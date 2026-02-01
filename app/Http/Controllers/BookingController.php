@@ -814,6 +814,16 @@ class BookingController extends Controller
 
                 DB::commit();
 
+                // --- TRA INTEGRATION ---
+                try {
+                    $tra = new \App\Services\TraVfdService();
+                    // We need to refresh the booking to ensure we have latest data
+                    $tra->fiscalize($booking->refresh()); 
+                } catch (\Exception $e) {
+                    Log::channel('tigo')->error("TRA Fiscalization Failed: " . $e->getMessage());
+                }
+                // -----------------------
+
                 Log::channel('tigo')->info('Payment processed successfully', [
                     'booking_id' => $booking->id,
                     'company_id' => $bus->campany->id,

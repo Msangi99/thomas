@@ -1025,6 +1025,15 @@ class ClickPesaController extends Controller
 
             DB::commit();
 
+            // --- TRA INTEGRATION ---
+            try {
+                $tra = new \App\Services\TraVfdService();
+                $tra->fiscalize($booking->refresh());
+            } catch (\Exception $e) {
+                Log::error("TRA Fiscalization Failed (ClickPesa): " . $e->getMessage());
+            }
+            // -----------------------
+
             Log::info('ClickPesa Payment processed successfully', [
                 'booking_id' => $booking->id,
                 'company_id' => $bus->campany->id,

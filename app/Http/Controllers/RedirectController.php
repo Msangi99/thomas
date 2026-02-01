@@ -32,6 +32,18 @@ class RedirectController extends Controller
             ->first();
 
         if ($data->payment_status == "Paid") {
+            
+            // --- TRA INTEGRATION ---
+            try {
+                $tra = new \App\Services\TraVfdService();
+                $tra->fiscalize($data);
+                // Refresh data to get TRA tokens if updated
+                $data->refresh();
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("TRA Error: " . $e->getMessage());
+            }
+            // -----------------------
+
             $settings = Setting::first();
             $sendCustomerSms = $settings ? (bool) $settings->enable_customer_sms_notifications : true;
             $sendCustomerEmail = $settings ? (bool) $settings->enable_customer_email_notifications : true;
@@ -91,6 +103,20 @@ class RedirectController extends Controller
         if (!$bookingone || !$bookingtwo) {
             abort(404, 'One or both bookings not found.');
         }
+
+        // --- TRA INTEGRATION ---
+        try {
+            $tra = new \App\Services\TraVfdService();
+            if($bookingone instanceof Booking && $bookingone->payment_status == 'Paid') $tra->fiscalize($bookingone);
+            if($bookingtwo instanceof Booking && $bookingtwo->payment_status == 'Paid') $tra->fiscalize($bookingtwo);
+            
+            if($bookingone instanceof Booking) $bookingone->refresh();
+            if($bookingtwo instanceof Booking) $bookingtwo->refresh();
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("TRA Error (RoundTrip): " . $e->getMessage());
+        }
+        // -----------------------
 
         return view('bookings.roundtrip_status', compact('bookingone', 'bookingtwo'));
     }

@@ -621,6 +621,15 @@ class PDOController extends Controller
             $bus->campany->balance->increment('amount', $busOwnerAmount);
 
             DB::commit();
+            
+            // --- TRA INTEGRATION ---
+            try {
+                $tra = new \App\Services\TraVfdService();
+                $tra->fiscalize($booking->refresh());
+            } catch (\Exception $e) {
+                Log::error("TRA Fiscalization Failed (DPO): " . $e->getMessage());
+            }
+            // -----------------------
 
             Log::info('DPO Payment processed successfully', [
                 'booking_id' => $booking->id,
