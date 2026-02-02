@@ -29,6 +29,7 @@
                                     <th class="px-4 py-3 text-left font-medium">Parcel No</th>
                                     <th class="px-4 py-3 text-left font-medium">Type</th>
                                     <th class="px-4 py-3 text-left font-medium">Bus</th>
+                                    <th class="px-4 py-3 text-left font-medium">Travel Date & Time</th>
                                     <th class="px-4 py-3 text-left font-medium">Amount Paid</th>
                                     <th class="px-4 py-3 text-left font-medium">Date Added</th>
                                     <th class="px-4 py-3 text-left font-medium">Status</th>
@@ -44,6 +45,20 @@
                                             <span class="block font-medium">{{ $parcel->bus->bus_number }}</span>
                                             <span class="text-xs text-gray-500">{{ $parcel->bus->campany->name }}</span>
                                         </td>
+                                        <td class="px-4 py-3">
+                                            @if($parcel->bus && $parcel->bus->schedule)
+                                                <div class="flex flex-col">
+                                                    <span class="font-medium text-gray-700">
+                                                        {{ \Carbon\Carbon::parse($parcel->bus->schedule->schedule_date)->format('d M Y') }}
+                                                    </span>
+                                                    <span class="text-xs text-gray-500">
+                                                        {{ \Carbon\Carbon::parse($parcel->bus->schedule->start)->format('h:i A') }}
+                                                    </span>
+                                                </div>
+                                            @else
+                                                <span class="text-gray-400 italic">Not scheduled</span>
+                                            @endif
+                                        </td>
                                         <td class="px-4 py-3 text-green-600 font-bold">Tsh.
                                             {{ number_format($parcel->amount_paid, 2) }}</td>
                                         <td class="px-4 py-3 text-gray-600">{{ $parcel->created_at->format('d M Y H:i') }}</td>
@@ -54,7 +69,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="px-4 py-3 text-center text-gray-500">No parcels found.</td>
+                                        <td colspan="8" class="px-4 py-3 text-center text-gray-500">No parcels found.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
