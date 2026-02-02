@@ -37,6 +37,10 @@ class SystemController extends Controller
 
         // Today's total amount
         $todayAmount = Booking::whereDate('created_at', today())->where('payment_status', 'Paid')->sum('amount');
+        
+        // Total amount paid (All time)
+        $totalAmount = Booking::where('payment_status', 'Paid')->sum('amount');
+        
         $bima = Bima::sum('amount');
 
         // Weekly amounts (last 7 days)
@@ -54,7 +58,7 @@ class SystemController extends Controller
         $balance = AdminWallet::sum('balance');
         $cancelledAmount = CancelledBookings::sum('amount');
 
-        return view('system.dashboard', compact('bookings', 'todayAmount', 'weeklyAmounts', 'service', 'fees', 'bima', 'balance', 'cancelledAmount'));
+        return view('system.dashboard', compact('bookings', 'todayAmount', 'totalAmount', 'weeklyAmounts', 'service', 'fees', 'bima', 'balance', 'cancelledAmount'));
     }
 
     public function buses()
