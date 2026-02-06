@@ -1,0 +1,128 @@
+@extends('bus_owner.app')
+
+@section('title', 'Manage Parcels')
+
+@section('content')
+<div class="container mx-auto px-4 py-6">
+    <!-- Success/Error Messages -->
+    @if (session('success'))
+        <div class="mb-4 bg-green-50 border-l-4 border-green-500 p-4 rounded-lg shadow-sm">
+            <div class="flex">
+                <div class="flex-shrink-0 text-green-500">
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-green-800">{{ session('success') }}</p>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Parcel Management</h1>
+            <p class="mt-1 text-sm text-gray-500">Manage status and acceptance of parcels for your buses.</p>
+        </div>
+    </div>
+
+    <!-- Bus Toggle Section -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        @foreach($buses as $bus)
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="font-bold text-gray-800">{{ $bus->bus_number }}</h3>
+                    <p class="text-sm text-gray-500">{{ $bus->bus_model }}</p>
+                </div>
+                
+                <form action="{{ route('bus_owner.parcels.toggle_acceptance') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="bus_id" value="{{ $bus->id }}">
+                    <button type="submit" 
+                        class="relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 {{ $bus->accept_parcels ? 'bg-green-500' : 'bg-gray-200' }}" 
+                        role="switch" aria-checked="{{ $bus->accept_parcels ? 'true' : 'false' }}">
+                        <span class="sr-only">Accept Parcels</span>
+                        <span aria-hidden="true" 
+                            class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200 {{ $bus->accept_parcels ? 'translate-x-5' : 'translate-x-0' }}">
+                        </span>
+                    </button>
+                    <span class="block text-xs mt-1 {{ $bus->accept_parcels ? 'text-green-600' : 'text-gray-500' }}">
+                        {{ $bus->accept_parcels ? 'Accepting Parcels' : 'Not Accepting' }}
+                    </span>
+                </form>
+            </div>
+        </div>
+        @endforeach
+    </div>
+
+    <!-- Parcels Table -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Recent Parcels</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table id="parcelsTable" class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parcel No</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bus</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Update Status</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @forelse($parcels as $parcel)
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $parcel->parcel_number }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $parcel->bus->bus_number }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $parcel->parcel_type }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">
+                                <div class="text-xs">
+                                    @if($parcel->weight) <div>W: {{ $parcel->weight }}kg</div> @endif
+                                    @if($parcel->height) <div>H: {{ $parcel->height }}cm</div> @endif
+                                    @if($parcel->width) <div>L: {{ $parcel->width }}cm</div> @endif
+                                    @if(!$parcel->weight && !$parcel->height && !$parcel->width) - @endif
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
+                                Tsh {{ number_format($parcel->amount_paid, 2) }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                    {{ $parcel->status === 'completed' ? 'bg-green-100 text-green-800' : '' }}
+                                    {{ $parcel->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : '' }}
+                                    {{ $parcel->status === 'cancelled' ? 'bg-red-100 text-red-800' : '' }}">
+                                    {{ ucfirst($parcel->status) }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <form action="{{ route('bus_owner.parcels.update_status', $parcel->id) }}" method="POST" class="flex items-center space-x-2">
+                                    @csrf
+                                    <select name="status" class="text-xs border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                                        <option value="pending" {{ $parcel->status === 'pending' ? 'selected' : '' }}>Pending</option>
+                                        <option value="completed" {{ $parcel->status === 'completed' ? 'selected' : '' }}>Completed</option>
+                                        <option value="cancelled" {{ $parcel->status === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                                    </select>
+                                    <button type="submit" class="text-indigo-600 hover:text-indigo-900 text-xs font-bold">Update</button>
+                                </form>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">No parcels found.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="px-6 py-4 border-t border-gray-200">
+            {{ $parcels->links() }}
+        </div>
+    </div>
+</div>
+@endsection

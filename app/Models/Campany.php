@@ -15,6 +15,7 @@ class Campany extends Model
         'payment_number',
         'status',
         'percentage',
+        'commission_amount',
     ];
 
     public function bus()

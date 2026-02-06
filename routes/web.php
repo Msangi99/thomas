@@ -274,6 +274,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/buses/print/pdf', [AdminController::class, 'printBusesPdf'])->name('bus.print.pdf');
         Route::get('/get-filtered-schedules', [AdminController::class, 'getFilteredSchedules'])->name('get.filtered.schedules');
         Route::get('/calculate-transfer-amounts', [AdminController::class, 'calculateTransferAmounts'])->name('calculate.transfer.amounts');
+        
+        // Bus Owner Parcel Management
+        Route::prefix('/parcels')->name('bus_owner.parcels.')->group(function () {
+             Route::get('/', [AdminController::class, 'busOwnerParcels'])->name('index');
+             Route::post('/update-status/{id}', [ParcelController::class, 'updateStatus'])->name('update_status');
+             Route::post('/toggle-acceptance', [ParcelController::class, 'toggleAcceptance'])->name('toggle_acceptance');
+        });
     });
 
     // Admin Routes (Accessible only to admin role)

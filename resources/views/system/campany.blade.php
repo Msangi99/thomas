@@ -87,7 +87,11 @@
                                             <span class="text-sm text-gray-500">{{ $campany->percentage ?? 0 }}%</span>
                                             <input type="number" name="percentage" min="0" max="100" 
                                                    class="w-16 text-sm border border-gray-300 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500" 
-                                                   value="{{ $campany->percentage }}">
+                                                   value="{{ $campany->percentage }}" placeholder="%">
+                                            <span class="text-sm text-gray-500">or</span>
+                                            <input type="number" name="commission_amount" step="0.01"
+                                                   class="w-24 text-sm border border-gray-300 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500" 
+                                                   value="{{ $campany->commission_amount }}" placeholder="Amount">
                                         </div>
                                     </td>
                                     <input type="hidden" name="campany_id" value="{{ $campany->id }}">

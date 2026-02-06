@@ -64,6 +64,31 @@
                                     <option value="Other" {{ old('parcel_type') == 'Other' ? 'selected' : '' }}>Other</option>
                                 </select>
                             </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <label for="weight" class="block text-sm font-medium text-gray-700 mb-1">Weight (kg)</label>
+                                    <input type="number" name="weight" id="weight" step="0.01"
+                                        value="{{ old('weight') }}"
+                                        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                        placeholder="0.00">
+                                </div>
+                                <div>
+                                    <label for="height" class="block text-sm font-medium text-gray-700 mb-1">Height (cm)</label>
+                                    <input type="number" name="height" id="height" step="0.01"
+                                        value="{{ old('height') }}"
+                                        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                        placeholder="0.00">
+                                </div>
+                                <div>
+                                    <label for="width" class="block text-sm font-medium text-gray-700 mb-1">Width (cm)</label>
+                                    <input type="number" name="width" id="width" step="0.01"
+                                        value="{{ old('width') }}"
+                                        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                        placeholder="0.00">
+                                </div>
+                            </div>
                         </div>
 
                         <div>

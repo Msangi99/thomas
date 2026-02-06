@@ -1350,4 +1350,23 @@ $q->where('id', auth()->user()->campany->id);
             'new_route_id' => $newBus->route->id,
         ]);
     }
+
+    public function busOwnerParcels()
+    {
+        $user = auth()->user();
+        if ($user->campany) {
+             $companyId = $user->campany->id;
+             $buses = Bus::where('campany_id', $companyId)->get();
+             $busIds = $buses->pluck('id');
+     
+             $parcels = \App\Models\Parcel::whereIn('bus_id', $busIds)
+                 ->with('bus')
+                 ->latest()
+                 ->paginate(15);
+     
+             return view('bus_owner.parcels.index', compact('buses', 'parcels'));
+        } else {
+             return back()->with('error', 'No company associated with your account.');
+        }
+    }
 }

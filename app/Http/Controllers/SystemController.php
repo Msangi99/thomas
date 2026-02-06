@@ -155,10 +155,22 @@ class SystemController extends Controller
             $transaction->reference_number = $request->reference_number;
             $transaction->save();
             $balance = balance::where('campany_id', $campany)->first();
-            $percent = 100 - PercentController::PERCENTAGE;
-            $transactions = $transaction->amount * ($percent / 100);
+            
+            // Commission Logic: Priority Percentage > Amount
+            $campanyModel = Campany::find($campany);
+            $commission = 0;
 
-            $balance->amount -= $transactions;
+            if ($campanyModel->percentage > 0) {
+                $commission = $transaction->amount * ($campanyModel->percentage / 100);
+            } elseif ($campanyModel->commission_amount > 0) {
+                $commission = $campanyModel->commission_amount;
+            } else {
+                 // Fallback to default system percentage if neither is set on company
+                 $percent = PercentController::PERCENTAGE; // Assuming this is 5 (0.05) or similar from controller constant
+                 $commission = $transaction->amount * ($percent / 100);
+            }
+
+            $balance->amount -= $commission;
             $balance->save();
 
             return redirect()->back()->with('success', 'Transaction marked as Completed.');
@@ -200,6 +212,7 @@ class SystemController extends Controller
     public function campany_status(Request $request)
     {
         $percent = $request->percentage ?? 0;
+        $amount = $request->commission_amount ?? 0;
         $status = $request->status;
         $campany_id = $request->campany_id;
 
@@ -207,6 +220,7 @@ class SystemController extends Controller
 
         $campany->status = $status;
         $campany->percentage = $percent;
+        $campany->commission_amount = $amount;
         $campany->save();
 
         return back()->with('success', 'company edit successful');

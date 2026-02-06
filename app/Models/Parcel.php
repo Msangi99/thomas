@@ -11,6 +11,10 @@ class Parcel extends Model
         'parcel_type',
         'description',
         'amount_paid',
+        'weight',
+        'height',
+        'width',
+        'status',
         'bus_id',
         'vender_id',
     ];
