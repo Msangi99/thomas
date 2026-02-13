@@ -31,8 +31,17 @@ class CashController extends Controller
             $round = new RoundpaymentController();
             $code1 = $booking1->booking_code ?? 'N/A';
             $code2 = $booking2->booking_code ?? 'N/A';
-            $data1 = $round->roundtrip($transToken, $transToken, $code1);
-            $data2 = $round->roundtrip($transToken, $transToken, $transToken, $code2);
+            $data1 = $round->roundtrip($transToken, $transToken, null, $code1);
+            $data2 = $round->roundtrip($transToken, $transToken, null, $code2);
+
+            if (is_array($data1) && isset($data1['errorMessage'])) {
+                $go = new \App\Http\Controllers\RoundTripController();
+                return $go->paymentFailed($data1['errorMessage'] ?? 'Booking not found');
+            }
+            if (is_array($data2) && isset($data2['errorMessage'])) {
+                $go = new \App\Http\Controllers\RoundTripController();
+                return $go->paymentFailed($data2['errorMessage'] ?? 'Booking not found');
+            }
 
             $red = new RedirectController();
             return $red->showRoundTripBookingStatus($data1, $data2);

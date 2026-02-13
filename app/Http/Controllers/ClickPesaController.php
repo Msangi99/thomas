@@ -262,6 +262,21 @@ class ClickPesaController extends Controller
                         $data1 = $round->roundtrip($reference, $reference, $verifyResponse, $code1);
                         $data2 = $round->roundtrip($reference, $reference, $verifyResponse, $code2);
 
+                        if (is_array($data1) && isset($data1['errorMessage'])) {
+                            session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
+                            return view('clickpesa.error', [
+                                'message' => $data1['errorMessage'] ?? 'Booking not found',
+                                'reference' => $reference
+                            ]);
+                        }
+                        if (is_array($data2) && isset($data2['errorMessage'])) {
+                            session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
+                            return view('clickpesa.error', [
+                                'message' => $data2['errorMessage'] ?? 'Booking not found',
+                                'reference' => $reference
+                            ]);
+                        }
+
                         // Clear round trip session data after successful processing
                         session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
 
@@ -811,6 +826,21 @@ class ClickPesaController extends Controller
             try {
                 $data1 = $round->roundtrip($transToken, $transToken, $verifyResponse, $code1);
                 $data2 = $round->roundtrip($transToken, $transToken, $verifyResponse, $code2);
+
+                if (is_array($data1) && isset($data1['errorMessage'])) {
+                    session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
+                    return view('clickpesa.error', [
+                        'message' => $data1['errorMessage'] ?? 'Booking not found',
+                        'reference' => $transToken
+                    ]);
+                }
+                if (is_array($data2) && isset($data2['errorMessage'])) {
+                    session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
+                    return view('clickpesa.error', [
+                        'message' => $data2['errorMessage'] ?? 'Booking not found',
+                        'reference' => $transToken
+                    ]);
+                }
 
                 // Clear round trip session data after successful processing
                 session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);

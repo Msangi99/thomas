@@ -188,18 +188,25 @@
                             @foreach ($busList as $bus)
                                 @if (!empty($bus['schedules']))
                                     @foreach ($bus['schedules'] as $schedule)
-                                        <tr class="border-b border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors duration-150" data-bus="{{ $bus['bus_number'] ?? 'N/A' }}" data-from="{{ $schedule['from'] ?? 'N/A' }}" data-to="{{ $schedule['to'] ?? 'N/A' }}" data-time="{{ $schedule['start'] ?? 'N/A' }} -> {{ $schedule['end'] ?? 'N/A' }}" data-date="{{ $schedule['schedule_date'] ?? 'N/A' }}">
+                                        @php
+                                            $sFrom = $schedule['from'] ?? (isset($schedule->route) ? $schedule->route->from : null);
+                                            $sTo = $schedule['to'] ?? (isset($schedule->route) ? $schedule->route->to : null);
+                                            $sStart = $schedule['start'] ? \Carbon\Carbon::parse($schedule['start'])->format('H:i') : 'N/A';
+                                            $sEnd = $schedule['end'] ? \Carbon\Carbon::parse($schedule['end'])->format('H:i') : 'N/A';
+                                            $sDate = $schedule['schedule_date'] ? \Carbon\Carbon::parse($schedule['schedule_date'])->format('d M Y') : 'N/A';
+                                        @endphp
+                                        <tr class="border-b border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors duration-150" data-bus="{{ $bus['bus_number'] ?? 'N/A' }}" data-from="{{ $sFrom ?? 'N/A' }}" data-to="{{ $sTo ?? 'N/A' }}" data-time="{{ $sStart }} -> {{ $sEnd }}" data-date="{{ $sDate }}">
                                             <td class="px-4 py-3">{{ $loop->iteration }}</td>
                                             <td class="px-4 py-3">{{ $bus['bus_number'] ?? 'N/A' }}</td>
-                                            <td class="px-4 py-3">{{ $schedule['from'] ?? 'N/A' }}</td>
-                                            <td class="px-4 py-3">{{ $schedule['to'] ?? 'N/A' }}</td>
-                                            <td class="px-4 py-3">{{ $schedule['start'] ?? 'N/A' }} -> {{ $schedule['end'] ?? 'N/A' }}</td>
-                                            <td class="px-4 py-3">{{ $schedule['schedule_date'] ?? 'N/A' }}</td>
+                                            <td class="px-4 py-3">{{ $sFrom ?? 'N/A' }}</td>
+                                            <td class="px-4 py-3">{{ $sTo ?? 'N/A' }}</td>
+                                            <td class="px-4 py-3">{{ $sStart }} -> {{ $sEnd }}</td>
+                                            <td class="px-4 py-3">{{ $sDate }}</td>
                                             <td class="px-4 py-3">
                                                 <form action="{{ route('vender.route.road') }}" method="GET">
                                                     @csrf
-                                                    <input type="hidden" name="departure_city" value="{{ App\Models\City::where('name', $schedule['from'])->value('id') ?? '' }}">
-                                                    <input type="hidden" name="arrival_city" value="{{ App\Models\City::where('name', $schedule['to'])->value('id') ?? '' }}">
+                                                    <input type="hidden" name="departure_city" value="{{ App\Models\City::where('name', $sFrom)->value('id') ?? '' }}">
+                                                    <input type="hidden" name="arrival_city" value="{{ App\Models\City::where('name', $sTo)->value('id') ?? '' }}">
                                                     <input type="hidden" name="departure_date" value="{{ $schedule['schedule_date'] ?? '' }}">
                                                     <button type="submit" class="inline-flex items-center px-3 py-1 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors">
                                                         <i class="fas fa-ticket-alt mr-1"></i> {{ __('customer/busroot.book') }}

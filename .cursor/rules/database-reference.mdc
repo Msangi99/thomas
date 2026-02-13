@@ -1,0 +1,13 @@
+---
+description: Use hisgnbki_ticket.sql for database schema reference
+alwaysApply: true
+---
+
+# Database reference
+
+When you need database schema, table structures, or reference for the `hisgnbki_ticket` database:
+
+- **Use** `@hisgnbki_ticket.sql` — include or reference this file so schema (tables, columns, relationships) is in context.
+- Prefer citing this file over guessing table or column names.
+
+Example: when writing queries, migrations, or code that touches the database, add `@hisgnbki_ticket.sql` to your context first.

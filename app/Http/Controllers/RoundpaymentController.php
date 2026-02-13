@@ -29,13 +29,10 @@ class RoundpaymentController extends Controller
             ];
         }
 
-        // Check for duplicate processing
+        // Check for duplicate processing - return booking so callers get consistent type (Booking)
         if ($booking->payment_status !== 'Unpaid') {
             Log::warning('Booking already processed', ['transaction_ref_id' => $companyRef]);
-            return view('dpo.success', [
-                'message' => 'Payment already processed',
-                'booking' => $booking
-            ]);
+            return $booking;
         }
 
         // Begin transaction

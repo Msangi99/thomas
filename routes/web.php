@@ -118,7 +118,17 @@ Route::any('/vender/dpo/cancel', [VenderWalletController::class, 'handlePdoCallb
 Route::view('/dpo/example', 'dpo.example')->name('dpo.example');
 // General Routes (Accessible to all authenticated users)
 Route::get('/', function () {
-    return view('welcome');
+    $todaySchedules = \App\Models\Schedule::whereDate('schedule_date', \Carbon\Carbon::today())
+        ->with(['bus.campany', 'route'])
+        ->whereHas('bus', function ($q) {
+            $q->whereHas('busname', function ($b) {
+                $b->where('status', 1);
+            });
+        })
+        ->orderBy('start')
+        ->limit(4)
+        ->get();
+    return view('welcome', compact('todaySchedules'));
 })->name('home');
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

@@ -631,8 +631,17 @@ class BookingController extends Controller
                 $round = new RoundpaymentController();
                 $code1 = $booking1->booking_code ?? 'N/A';
                 $code2 = $booking2->booking_code ?? 'N/A';
-                $data1 = $round->roundtrip($$transactionRefId, $request->CompanyRef, $verificationCode, $code1);
-                $data2 = $round->roundtrip($transactionRefId, $request->CompanyRef, $verificationCode, $code2);
+                $data1 = $round->roundtrip($transactionRefId, $transactionRefId, $verificationCode, $code1);
+                $data2 = $round->roundtrip($transactionRefId, $transactionRefId, $verificationCode, $code2);
+                // If roundtrip returned error (e.g. booking not found), show payment failed
+                if (is_array($data1) && isset($data1['errorMessage'])) {
+                    $go = new RoundTripController();
+                    return $go->paymentFailed($data1['errorMessage'] ?? 'Booking not found');
+                }
+                if (is_array($data2) && isset($data2['errorMessage'])) {
+                    $go = new RoundTripController();
+                    return $go->paymentFailed($data2['errorMessage'] ?? 'Booking not found');
+                }
                 $red = new RedirectController();
                 return $red->showRoundTripBookingStatus($data1, $data2);
             }

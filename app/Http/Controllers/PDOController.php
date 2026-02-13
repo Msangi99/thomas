@@ -217,6 +217,21 @@ class PDOController extends Controller
                         $data1 = $round->roundtrip($transToken, $transToken, $verifyResponse, $code1);
                         $data2 = $round->roundtrip($transToken, $transToken, $verifyResponse, $code2);
 
+                        if (is_array($data1) && isset($data1['errorMessage'])) {
+                            session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
+                            return view('dpo.error', [
+                                'message' => $data1['errorMessage'] ?? 'Booking not found',
+                                'transactionToken' => $transToken
+                            ]);
+                        }
+                        if (is_array($data2) && isset($data2['errorMessage'])) {
+                            session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
+                            return view('dpo.error', [
+                                'message' => $data2['errorMessage'] ?? 'Booking not found',
+                                'transactionToken' => $transToken
+                            ]);
+                        }
+
                         // Clear round trip session data after successful processing
                         session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
 
@@ -445,6 +460,21 @@ class PDOController extends Controller
             try {
                 $data1 = $round->roundtrip($transToken, $transToken, $verifyResponse, $code1);
                 $data2 = $round->roundtrip($transToken, $transToken, $verifyResponse, $code2);
+
+                if (is_array($data1) && isset($data1['errorMessage'])) {
+                    session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
+                    return view('dpo.error', [
+                        'message' => $data1['errorMessage'] ?? 'Booking not found',
+                        'transactionToken' => $transToken
+                    ]);
+                }
+                if (is_array($data2) && isset($data2['errorMessage'])) {
+                    session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
+                    return view('dpo.error', [
+                        'message' => $data2['errorMessage'] ?? 'Booking not found',
+                        'transactionToken' => $transToken
+                    ]);
+                }
 
                 // Clear round trip session data after successful processing
                 session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);

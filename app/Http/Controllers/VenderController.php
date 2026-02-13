@@ -255,21 +255,17 @@ class VenderController extends Controller
         session()->put('departure_date', $departure_date);
 
         // Query buses with relationships and filter by route - only today to future
+        // Load schedule.route so from/to use real schedule data with route fallback when null
         $busQuery = Bus::with([
             'busname' => function ($query) {
                 $query->where('status', 1);
             },
             'route.via',
             'schedules' => function ($query) use ($departureCityName, $arrivalCityName, $departure_date) {
-                $query->where('from', $departureCityName)
+                $query->with('route')
+                    ->where('from', $departureCityName)
                     ->where('to', $arrivalCityName)
                     ->whereDate('schedule_date', $departure_date);
-                    // ->where(function ($timeQuery) use ($departure_date) {
-                    //     // If it's today, only show schedules that haven't started yet
-                    //     if ($departure_date === Carbon::now()->toDateString()) {
-                    //         $timeQuery->where('start', '>', Carbon::now()->toTimeString());
-                    //     }
-                    // });
             },
             'booking' => function ($query) use ($departure_date) {
                 $query->where('travel_date', $departure_date)
