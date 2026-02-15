@@ -431,6 +431,30 @@ class ClickPesaController extends Controller
     }
 
     /**
+     * Compute ClickPesa payload checksum (HMAC-SHA256 of canonical JSON).
+     * Required when checksum is enabled in the ClickPesa application.
+     * @see https://docs.clickpesa.com/home/checksum
+     */
+    private function computeChecksum(array $payload): string
+    {
+        $canonical = $this->canonicalizeForChecksum($payload);
+        $jsonString = json_encode($canonical, JSON_UNESCAPED_SLASHES);
+        return hash_hmac('sha256', $jsonString, $this->apiSecret);
+    }
+
+    /**
+     * Recursively sort object keys alphabetically for canonical JSON.
+     */
+    private function canonicalizeForChecksum($data)
+    {
+        if (is_array($data)) {
+            ksort($data, SORT_STRING);
+            return array_map([$this, 'canonicalizeForChecksum'], $data);
+        }
+        return $data;
+    }
+
+    /**
      * Create ClickPesa USSD-PUSH request
      */
     private function createCheckoutSession($orderDetails)
@@ -453,13 +477,18 @@ class ClickPesaController extends Controller
         // ClickPesa requires alphanumeric-only order reference (no hyphens or special chars)
         $orderReference = preg_replace('/[^a-zA-Z0-9]/', '', $orderDetails['order_id']);
 
-        // ClickPesa USSD-PUSH API format
+        // ClickPesa USSD-PUSH API format (checksum is computed from this payload, then added)
         $payload = [
             'amount' => (string) $orderDetails['amount'],
             'currency' => 'TZS',
             'orderReference' => $orderReference,
             'phoneNumber' => $phoneNumber,
         ];
+
+        // Generate checksum when API secret is set (required when checksum is enabled in ClickPesa app)
+        if (!empty($this->apiSecret)) {
+            $payload['checksum'] = $this->computeChecksum($payload);
+        }
 
         $jsonPayload = json_encode($payload);
 
