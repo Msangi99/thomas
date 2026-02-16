@@ -21,14 +21,14 @@ class ClickPesaController extends Controller
 {
     // ClickPesa API Configuration
     private $apiKey;
-    private $apiSecret;
+    private $clientId;
     private $endpoint;
     private $callbackUrl;
 
     public function __construct()
     {
         $this->apiKey = env('CLICKPESA_API_KEY'); // Your ClickPesa API Key
-        $this->apiSecret = env('CLICKPESA_API_SECRET'); // Your ClickPesa API Secret
+        $this->clientId = env('CLICKPESA_CLIENT_ID'); // Your ClickPesa Client ID
         $this->endpoint = env('CLICKPESA_ENDPOINT', 'https://api.clickpesa.com/third-parties/payments/initiate-ussd-push-request');
         $this->callbackUrl = route('clickpesa.callback');
     }
@@ -397,7 +397,7 @@ class ClickPesaController extends Controller
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'api-key: ' . $this->apiKey,
-            'client-id: ' . $this->apiSecret  // client-id is the API Secret
+            'client-id: ' . $this->clientId
         ]);
         
         $response = curl_exec($ch);
@@ -439,7 +439,7 @@ class ClickPesaController extends Controller
     {
         $canonical = $this->canonicalizeForChecksum($payload);
         $jsonString = json_encode($canonical, JSON_UNESCAPED_SLASHES);
-        $checksum = hash_hmac('sha256', $jsonString, $this->apiSecret);
+        $checksum = hash_hmac('sha256', $jsonString, $this->clientId);
         // Return checksum in uppercase format (as ClickPesa may expect this)
         return strtoupper($checksum);
     }
@@ -489,9 +489,9 @@ class ClickPesaController extends Controller
 
         // Generate checksum (required when checksum is enabled in ClickPesa app)
         // Checksum must be computed from the payload using HMAC-SHA256
-        if (empty($this->apiSecret)) {
-            Log::error('ClickPesa API Secret is not set - checksum cannot be computed');
-            return "ClickPesa API Secret is not configured. Cannot compute checksum.";
+        if (empty($this->clientId)) {
+            Log::error('ClickPesa Client ID is not set - checksum cannot be computed');
+            return "ClickPesa Client ID is not configured. Cannot compute checksum.";
         }
         
         // Compute checksum from payload (without checksum field)
@@ -507,7 +507,7 @@ class ClickPesaController extends Controller
                 'orderReference' => $payload['orderReference'],
                 'phoneNumber' => $payload['phoneNumber']
             ],
-            'api_secret_set' => !empty($this->apiSecret)
+            'client_id_set' => !empty($this->clientId)
         ]);
 
         $jsonPayload = json_encode($payload);
