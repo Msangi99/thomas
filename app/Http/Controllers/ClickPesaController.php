@@ -439,7 +439,9 @@ class ClickPesaController extends Controller
     {
         $canonical = $this->canonicalizeForChecksum($payload);
         $jsonString = json_encode($canonical, JSON_UNESCAPED_SLASHES);
-        return hash_hmac('sha256', $jsonString, $this->apiSecret);
+        $checksum = hash_hmac('sha256', $jsonString, $this->apiSecret);
+        // Return checksum in uppercase format (as ClickPesa may expect this)
+        return strtoupper($checksum);
     }
 
     /**
@@ -485,9 +487,28 @@ class ClickPesaController extends Controller
             'phoneNumber' => $phoneNumber,
         ];
 
-        // Add checksum (required when checksum is enabled in ClickPesa app)
-        // Using the provided checksum value
-        $payload['checksum'] = 'CHKRQFAG4W0EBGLtFSHybm4IJ8qWYFa7828';
+        // Generate checksum (required when checksum is enabled in ClickPesa app)
+        // Checksum must be computed from the payload using HMAC-SHA256
+        if (empty($this->apiSecret)) {
+            Log::error('ClickPesa API Secret is not set - checksum cannot be computed');
+            return "ClickPesa API Secret is not configured. Cannot compute checksum.";
+        }
+        
+        // Compute checksum from payload (without checksum field)
+        // Important: checksum is computed from payload BEFORE adding checksum field
+        $computedChecksum = $this->computeChecksum($payload);
+        $payload['checksum'] = $computedChecksum;
+        
+        Log::debug('ClickPesa Checksum Computed', [
+            'checksum' => $computedChecksum,
+            'payload_before_checksum' => [
+                'amount' => $payload['amount'],
+                'currency' => $payload['currency'],
+                'orderReference' => $payload['orderReference'],
+                'phoneNumber' => $payload['phoneNumber']
+            ],
+            'api_secret_set' => !empty($this->apiSecret)
+        ]);
 
         $jsonPayload = json_encode($payload);
 
