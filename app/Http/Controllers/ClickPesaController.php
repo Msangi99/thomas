@@ -485,10 +485,9 @@ class ClickPesaController extends Controller
             'phoneNumber' => $phoneNumber,
         ];
 
-        // Generate checksum when API secret is set (required when checksum is enabled in ClickPesa app)
-        if (!empty($this->apiSecret)) {
-            $payload['checksum'] = $this->computeChecksum($payload);
-        }
+        // Add checksum (required when checksum is enabled in ClickPesa app)
+        // Using the provided checksum value
+        $payload['checksum'] = 'CHKRQFAG4W0EBGLtFSHybm4IJ8qWYFa7828';
 
         $jsonPayload = json_encode($payload);
 
