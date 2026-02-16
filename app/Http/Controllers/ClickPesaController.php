@@ -389,12 +389,23 @@ class ClickPesaController extends Controller
      */
     private function getAccessToken()
     {
+        // Check if credentials are set
+        if (empty($this->apiKey) || empty($this->clientId)) {
+            Log::error('ClickPesa Token Error - Missing Credentials', [
+                'api_key_set' => !empty($this->apiKey),
+                'client_id_set' => !empty($this->clientId)
+            ]);
+            return null;
+        }
+
         $tokenEndpoint = 'https://api.clickpesa.com/third-parties/generate-token';
         
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $tokenEndpoint);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'api-key: ' . $this->apiKey,
             'client-id: ' . $this->clientId
@@ -402,30 +413,65 @@ class ClickPesaController extends Controller
         
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
         curl_close($ch);
+
+        // Log curl errors
+        if ($curlError) {
+            Log::error('ClickPesa Token CURL Error', [
+                'curl_error' => $curlError,
+                'endpoint' => $tokenEndpoint
+            ]);
+            return null;
+        }
 
         if ($httpCode != 200) {
             Log::error('ClickPesa Token Error', [
                 'http_code' => $httpCode,
-                'response' => $response
+                'response' => $response,
+                'endpoint' => $tokenEndpoint,
+                'api_key_preview' => substr($this->apiKey, 0, 10) . '...',
+                'client_id_preview' => substr($this->clientId, 0, 10) . '...'
             ]);
             return null;
         }
 
         $jsonResponse = json_decode($response);
         
-        // Response format: {"success":true,"token":"Bearer eyJ..."}
+        // Handle different possible response formats
+        $token = null;
+        
+        // Format 1: {"success":true,"token":"Bearer eyJ..."}
         if (isset($jsonResponse->success) && $jsonResponse->success && isset($jsonResponse->token)) {
-            // Token already includes "Bearer " prefix, so extract just the token part
             $token = $jsonResponse->token;
+        }
+        // Format 2: {"token":"Bearer ..."} or {"token":"..."}
+        elseif (isset($jsonResponse->token)) {
+            $token = $jsonResponse->token;
+        }
+        // Format 3: {"access_token":"..."}
+        elseif (isset($jsonResponse->access_token)) {
+            $token = $jsonResponse->access_token;
+        }
+        // Format 4: Array response [{"token":"..."}]
+        elseif (is_array($jsonResponse) && isset($jsonResponse[0]->token)) {
+            $token = $jsonResponse[0]->token;
+        }
+        
+        if ($token) {
+            // Token might include "Bearer " prefix, so extract just the token part
             if (strpos($token, 'Bearer ') === 0) {
                 $token = substr($token, 7); // Remove "Bearer " prefix
             }
+            Log::debug('ClickPesa Token Generated Successfully');
             return $token;
         }
         
         Log::error('ClickPesa Token Response Invalid', [
-            'response' => $jsonResponse
+            'response' => $jsonResponse,
+            'raw_response' => $response,
+            'http_code' => $httpCode,
+            'response_keys' => is_object($jsonResponse) ? array_keys((array)$jsonResponse) : 'not_object'
         ]);
         return null;
     }
