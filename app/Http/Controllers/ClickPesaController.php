@@ -406,6 +406,8 @@ class ClickPesaController extends Controller
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'api-key: ' . $this->apiKey,
             'client-id: ' . $this->clientId
@@ -483,23 +485,37 @@ class ClickPesaController extends Controller
      */
     private function computeChecksum(array $payload): string
     {
-        $canonical = $this->canonicalizeForChecksum($payload);
-        $jsonString = json_encode($canonical, JSON_UNESCAPED_SLASHES);
-        $checksum = hash_hmac('sha256', $jsonString, $this->clientId);
+        // Canonicalize the payload recursively for consistent ordering
+        $canonicalPayload = $this->canonicalize($payload);
+        // Serialize the canonical payload
+        $payloadString = json_encode($canonicalPayload, JSON_UNESCAPED_SLASHES);
+        // Create HMAC with SHA256
+        $checksum = hash_hmac('sha256', $payloadString, $this->apiKey);
         // Return checksum in uppercase format (as ClickPesa may expect this)
         return strtoupper($checksum);
     }
 
     /**
-     * Recursively sort object keys alphabetically for canonical JSON.
+     * Recursively canonicalize payload for consistent ordering.
+     * Handles both associative arrays (objects) and sequential arrays (lists).
      */
-    private function canonicalizeForChecksum($data)
+    private function canonicalize($obj)
     {
-        if (is_array($data)) {
-            ksort($data, SORT_STRING);
-            return array_map([$this, 'canonicalizeForChecksum'], $data);
+        if ($obj === null || !is_array($obj)) {
+            return $obj;
         }
-        return $data;
+
+        // Check if array is a list (sequential numeric keys starting from 0)
+        if (array_values($obj) === $obj) {
+            return array_map([$this, 'canonicalize'], $obj);
+        }
+
+        ksort($obj);
+        $result = [];
+        foreach ($obj as $key => $value) {
+            $result[$key] = $this->canonicalize($value);
+        }
+        return $result;
     }
 
     /**
@@ -571,6 +587,8 @@ class ClickPesaController extends Controller
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonPayload);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
             'Authorization: Bearer ' . $accessToken
@@ -650,6 +668,8 @@ class ClickPesaController extends Controller
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, 15); // Set timeout
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Authorization: Bearer ' . $accessToken
         ]);
@@ -814,6 +834,8 @@ class ClickPesaController extends Controller
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, 30); // Set 30 second timeout
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10); // Connection timeout
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Authorization: Bearer ' . $accessToken
         ]);
