@@ -566,6 +566,13 @@ class ClickPesaController extends Controller
             'token_preview' => substr($accessToken, 0, 20) . '...'
         ]);
 
+        Log::info('ClickPesa payment request', [
+            'order_reference' => $orderReference,
+            'order_id' => $orderDetails['order_id'],
+            'amount' => $orderDetails['amount'],
+            'currency' => $payload['currency'] ?? 'TZS',
+        ]);
+
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $this->endpoint);
         curl_setopt($ch, CURLOPT_POST, 1);
