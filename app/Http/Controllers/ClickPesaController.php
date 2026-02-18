@@ -152,8 +152,10 @@ class ClickPesaController extends Controller
 
         // Check if response is a string (error) or object (success)
         if (is_string($checkoutResponse)) {
+            $orderReference = preg_replace('/[^a-zA-Z0-9]/', '', $orderDetails['order_id']);
             Log::error('ClickPesa Checkout Creation Failed', [
                 'order_id' => $orderDetails['order_id'],
+                'order_reference' => $orderReference,
                 'error' => $checkoutResponse,
             ]);
 
