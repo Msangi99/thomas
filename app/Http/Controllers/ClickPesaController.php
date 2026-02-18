@@ -484,22 +484,38 @@ class ClickPesaController extends Controller
      * Compute ClickPesa payload checksum (HMAC-SHA256 of canonical JSON).
      * Required when checksum is enabled in the ClickPesa application.
      * @see https://docs.clickpesa.com/home/checksum
+     * 
+     * Important: The payload must NOT include the 'checksum' or 'checksumMethod' fields
+     * when computing the checksum. These fields should be excluded from checksum computations.
      */
     private function computeChecksum(array $payload): string
     {
+        // Exclude checksum and checksumMethod from payload before computing
+        $payloadForChecksum = [];
+        foreach ($payload as $key => $value) {
+            if ($key !== 'checksum' && $key !== 'checksumMethod') {
+                $payloadForChecksum[$key] = $value;
+            }
+        }
+        
         // Canonicalize the payload recursively for consistent ordering
-        $canonicalPayload = $this->canonicalize($payload);
+        $canonicalPayload = $this->canonicalize($payloadForChecksum);
         // Serialize the canonical payload
         $payloadString = json_encode($canonicalPayload, JSON_UNESCAPED_SLASHES);
+        
+        // Use checksum key from environment if set, otherwise use clientId
+        // The checksum key is typically the same as clientId, but can be configured separately
+        $checksumKey = env('CLICKPESA_CHECKSUM_KEY', $this->clientId);
+        
         // Create HMAC with SHA256
-        $checksum = hash_hmac('sha256', $payloadString, $this->apiKey);
-        // Return checksum in uppercase format (as ClickPesa may expect this)
-        return strtoupper($checksum);
+        // Return lowercase hex digest (as per ClickPesa documentation)
+        return hash_hmac('sha256', $payloadString, $checksumKey);
     }
 
     /**
      * Recursively canonicalize payload for consistent ordering.
      * Handles both associative arrays (objects) and sequential arrays (lists).
+     * Based on ClickPesa documentation: https://docs.clickpesa.com/home/checksum
      */
     private function canonicalize($obj)
     {
@@ -563,15 +579,24 @@ class ClickPesaController extends Controller
         $computedChecksum = $this->computeChecksum($payload);
         $payload['checksum'] = $computedChecksum;
         
+        // Log checksum computation details for debugging
+        $payloadForLogging = [
+            'amount' => $payload['amount'],
+            'currency' => $payload['currency'],
+            'orderReference' => $payload['orderReference'],
+            'phoneNumber' => $payload['phoneNumber']
+        ];
+        $canonicalForLogging = $this->canonicalize($payloadForLogging);
+        $payloadStringForLogging = json_encode($canonicalForLogging, JSON_UNESCAPED_SLASHES);
+        $checksumKey = env('CLICKPESA_CHECKSUM_KEY', $this->clientId);
+        
         Log::debug('ClickPesa Checksum Computed', [
             'checksum' => $computedChecksum,
-            'payload_before_checksum' => [
-                'amount' => $payload['amount'],
-                'currency' => $payload['currency'],
-                'orderReference' => $payload['orderReference'],
-                'phoneNumber' => $payload['phoneNumber']
-            ],
-            'client_id_set' => !empty($this->clientId)
+            'checksum_length' => strlen($computedChecksum),
+            'payload_before_checksum' => $payloadForLogging,
+            'canonical_json' => $payloadStringForLogging,
+            'checksum_key_source' => env('CLICKPESA_CHECKSUM_KEY') ? 'CLICKPESA_CHECKSUM_KEY' : 'CLICKPESA_CLIENT_ID',
+            'checksum_key_length' => strlen($checksumKey ?? '')
         ]);
 
         $jsonPayload = json_encode($payload);
