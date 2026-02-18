@@ -152,8 +152,10 @@ class ClickPesaController extends Controller
 
         // Check if response is a string (error) or object (success)
         if (is_string($checkoutResponse)) {
+            $orderReference = preg_replace('/[^a-zA-Z0-9]/', '', $orderDetails['order_id']);
             Log::error('ClickPesa Checkout Creation Failed', [
                 'order_id' => $orderDetails['order_id'],
+                'order_reference' => $orderReference,
                 'error' => $checkoutResponse,
             ]);
 
@@ -580,6 +582,13 @@ class ClickPesaController extends Controller
             'payload' => $payload,
             'phone_formatted' => $phoneNumber,
             'token_preview' => substr($accessToken, 0, 20) . '...'
+        ]);
+
+        Log::info('ClickPesa payment request', [
+            'order_reference' => $orderReference,
+            'order_id' => $orderDetails['order_id'],
+            'amount' => $orderDetails['amount'],
+            'currency' => $payload['currency'] ?? 'TZS',
         ]);
 
         $ch = curl_init();
