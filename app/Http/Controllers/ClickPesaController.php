@@ -22,6 +22,8 @@ class ClickPesaController extends Controller
     // ClickPesa API Configuration
     private $apiKey;
     private $clientId;
+    /** @var string Checksum key/secret for HMAC (from ClickPesa dashboard) */
+    private $checksumKey;
     private $endpoint;
     private $callbackUrl;
 
@@ -29,7 +31,8 @@ class ClickPesaController extends Controller
     {
         $this->apiKey = env('CLICKPESA_API_KEY'); // Your ClickPesa API Key
         $this->clientId = env('CLICKPESA_CLIENT_ID'); // Your ClickPesa Client ID
-        $this->endpoint = env('CLICKPESA_ENDPOINT', 'https://api.clickpesa.com/third-parties/payments/initiate-ussd-push-request');
+        $this->checksumKey = env('CLICKPESA_CHECKSUM_KEY', $this->clientId ?? ''); // Checksum key from ClickPesa (for HMAC)
+        $this->endpoint = env('CLICKPESA_ENDPOINT', 'https://api.clickpesa.com/third-parties/payments/preview-ussd-push-request');
         $this->callbackUrl = route('clickpesa.callback');
     }
 
@@ -56,8 +59,10 @@ class ClickPesaController extends Controller
         // Check if response is a string (error) or object (success)
         if (is_string($checkoutResponse)) {
             // Handle error case
+            $orderReference = preg_replace('/[^a-zA-Z0-9]/', '', $orderDetails['order_id']);
             Log::error('ClickPesa Checkout Creation Failed', [
                 'order_id' => $orderDetails['order_id'],
+                'order_reference' => $orderReference,
                 'error' => $checkoutResponse,
             ]);
 
@@ -122,8 +127,12 @@ class ClickPesaController extends Controller
                 ? (string) $checkoutResponse->message
                 : "Unknown error creating USSD-PUSH request";
 
+            $orderRefForLog = isset($checkoutResponse->orderReference)
+                ? (string) $checkoutResponse->orderReference
+                : preg_replace('/[^a-zA-Z0-9]/', '', $orderDetails['order_id']);
             Log::error('ClickPesa USSD-PUSH Request Failed', [
                 'order_id' => $orderDetails['order_id'],
+                'order_reference' => $orderRefForLog,
                 'error' => $errorMessage,
                 'response' => $checkoutResponse,
                 'response_keys' => $checkoutResponse ? array_keys((array)$checkoutResponse) : []
@@ -490,6 +499,7 @@ class ClickPesaController extends Controller
      */
     private function computeChecksum(array $payload): string
     {
+<<<<<<< Updated upstream
         // Exclude checksum and checksumMethod from payload before computing
         $payloadForChecksum = [];
         foreach ($payload as $key => $value) {
@@ -510,6 +520,13 @@ class ClickPesaController extends Controller
         // Create HMAC with SHA256
         // Return lowercase hex digest (as per ClickPesa documentation)
         return hash_hmac('sha256', $payloadString, $checksumKey);
+=======
+        $canonical = $this->canonicalizeForChecksum($payload);
+        $jsonString = json_encode($canonical, JSON_UNESCAPED_SLASHES);
+        $checksum = hash_hmac('sha256', $jsonString, $this->checksumKey);
+        // Return checksum in uppercase format (as ClickPesa may expect this)
+        return strtoupper($checksum);
+>>>>>>> Stashed changes
     }
 
     /**
@@ -559,25 +576,26 @@ class ClickPesaController extends Controller
         // ClickPesa requires alphanumeric-only order reference (no hyphens or special chars)
         $orderReference = preg_replace('/[^a-zA-Z0-9]/', '', $orderDetails['order_id']);
 
-        // ClickPesa USSD-PUSH API format (checksum is computed from this payload, then added)
+        // ClickPesa preview-ussd-push-request API format (checksum is computed from this payload, then added)
         $payload = [
             'amount' => (string) $orderDetails['amount'],
             'currency' => 'TZS',
             'orderReference' => $orderReference,
             'phoneNumber' => $phoneNumber,
+            'fetchSenderDetails' => false,
         ];
 
         // Generate checksum (required when checksum is enabled in ClickPesa app)
-        // Checksum must be computed from the payload using HMAC-SHA256
-        if (empty($this->clientId)) {
-            Log::error('ClickPesa Client ID is not set - checksum cannot be computed');
-            return "ClickPesa Client ID is not configured. Cannot compute checksum.";
+        // Checksum must be computed from the payload using HMAC-SHA256 with ClickPesa checksum key
+        if (empty($this->checksumKey)) {
+            Log::error('ClickPesa checksum key is not set - checksum cannot be computed');
+            return "ClickPesa checksum key is not configured. Set CLICKPESA_CHECKSUM_KEY in .env.";
         }
         
         // Compute checksum from payload (without checksum field)
         // Important: checksum is computed from payload BEFORE adding checksum field
         $computedChecksum = $this->computeChecksum($payload);
-        $payload['checksum'] = $computedChecksum;
+        $payload['checksum'] = $this->checksumKey;
         
         // Log checksum computation details for debugging
         $payloadForLogging = [
@@ -592,17 +610,29 @@ class ClickPesaController extends Controller
         
         Log::debug('ClickPesa Checksum Computed', [
             'checksum' => $computedChecksum,
+<<<<<<< Updated upstream
             'checksum_length' => strlen($computedChecksum),
             'payload_before_checksum' => $payloadForLogging,
             'canonical_json' => $payloadStringForLogging,
             'checksum_key_source' => env('CLICKPESA_CHECKSUM_KEY') ? 'CLICKPESA_CHECKSUM_KEY' : 'CLICKPESA_CLIENT_ID',
             'checksum_key_length' => strlen($checksumKey ?? '')
+=======
+            'payload_before_checksum' => [
+                'amount' => $payload['amount'],
+                'currency' => $payload['currency'],
+                'orderReference' => $payload['orderReference'],
+                'phoneNumber' => $payload['phoneNumber'],
+                'fetchSenderDetails' => $payload['fetchSenderDetails'],
+            ],
+            'checksum_key_set' => !empty($this->checksumKey)
+>>>>>>> Stashed changes
         ]);
 
         $jsonPayload = json_encode($payload);
 
         Log::debug('ClickPesa USSD-PUSH Request', [
             'order_id' => $orderDetails['order_id'],
+            'order_reference' => $orderReference,
             'endpoint' => $this->endpoint,
             'payload' => $payload,
             'phone_formatted' => $phoneNumber,
@@ -637,6 +667,7 @@ class ClickPesaController extends Controller
             Log::error('ClickPesa Create Checkout HTTP Error', [
                 'http_code' => $httpCode,
                 'order_id' => $orderDetails['order_id'],
+                'order_reference' => $orderReference,
                 'response' => $response,
                 'curl_error' => $curlError,
                 'endpoint' => $this->endpoint,
@@ -651,13 +682,15 @@ class ClickPesaController extends Controller
         if ($jsonResponse === null) {
             Log::error('ClickPesa Create Checkout JSON Parse Error', [
                 'response' => $response,
-                'order_id' => $orderDetails['order_id']
+                'order_id' => $orderDetails['order_id'],
+                'order_reference' => $orderReference
             ]);
             return "Error parsing JSON response: $response";
         }
 
         Log::debug('ClickPesa Create Checkout Response', [
             'order_id' => $orderDetails['order_id'],
+            'order_reference' => $orderReference,
             'response' => $jsonResponse
         ]);
 
