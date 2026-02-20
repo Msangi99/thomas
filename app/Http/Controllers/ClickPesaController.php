@@ -375,6 +375,85 @@ class ClickPesaController extends Controller
     }
 
     /**
+     * Retry ClickPesa payment (push again) from cancel/error page.
+     * Finds booking by reference and re-sends USSD push.
+     */
+    public function retryPayment(Request $request)
+    {
+        $reference = $request->get('reference');
+        if (!$reference || $reference === 'N/A') {
+            return redirect()->route('home')->with('error', __('all.session_expired_try_again') ?? 'Session expired. Please start again from home.');
+        }
+
+        $sanitized = preg_replace('/[^a-zA-Z0-9]/', '', $reference);
+        $booking = Booking::where('transaction_ref_id', $reference)
+            ->orWhere('transaction_ref_id', $sanitized)
+            ->orWhere('external_ref_id', $reference)
+            ->orWhere('external_ref_id', $sanitized)
+            ->first();
+
+        if (!$booking) {
+            return redirect()->route('home')->with('error', __('all.booking_not_found_try_again') ?? 'Booking not found. Please start again from home.');
+        }
+
+        if ($booking->payment_status !== 'Unpaid') {
+            return redirect()->route('home')->with('success', __('all.payment_already_completed') ?? 'Payment already completed.');
+        }
+
+        $name = $booking->customer_name ?? 'Customer';
+        $parts = explode(' ', trim($name), 2);
+        $firstName = $parts[0] ?? 'Customer';
+        $lastName = $parts[1] ?? '';
+        $phone = $booking->customer_phone ?? '';
+        $email = $booking->customer_email ?? '';
+
+        $orderId = $booking->booking_code . '-' . time();
+        $orderDetails = [
+            'amount' => (int) round($booking->amount),
+            'order_id' => $orderId,
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'phone' => $phone,
+            'email' => $email,
+            'redirect_url' => route('clickpesa.callback'),
+            'cancel_url' => route('clickpesa.cancel'),
+        ];
+
+        $checkoutResponse = $this->createCheckoutSession($orderDetails);
+
+        if (is_string($checkoutResponse)) {
+            Log::warning('ClickPesa retry failed', ['reference' => $reference, 'error' => $checkoutResponse]);
+            return view('clickpesa.error', [
+                'message' => $checkoutResponse,
+                'reference' => $reference
+            ]);
+        }
+
+        if (!($checkoutResponse && isset($checkoutResponse->id) && isset($checkoutResponse->status))) {
+            $msg = isset($checkoutResponse->message) ? (string) $checkoutResponse->message : 'Unknown error. Please try again.';
+            return view('clickpesa.error', ['message' => $msg, 'reference' => $reference]);
+        }
+
+        $transactionId = (string) $checkoutResponse->id;
+        $status = (string) $checkoutResponse->status;
+        $orderRef = isset($checkoutResponse->orderReference) ? (string) $checkoutResponse->orderReference : preg_replace('/[^a-zA-Z0-9]/', '', $orderId);
+
+        Booking::where('id', $booking->id)->update([
+            'transaction_ref_id' => $orderRef,
+            'external_ref_id' => $transactionId
+        ]);
+        session()->put('booking', $booking->fresh());
+
+        return view('clickpesa.payment_waiting', [
+            'transaction_id' => $transactionId,
+            'order_id' => $orderRef,
+            'amount' => $orderDetails['amount'],
+            'status' => $status,
+            'message' => 'Payment request sent again to your phone. Please check your mobile device and enter your PIN.'
+        ]);
+    }
+
+    /**
      * Handle cancellation specifically
      */
     public function handleCancel(Request $request)

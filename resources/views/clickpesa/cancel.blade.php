@@ -48,7 +48,7 @@
             </div>
 
             <div class="action-buttons">
-                <a href="{{ url()->previous() }}" class="btn-primary">
+                <a href="{{ ($reference && $reference !== 'N/A') ? route('clickpesa.retry', ['reference' => $reference]) : route('home') }}" class="btn-primary">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M21 12a9 9 0 11-2.636-6.364" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                         <path d="M21 6v4h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>

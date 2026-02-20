@@ -102,6 +102,7 @@ Route::get('/dpo/cancel', [PDOController::class, 'handleCallback'])->name('dpo.c
 Route::get('/clickpesa/callback', [ClickPesaController::class, 'handleCallback'])->name('clickpesa.callback');
 Route::get('/clickpesa/cancel', [ClickPesaController::class, 'handleCallback'])->name('clickpesa.cancel');
 Route::get('/clickpesa/check-status', [ClickPesaController::class, 'checkPaymentStatus'])->name('clickpesa.check-status');
+Route::get('/clickpesa/retry', [ClickPesaController::class, 'retryPayment'])->name('clickpesa.retry');
 
 // New Tigosecure Callback Route (outside auth middleware if it's a public callback)
 //Route::get('/tigosecure/callback', [VenderWalletController::class, 'handleTigosecureCallback'])->name('tigo.callback');
