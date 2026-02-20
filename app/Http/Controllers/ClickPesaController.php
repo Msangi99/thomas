@@ -499,7 +499,6 @@ class ClickPesaController extends Controller
      */
     private function computeChecksum(array $payload): string
     {
-<<<<<<< Updated upstream
         // Exclude checksum and checksumMethod from payload before computing
         $payloadForChecksum = [];
         foreach ($payload as $key => $value) {
@@ -507,26 +506,44 @@ class ClickPesaController extends Controller
                 $payloadForChecksum[$key] = $value;
             }
         }
-        
+
         // Canonicalize the payload recursively for consistent ordering
         $canonicalPayload = $this->canonicalize($payloadForChecksum);
         // Serialize the canonical payload
         $payloadString = json_encode($canonicalPayload, JSON_UNESCAPED_SLASHES);
-        
+
         // Use checksum key from environment if set, otherwise use clientId
-        // The checksum key is typically the same as clientId, but can be configured separately
         $checksumKey = env('CLICKPESA_CHECKSUM_KEY', $this->clientId);
-        
-        // Create HMAC with SHA256
-        // Return lowercase hex digest (as per ClickPesa documentation)
+
+        // Create HMAC with SHA256; return lowercase hex digest (as per ClickPesa documentation)
         return hash_hmac('sha256', $payloadString, $checksumKey);
-=======
-        $canonical = $this->canonicalizeForChecksum($payload);
-        $jsonString = json_encode($canonical, JSON_UNESCAPED_SLASHES);
-        $checksum = hash_hmac('sha256', $jsonString, $this->checksumKey);
-        // Return checksum in uppercase format (as ClickPesa may expect this)
-        return strtoupper($checksum);
->>>>>>> Stashed changes
+    }
+
+    /**
+     * Normalize phone number for ClickPesa API: digits only, country code (255), no plus sign.
+     * Returns normalized string or null if invalid.
+     */
+    private function normalizeClickPesaPhone(?string $phone): ?string
+    {
+        if ($phone === null || trim($phone) === '') {
+            return null;
+        }
+        // Remove plus sign and any other non-digit characters
+        $digits = preg_replace('/[^0-9]/', '', $phone);
+        if ($digits === '') {
+            return null;
+        }
+        // Ensure Tanzania country code: replace leading 0 with 255, or prepend 255 if missing
+        if (substr($digits, 0, 1) === '0') {
+            $digits = '255' . substr($digits, 1);
+        } elseif (substr($digits, 0, 3) !== '255') {
+            $digits = '255' . $digits;
+        }
+        // ClickPesa expects valid length (e.g. 255 + 9 digits for Tanzania = 12 digits min)
+        if (strlen($digits) < 12) {
+            return null;
+        }
+        return $digits;
     }
 
     /**
@@ -564,13 +581,11 @@ class ClickPesaController extends Controller
             return "Failed to obtain access token from ClickPesa";
         }
 
-        // Format phone number (remove + and ensure it starts with country code)
-        $phoneNumber = $orderDetails['phone'];
-        $phoneNumber = preg_replace('/[^0-9]/', '', $phoneNumber); // Remove non-digits
-        if (substr($phoneNumber, 0, 1) === '0') {
-            $phoneNumber = '255' . substr($phoneNumber, 1); // Convert 0... to 255...
-        } elseif (substr($phoneNumber, 0, 3) !== '255') {
-            $phoneNumber = '255' . $phoneNumber; // Add country code if missing
+        // Format phone number for ClickPesa: must start with country code, WITHOUT the plus sign
+        $phoneNumber = $this->normalizeClickPesaPhone($orderDetails['phone'] ?? '');
+        if ($phoneNumber === null) {
+            Log::warning('ClickPesa: Invalid or missing phone number', ['phone' => $orderDetails['phone'] ?? '']);
+            return "Valid phone number is required. Enter number with country code (e.g. 255681234567) without the plus sign.";
         }
 
         // ClickPesa requires alphanumeric-only order reference (no hyphens or special chars)
@@ -610,22 +625,11 @@ class ClickPesaController extends Controller
         
         Log::debug('ClickPesa Checksum Computed', [
             'checksum' => $computedChecksum,
-<<<<<<< Updated upstream
             'checksum_length' => strlen($computedChecksum),
             'payload_before_checksum' => $payloadForLogging,
             'canonical_json' => $payloadStringForLogging,
             'checksum_key_source' => env('CLICKPESA_CHECKSUM_KEY') ? 'CLICKPESA_CHECKSUM_KEY' : 'CLICKPESA_CLIENT_ID',
-            'checksum_key_length' => strlen($checksumKey ?? '')
-=======
-            'payload_before_checksum' => [
-                'amount' => $payload['amount'],
-                'currency' => $payload['currency'],
-                'orderReference' => $payload['orderReference'],
-                'phoneNumber' => $payload['phoneNumber'],
-                'fetchSenderDetails' => $payload['fetchSenderDetails'],
-            ],
-            'checksum_key_set' => !empty($this->checksumKey)
->>>>>>> Stashed changes
+            'checksum_key_length' => strlen($checksumKey ?? ''),
         ]);
 
         $jsonPayload = json_encode($payload);
