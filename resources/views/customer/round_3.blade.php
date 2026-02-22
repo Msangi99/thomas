@@ -308,9 +308,7 @@
                     } else {
                         endMarker = updateMarker(endMarker, latlng, 'end');
                     }
-                    if (startMarker && endMarker) {
-                        calculateDistance();
-                    } else {
+                    if (!startMarker || !endMarker) {
                         map.setView(latlng, 12);
                     }
                 } else {
@@ -408,7 +406,10 @@
         }
 
         setStart().then(setEnd).then(function () {
-            if (startMarker && endMarker) calculateDistance();
+            if (startMarker && endMarker) {
+                // Small delay so map/markers are ready; fixes distance only working on second click
+                setTimeout(function () { calculateDistance(); }, 50);
+            }
         });
     });
 

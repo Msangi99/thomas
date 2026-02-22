@@ -18,7 +18,7 @@
                             </span>
                         </div>
 
-                        <form action="{{ route('round.trip.payment.pay') }}" method="POST">
+                        <form id="roundTripPaymentForm" action="{{ route('round.trip.payment.pay') }}" method="POST">
                             @csrf
                             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <!-- Trip and Passenger Details -->
@@ -249,8 +249,7 @@
                                             </div>
                                         </div>
                                         <button type="submit"
-                                            class="w-full mt-4 bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-medium py-3 px-6 rounded-lg shadow-md transition-all duration-300 flex items-center justify-center"
-                                            onclick="submitPassengerDetails()">
+                                            class="w-full mt-4 bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-medium py-3 px-6 rounded-lg shadow-md transition-all duration-300 flex items-center justify-center">
                                             <i class="fas fa-check-circle mr-2"></i>
                                             {{ __('customer/busroot.continue_to_payment') }}
                                         </button>
@@ -282,11 +281,6 @@
                 typeSelect.classList.add('hidden');
                 dateInput.value = '';
             }
-        }
-
-        function submitPassengerDetails() {
-            // Optional: Add client-side validation or additional logic before submission
-            document.querySelector('form').submit();
         }
 
         function toggleExcessLuggageDescription() {

@@ -481,6 +481,10 @@ Route::post('/round-trip/seats', [RoundTripController::class, 'get_seats'])->nam
 Route::get('/round-trip/payment', [RoundTripController::class, 'payment'])->name('round.trip.payment');
 
 Route::post('/round-trip/payment/pay', [RoundTripController::class, 'payment_info'])->name('round.trip.payment.pay');
+// If user hits payment/pay with GET (e.g. back button, refresh), show payment form instead of 405
+Route::get('/round-trip/payment/pay', function () {
+    return redirect()->route('round.trip.payment');
+})->name('round.trip.payment.pay.get');
 
 Route::post('/round-trip/get_payment', [RoundTripController::class, 'get_payment'])->name('round.trip.get_payment');
 
