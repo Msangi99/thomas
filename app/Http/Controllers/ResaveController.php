@@ -124,12 +124,17 @@ class ResaveController extends Controller
                 $email,
                 $booking->booking_code
             );
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Resaved ClickPesa payment failed: ' . $e->getMessage(), [
                 'booking_id' => $booking->id,
                 'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
             ]);
-            return $this->backWithError($booking->id, 'ClickPesa payment failed: ' . $e->getMessage());
+            return $this->backWithError(
+                $booking->id,
+                'ClickPesa error: ' . (strlen($e->getMessage()) > 200 ? substr($e->getMessage(), 0, 200) . '…' : $e->getMessage())
+            );
         }
     }
 }

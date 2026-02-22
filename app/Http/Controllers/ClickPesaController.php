@@ -25,7 +25,6 @@ class ClickPesaController extends Controller
     /** @var string Checksum key/secret for HMAC (from ClickPesa dashboard) */
     private $checksumKey;
     private $endpoint;
-    private $callbackUrl;
 
     public function __construct()
     {
@@ -33,7 +32,6 @@ class ClickPesaController extends Controller
         $this->clientId = env('CLICKPESA_CLIENT_ID'); // Your ClickPesa Client ID
         $this->checksumKey = env('CLICKPESA_CHECKSUM_KEY', $this->clientId ?? ''); // Checksum key from ClickPesa (for HMAC)
         $this->endpoint = env('CLICKPESA_ENDPOINT', 'https://api.clickpesa.com/third-parties/payments/preview-ussd-push-request');
-        $this->callbackUrl = route('clickpesa.callback');
     }
 
     /**
@@ -58,15 +56,16 @@ class ClickPesaController extends Controller
 
         // Check if response is a string (error) or object (success)
         if (is_string($checkoutResponse)) {
-            // Handle error case
+            // Handle error case (truncate long API/HTML responses for session flash)
             $orderReference = preg_replace('/[^a-zA-Z0-9]/', '', $orderDetails['order_id']);
+            $errorMsg = strlen($checkoutResponse) > 300 ? substr($checkoutResponse, 0, 300) . '…' : $checkoutResponse;
             Log::error('ClickPesa Checkout Creation Failed', [
                 'order_id' => $orderDetails['order_id'],
                 'order_reference' => $orderReference,
                 'error' => $checkoutResponse,
             ]);
 
-            return back()->with('error', 'ClickPesa Payment Failed: ' . $checkoutResponse);
+            return back()->with('error', 'ClickPesa Payment Failed: ' . $errorMsg);
         }
 
         // Check if we have a valid response with checkout URL
@@ -115,13 +114,22 @@ class ClickPesaController extends Controller
             }
 
             // Redirect to a waiting page where user confirms payment on their phone
-            return view('clickpesa.payment_waiting', [
-                'transaction_id' => $transactionId,
-                'order_id' => $orderRef,
-                'amount' => $orderDetails['amount'],
-                'status' => $status,
-                'message' => 'Payment request sent to your phone. Please check your mobile device and enter your PIN to complete the payment.'
-            ]);
+            try {
+                return view('clickpesa.payment_waiting', [
+                    'transaction_id' => $transactionId,
+                    'order_id' => $orderRef,
+                    'amount' => $orderDetails['amount'],
+                    'status' => $status,
+                    'message' => 'Payment request sent to your phone. Please check your mobile device and enter your PIN to complete the payment.'
+                ]);
+            } catch (\Throwable $e) {
+                Log::error('ClickPesa payment_waiting view failed', [
+                    'order_id' => $orderRef,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+                return back()->with('error', 'Could not load payment page: ' . $e->getMessage());
+            }
         } else {
             $errorMessage = isset($checkoutResponse->message)
                 ? (string) $checkoutResponse->message

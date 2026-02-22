@@ -14,6 +14,12 @@
             </div>
         </div>
 
+        @if (session('error'))
+            <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                <p class="text-sm font-semibold text-red-800 mb-1">{{ __('customer/busroot.payment_error') }}:</p>
+                <p class="text-sm text-red-700">{{ session('error') }}</p>
+            </div>
+        @endif
         @if ($errors->any())
             <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
                 <p class="text-sm font-semibold text-red-800 mb-1">{{ __('customer/busroot.payment_error') }}:</p>
