@@ -1180,6 +1180,9 @@ class ClickPesaController extends Controller
         // Check for duplicate processing
         if ($booking->payment_status !== 'Unpaid') {
             Log::warning('Booking already processed', ['transaction_ref_id' => $companyRef]);
+            if (auth()->check() && auth()->user()->role === 'customer') {
+                return redirect()->route('customer.mybooking')->with('success', __('all.payment_successful') ?: 'Payment successful');
+            }
             return view('clickpesa.success', [
                 'message' => 'Payment already processed',
                 'booking' => $booking

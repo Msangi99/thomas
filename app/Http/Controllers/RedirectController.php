@@ -90,6 +90,11 @@ class RedirectController extends Controller
             Mail::to($conductorEmail)->send(new SendEmail($conductorMessage));
         }
 
+        // After ClickPesa (or other) payment success, send customers to My Ticket with message
+        if (auth()->check() && auth()->user()->role === 'customer') {
+            return redirect()->route('customer.mybooking')->with('success', __('all.payment_successful') ?: 'Payment successful');
+        }
+
         return view('payments.success', compact('data'));
     }
 
