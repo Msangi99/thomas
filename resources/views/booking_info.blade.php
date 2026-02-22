@@ -68,7 +68,13 @@
                                 </td>
                                 <td class="px-4 py-3 flex space-x-2">
                                     @if ($book->payment_status == 'Paid')
-                                        <!-- Cancel Button and Modal -->
+                                        @php
+                                            $travelDate = $book->travel_date ? \Carbon\Carbon::parse($book->travel_date)->startOfDay() : null;
+                                            $today = \Carbon\Carbon::today()->startOfDay();
+                                            $isFutureTicket = $travelDate && $travelDate->gte($today);
+                                        @endphp
+                                        @if ($isFutureTicket)
+                                        <!-- Cancel Button and Modal (only for future paid tickets) -->
                                         <div x-data="{ openCancelModal: false }">
                                             <button @click="openCancelModal = true"
                                                 class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-2 rounded"
@@ -139,6 +145,7 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        @endif
 
                                         <!-- Edit Button -->
                                         <div class="relative inline-block">
