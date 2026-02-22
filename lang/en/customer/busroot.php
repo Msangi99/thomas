@@ -162,6 +162,8 @@ return [
     'total' => 'Total:',
     'enter_yas_mobile_number' => 'Please enter your valid Yas mobile number',
     'connected_mobile_number' => 'Connected mobile number',
+    'leave_blank_use_booking_phone' => 'Leave blank to use the phone number from your booking.',
+    'invalid_payment_phone' => 'A valid mobile number is required (e.g. 255712345678 or 0712345678).',
     'i_accept' => 'I accept',
     'terms_and_conditions' => 'terms and conditions',
     'proceed_to_pay' => 'Proceed to Pay',

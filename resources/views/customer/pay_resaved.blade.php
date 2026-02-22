@@ -91,10 +91,12 @@
                                                 <p class="text-gray-700">{{ __('customer/busroot.enter_yas_mobile_number') }}</p>
                                                 
                                                 <div>
-                                                    <label for="paymentContact" class="block text-sm font-medium text-gray-700 mb-1">{{ __('customer/busroot.mobile_number') }}</label>
-                                                    <input type="text" name="payment_contact" id="paymentContact" maxlength="10"
+                                                    <label for="mix_payment_phone" class="block text-sm font-medium text-gray-700 mb-1">{{ __('customer/busroot.mobile_number') }}</label>
+                                                    <input type="text" name="payment_contact" id="mix_payment_phone" maxlength="12"
+                                                        value="{{ old('payment_contact', $booking->customer_phone ?? '') }}"
                                                         class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 onlydigits"
-                                                        placeholder="{{ __('customer/busroot.connected_mobile_number') }}" required>
+                                                        placeholder="255712345678">
+                                                    <p class="text-xs text-gray-500 mt-1">{{ __('customer/busroot.leave_blank_use_booking_phone') }}</p>
                                                 </div>
                                                 
                                                 <input type="hidden" name="amount" value="{{ $price + $fees }}">
@@ -155,10 +157,12 @@
                                                 -->
                                                 
                                                 <div>
-                                                    <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">{{ __('customer/busroot.mobile_number') }}</label>
-                                                    <!-- <input type="text" name="customer_number" id="phone" maxlength="12"
+                                                    <label for="dpo_payment_phone" class="block text-sm font-medium text-gray-700 mb-1">{{ __('customer/busroot.mobile_number') }}</label>
+                                                    <input type="text" name="payment_phone" id="dpo_payment_phone" maxlength="12"
+                                                        value="{{ old('payment_phone', $booking->customer_phone ?? '') }}"
                                                         class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 onlydigits"
-                                                        placeholder="{{ __('customer/busroot.enter_mobile_number') }}" required> -->
+                                                        placeholder="255712345678">
+                                                    <p class="text-xs text-gray-500 mt-1">{{ __('customer/busroot.leave_blank_use_booking_phone') }}</p>
                                                 </div>
                                                 
                                                 <!--
@@ -203,6 +207,14 @@
                                                     <input type="text" id="clickpesa_amount_display" value="{{ convert_money($price + $fees) }}" readonly
                                                         class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50">
                                                     <input type="hidden" name="amount" value="{{ $price + $fees }}">
+                                                </div>
+                                                <div>
+                                                    <label for="clickpesa_payment_phone" class="block text-sm font-medium text-gray-700 mb-1">{{ __('customer/busroot.mobile_number') }}</label>
+                                                    <input type="text" name="payment_phone" id="clickpesa_payment_phone" maxlength="12"
+                                                        value="{{ old('payment_phone', $booking->customer_phone ?? '') }}"
+                                                        class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 onlydigits"
+                                                        placeholder="255712345678">
+                                                    <p class="text-xs text-gray-500 mt-1">{{ __('customer/busroot.leave_blank_use_booking_phone') }}</p>
                                                 </div>
                                                 <div class="flex items-start">
                                                     <div class="flex items-center h-5">

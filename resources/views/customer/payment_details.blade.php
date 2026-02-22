@@ -16,6 +16,23 @@
                 </div>
             </div>
 
+            @if (session('error'))
+                <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                    <p class="text-sm font-semibold text-red-800 mb-1">{{ __('customer/busroot.payment_error') }}:</p>
+                    <p class="text-sm text-red-700">{{ session('error') }}</p>
+                </div>
+            @endif
+            @if ($errors->any())
+                <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                    <p class="text-sm font-semibold text-red-800 mb-1">{{ __('customer/busroot.payment_error') }}:</p>
+                    <ul class="list-disc list-inside text-sm text-red-700 space-y-0.5">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Left Column - Payment Content -->
                 <div class="lg:col-span-2 space-y-6">

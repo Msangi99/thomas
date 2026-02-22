@@ -162,6 +162,8 @@ return [
     'total' => 'Jumla:',
     'enter_yas_mobile_number' => 'Tafadhali ingiza nambari yako sahihi ya simu ya Yas',
     'connected_mobile_number' => 'Nambari ya simu iliyounganishwa',
+    'leave_blank_use_booking_phone' => 'Acha tupu kutumia nambari ya simu kutoka kwa hifadhi yako.',
+    'invalid_payment_phone' => 'Nambari ya simu sahihi inahitajika (mf. 255712345678 au 0712345678).',
     'i_accept' => 'Nakubali',
     'terms_and_conditions' => 'sheria na masharti',
     'proceed_to_pay' => 'Endelea Kulipa',

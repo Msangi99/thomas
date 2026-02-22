@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\ClickPesaController;
 use App\Http\Controllers\PDOController;
 use App\Http\Controllers\TigosecureController;
 use App\Http\Controllers\CashController; // Added this line
@@ -628,7 +629,29 @@ class CustomerController extends Controller
                 // Optionally, redirect the user back with an error message
                 return $e->getMessage();
             }
+        } elseif ($method == 'clickpesa') {
+            try {
+                $clickpesa = new ClickPesaController();
+                Session::put('booking', $booking);
+                return $clickpesa->initiatePayment(
+                    round($amount),
+                    session()->get('booking_form')['customer_name'],
+                    session()->get('booking_form')['customer_name'],
+                    session()->get('booking_form')['customer_number'],
+                    session()->get('booking_form')['customer_email'],
+                    $xcode
+                );
+            } catch (\Throwable $e) {
+                Log::error('Customer ClickPesa payment failed: ' . $e->getMessage(), [
+                    'booking_id' => $booking->id ?? null,
+                    'trace' => $e->getTraceAsString(),
+                ]);
+                $msg = strlen($e->getMessage()) > 200 ? substr($e->getMessage(), 0, 200) . '…' : $e->getMessage();
+                return redirect()->back()->with('error', 'ClickPesa error: ' . $msg)->withErrors(['payment_error' => $msg]);
+            }
         }
+
+        return redirect()->back()->with('error', __('customer/busroot.payment_error') ?? 'Payment method not supported.');
     }
 
     public function update_profile(Request $request)

@@ -23,6 +23,49 @@ class ResaveController extends Controller
             ->withInput();
     }
 
+    /**
+     * Normalize phone for ClickPesa/DPO/Mix: digits only, 255XXXXXXXXX (Tanzania).
+     * Returns normalized string or null if invalid/empty.
+     */
+    private function normalizePaymentPhone(?string $value): ?string
+    {
+        if ($value === null || trim($value) === '') {
+            return null;
+        }
+        $digits = preg_replace('/[^0-9]/', '', $value);
+        if ($digits === '') {
+            return null;
+        }
+        if (strpos($digits, '0') === 0) {
+            $digits = '255' . substr($digits, 1);
+        } elseif (substr($digits, 0, 3) !== '255') {
+            $digits = '255' . $digits;
+        }
+        // Tanzania: 255 + 9 digits (e.g. 255712345678)
+        if (strlen($digits) === 12 && substr($digits, 0, 3) === '255') {
+            return $digits;
+        }
+        return null;
+    }
+
+    /**
+     * Resolve payment phone from request or booking; normalize and validate.
+     * Returns [normalized_phone, error_message]. error_message is null on success.
+     */
+    private function resolvePaymentPhone(Request $request, Booking $booking, string $formField = 'payment_phone', string $mixField = 'payment_contact'): array
+    {
+        $raw = $request->input($formField) ?: $request->input($mixField);
+        $raw = $raw ? trim($raw) : null;
+        if ($raw === null || $raw === '') {
+            $raw = $booking->customer_phone ?? $booking->phone ?? null;
+        }
+        $normalized = $this->normalizePaymentPhone($raw ?? '');
+        if ($normalized === null) {
+            return [null, __('customer/busroot.invalid_payment_phone')];
+        }
+        return [$normalized, null];
+    }
+
     public function byMix(Request $request)
     {
         $request->validate(['booking_id' => 'required']);
@@ -36,8 +79,13 @@ class ResaveController extends Controller
                 ->withErrors(['payment_error' => 'Booking not found or not eligible for payment.']);
         }
 
+        [$phone, $phoneError] = $this->resolvePaymentPhone($request, $booking, 'payment_phone', 'payment_contact');
+        if ($phoneError !== null) {
+            return $this->backWithError($booking->id, $phoneError);
+        }
+
         $postedData = [
-            'account' => $booking->customer_phone ?? $booking->phone ?? '',
+            'account' => $phone,
             'countryCode' => '255',
             'country' => 'TZA',
             'firstName' => $booking->customer_name ?? $booking->first_name ?? 'Customer',
@@ -72,13 +120,18 @@ class ResaveController extends Controller
                 ->withErrors(['payment_error' => 'Booking not found or not eligible for payment.']);
         }
 
+        [$phone, $phoneError] = $this->resolvePaymentPhone($request, $booking, 'payment_phone');
+        if ($phoneError !== null) {
+            return $this->backWithError($booking->id, $phoneError);
+        }
+
         try {
             $pdoController = new PDOController();
             return $pdoController->initiatePayment(
                 $booking->amount,
                 $booking->first_name ?? $booking->customer_name ?? 'Customer',
                 $booking->last_name ?? '',
-                $booking->phone ?? $booking->customer_phone ?? '',
+                $phone,
                 $booking->email ?? $booking->customer_email ?? '',
                 $booking->booking_code
             );
@@ -109,10 +162,17 @@ class ResaveController extends Controller
         $total = round($price + $fees);
 
         $name = $booking->customer_name ?? 'Customer';
-        $phone = $booking->customer_phone ?? '';
         $email = $booking->customer_email ?? '';
 
+        [$phone, $phoneError] = $this->resolvePaymentPhone($request, $booking, 'payment_phone');
+        if ($phoneError !== null) {
+            return $this->backWithError($booking->id, $phoneError);
+        }
+
         Session::put('booking', $booking);
+
+        // Unique order reference per attempt (ClickPesa rejects duplicate order references)
+        $orderReference = $booking->booking_code . '-' . time();
 
         try {
             $clickpesa = new ClickPesaController();
@@ -122,7 +182,7 @@ class ResaveController extends Controller
                 $name,
                 $phone,
                 $email,
-                $booking->booking_code
+                $orderReference
             );
         } catch (\Throwable $e) {
             Log::error('Resaved ClickPesa payment failed: ' . $e->getMessage(), [
