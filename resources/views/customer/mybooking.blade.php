@@ -167,37 +167,34 @@
                                             </div>
 
                                             <!-- Refund Modal -->
-                                            <div class="modal fade hidden" id="refundModal{{ $book->id }}"
+                                            <div class="modal fade" id="refundModal{{ $book->id }}"
                                                 tabindex="-1" aria-labelledby="refundModalLabel{{ $book->id }}"
-                                                aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="true">
-                                                <div
-                                                    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                                                    <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+                                                aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="true">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content rounded-lg shadow-xl p-6">
                                                         <div class="flex justify-between items-center mb-4">
                                                             <h5 class="text-lg font-bold text-gray-800"
                                                                 id="refundModalLabel{{ $book->id }}">{{ __('all.refund_title') }} Request
                                                             </h5>
-                                                            <button type="button"
-                                                                class="text-gray-500 hover:text-gray-700 text-2xl leading-none cursor-pointer"
-                                                                data-bs-dismiss="modal"
-                                                                aria-label="Close">&times;</button>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                         </div>
                                                         <form action="{{ route('customer.refund') }}" method="POST"
-                                                            id="refundForm{{ $book->id }}" class="needs-validation"
-                                                            novalidate>
+                                                            id="refundForm{{ $book->id }}" class="needs-validation refund-form"
+                                                            novalidate data-book-id="{{ $book->id }}">
                                                             @csrf
                                                             <input type="hidden" name="booking_id"
                                                                 value="{{ $book->id }}">
+                                                            <p class="text-xs text-gray-500 mb-3">{{ __('all.refund_mobile_or_bank_hint') ?? 'Enter at least one: mobile number (must match booking phone) or bank account number.' }}</p>
                                                             <div class="mb-4">
                                                                 <label for="fullname{{ $book->id }}"
                                                                     class="block text-sm font-medium text-gray-700 mb-1">{{ __('all.full_name') }}</label>
                                                                 <input type="text"
                                                                     class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                                     id="fullname{{ $book->id }}" name="fullname"
-                                                                    required placeholder="{{ __('all.enter_full_name') }}">
-                                                                <div
-                                                                    class="text-red-600 text-xs mt-1 hidden invalid:block">
-                                                                    {{ __('all.enter_full_name') }}.</div>
+                                                                    value="{{ old('fullname') }}" required placeholder="{{ __('all.enter_full_name') }}">
+                                                                @error('fullname')
+                                                                    <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                                                                @enderror
                                                             </div>
                                                             <div class="mb-4">
                                                                 <label for="mobile_number{{ $book->id }}"
@@ -205,10 +202,12 @@
                                                                 <input type="tel"
                                                                     class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                                     id="mobile_number{{ $book->id }}"
-                                                                    name="mobile_number" required pattern="[0-9]{10,15}" placeholder="{{ __('all.enter_mobile_number') }}">
-                                                                <div
-                                                                    class="text-red-600 text-xs mt-1 hidden invalid:block">
-                                                                    {{ __('all.enter_mobile_number') }} (10-15 digits).</div>
+                                                                    name="mobile_number" pattern="[0-9]{9,15}" placeholder="{{ $book->customer_phone ?? __('all.enter_mobile_number') }}"
+                                                                    value="{{ old('mobile_number') }}">
+                                                                <div class="text-gray-500 text-xs mt-1">{{ __('all.mobile_must_match_booking') ?? 'Must match the phone number used for this booking.' }}</div>
+                                                                @error('mobile_number')
+                                                                    <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                                                                @enderror
                                                             </div>
                                                             <div class="mb-4">
                                                                 <label for="bank_number{{ $book->id }}"
@@ -216,13 +215,15 @@
                                                                 <input type="text"
                                                                     class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                                     id="bank_number{{ $book->id }}"
-                                                                    name="bank_number" required placeholder="{{ __('all.enter_bank_account_number') }}">
-                                                                <div
-                                                                    class="text-red-600 text-xs mt-1 hidden invalid:block">
-                                                                    {{ __('all.enter_bank_account_number') }}.</div>
+                                                                    name="bank_number" placeholder="{{ __('all.enter_bank_account_number') }}"
+                                                                    value="{{ old('bank_number') }}">
+                                                                @error('bank_number')
+                                                                    <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                                                                @enderror
                                                             </div>
+                                                            <div id="refundFormError{{ $book->id }}" class="text-red-600 text-sm mb-3 hidden" role="alert"></div>
                                                             <div class="flex justify-end gap-2">
-                                                                <button type="button" onclick="close()" id="close"
+                                                                <button type="button"
                                                                     class="bg-gray-500 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-md"
                                                                     data-bs-dismiss="modal">{{ __('all.close_button') }}</button>
                                                                 <button type="submit"
@@ -232,11 +233,6 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <script>
-                                                function close() {
-                                                    document.getElementById('refundModal{{ $book->id }}').style.display = 'none';
-                                                }
-                                            </script>
                                         @elseif($book->payment_status == 'Unpaid')
                                             <div class="relative inline-block group">
                                                 <button
@@ -328,31 +324,61 @@
             </div>
         </div>
     </div>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Initializing modals and form validation');
+            // Refund form: require at least one of mobile or bank
+            document.querySelectorAll('.refund-form').forEach(function(form) {
+                form.addEventListener('submit', function(event) {
+                    var mobile = (form.querySelector('input[name="mobile_number"]') || {}).value || '';
+                    var bank = (form.querySelector('input[name="bank_number"]') || {}).value || '';
+                    var mobileTrim = mobile.trim();
+                    var bankTrim = bank.trim();
+                    var errEl = form.querySelector('[id^="refundFormError"]');
+                    if (!mobileTrim && !bankTrim) {
+                        event.preventDefault();
+                        if (errEl) {
+                            errEl.textContent = '{{ __("all.please_enter_mobile_or_bank") ?? "Please enter a mobile number or bank account number." }}';
+                            errEl.classList.remove('hidden');
+                        }
+                        return false;
+                    }
+                    if (errEl) {
+                        errEl.classList.add('hidden');
+                        errEl.textContent = '';
+                    }
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
 
-            // Client-side form validation
-            var forms = document.querySelectorAll('.needs-validation');
-            Array.prototype.slice.call(forms).forEach(function(form) {
+            // Standard needs-validation (non-refund forms)
+            var otherForms = document.querySelectorAll('.needs-validation:not(.refund-form)');
+            Array.prototype.slice.call(otherForms).forEach(function(form) {
                 form.addEventListener('submit', function(event) {
                     if (!form.checkValidity()) {
                         event.preventDefault();
                         event.stopPropagation();
                     }
-                    form.querySelectorAll('input').forEach(function(input) {
-                        if (!input.checkValidity()) {
-                            input.nextElementSibling.classList.remove('hidden');
-                        } else {
-                            input.nextElementSibling.classList.add('hidden');
-                        }
-                    });
                     form.classList.add('was-validated');
                 }, false);
             });
+
+            // Re-open refund modal when returning with validation errors for this booking
+            var refundBookingId = {{ json_encode(old('booking_id')) }};
+            if (refundBookingId) {
+                var modalEl = document.getElementById('refundModal' + refundBookingId);
+                if (modalEl && typeof bootstrap !== 'undefined') {
+                    var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    modal.show();
+                }
+            }
         });
     </script>
     <script>

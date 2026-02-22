@@ -16,7 +16,7 @@
         @else
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 @foreach ($busList as $bus)
-                    <div class="rounded-2xl p-4 hover:shadow-md transition-assistance/booking bg-gray-500">
+                    <div class="rounded-2xl p-4 hover:shadow-md transition bg-gray-500">
                         <!-- Bus Header -->
                         <div class="flex items-start justify-between mb-3">
                             <div>
@@ -40,7 +40,7 @@
                                 </div>
                             </div>
                             <div class="bg-indigo-100/30 px-2 py-1 rounded text-xs text-indigo-800">
-                                {{ $bus->bus_number ?? __('assistance/booking.na') }}
+                                {{ $bus->bus_number ?? __('customer/busroot.na') }}
                             </div>
                         </div>
 

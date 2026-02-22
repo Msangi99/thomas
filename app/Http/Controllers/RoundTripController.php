@@ -380,9 +380,10 @@ class RoundTripController extends Controller
 
     public function get_form(Request $request)
     {
-        //return $request->all();
-        if ($request->route_distance < 1) {
-            return back()->with('error', 'Calculate distance before continue');
+        // Customer round trip: distance calculation/geocoding is disabled; allow proceed without it
+        $routeDistance = $request->route_distance;
+        if ($routeDistance === null || $routeDistance === '' || (is_numeric($routeDistance) && (float) $routeDistance < 1)) {
+            $routeDistance = 0;
         }
         $route = Route::find($request->route_id);
         $bus_info = [
@@ -394,7 +395,7 @@ class RoundTripController extends Controller
             'dropping_point' => $request->dropping_point ?? $route->to,
             'travel_date' => session()->get('departure_date') ?? now()->format('Y-m-d'),
             'dropping_point_amount' => $request->dropping_point_amount ?? ($route ? $route->price : 0),
-            'route_distance' => $request->route_distance ?? 0,
+            'route_distance' => $routeDistance,
             'schedule_id' => $request->schedule_id,
         ];
 

@@ -213,6 +213,7 @@ return [
     'choose_booking_method' => 'Chagua Njia ya Kuweka Nafasi',
     'book_your_journey' => 'Weka Nafasi Safari Yako',
     'choose_preferred_booking_method' => 'Chagua njia unayopendelea ya kuweka nafasi',
+    'route_tab' => 'Njia',
     'book_by_route' => 'Weka Nafasi kwa Njia',
     'select_departure_destination_find_buses' => 'Chagua mahali pa kuondoka na unakoenda ili kupata mabasi yote yanayopatikana kwenye njia hiyo.',
     'continue_button' => 'Endelea',

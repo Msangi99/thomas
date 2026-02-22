@@ -283,38 +283,15 @@
         map.fitBounds(L.latLngBounds(startLatLng, endLatLng));
     }
 
+    // Geocoding disabled for customer round trip (no API calls, no alerts)
     function geocodePlace(place, inputId) {
         if (!place) return;
-        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place)}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.length > 0) {
-                    const lat = parseFloat(data[0].lat);
-                    const lon = parseFloat(data[0].lon);
-                    const latlng = L.latLng(lat, lon);
-                    document.getElementById(inputId).value = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
-
-                    if (inputId === 'start') {
-                        startMarker = updateMarker(startMarker, latlng, 'start');
-                    } else {
-                        endMarker = updateMarker(endMarker, latlng, 'end');
-                    }
-
-                    if (startMarker && endMarker) {
-                        calculateDistance();
-                    } else {
-                        map.setView(latlng, 12);
-                    }
-                } else {
-                    alert(`{{ __('customer/busroot.no_results_found', ['place' => '${place}']) }}`);
-                    document.getElementById(inputId).value = '';
-                }
-            })
-            .catch(error => {
-                console.error('Geocoding error:', error);
-                alert('{{ __('customer/busroot.geocoding_error') }}');
-                document.getElementById(inputId).value = '';
-            });
+        // Leave place name as-is; do not call Nominatim or show geocoding errors
+        if (inputId === 'start' && document.getElementById('start').value !== place) {
+            document.getElementById('start').value = place;
+        } else if (inputId === 'end' && document.getElementById('end').value !== place) {
+            document.getElementById('end').value = place;
+        }
     }
 
     function handleInputChange(inputId) {
@@ -441,17 +418,24 @@
     handleInputChange('start');
     handleInputChange('end');
 
-    // Auto-geocode default points on load
+    // Distance/geocoding disabled for customer round trip: just set labels, no API calls
     window.addEventListener('load', function () {
         const fromValue = document.getElementById('routeFrom').value;
         const toValue = document.getElementById('routeTo').value;
-        if (fromValue) {
-            document.getElementById('start').value = fromValue;
-            geocodePlace(fromValue, 'start');
+        if (fromValue) document.getElementById('start').value = fromValue;
+        if (toValue) document.getElementById('end').value = toValue;
+        // Ensure route_distance has a value so form can submit without calculating
+        if (!document.getElementById('routeDistance').value) {
+            document.getElementById('routeDistance').value = '0';
+            document.getElementById('routeDistanceDisplay').value = '0';
         }
-        if (toValue) {
-            document.getElementById('end').value = toValue;
-            geocodePlace(toValue, 'end');
+    });
+
+    // On submit, ensure route_distance is set (backend accepts 0)
+    document.getElementById('busSearchForm').addEventListener('submit', function () {
+        if (!document.getElementById('routeDistance').value) {
+            document.getElementById('routeDistance').value = '0';
+            document.getElementById('routeDistanceDisplay').value = '0';
         }
     });
 </script>

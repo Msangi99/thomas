@@ -236,6 +236,7 @@ return [
     'choose_booking_method' => 'Choose Booking Method',
     'book_your_journey' => 'Book Your Journey',
     'choose_preferred_booking_method' => 'Choose your preferred booking method',
+    'route_tab' => 'Route',
     'book_by_route' => 'Book by Route',
     'select_departure_destination_find_buses' => 'Select your departure and destination to find all available buses on that route.',
     'continue_button' => 'Continue',
