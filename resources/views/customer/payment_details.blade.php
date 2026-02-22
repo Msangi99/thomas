@@ -702,6 +702,25 @@
             startTimer(fiveMinutes, displayMinutes, displaySeconds);
         };
 
+        // Normalize phone: digits only; if starts with 0, convert to 255XXXXXXXXX
+        function normalizePhoneTo255(str) {
+            if (!str) return str;
+            var digits = String(str).replace(/\D/g, '');
+            if (digits.charAt(0) === '0')
+                digits = '255' + digits.substring(1);
+            else if (digits.length > 0 && digits.substring(0, 3) !== '255')
+                digits = '255' + digits;
+            return digits;
+        }
+        (function() {
+            var contactNumberEl = document.getElementById('contactNumber');
+            if (contactNumberEl) {
+                contactNumberEl.addEventListener('blur', function() {
+                    this.value = normalizePhoneTo255(this.value);
+                });
+            }
+        })();
+
         // Form submission handler for Tigo form
         document.getElementById('tigo').addEventListener('submit', function (event) {
             event.preventDefault();
@@ -720,7 +739,7 @@
             const phoneInput = document.createElement('input');
             phoneInput.type = 'hidden';
             phoneInput.name = 'contactNumber';
-            phoneInput.value = phone;
+            phoneInput.value = normalizePhoneTo255(phone);
 
             const emailInput = document.createElement('input');
             emailInput.type = 'hidden';
@@ -754,7 +773,7 @@
             const phoneInput = document.createElement('input');
             phoneInput.type = 'hidden';
             phoneInput.name = 'contactNumber';
-            phoneInput.value = phone;
+            phoneInput.value = normalizePhoneTo255(phone);
 
             const emailInput = document.createElement('input');
             emailInput.type = 'hidden';
@@ -788,7 +807,7 @@
             const phoneInput = document.createElement('input');
             phoneInput.type = 'hidden';
             phoneInput.name = 'contactNumber';
-            phoneInput.value = phone;
+            phoneInput.value = normalizePhoneTo255(phone);
 
             const emailInput = document.createElement('input');
             emailInput.type = 'hidden';
@@ -822,7 +841,7 @@
             const phoneInput = document.createElement('input');
             phoneInput.type = 'hidden';
             phoneInput.name = 'contactNumber';
-            phoneInput.value = phone;
+            phoneInput.value = normalizePhoneTo255(phone);
 
             const emailInput = document.createElement('input');
             emailInput.type = 'hidden';
@@ -856,7 +875,7 @@
             const phoneInput = document.createElement('input');
             phoneInput.type = 'hidden';
             phoneInput.name = 'contactNumber';
-            phoneInput.value = phone;
+            phoneInput.value = normalizePhoneTo255(phone);
 
             const emailInput = document.createElement('input');
             emailInput.type = 'hidden';

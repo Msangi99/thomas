@@ -98,7 +98,7 @@
                                                         placeholder="255712345678">
                                                     <p class="text-xs text-gray-500 mt-1">{{ __('customer/busroot.leave_blank_use_booking_phone') }}</p>
                                                 </div>
-                                                
+                          g                      
                                                 <input type="hidden" name="amount" value="{{ $price + $fees }}">
                                                 
                                                 <div class="flex items-start">
@@ -314,6 +314,35 @@
             displaySeconds = document.querySelector('#seconds');
         startTimer(fiveMinutes, displayMinutes, displaySeconds);
     };
+
+    // Normalize phone: digits only; if starts with 0, convert to 255XXXXXXXXX
+    function normalizePhoneTo255(str) {
+        if (!str) return str;
+        var digits = String(str).replace(/\D/g, '');
+        if (digits.charAt(0) === '0')
+            digits = '255' + digits.substring(1);
+        else if (digits.length > 0 && digits.substring(0, 3) !== '255')
+            digits = '255' + digits;
+        return digits;
+    }
+    function normalizePhoneInput(input) {
+        if (!input) return;
+        input.value = normalizePhoneTo255(input.value);
+    }
+
+    // Apply to all payment phone inputs on blur and before submit
+    ['mix_payment_phone', 'dpo_payment_phone', 'clickpesa_payment_phone'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('blur', function() { normalizePhoneInput(this); });
+        }
+    });
+    document.querySelectorAll('#tab1 form, #tab2 form, #tab3 form').forEach(function(form) {
+        form.addEventListener('submit', function() {
+            var inp = form.querySelector('input[name="payment_contact"], input[name="payment_phone"]');
+            if (inp) normalizePhoneInput(inp);
+        });
+    });
 
     // Tab functionality (data-bs-target holds the tab pane id e.g. #tab1)
     document.querySelectorAll('[role="tablist"] button[data-bs-target]').forEach(button => {
