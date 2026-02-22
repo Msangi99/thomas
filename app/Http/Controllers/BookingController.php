@@ -1105,7 +1105,22 @@ class BookingController extends Controller
 
     public function print_ticket(Request $request)
     {
-        $data = json_decode($request->data);
+        $payload = json_decode($request->data);
+        $bookingId = $payload->id ?? null;
+        $bookingCode = $payload->booking_code ?? null;
+
+        // Load full booking with relations so route/schedule times are available for the ticket
+        $data = null;
+        if ($bookingId) {
+            $data = Booking::with(['bus.route', 'campany.busOwnerAccount', 'schedule', 'vender'])->find($bookingId);
+        }
+        if (!$data && $bookingCode) {
+            $data = Booking::with(['bus.route', 'campany.busOwnerAccount', 'schedule', 'vender'])->where('booking_code', $bookingCode)->first();
+        }
+        if (!$data) {
+            $data = $payload;
+        }
+
         $dns2d = new DNS2D();
         $qrCode = $dns2d->getBarcodeHTML($data->booking_code, 'QRCODE', 6, 6, 'black');
         $data->qrcode = $qrCode;

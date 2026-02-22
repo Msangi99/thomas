@@ -70,6 +70,11 @@ class Booking extends Model
         return $this->hasOne(route::class, 'id', 'route_id');
     }
 
+    public function schedule()
+    {
+        return $this->belongsTo(Schedule::class);
+    }
+
     public function user()
     {
         return $this->hasOne(User::class, 'id', 'user_id');

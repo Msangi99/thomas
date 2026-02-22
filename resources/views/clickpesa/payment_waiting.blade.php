@@ -118,6 +118,9 @@
                     </svg>
                     {{ __('all.check_status') }}
                 </button>
+                <a href="{{ route('clickpesa.callback', ['reference' => $order_id ?? '', 'status' => 'success']) }}" class="btn-secondary completed-payment-link">
+                    {{ __('all.payment_completed_go_to_booking') ?? "I've completed payment – take me to my booking" }}
+                </a>
                 <a href="{{ route('home') }}" class="btn-secondary">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -541,6 +544,9 @@
             gap: 0.75rem;
             padding: 1.5rem;
         }
+        .action-buttons .completed-payment-link {
+            grid-column: 1 / -1;
+        }
 
         .btn-primary,
         .btn-secondary {
@@ -676,8 +682,8 @@
             const paymentCard = document.querySelector('.payment-card');
             
             let pollCount = 0;
-            const maxPolls = 60;
-            const pollInterval = 5000;
+            const maxPolls = 80;
+            const pollInterval = 3000;
             
             const statusBadge = document.querySelector('.status-badge');
             const statusDot = document.querySelector('.status-dot');
@@ -729,25 +735,22 @@
                 .then(response => response.json())
                 .then(data => {
                     console.log('Payment status check:', data);
-                    
-                    if (data.status === 'success') {
+                    const status = (data.status || '').toLowerCase();
+                    const isSuccess = data.success === true || status === 'success';
+                    const redirectUrl = data.redirect_url || '';
+
+                    if (isSuccess) {
                         clearInterval(pollTimer);
                         showSuccess();
                         updateUI('success', 'Payment successful! Redirecting...');
-                        
-                        setTimeout(() => {
-                            window.location.href = data.redirect_url;
-                        }, 1500);
-                        
-                    } else if (data.status === 'failed' || data.status === 'cancelled') {
+                        const fallbackUrl = '{{ url("/clickpesa/callback") }}?reference=' + encodeURIComponent(orderReference) + '&status=success';
+                        const go = () => { window.location.href = redirectUrl || fallbackUrl; };
+                        setTimeout(go, 800);
+                    } else if (status === 'failed' || status === 'cancelled' || status === 'rejected') {
                         clearInterval(pollTimer);
-                        showFailed(data.status);
-                        updateUI(data.status, data.message || 'Payment was ' + data.status);
-                        
-                        setTimeout(() => {
-                            window.location.href = data.redirect_url;
-                        }, 2000);
-                        
+                        showFailed(status);
+                        updateUI(status, data.message || 'Payment was ' + status);
+                        if (redirectUrl) setTimeout(() => { window.location.href = redirectUrl; }, 2000);
                     } else {
                         updateUI('pending', 'Waiting for payment confirmation... (Check ' + pollCount + '/' + maxPolls + ')');
                     }

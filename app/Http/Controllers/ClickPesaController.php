@@ -844,8 +844,19 @@ class ClickPesaController extends Controller
             ]);
         }
 
-        // API returns an array, get first item
-        $paymentData = is_array($jsonResponse) ? ($jsonResponse[0] ?? null) : $jsonResponse;
+        // API may return array, object, or { data: [...] } - get first payment item
+        $paymentData = null;
+        if (is_array($jsonResponse)) {
+            $paymentData = $jsonResponse[0] ?? null;
+        } elseif (isset($jsonResponse->data) && is_array($jsonResponse->data)) {
+            $paymentData = $jsonResponse->data[0] ?? null;
+        } elseif (isset($jsonResponse->data) && is_object($jsonResponse->data)) {
+            $paymentData = $jsonResponse->data;
+        } elseif (is_object($jsonResponse) && isset($jsonResponse->status)) {
+            $paymentData = $jsonResponse;
+        } elseif (is_object($jsonResponse)) {
+            $paymentData = $jsonResponse;
+        }
         
         if (!$paymentData) {
             return response()->json([
@@ -863,7 +874,7 @@ class ClickPesaController extends Controller
             'collected_amount' => $paymentData->collectedAmount ?? 0
         ]);
         
-        if ($status === 'SUCCESS' || $status === 'SUCCESSFUL' || $status === 'COMPLETED') {
+        if (in_array($status, ['SUCCESS', 'SUCCESSFUL', 'COMPLETED', 'PAID'], true)) {
             // Payment successful - store payment data in session for callback processing
             Session::put('clickpesa_payment_data', $paymentData);
             
