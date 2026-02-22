@@ -404,7 +404,7 @@ class ClickPesaController extends Controller
             return redirect()->route('home')->with('error', __('all.booking_not_found_try_again') ?? 'Booking not found. Please start again from home.');
         }
 
-        if ($booking->payment_status !== 'Unpaid') {
+        if (!in_array($booking->payment_status, ['Unpaid', 'resaved'], true)) {
             return redirect()->route('home')->with('success', __('all.payment_already_completed') ?? 'Payment already completed.');
         }
 
@@ -1177,8 +1177,8 @@ class ClickPesaController extends Controller
             ];
         }
 
-        // Check for duplicate processing
-        if ($booking->payment_status !== 'Unpaid') {
+        // Check for duplicate processing (allow Unpaid and resaved to be paid)
+        if (!in_array($booking->payment_status, ['Unpaid', 'resaved'], true)) {
             Log::warning('Booking already processed', ['transaction_ref_id' => $companyRef]);
             if (auth()->check() && auth()->user()->role === 'customer') {
                 return redirect()->route('customer.mybooking')->with('success', __('all.payment_successful') ?: 'Payment successful');
