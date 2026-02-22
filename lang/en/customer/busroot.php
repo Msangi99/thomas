@@ -153,6 +153,7 @@ return [
     'enter_mobile_number' => 'Enter mobile number',
     'email_address' => 'Email Address',
     'enter_email_address' => 'Enter email address',
+    'payment_error' => 'Payment error',
     'payment_options' => 'Payment Options',
     'payment_methods' => 'Payment methods',
     'mixx_by_yas' => 'Mixx By Yas',

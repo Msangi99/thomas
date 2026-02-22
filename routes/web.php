@@ -186,6 +186,7 @@ Route::post('/refund', [RefundController::class, 'get_booking'])->name('customer
 
 Route::post('/resaved-tickets/mix/', [ResaveController::class, 'byMix'])->name('resaved.mix');
 Route::post('/resaved-tickets/pdo/', [ResaveController::class, 'byPdo'])->name('resaved.pdo');
+Route::post('/resaved-tickets/clickpesa/', [ResaveController::class, 'byClickPesa'])->name('resaved.clickpesa')->middleware('auth');
 
 
 

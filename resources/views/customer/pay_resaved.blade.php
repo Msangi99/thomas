@@ -14,6 +14,17 @@
             </div>
         </div>
 
+        @if ($errors->any())
+            <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                <p class="text-sm font-semibold text-red-800 mb-1">{{ __('customer/busroot.payment_error') }}:</p>
+                <ul class="list-disc list-inside text-sm text-red-700 space-y-0.5">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Left Column - Payment Content -->
             <div class="lg:col-span-2 space-y-6">
@@ -47,6 +58,11 @@
                                         id="tab2-btn" data-bs-toggle="tab" data-bs-target="#tab2" role="tab"
                                         aria-controls="tab2">
                                         <i class="fas fa-credit-card mr-2"></i> {{ __('customer/busroot.dpo_payment') }}
+                                    </button>
+                                    <button type="button" class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100"
+                                        id="tab3-btn" data-bs-toggle="tab" data-bs-target="#tab3" role="tab"
+                                        aria-controls="tab3">
+                                        <i class="fas fa-wallet mr-2"></i> {{ __('customer/busroot.clickpesa_payment') }}
                                     </button>
                                 </div>
                             </div>
@@ -111,8 +127,7 @@
                                                     <label for="dpo_amount" class="block text-sm font-medium text-gray-700 mb-1">{{ __('customer/busroot.amount') }}</label>
                                                     <input type="text" name="amount_2" id="dpo_amount" value="{{ convert_money($price + $fees) }}" readonly
                                                         class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
-                                                    <input type="hidden" name="amount" id="dpo_amount" value="{{$price + $fees}}" readonly
-                                                        class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                                    <input type="hidden" name="amount" value="{{ $price + $fees }}">
                                                 </div>
                                                 
                                                 <!--
@@ -161,6 +176,39 @@
                                                 
                                                 <button type="submit"
                                                         class="w-full mt-4 py-3 px-6 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white font-medium rounded-lg shadow-md transition-all duration-300 flex items-center justify-center">
+                                                    <i class="fas fa-lock mr-2"></i> {{ __('customer/busroot.proceed_to_pay') }}
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+
+                                    <!-- ClickPesa Payment -->
+                                    <div id="tab3" class="tab-pane" role="tabpanel" aria-labelledby="tab3-btn">
+                                        <form action="{{ route('resaved.clickpesa') }}" method="POST">
+                                            @csrf
+                                            <input type="hidden" name="booking_id" value="{{ $booking->id }}">
+                                            <div class="space-y-4">
+                                                <div class="p-4 bg-blue-50 rounded-lg">
+                                                    <p class="text-sm text-gray-700 mb-1">{{ __('customer/busroot.session_expiry_warning') }}</p>
+                                                    <p class="text-lg font-bold text-green-600">{{ __('customer/busroot.total') }} {{ $currency }}. {{ convert_money($price + $fees) }}</p>
+                                                </div>
+                                                <div>
+                                                    <label for="clickpesa_amount_display" class="block text-sm font-medium text-gray-700 mb-1">{{ __('customer/busroot.amount') }}</label>
+                                                    <input type="text" id="clickpesa_amount_display" value="{{ convert_money($price + $fees) }}" readonly
+                                                        class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50">
+                                                    <input type="hidden" name="amount" value="{{ $price + $fees }}">
+                                                </div>
+                                                <div class="flex items-start">
+                                                    <div class="flex items-center h-5">
+                                                        <input id="clickpesa_terms" name="clickpesa_terms" type="checkbox" value="1" checked
+                                                            class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded">
+                                                    </div>
+                                                    <div class="ml-3 text-sm">
+                                                        <label for="clickpesa_terms" class="font-medium text-gray-700">{{ __('customer/busroot.i_accept') }} <a href="{{ route('ticket.purchase') }}" class="text-blue-600 hover:text-blue-500">{{ __('customer/busroot.terms_and_conditions') }}</a></label>
+                                                    </div>
+                                                </div>
+                                                <button type="submit"
+                                                    class="w-full mt-4 py-3 px-6 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white font-medium rounded-lg shadow-md transition-all duration-300 flex items-center justify-center">
                                                     <i class="fas fa-lock mr-2"></i> {{ __('customer/busroot.proceed_to_pay') }}
                                                 </button>
                                             </div>
@@ -249,78 +297,13 @@
         startTimer(fiveMinutes, displayMinutes, displaySeconds);
     };
 
-    // Form submission handler for Tigo form
-    document.getElementById('tigo').addEventListener('submit', function(event) {
-        event.preventDefault();
-        
-        // Get contact details from the main contact details card
-        const code = document.getElementById('countrycode').value;
-        const phone = document.getElementById('contactNumber').value;
-        const email = document.getElementById('contactEmail').value;
+    // Tab functionality (data-bs-target holds the tab pane id e.g. #tab1)
+    document.querySelectorAll('[role="tablist"] button[data-bs-target]').forEach(button => {
+        button.addEventListener('click', function() {
+            var targetId = this.getAttribute('data-bs-target');
+            if (!targetId) return;
 
-        // Create hidden inputs
-        const codeInput = document.createElement('input');
-        codeInput.type = 'hidden';
-        codeInput.name = 'countrycode';
-        codeInput.value = code;
-
-        const phoneInput = document.createElement('input');
-        phoneInput.type = 'hidden';
-        phoneInput.name = 'contactNumber';
-        phoneInput.value = phone;
-
-        const emailInput = document.createElement('input');
-        emailInput.type = 'hidden';
-        emailInput.name = 'contactEmail';
-        emailInput.value = email;
-
-        // Append to form
-        this.appendChild(codeInput);
-        this.appendChild(phoneInput);
-        this.appendChild(emailInput);
-
-        // Submit form
-        this.submit();
-    });
-
-    // Form submission handler for DPO form
-    document.getElementById('dpo').addEventListener('submit', function(event) {
-        event.preventDefault();
-        
-        // Get contact details from the main contact details card
-        const code = document.getElementById('countrycode').value;
-        const phone = document.getElementById('contactNumber').value;
-        const email = document.getElementById('contactEmail').value;
-
-        // Create hidden inputs
-        const codeInput = document.createElement('input');
-        codeInput.type = 'hidden';
-        codeInput.name = 'countrycode';
-        codeInput.value = code;
-
-        const phoneInput = document.createElement('input');
-        phoneInput.type = 'hidden';
-        phoneInput.name = 'contactNumber';
-        phoneInput.value = phone;
-
-        const emailInput = document.createElement('input');
-        emailInput.type = 'hidden';
-        emailInput.name = 'contactEmail';
-        emailInput.value = email;
-
-        // Append to form
-        this.appendChild(codeInput);
-        this.appendChild(phoneInput);
-        this.appendChild(emailInput);
-
-        // Submit form
-        this.submit();
-    });
-
-    // Tab functionality
-    document.querySelectorAll('[role="tablist"] button').forEach(button => {
-        button.addEventListener('click', () => {
-            // Remove active states
+            // Remove active states from all tab buttons
             document.querySelectorAll('[role="tablist"] button').forEach(btn => {
                 btn.classList.remove('bg-blue-100', 'text-blue-700');
                 btn.classList.add('hover:bg-gray-100');
@@ -329,10 +312,11 @@
                 pane.classList.remove('active');
             });
 
-            // Add active states
-            button.classList.add('bg-blue-100', 'text-blue-700');
-            button.classList.remove('hover:bg-gray-100');
-            document.querySelector(button.dataset.bsTarget).classList.add('active');
+            // Add active state to clicked button and show target pane
+            this.classList.add('bg-blue-100', 'text-blue-700');
+            this.classList.remove('hover:bg-gray-100');
+            var targetEl = document.querySelector(targetId);
+            if (targetEl) targetEl.classList.add('active');
         });
     });
 </script>

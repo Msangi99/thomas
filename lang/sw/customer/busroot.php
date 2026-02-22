@@ -153,6 +153,7 @@ return [
     'enter_mobile_number' => 'Ingiza nambari ya simu ya mkononi',
     'email_address' => 'Barua Pepe',
     'enter_email_address' => 'Ingiza barua pepe',
+    'payment_error' => 'Hitilafu ya malipo',
     'payment_options' => 'Njia za Malipo',
     'payment_methods' => 'Mbinu za malipo',
     'mixx_by_yas' => 'Mixx By Yas',
