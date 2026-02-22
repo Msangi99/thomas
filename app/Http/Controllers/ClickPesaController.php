@@ -77,9 +77,10 @@ class ClickPesaController extends Controller
         if ($checkoutResponse && isset($checkoutResponse->id) && isset($checkoutResponse->status)) {
             $transactionId = (string) $checkoutResponse->id;
             $status = (string) $checkoutResponse->status;
-            $orderRef = isset($checkoutResponse->orderReference) 
-                ? (string) $checkoutResponse->orderReference 
-                : $orderDetails['order_id'];
+            // Use same alphanumeric format we send to ClickPesa so polling and callback work
+            $orderRef = isset($checkoutResponse->orderReference)
+                ? (string) $checkoutResponse->orderReference
+                : preg_replace('/[^a-zA-Z0-9]/', '', $orderDetails['order_id']);
 
             // Log successful USSD-PUSH initiation
             Log::info('ClickPesa USSD-PUSH Initiated Successfully', [
@@ -776,6 +777,9 @@ class ClickPesaController extends Controller
             ], 400);
         }
 
+        // ClickPesa API expects alphanumeric order reference (same as when creating payment)
+        $orderRefForApi = preg_replace('/[^a-zA-Z0-9]/', '', $orderReference);
+
         // Get access token
         $accessToken = $this->getAccessToken();
         if (!$accessToken) {
@@ -790,8 +794,8 @@ class ClickPesaController extends Controller
             ]);
         }
 
-        // Call ClickPesa API to check payment status
-        $checkUrl = 'https://api.clickpesa.com/third-parties/payments/' . $orderReference;
+        // Call ClickPesa API to check payment status (use sanitized ref to match create payload)
+        $checkUrl = 'https://api.clickpesa.com/third-parties/payments/' . $orderRefForApi;
         
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $checkUrl);
@@ -884,8 +888,8 @@ class ClickPesaController extends Controller
                 if ($booking && isset($booking->booking_code)) {
                     Booking::where('booking_code', $booking->booking_code)
                         ->update([
-                            'transaction_ref_id' => $orderReference,
-                            'external_ref_id' => $paymentData->id ?? $orderReference
+                            'transaction_ref_id' => $orderRefForApi,
+                            'external_ref_id' => $paymentData->id ?? $orderRefForApi
                         ]);
                 }
             } catch (\Exception $e) {
@@ -894,13 +898,13 @@ class ClickPesaController extends Controller
                     'order_reference' => $orderReference
                 ]);
             }
-            
+
             return response()->json([
                 'success' => true,
                 'status' => 'success',
                 'message' => 'Payment completed successfully',
                 'redirect_url' => route('clickpesa.callback', [
-                    'reference' => $orderReference,
+                    'reference' => $orderRefForApi,
                     'status' => 'success'
                 ])
             ]);
@@ -967,8 +971,9 @@ class ClickPesaController extends Controller
             ];
         }
 
-        // Use the correct ClickPesa API endpoint for checking payment status
-        $checkUrl = 'https://api.clickpesa.com/third-parties/payments/' . $reference;
+        // ClickPesa API expects alphanumeric reference (same as when creating)
+        $refForApi = preg_replace('/[^a-zA-Z0-9]/', '', $reference);
+        $checkUrl = 'https://api.clickpesa.com/third-parties/payments/' . $refForApi;
         
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $checkUrl);
@@ -1135,14 +1140,20 @@ class ClickPesaController extends Controller
         
         // If session was lost, try to find booking by transaction reference
         if (!$booking && $transToken) {
-            // Try by transaction_ref_id first
             $booking = Booking::where('transaction_ref_id', $transToken)->first();
-            
             if (!$booking) {
-                // Try by external_ref_id
                 $booking = Booking::where('external_ref_id', $transToken)->first();
             }
-            
+            // ClickPesa uses alphanumeric ref; try sanitized if URL had hyphen (e.g. old link)
+            if (!$booking) {
+                $sanitizedRef = preg_replace('/[^a-zA-Z0-9]/', '', $transToken);
+                if ($sanitizedRef !== $transToken) {
+                    $booking = Booking::where('transaction_ref_id', $sanitizedRef)->first();
+                    if (!$booking) {
+                        $booking = Booking::where('external_ref_id', $sanitizedRef)->first();
+                    }
+                }
+            }
             if ($booking) {
                 Log::info('ClickPesa: Found booking by transaction reference', [
                     'transaction_ref' => $transToken,
