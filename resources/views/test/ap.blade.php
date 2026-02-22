@@ -269,8 +269,8 @@
     <!-- Hero Section -->
     @include('test.hero')
 
-    <!-- Popular Routes (hidden on Explore All Routes / schedules today page) -->
-    @unless (request()->routeIs('schedules.today'))
+    <!-- Popular Routes (hidden on About and Explore All Routes / schedules today) -->
+    @unless (request()->routeIs('schedules.today', 'about'))
         @include('test.popular')
     @endunless
 
