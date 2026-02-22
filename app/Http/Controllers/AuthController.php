@@ -84,30 +84,7 @@ class AuthController extends Controller
                 $user->locked_until = null;
                 $user->save();
 
-                // Check email verification for customers on every login
-                if ($user->role === 'customer') {
-                    // Generate verification code and send email
-                    $verificationCode = $user->generateVerificationCode();
-
-                    try {
-                        Mail::to($user->email)->send(new EmailVerification($user, $verificationCode));
-                    } catch (\Exception $e) {
-                        Log::error('Failed to send verification email: ' . $e->getMessage());
-                        return back()->withErrors([
-                            'email' => 'Login successful but failed to send verification email. Please try again or contact support.',
-                        ])->withInput($request->only('email'));
-                    }
-
-                    // Store user ID in session for verification instead of logging out
-                    $request->session()->put('verification_user_id', $user->id);
-                    $request->session()->put('verification_email', $user->email);
-
-                    return redirect()->route('email.verification.show')
-                        ->with('email', $user->email)
-                        ->with('status', 'Please verify your email address. A verification code has been sent to your email.');
-                }
-
-                // Check for MFA setup for specific roles
+                // Check for MFA setup for specific roles (customers skip email verification and MFA)
                 if (in_array($user->role, ['admin', 'bus_campany', 'vender'])) {
                     if ($user->two_factor_secret == null) {
                         return redirect()->route('two-factor.setup')->with('status', 'Please enable Two-Factor Authentication for your account.');
