@@ -25,7 +25,6 @@
                             <option value="{{ $city->id }}" {{ old('departure_city') == $city->id ? 'selected' : '' }}>{{ $city->name }}</option>
                         @endforeach
                     </select>
-                    <i class="fas fa-map-marker-alt absolute right-3 top-3 text-white/60 pointer-events-none"></i>
                 </div>
             </div>
 
@@ -39,7 +38,6 @@
                             <option value="{{ $city->id }}" {{ old('arrival_city') == $city->id ? 'selected' : '' }}>{{ $city->name }}</option>
                         @endforeach
                     </select>
-                    <i class="fas fa-map-marker-alt absolute right-3 top-3 text-white/60 pointer-events-none"></i>
                 </div>
             </div>
 
@@ -49,7 +47,6 @@
                     <input type="date" name="departure_date" id="departure_date"
                         value="{{ old('departure_date') }}"
                         class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white [color-scheme:dark]">
-                    <i class="fas fa-calendar-day absolute right-3 top-3 text-white/60"></i>
                 </div>
             </div>
 
@@ -64,14 +61,13 @@
                         <option value="30" {{ old('bus_class') == '30' ? 'selected' : '' }}>Lower Semi-Luxury</option>
                         <option value="40" {{ old('bus_class') == '40' ? 'selected' : '' }}>Ordinary</option>
                     </select>
-                    <i class="fas fa-bus absolute right-3 top-3 text-white/60 pointer-events-none"></i>
                 </div>
             </div>
 
             <div class="relative flex items-end">
                 <button
                     class="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white py-3 rounded-lg font-medium text-base transition-all btn-glow">
-                    <i class="fas fa-search mr-2"></i> Find Buses
+                    Find Buses
                 </button>
             </div>
         </div>
@@ -80,12 +76,11 @@
     <!-- Round Trip Form -->
     <div class="search-form hidden text-center py-12" id="round-trip-form">
         <div class="flex flex-col items-center justify-center">
-            <i class="fas fa-road text-4xl text-indigo-400 mb-4 animate-pulse"></i>
             <h2 class="text-2xl font-bold text-white mb-2">Round Trip Booking</h2>
             <p class="text-white/80 text-sm max-w-md mb-6">Book your round trip journey with ease and convenience!</p>
             <a href="{{ route('round.trip') }}" 
                class="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg font-medium text-base transition-all btn-glow inline-flex items-center">
-                <i class="fas fa-route mr-2"></i> Book Round Trip
+                Book Round Trip
             </a>
         </div>
     </div>
@@ -93,7 +88,6 @@
     <!-- Multi-City Coming Soon -->
     <div class="search-form hidden text-center py-12" id="multi-city-form">
         <div class="flex flex-col items-center justify-center">
-            <i class="fas fa-route text-4xl text-indigo-400 mb-4 animate-pulse"></i>
             <h2 class="text-2xl font-bold text-white mb-2">Multi-City Coming Soon!</h2>
             <p class="text-white/80 text-sm max-w-md">Explore multiple destinations with ease. Multi-city booking is on its way!</p>
         </div>
@@ -115,14 +109,13 @@
                             <option value="">No Bus Companies Available</option>
                         @endforelse
                     </select>
-                    <i class="fas fa-bus absolute right-3 top-3 text-white/60"></i>
                 </div>
             </div>
 
             <div class="relative flex items-end">
                 <button
                     class="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white py-3 rounded-lg font-medium text-base transition-all btn-glow">
-                    <i class="fas fa-search mr-2"></i> Find Buses
+                    Find Buses
                 </button>
             </div>
         </div>
@@ -130,6 +123,20 @@
 </div>
 
 <style>
+/* Date input to match select height and look */
+input[type="date"] {
+    height: 44px;
+    min-height: 44px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0.6;
+    cursor: pointer;
+    filter: invert(1);
+}
+
 /* Custom Select2 styles to match dark theme without blur */
 .select2-container--default .select2-selection--single {
     background-color: #1f2937; /* Solid dark background (Tailwind: gray-800) */
@@ -176,22 +183,8 @@
     background-color: #312e81; /* Indigo-900 for selected option */
 }
 
-/* Ensure the font-awesome icon is above the Select2 dropdown arrow */
 .select2-container--default .select2-selection--single .select2-selection__arrow {
     z-index: 1;
-}
-.fas.fa-map-marker-alt, .fas.fa-bus, .fas.fa-calendar-day, .fas.fa-road, .fas.fa-route {
-    z-index: 2;
-}
-
-/* Animation for Coming Soon icons */
-@keyframes pulse {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.2); opacity: 0.7; }
-    100% { transform: scale(1); opacity: 1; }
-}
-.animate-pulse {
-    animation: pulse 2s infinite;
 }
 </style>
 

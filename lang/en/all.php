@@ -8,7 +8,7 @@ return [
     'seat' => 'Seat',
     'explore_tanzania' => "Explore Tanzania's most traveled destinations with our premium bus services",
     'higlink_premium_travel' => 'HIGHLINK - Premium Bus Travel in Tanzania',
-    'why_choose_higlink' => 'Why Choose HIGHLINK?',
+    'why_choose_higlink' => 'Why Choose ',
     'experience_travel_redefined' => 'Experience travel redefined with our premium services and amenities',
     'safety_first' => 'Safety First',
     'safety_first_description' => 'Our buses undergo rigorous safety checks and are equipped with emergency exits, first aid kits, and fire extinguishers. All drivers are highly trained professionals with clean records.',

@@ -904,6 +904,53 @@ class BookingController extends Controller
         return view('by_route', compact('cities'));
     }
 
+    /**
+     * Show all bus schedules for today (used by "Explore All Routes").
+     */
+    public function schedulesToday()
+    {
+        $departure_date = Carbon::today()->toDateString();
+        session()->put('departure_date', $departure_date);
+
+        $schedules = Schedule::with(['bus.busname', 'route'])
+            ->where('schedule_date', $departure_date)
+            ->whereHas('bus.busname', function ($query) {
+                $query->where('status', 1);
+            })
+            ->orderBy('start')
+            ->get();
+
+        $busList = $schedules->map(function ($schedule) use ($departure_date) {
+            $bus = $schedule->bus;
+            $total_seats = $bus->total_seats ?? $bus->busname->total_seats ?? 0;
+            $booked_seats = Booking::where('bus_id', $bus->id)
+                ->where('travel_date', $departure_date)
+                ->where('payment_status', 'Paid')
+                ->get()
+                ->flatMap(function ($booking) {
+                    return array_filter(array_map('trim', explode(',', $booking->seat)));
+                })
+                ->unique()
+                ->count();
+            $remain_seats = max(0, $total_seats - $booked_seats);
+
+            $row = (object) [
+                'id' => $bus->id,
+                'bus_number' => $bus->bus_number ?? 'N/A',
+                'bus_type' => $bus->bus_type ?? null,
+                'busname' => $bus->busname,
+                'schedule' => $schedule,
+                'route' => $schedule->route,
+                'remain_seats' => $remain_seats,
+            ];
+            return $row;
+        });
+
+        $departureCityName = 'All Routes';
+        $arrivalCityName = '';
+        return view('by_route_search', compact('busList', 'departureCityName', 'arrivalCityName', 'departure_date'));
+    }
+
     public function by_route_search(Request $request)
     {
         // Validate the request

@@ -8,7 +8,7 @@ return [
     'seat' => 'Kiti',
     'explore_tanzania' => "Gundua maeneo maarufu zaidi ya Tanzania kwa huduma zetu za mabasi ya kifahari",
     'higlink_premium_travel' => 'HIGHLINK - Safari za Mabasi ya Kifahari Tanzania',
-    'why_choose_higlink' => 'Kwa Nini Uchague HIGHLINK?',
+    'why_choose_higlink' => 'Kwa Nini Uchague ',
     'experience_travel_redefined' => 'Furahia safari iliyoboreshwa na huduma na starehe zetu za kifahari',
     'safety_first' => 'Usalama Kwanza',
     'safety_first_description' => 'Mabasi yetu hupitia ukaguzi mkali wa usalama na yana vifaa vya kutoka dharura, vifaa vya huduma ya kwanza, na vizima moto. Madereva wote ni wataalamu waliofunzwa sana na rekodi safi.',

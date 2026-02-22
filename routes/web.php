@@ -158,6 +158,7 @@ Route::get('/payment/success', [BookingController::class, 'paymentSuccess'])->na
 Route::get('/payment/failed', [BookingController::class, 'paymentFailed'])->name('payment.failed');
 Route::get('/booking-status/{bookingId}', [RedirectController::class, 'showBookingStatus'])->name('booking.status');
 Route::get('/by_route', [BookingController::class, 'by_route'])->name('by_route');
+Route::get('/schedules/today', [BookingController::class, 'schedulesToday'])->name('schedules.today');
 Route::post('/by_route_search', [BookingController::class, 'by_route_search'])->name('by_route_search');
 
 Route::post('/airtel/auth', [AirtelPaymentController::class, 'getAuthToken']);

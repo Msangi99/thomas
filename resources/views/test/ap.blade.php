@@ -269,8 +269,10 @@
     <!-- Hero Section -->
     @include('test.hero')
 
-    <!-- Popular Routes -->
-    @include('test.popular')
+    <!-- Popular Routes (hidden on Explore All Routes / schedules today page) -->
+    @unless (request()->routeIs('schedules.today'))
+        @include('test.popular')
+    @endunless
 
     <!-- Features -->
     @include('test.features')

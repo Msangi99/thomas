@@ -74,7 +74,7 @@
             </div>
 
             <div class="text-center mt-10 fade-in delay-400">
-                <button class="px-6 py-3 border border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 font-medium transition-all btn-glow">
+                <button class="px-6 py-3 border border-white/80 text-white rounded-lg hover:bg-white/10 font-medium transition-all btn-glow">
                     View More Testimonials <i class="fas fa-chevron-right ml-2"></i>
                 </button>
             </div>
