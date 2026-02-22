@@ -269,7 +269,7 @@
     <!-- Hero Section -->
     @include('test.hero')
 
-    @unless (request()->routeIs('schedules.today', 'about', 'contact'))
+    @unless (request()->routeIs('schedules.today', 'about', 'contact', 'info', 'booking_info'))
         <!-- Popular Routes -->
         @include('test.popular')
 
