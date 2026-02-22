@@ -49,15 +49,109 @@
         #busTable {
             background-color: #ffffff;
             color: #1f2937;
+            border-collapse: collapse;
         }
         #busTable th, #busTable td {
             border-color: #e5e7eb;
+            color: #374151;
         }
         #busTable thead {
             background-color: #f3f4f6;
         }
+        #busTable thead th {
+            color: #4b5563;
+            font-weight: 600;
+            white-space: nowrap;
+        }
         #busTable tbody tr:hover {
             background-color: #f9fafb;
+        }
+        /* Empty state */
+        #busTable tbody td.dataTables_empty {
+            padding: 2.5rem 1rem;
+            text-align: center;
+            color: #6b7280;
+            font-size: 0.9375rem;
+        }
+        /* DataTables wrapper: controls and pagination */
+        #busTable_wrapper {
+            width: 100%;
+        }
+        #busTable_wrapper .dataTables_length,
+        #busTable_wrapper .dataTables_filter,
+        #busTable_wrapper .dataTables_info {
+            margin-bottom: 0.75rem;
+            color: #4b5563;
+            font-size: 0.875rem;
+        }
+        #busTable_wrapper .dataTables_length label,
+        #busTable_wrapper .dataTables_filter label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        #busTable_wrapper .dataTables_length select,
+        #busTable_wrapper .dataTables_filter input {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            background: #fff;
+            font-size: 0.875rem;
+            color: #1f2937;
+        }
+        #busTable_wrapper .dataTables_filter input {
+            min-width: 12rem;
+        }
+        #busTable_wrapper .dataTables_filter input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+        }
+        #busTable_wrapper .dataTables_paginate {
+            margin-top: 1rem;
+            padding-top: 0.75rem;
+        }
+        #busTable_wrapper .dataTables_paginate .paginate_button {
+            padding: 0.5rem 0.875rem;
+            margin: 0 0.15rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            background: #fff;
+            color: #374151 !important;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        #busTable_wrapper .dataTables_paginate .paginate_button:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+            color: #111827 !important;
+        }
+        #busTable_wrapper .dataTables_paginate .paginate_button.current {
+            background: linear-gradient(to right, #4f46e5, #4338ca);
+            border-color: #4f46e5;
+            color: #fff !important;
+        }
+        #busTable_wrapper .dataTables_paginate .paginate_button.current:hover {
+            background: linear-gradient(to right, #4338ca, #3730a3);
+            color: #fff !important;
+        }
+        #busTable_wrapper .dataTables_paginate .paginate_button.disabled,
+        #busTable_wrapper .dataTables_paginate .paginate_button.disabled:hover {
+            background: #f9fafb !important;
+            border-color: #e5e7eb;
+            color: #9ca3af !important;
+            cursor: not-allowed;
+        }
+        @media (min-width: 640px) {
+            #busTable_wrapper .row:first-child {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+            }
         }
         /* Modal styling */
         dialog {
@@ -162,9 +256,9 @@
                 @if (session('error'))
                     <div class="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm">{{ session('error') }}</div>
                 @endif
-                <div class="overflow-x-auto">
-                    <table id="busTable" class="w-full text-sm text-gray-100">
-                        <thead class="bg-gray-100 text-xs uppercase text-gray-500 font-semibold">
+                <div class="overflow-x-auto rounded-lg border border-gray-200" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                    <table id="busTable" class="w-full text-sm text-gray-700">
+                        <thead class="bg-gray-100 text-xs uppercase text-gray-600 font-semibold tracking-wide">
                             <tr>
                                 <th class="px-4 py-3 text-left">{{ __('all.no') }}</th>
                                 <th class="px-4 py-3 text-left">{{ __('all.bus_number') }}</th>
@@ -273,12 +367,24 @@
 
             // Initialize DataTable
             $('#busTable').DataTable({
-                responsive: true,
+                responsive: false,
+                scrollX: false,
                 paging: true,
+                pageLength: 10,
                 searching: true,
                 ordering: true,
                 language: {
-                    emptyTable: "{{ __('all.no_buses_available') }}"
+                    emptyTable: "{{ __('all.no_buses_available') }}",
+                    lengthMenu: "{{ __('all.show') ?? 'Show' }} _MENU_ {{ __('all.entries') ?? 'entries' }}",
+                    search: "{{ __('all.search') ?? 'Search' }}:",
+                    info: "{{ __('all.showing') ?? 'Showing' }} _START_ {{ __('all.to') ?? 'to' }} _END_ {{ __('all.of') ?? 'of' }} _TOTAL_ {{ __('all.entries') ?? 'entries' }}",
+                    infoEmpty: "{{ __('all.showing') ?? 'Showing' }} 0 {{ __('all.to') ?? 'to' }} 0 {{ __('all.of') ?? 'of' }} 0 {{ __('all.entries') ?? 'entries' }}",
+                    paginate: {
+                        first: "{{ __('all.first') ?? 'First' }}",
+                        last: "{{ __('all.last') ?? 'Last' }}",
+                        next: "{{ __('all.next') ?? 'Next' }}",
+                        previous: "{{ __('all.previous') ?? 'Previous' }}"
+                    }
                 }
             });
 
