@@ -702,7 +702,7 @@
             startTimer(fiveMinutes, displayMinutes, displaySeconds);
         };
 
-        // Normalize phone: digits only; if starts with 0, convert to 255XXXXXXXXX
+        // Normalize phone in background on submit only (no change to visible field)
         function normalizePhoneTo255(str) {
             if (!str) return str;
             var digits = String(str).replace(/\D/g, '');
@@ -712,14 +712,6 @@
                 digits = '255' + digits;
             return digits;
         }
-        (function() {
-            var contactNumberEl = document.getElementById('contactNumber');
-            if (contactNumberEl) {
-                contactNumberEl.addEventListener('blur', function() {
-                    this.value = normalizePhoneTo255(this.value);
-                });
-            }
-        })();
 
         // Form submission handler for Tigo form
         document.getElementById('tigo').addEventListener('submit', function (event) {

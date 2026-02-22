@@ -92,13 +92,13 @@
                                                 
                                                 <div>
                                                     <label for="mix_payment_phone" class="block text-sm font-medium text-gray-700 mb-1">{{ __('customer/busroot.mobile_number') }}</label>
-                                                    <input type="text" name="payment_contact" id="mix_payment_phone" maxlength="12"
+                                                    <input type="text" id="mix_payment_phone" maxlength="12"
                                                         value="{{ old('payment_contact', $booking->customer_phone ?? '') }}"
                                                         class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 onlydigits"
-                                                        placeholder="255712345678">
+                                                        placeholder="0712345678 or 255712345678">
+                                                    <input type="hidden" name="payment_contact" id="mix_payment_contact_hidden">
                                                     <p class="text-xs text-gray-500 mt-1">{{ __('customer/busroot.leave_blank_use_booking_phone') }}</p>
-                                                </div>
-                          g                      
+                                                </div>                      
                                                 <input type="hidden" name="amount" value="{{ $price + $fees }}">
                                                 
                                                 <div class="flex items-start">
@@ -158,10 +158,11 @@
                                                 
                                                 <div>
                                                     <label for="dpo_payment_phone" class="block text-sm font-medium text-gray-700 mb-1">{{ __('customer/busroot.mobile_number') }}</label>
-                                                    <input type="text" name="payment_phone" id="dpo_payment_phone" maxlength="12"
+                                                    <input type="text" id="dpo_payment_phone" maxlength="12"
                                                         value="{{ old('payment_phone', $booking->customer_phone ?? '') }}"
                                                         class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 onlydigits"
-                                                        placeholder="255712345678">
+                                                        placeholder="0712345678 or 255712345678">
+                                                    <input type="hidden" name="payment_phone" id="dpo_payment_phone_hidden">
                                                     <p class="text-xs text-gray-500 mt-1">{{ __('customer/busroot.leave_blank_use_booking_phone') }}</p>
                                                 </div>
                                                 
@@ -210,10 +211,11 @@
                                                 </div>
                                                 <div>
                                                     <label for="clickpesa_payment_phone" class="block text-sm font-medium text-gray-700 mb-1">{{ __('customer/busroot.mobile_number') }}</label>
-                                                    <input type="text" name="payment_phone" id="clickpesa_payment_phone" maxlength="12"
+                                                    <input type="text" id="clickpesa_payment_phone" maxlength="12"
                                                         value="{{ old('payment_phone', $booking->customer_phone ?? '') }}"
                                                         class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 onlydigits"
-                                                        placeholder="255712345678">
+                                                        placeholder="0712345678 or 255712345678">
+                                                    <input type="hidden" name="payment_phone" id="clickpesa_payment_phone_hidden">
                                                     <p class="text-xs text-gray-500 mt-1">{{ __('customer/busroot.leave_blank_use_booking_phone') }}</p>
                                                 </div>
                                                 <div class="flex items-start">
@@ -315,7 +317,7 @@
         startTimer(fiveMinutes, displayMinutes, displaySeconds);
     };
 
-    // Normalize phone: digits only; if starts with 0, convert to 255XXXXXXXXX
+    // Normalize phone in background on submit only (no change to visible field)
     function normalizePhoneTo255(str) {
         if (!str) return str;
         var digits = String(str).replace(/\D/g, '');
@@ -325,22 +327,14 @@
             digits = '255' + digits;
         return digits;
     }
-    function normalizePhoneInput(input) {
-        if (!input) return;
-        input.value = normalizePhoneTo255(input.value);
-    }
-
-    // Apply to all payment phone inputs on blur and before submit
-    ['mix_payment_phone', 'dpo_payment_phone', 'clickpesa_payment_phone'].forEach(function(id) {
-        var el = document.getElementById(id);
-        if (el) {
-            el.addEventListener('blur', function() { normalizePhoneInput(this); });
-        }
-    });
     document.querySelectorAll('#tab1 form, #tab2 form, #tab3 form').forEach(function(form) {
         form.addEventListener('submit', function() {
-            var inp = form.querySelector('input[name="payment_contact"], input[name="payment_phone"]');
-            if (inp) normalizePhoneInput(inp);
+            var visible = form.querySelector('#mix_payment_phone, #dpo_payment_phone, #clickpesa_payment_phone');
+            var hidden = form.querySelector('#mix_payment_contact_hidden, #dpo_payment_phone_hidden, #clickpesa_payment_phone_hidden');
+            if (visible && hidden) {
+                var raw = visible.value ? visible.value.trim() : '';
+                hidden.value = raw ? normalizePhoneTo255(raw) : '';
+            }
         });
     });
 
