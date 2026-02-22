@@ -219,7 +219,67 @@
     <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
 
-    <style>[x-cloak] { display: none !important; }</style>
+    <style>
+        [x-cloak] { display: none !important; }
+
+        /* DataTables: match page design - pagination, length, filter */
+        #busTable_wrapper .dataTables_length,
+        #busTable_wrapper .dataTables_filter,
+        #busTable_wrapper .dataTables_info {
+            margin-bottom: 1rem;
+            color: #4b5563;
+        }
+        #busTable_wrapper .dataTables_length select,
+        #busTable_wrapper .dataTables_filter input {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            background: #fff;
+            font-size: 0.875rem;
+        }
+        #busTable_wrapper .dataTables_filter input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+        /* Pagination buttons */
+        #busTable_wrapper .dataTables_paginate {
+            margin-top: 1rem;
+            padding-top: 0.75rem;
+        }
+        #busTable_wrapper .dataTables_paginate .paginate_button {
+            padding: 0.5rem 0.875rem;
+            margin: 0 0.15rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            background: #fff;
+            color: #374151 !important;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        #busTable_wrapper .dataTables_paginate .paginate_button:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+            color: #111827 !important;
+        }
+        #busTable_wrapper .dataTables_paginate .paginate_button.current {
+            background: linear-gradient(to right, #2563eb, #1d4ed8);
+            border-color: #2563eb;
+            color: #fff !important;
+        }
+        #busTable_wrapper .dataTables_paginate .paginate_button.current:hover {
+            background: linear-gradient(to right, #1d4ed8, #1e40af);
+            color: #fff !important;
+        }
+        #busTable_wrapper .dataTables_paginate .paginate_button.disabled,
+        #busTable_wrapper .dataTables_paginate .paginate_button.disabled:hover {
+            background: #f9fafb !important;
+            border-color: #e5e7eb;
+            color: #9ca3af !important;
+            cursor: not-allowed;
+        }
+    </style>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script>
         $(document).ready(function() {
@@ -228,10 +288,8 @@
                 "searching": true,
                 "ordering": true,
                 "info": true,
-                "columnDefs": [{
-                        "orderable": false,
-                        "targets": 7
-                    } // Disable sorting on Actions column
+                "columnDefs": [
+                    { "orderable": false, "searchable": false, "targets": 7 }  // Action column: no sort, no search
                 ]
             });
         });

@@ -59,13 +59,15 @@ class BookingController extends Controller
                 $request->session()->put('booking_verification_code', $verificationCode);
                 $request->session()->put('booking_verification_expires_at', $expiresAt);
 
-                try {
-                    // Send verification email (create a simple user object for the email)
-                    $tempUser = (object) ['email' => $data, 'name' => 'Customer'];
-                    Mail::to($data)->send(new \App\Mail\EmailVerification($tempUser, $verificationCode));
-                } catch (\Exception $e) {
-                    Log::error('Failed to send verification email: ' . $e->getMessage());
-                }
+                $tempUser = (object) ['email' => $data, 'name' => 'Customer'];
+                $verificationCodeForEmail = $verificationCode;
+                dispatch(function () use ($data, $tempUser, $verificationCodeForEmail) {
+                    try {
+                        Mail::to($data)->send(new \App\Mail\EmailVerification($tempUser, $verificationCodeForEmail));
+                    } catch (\Exception $e) {
+                        Log::error('Failed to send verification email: ' . $e->getMessage());
+                    }
+                })->afterResponse();
 
                 return redirect()->route('booking.verification.show')
                     ->with('email', $data)
@@ -150,17 +152,19 @@ class BookingController extends Controller
         $request->session()->put('booking_verification_code', $verificationCode);
         $request->session()->put('booking_verification_expires_at', $expiresAt);
 
-        try {
-            // Send verification email
-            $tempUser = (object) ['email' => $email, 'name' => 'Customer'];
-            Mail::to($email)->send(new \App\Mail\EmailVerification($tempUser, $verificationCode));
-            return back()
+        $tempUser = (object) ['email' => $email, 'name' => 'Customer'];
+        $code = $verificationCode;
+        dispatch(function () use ($email, $tempUser, $code) {
+            try {
+                Mail::to($email)->send(new \App\Mail\EmailVerification($tempUser, $code));
+            } catch (\Exception $e) {
+                Log::error('Failed to resend verification email: ' . $e->getMessage());
+            }
+        })->afterResponse();
+
+        return back()
                 ->with('email', $email)
                 ->with('status', 'A new verification code has been sent to your email.');
-        } catch (\Exception $e) {
-            Log::error('Failed to resend verification email: ' . $e->getMessage());
-            return back()->withErrors(['email' => 'Failed to send verification email. Please try again.'])->withInput();
-        }
     }
 
     public function form()
