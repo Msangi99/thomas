@@ -61,8 +61,6 @@
     </nav>
 
     <div class="dashboard-container">
-        <h1>{{ __('all.welcome_to_your_dashboard') }}</h1>
-
         <div class="row">
             <div class="col-md-3">
                 <div class="payment-card bg-success text-white">

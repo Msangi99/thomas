@@ -10,7 +10,6 @@
             <h1 class="text-3xl md:text-4xl font-bold text-gray-800">
                 {{ __('all.welcome') }} <span class="text-indigo-600">{{ auth()->user()->name }}</span>!
             </h1>
-            <p class="text-lg text-gray-500 mt-2">{{ __('all.welcome_to_your_dashboard') }}</p>
         </div>
 
         <!-- Stats Cards -->

@@ -357,15 +357,19 @@
     </script>
     <script>
         $(document).ready(function() {
-            $('#busTable').DataTable({
-                responsive: true,
-                paging: true,
-                searching: true,
-                ordering: true,
-                language: {
-                    emptyTable: "{{ __('customer/myticket.no_booking_found') }}"
-                }
-            });
+            // Only init DataTables when table has data rows (8 columns). Empty state has 1 cell with colspan=8.
+            var $firstRow = $('#busTable tbody tr:first');
+            if ($firstRow.length && $firstRow.find('td').length === 8) {
+                $('#busTable').DataTable({
+                    responsive: true,
+                    paging: true,
+                    searching: true,
+                    ordering: true,
+                    language: {
+                        emptyTable: "{{ __('customer/myticket.no_booking_found') }}"
+                    }
+                });
+            }
         });
     </script>
 @endsection
