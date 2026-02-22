@@ -72,11 +72,5 @@
                     <div class="text-xs text-gray-500">Traveled: Dar es Salaam → Mbeya • April 2023</div>
                 </div>
             </div>
-
-            <div class="text-center mt-10 fade-in delay-400">
-                <button class="px-6 py-3 border border-white/80 text-white rounded-lg hover:bg-white/10 font-medium transition-all btn-glow">
-                    View More Testimonials <i class="fas fa-chevron-right ml-2 text-white"></i>
-                </button>
-            </div>
         </div>
     </section>

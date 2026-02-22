@@ -269,31 +269,28 @@
     <!-- Hero Section -->
     @include('test.hero')
 
-    <!-- Popular Routes (hidden on About and Explore All Routes / schedules today) -->
-    @unless (request()->routeIs('schedules.today', 'about'))
+    @unless (request()->routeIs('schedules.today', 'about', 'contact'))
+        <!-- Popular Routes -->
         @include('test.popular')
+
+        <!-- Features -->
+        @include('test.features')
+
+        <!-- Booking Steps -->
+        @include('test.booking_step')
+
+        <!-- Testimonials -->
+        @include('test.testimonials')
+
+        <!-- Download App -->
+        @include('test.download')
+
+        <!-- FAQ -->
+        @include('test.faq')
+
+        <!-- Newsletter -->
+        @include('test.newsletter')
     @endunless
-
-    <!-- Features -->
-    @include('test.features')
-
-    <!-- Booking Steps -->
-    @include('test.booking_step')
-
-    <!-- Testimonials -->
-    @include('test.testimonials')
-
-    <!-- Special Offers -->
-
-
-    <!-- Download App -->
-    @include('test.download')
-
-    <!-- FAQ -->
-    @include('test.faq')
-
-    <!-- Newsletter -->
-    @include('test.newsletter')
 
     <!-- Footer -->
     @include('test.footer')
