@@ -79,7 +79,8 @@
                                                         d="M6.293 6.293a1 1 0 011.414 0L10 8.586l2.293-2.293a1 1 0 111.414 1.414L11.414 10l2.293 2.293a1 1 0 01-1.414 1.414L10 11.414l-2.293 2.293a1 1 0 01-1.414-1.414L8.586 10 6.293 7.707a1 1 0 010-1.414zM10 0a10 10 0 100 20 10 10 0 000-20z" />
                                                 </svg>
                                             </button>
-                                            <div x-show="openCancelModal" class="fixed inset-0 overflow-y-auto"
+                                            <div x-show="openCancelModal" x-cloak
+                                                class="fixed inset-0 overflow-y-auto z-50"
                                                 aria-labelledby="modal-title" role="dialog" aria-modal="true">
                                                 <div
                                                     class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
@@ -218,6 +219,8 @@
     <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
 
+    <style>[x-cloak] { display: none !important; }</style>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script>
         $(document).ready(function() {
             $('#busTable').DataTable({
