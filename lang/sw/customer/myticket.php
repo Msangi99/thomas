@@ -9,6 +9,7 @@ return [
     'departure_date' => 'Tarehe ya Kuondoka',
     'status' => 'Hali',
     'action' => 'Kitendo',
+    'no' => 'No.',
     'no_booking_found' => 'Hakuna uhifadhi uliopatikana.',
     'Paid' => 'Imelipiwa',
     'Unpaid' => 'Haijapatikana',

@@ -9,6 +9,7 @@ return [
     'departure_date' => 'Departure Date',
     'status' => 'Status',
     'action' => 'Action',
+    'no' => 'No.',
     'no_booking_found' => 'No booking found.',
     'Paid' => 'Paid',
     'Unpaid' => 'Unpaid',

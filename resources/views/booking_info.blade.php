@@ -31,7 +31,7 @@
                 <table id="busTable" class="w-full table-auto text-sm text-gray-700">
                     <thead class="bg-gray-100 text-xs uppercase text-gray-500 font-semibold">
                         <tr>
-                            <th class="px-4 py-3">{{ __('customer/myticket.no_booking_found') }}</th>
+                            <th class="px-4 py-3">{{ __('customer/myticket.no') }}</th>
                             <th class="px-4 py-3 text-left">{{ __('customer/myticket.booking_id') }}</th>
                             <th class="px-4 py-3 text-left">{{ __('customer/busroot.price') }}</th>
                             <th class="px-4 py-3 text-left">{{ __('customer/myticket.bus_name') }}</th>
