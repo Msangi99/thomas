@@ -210,8 +210,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="px-4 py-3 text-center">
-                                    {{ __('customer/myticket.no_booking_found') }}</td>
+                                <td class="px-4 py-3 text-center" colspan="8">{{ __('customer/myticket.no_booking_found') }}</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -290,15 +289,19 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script>
         $(document).ready(function() {
-            $('#busTable').DataTable({
-                "paging": true,
-                "searching": true,
-                "ordering": true,
-                "info": true,
-                "columnDefs": [
-                    { "orderable": false, "searchable": false, "targets": 7 }  // Action column: no sort, no search
-                ]
-            });
+            // Only init DataTables when table has data rows (8 columns). Empty state has 1 cell with colspan=8.
+            var $firstRow = $('#busTable tbody tr:first');
+            if ($firstRow.length && $firstRow.find('td').length === 8) {
+                $('#busTable').DataTable({
+                    "paging": true,
+                    "searching": true,
+                    "ordering": true,
+                    "info": true,
+                    "columnDefs": [
+                        { "orderable": false, "searchable": false, "targets": 7 }
+                    ]
+                });
+            }
         });
     </script>
 @endsection

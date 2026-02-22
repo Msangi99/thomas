@@ -195,6 +195,7 @@ class AuthController extends Controller
                 'password' => Hash::make($request->password),
                 'role' => $request->role,
                 'contact' => $request->contact,
+                'status' => 'accept', // Active by default so customers can log in immediately
             ]);
 
             if ($request->role === 'bus_campany') {

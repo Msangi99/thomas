@@ -15,25 +15,23 @@
             <div class="mb-6">
                 <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
                 <div class="relative group">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 group-hover:text-blue-500 transition-colors">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400 group-hover:text-blue-500 transition-colors">
+                        <svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
                         </svg>
                     </span>
                     <input id="email" type="email" 
                            class="w-full pl-10 pr-3 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 bg-gray-50/50 text-gray-900 placeholder-gray-400 transition-all duration-200 @error('email') border-red-400 focus:ring-red-400 @enderror" 
                            name="email" value="{{ old('email') }}" required autocomplete="email" autofocus placeholder="Enter your email">
-                    @error('email')
-                        <p class="mt-1 text-xs text-red-500 font-medium">{{ $message }}</p>
-                    @enderror
                 </div>
+                <p class="mt-1 min-h-[1.25rem] text-xs text-red-500 font-medium">@error('email'){{ $message }}@enderror</p>
             </div>
 
             <div class="mb-6">
                 <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
                 <div class="relative group">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 group-hover:text-blue-500 transition-colors">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400 group-hover:text-blue-500 transition-colors">
+                        <svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
                         </svg>
                     </span>
@@ -41,14 +39,12 @@
                            class="w-full pl-10 pr-12 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 bg-gray-50/50 text-gray-900 placeholder-gray-400 transition-all duration-200 @error('password') border-red-400 focus:ring-red-400 @enderror" 
                            name="password" required autocomplete="current-password" placeholder="Enter your password">
                     <button type="button" class="toggle-password absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-blue-500 transition-colors" data-target="password">
-                        <svg class="w-5 h-5 bi-eye" fill="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 shrink-0 bi-eye" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
                         </svg>
                     </button>
-                    @error('password')
-                        <p class="mt-1 text-xs text-red-500 font-medium">{{ $message }}</p>
-                    @enderror
                 </div>
+                <p class="mt-1 min-h-[1.25rem] text-xs text-red-500 font-medium">@error('password'){{ $message }}@enderror</p>
             </div>
 
             <div class="mb-6 flex justify-between items-center">
