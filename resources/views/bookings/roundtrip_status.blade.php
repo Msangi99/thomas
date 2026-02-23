@@ -23,8 +23,8 @@
                     <p class="text-gray-600">Here are the details for your two bookings.</p>
                 </div>
 
-                <!-- Booking One Details -->
-                <h4 class="text-xl font-bold text-gray-900 mb-4">Booking One Details</h4>
+                <!-- First leg (Outbound) -->
+                <h4 class="text-xl font-bold text-gray-900 mb-4">First leg (Outbound)</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <!-- Booking Summary -->
                     <div class="bg-gray-50 p-6 rounded-lg">
@@ -36,20 +36,16 @@
                         </div>
                         <div class="space-y-3">
                             <div class="flex justify-between">
+                                <span class="text-gray-600">Route:</span>
+                                <span class="font-medium text-gray-600">{{ $bookingone->pickup_point ?? $bookingone->bus->route->from ?? 'N/A' }} → {{ $bookingone->dropping_point ?? $bookingone->bus->route->to ?? 'N/A' }}</span>
+                            </div>
+                            <div class="flex justify-between">
                                 <span class="text-gray-600">Bus:</span>
                                 <span class="font-medium text-gray-600">{{ $bookingone->bus->busname->name }} | {{ $bookingone->bus->bus_number }}</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-600">Booking Code:</span>
                                 <span class="font-medium text-gray-600">{{ $bookingone->booking_code }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Bus Route:</span>
-                                <span class="font-medium text-gray-600">{{ $bookingone->bus->route->from ?? 'N/A' }} To {{ $bookingone->bus->route->to ?? 'N/A' }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">User Route:</span>
-                                <span class="font-medium text-gray-600">{{ $bookingone->pickup_point ?? 'N/A' }} To {{ $bookingone->dropping_point ?? 'N/A' }}</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-600">Travel Date:</span>
@@ -123,8 +119,8 @@
                     </div>
                 </div>
 
-                <!-- Booking Two Details -->
-                <h4 class="text-xl font-bold text-gray-900 mb-4 mt-8">Booking Two Details</h4>
+                <!-- Second leg (Return) -->
+                <h4 class="text-xl font-bold text-gray-900 mb-4 mt-8">Second leg (Return)</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <!-- Booking Summary -->
                     <div class="bg-gray-50 p-6 rounded-lg">
@@ -136,20 +132,16 @@
                         </div>
                         <div class="space-y-3">
                             <div class="flex justify-between">
+                                <span class="text-gray-600">Route:</span>
+                                <span class="font-medium text-gray-600">{{ $bookingtwo->pickup_point ?? $bookingtwo->bus->route->from ?? 'N/A' }} → {{ $bookingtwo->dropping_point ?? $bookingtwo->bus->route->to ?? 'N/A' }}</span>
+                            </div>
+                            <div class="flex justify-between">
                                 <span class="text-gray-600">Bus:</span>
                                 <span class="font-medium text-gray-600">{{ $bookingtwo->bus->busname->name }} | {{ $bookingtwo->bus->bus_number }}</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-600">Booking Code:</span>
                                 <span class="font-medium text-gray-600">{{ $bookingtwo->booking_code }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Bus Route:</span>
-                                <span class="font-medium text-gray-600">{{ $bookingtwo->bus->route->from ?? 'N/A' }} To {{ $bookingtwo->bus->route->to ?? 'N/A' }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">User Route:</span>
-                                <span class="font-medium text-gray-600">{{ $bookingtwo->pickup_point ?? 'N/A' }} To {{ $bookingtwo->dropping_point ?? 'N/A' }}</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-600">Travel Date:</span>
@@ -233,22 +225,22 @@
                     </a>
                     <form action="{{ route('ticket.print') }}" method="POST">
                         @csrf
-                        <input type="hidden" name="data" value="{{ $bookingone }}">
+                        <input type="hidden" name="data" value='{{ json_encode(["id" => $bookingone->id]) }}'>
                         <button type="submit" class="px-6 py-3 border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded-lg transition duration-200 flex items-center justify-center">
                             <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                             </svg>
-                            Print Ticket (Booking One)
+                            Print Ticket (First leg)
                         </button>
                     </form>
                     <form action="{{ route('ticket.print') }}" method="POST">
                         @csrf
-                        <input type="hidden" name="data" value="{{ $bookingtwo }}">
+                        <input type="hidden" name="data" value='{{ json_encode(["id" => $bookingtwo->id]) }}'>
                         <button type="submit" class="px-6 py-3 border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded-lg transition duration-200 flex items-center justify-center">
                             <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                             </svg>
-                            Print Ticket (Booking Two)
+                            Print Ticket (Return leg)
                         </button>
                     </form>
                 </div>

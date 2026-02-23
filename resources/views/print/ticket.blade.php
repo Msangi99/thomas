@@ -82,14 +82,8 @@
                     <td>{{ $data->bus->bus_number ?? 'N/A' }}</td>
                 </tr>
                 <tr>
-                    <td>Bus route:</td>
-                    <td>
-                        {{ $data->bus && $data->bus->route ? ($data->bus->route->from ?? 'N/A') . ' - ' . ($data->bus->route->to ?? 'N/A') : 'N/A' }}
-                    </td>
-                </tr>
-                <tr>
-                    <td>Traveller route:</td>
-                    <td>{{ $data->pickup_point ?? 'N/A' }} - {{ $data->dropping_point ?? 'N/A' }}</td>
+                    <td>Route:</td>
+                    <td>{{ $data->pickup_point ?? ($data->bus->route->from ?? 'N/A') }} - {{ $data->dropping_point ?? ($data->bus->route->to ?? 'N/A') }}</td>
                 </tr>
                 <tr>
                     <td>Travel date:</td>
