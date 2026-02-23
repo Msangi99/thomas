@@ -71,6 +71,7 @@ return [
     'end' => 'Maliza:',
     'no_results_found' => 'Hakuna matokeo yaliyopatikana kwa "[place]"',
     'geocoding_error' => 'Hitilafu wakati wa kutafuta eneo. Tafadhali jaribu tena.',
+    'routing_fallback' => 'Huduma ya njia haipatikani kwa sasa; inaonyesha umbali wa mstari wa moja kwa moja.',
     'select_input_first' => 'Tafadhali bofya kwanza kwenye sehemu ya kuchukulia au kushukia',
     'invalid_start_coords' => 'Kuratibu za kuanzia si sahihi. Tafadhali tumia muundo wa "lat, lng" au jina halali la mahali.',
     'invalid_end_coords' => 'Kuratibu za mwisho si sahihi. Tafadhali tumia muundo wa "lat, lng" au jina halali la mahali.',

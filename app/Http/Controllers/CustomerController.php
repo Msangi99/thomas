@@ -83,7 +83,9 @@ class CustomerController extends Controller
 
     public function by_route()
     {
-        return view('customer.byroute');
+        // Show the same light search form as busroot so one form works from first click (no dark form)
+        $busList = [];
+        return view('customer.busroot', compact('busList'));
     }
 
     public function by_route_search(Request $request)

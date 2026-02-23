@@ -382,45 +382,46 @@
                 $(this).focus();
             });
 
-            // Initialize DataTable
-            $('#busTable').DataTable({
-                responsive: false,
-                scrollX: false,
-                paging: true,
-                pageLength: 10,
-                searching: true,
-                ordering: true,
-                language: {
-                    emptyTable: "{{ __('all.no_buses_available') }}",
-                    lengthMenu: "{{ __('all.show') ?? 'Show' }} _MENU_ {{ __('all.entries') ?? 'entries' }}",
-                    search: "{{ __('all.search') ?? 'Search' }}:",
-                    info: "{{ __('all.showing') ?? 'Showing' }} _START_ {{ __('all.to') ?? 'to' }} _END_ {{ __('all.of') ?? 'of' }} _TOTAL_ {{ __('all.entries') ?? 'entries' }}",
-                    infoEmpty: "{{ __('all.showing') ?? 'Showing' }} 0 {{ __('all.to') ?? 'to' }} 0 {{ __('all.of') ?? 'of' }} 0 {{ __('all.entries') ?? 'entries' }}",
-                    paginate: {
-                        first: "{{ __('all.first') ?? 'First' }}",
-                        last: "{{ __('all.last') ?? 'Last' }}",
-                        next: "{{ __('all.next') ?? 'Next' }}",
-                        previous: "{{ __('all.previous') ?? 'Previous' }}"
+            // Initialize DataTable and modal only when results table exists (busList not empty)
+            if ($('#busTable').length) {
+                $('#busTable').DataTable({
+                    responsive: false,
+                    scrollX: false,
+                    paging: true,
+                    pageLength: 10,
+                    searching: true,
+                    ordering: true,
+                    language: {
+                        emptyTable: "{{ __('all.no_buses_available') }}",
+                        lengthMenu: "{{ __('all.show') ?? 'Show' }} _MENU_ {{ __('all.entries') ?? 'entries' }}",
+                        search: "{{ __('all.search') ?? 'Search' }}:",
+                        info: "{{ __('all.showing') ?? 'Showing' }} _START_ {{ __('all.to') ?? 'to' }} _END_ {{ __('all.of') ?? 'of' }} _TOTAL_ {{ __('all.entries') ?? 'entries' }}",
+                        infoEmpty: "{{ __('all.showing') ?? 'Showing' }} 0 {{ __('all.to') ?? 'to' }} 0 {{ __('all.of') ?? 'of' }} 0 {{ __('all.entries') ?? 'entries' }}",
+                        paginate: {
+                            first: "{{ __('all.first') ?? 'First' }}",
+                            last: "{{ __('all.last') ?? 'Last' }}",
+                            next: "{{ __('all.next') ?? 'Next' }}",
+                            previous: "{{ __('all.previous') ?? 'Previous' }}"
+                        }
                     }
-                }
-            });
+                });
 
-            // Modal logic
-            $('tbody tr').on('click', function(e) {
-                if ($(e.target).closest('button, a').length) return;
-                const row = $(this);
-                if (row.find('td').eq(2).text() !== 'N/A') {
-                    $('#modal-bus').text(row.data('bus'));
-                    $('#modal-from').text(row.data('from'));
-                    $('#modal-to').text(row.data('to'));
-                    $('#modal-time').text(row.data('time'));
-                    $('#modal-date').text(row.data('date'));
-                    document.getElementById('scheduleModal').showModal();
-                }
-            });
+                $('tbody tr').on('click', function(e) {
+                    if ($(e.target).closest('button, a').length) return;
+                    const row = $(this);
+                    if (row.find('td').eq(2).text() !== 'N/A') {
+                        $('#modal-bus').text(row.data('bus'));
+                        $('#modal-from').text(row.data('from'));
+                        $('#modal-to').text(row.data('to'));
+                        $('#modal-time').text(row.data('time'));
+                        $('#modal-date').text(row.data('date'));
+                        document.getElementById('scheduleModal').showModal();
+                    }
+                });
+            }
 
             $('#closeModal, #closeModalBtn').on('click', function() {
-                document.getElementById('scheduleModal').close();
+                if (document.getElementById('scheduleModal')) document.getElementById('scheduleModal').close();
             });
         });
     </script>

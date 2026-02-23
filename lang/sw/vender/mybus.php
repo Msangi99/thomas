@@ -52,6 +52,7 @@ return [
     'confirm_route' => 'Thibitisha Njia',
     'no_results_found' => 'Hakuna matokeo yaliyopatikana kwa "{place}"',
     'geocoding_error' => 'Hitilafu katika kupata eneo. Tafadhali jaribu tena.',
+    'routing_fallback' => 'Huduma ya njia haipatikani kwa sasa; inaonyesha umbali wa mstari wa moja kwa moja.',
     'select_input_first' => 'Tafadhali bonyeza kwenye sehemu ya Kuanza au Kumalizia kwanza',
     'invalid_start_coords' => 'Kurugenzi za kuanzia sio sahihi. Tafadhali tumia umbizo la "lat, lng" au jina sahihi la mahali.',
     'invalid_end_coords' => 'Kurugenzi za kumalizia sio sahihi. Tafadhali tumia umbizo la "lat, lng" au jina sahihi la mahali.',

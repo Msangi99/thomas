@@ -288,12 +288,32 @@
             return marker;
         }
 
+        function haversineKm(lat1, lon1, lat2, lon2) {
+            var R = 6371, dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lon2 - lon1) * Math.PI / 180;
+            var a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+
+        function setDistanceResult(calculatedDistanceKm, durationSec, startLatLng, endLatLng, isFallback) {
+            calculatedDistance = calculatedDistanceKm;
+            const resultDiv = document.getElementById('result');
+            const resultContent = document.getElementById('result-content');
+            if (resultDiv) resultDiv.style.display = 'block';
+            if (resultContent) {
+                var durationStr = durationSec != null ? Math.floor(durationSec/60) + ' min ' + (durationSec%60) + ' sec' : '–';
+                resultContent.innerHTML = (isFallback ? '<p class="text-amber-700 text-sm mb-2">{{ __("customer/busroot.routing_fallback") ?? "Route service unavailable; showing straight-line distance." }}</p>' : '') + '<div class="grid grid-cols-2 gap-2 text-sm text-black"><div><span class="font-medium">{{ __('customer/busroot.distance') }}</span> ' + calculatedDistanceKm + ' km</div><div><span class="font-medium">{{ __('customer/busroot.duration') }}</span> ' + durationStr + '</div><div><span class="font-medium">{{ __('customer/busroot.start') }}</span> ' + startLatLng.lat.toFixed(6) + ', ' + startLatLng.lng.toFixed(6) + '</div><div><span class="font-medium">{{ __('customer/busroot.end') }}</span> ' + endLatLng.lat.toFixed(6) + ', ' + endLatLng.lng.toFixed(6) + '</div></div>';
+            }
+            var rd = document.getElementById('routeDistance'), rdd = document.getElementById('routeDistanceDisplay');
+            if (rd) rd.value = calculatedDistanceKm;
+            if (rdd) rdd.value = calculatedDistanceKm;
+        }
+
         function calculateDistance() {
             if (!startMarker || !endMarker) return;
             const startLatLng = startMarker.getLatLng();
             const endLatLng = endMarker.getLatLng();
 
-            if (routingControl) map.removeControl(routingControl);
+            if (routingControl) { map.removeControl(routingControl); routingControl = null; }
 
             routingControl = L.Routing.control({
                 waypoints: [
@@ -305,37 +325,22 @@
                 addWaypoints: false,
                 draggableWaypoints: false,
                 fitSelectedRoutes: true,
-                lineOptions: {
-                    styles: [{
-                        color: '#3B82F6',
-                        opacity: 0.8,
-                        weight: 6
-                    }]
-                },
-                createMarker: function() {
-                    return null;
-                }
+                lineOptions: { styles: [{ color: '#3B82F6', opacity: 0.8, weight: 6 }] },
+                createMarker: function() { return null; }
             }).addTo(map);
 
             routingControl.on('routesfound', function(e) {
                 const routes = e.routes;
-                const distance = routes[0].summary.totalDistance; // in meters
-                const duration = routes[0].summary.totalTime; // in seconds
-                calculatedDistance = (distance / 1000).toFixed(2); // Store distance in km
+                const distance = routes[0].summary.totalDistance;
+                const duration = routes[0].summary.totalTime;
+                setDistanceResult((distance/1000).toFixed(2), duration, startLatLng, endLatLng, false);
+            });
 
-                const resultDiv = document.getElementById('result');
-                const resultContent = document.getElementById('result-content');
-                resultDiv.style.display = 'block';
-                resultContent.innerHTML = `
-            <div class="grid grid-cols-2 gap-2 text-sm text-black">
-                <div><span class="font-medium">{{ __('customer/busroot.distance') }}</span> ${calculatedDistance} km</div>
-                <div><span class="font-medium">{{ __('customer/busroot.duration') }}</span> ${Math.floor(duration / 60)} min ${duration % 60} sec</div>
-                <div><span class="font-medium">{{ __('customer/busroot.start') }}</span> ${startLatLng.lat.toFixed(6)}, ${startLatLng.lng.toFixed(6)}</div>
-                <div><span class="font-medium">{{ __('customer/busroot.end') }}</span> ${endLatLng.lat.toFixed(6)}, ${endLatLng.lng.toFixed(6)}</div>
-            </div>
-        `;
-                document.getElementById('routeDistance').value = calculatedDistance;
-                document.getElementById('routeDistanceDisplay').value = calculatedDistance;
+            routingControl.on('routingerror', function() {
+                map.removeControl(routingControl);
+                routingControl = null;
+                var fallbackKm = haversineKm(startLatLng.lat, startLatLng.lng, endLatLng.lat, endLatLng.lng).toFixed(2);
+                setDistanceResult(fallbackKm, null, startLatLng, endLatLng, true);
             });
 
             map.fitBounds(L.latLngBounds(startLatLng, endLatLng));

@@ -52,6 +52,7 @@ return [
     'confirm_route' => 'Confirm Route',
     'no_results_found' => 'No results found for "{place}"',
     'geocoding_error' => 'Error geocoding the place name. Please try again.',
+    'routing_fallback' => 'Route service temporarily unavailable; showing straight-line distance.',
     'select_input_first' => 'Please click on either Start or End input field first',
     'invalid_start_coords' => 'Invalid start coordinates. Please use "lat, lng" format or a valid place name.',
     'invalid_end_coords' => 'Invalid end coordinates. Please use "lat, lng" format or a valid place name.',

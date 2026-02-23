@@ -239,12 +239,30 @@
         return marker;
     }
 
+    function haversineKm(lat1, lon1, lat2, lon2) {
+        var R = 6371, dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lon2 - lon1) * Math.PI / 180;
+        var a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    function setDistanceResult(calculatedDistanceKm, distanceMeters, durationSec, startLatLng, endLatLng) {
+        const resultDiv = document.getElementById('result');
+        if (resultDiv) {
+            resultDiv.classList.remove('hidden');
+            resultDiv.className = 'p-3 rounded-md text-sm bg-green-50 text-gray-800';
+            var durationStr = durationSec != null ? Math.floor(durationSec/60) + ' min ' + (durationSec%60) + ' sec' : '–';
+            resultDiv.innerHTML = '<strong>{{ __('vender/busroot.distance') }}</strong> ' + calculatedDistanceKm + ' km (' + (distanceMeters || (calculatedDistanceKm*1000).toFixed(0)) + ' meters)<br><strong>{{ __('vender/busroot.duration') }}</strong> ' + durationStr + '<br><strong>{{ __('vender/busroot.start') }}</strong> ' + startLatLng.lat.toFixed(6) + ', ' + startLatLng.lng.toFixed(6) + '<br><strong>{{ __('vender/busroot.end') }}</strong> ' + endLatLng.lat.toFixed(6) + ', ' + endLatLng.lng.toFixed(6);
+        }
+        document.getElementById('routeDistance').value = calculatedDistanceKm;
+        document.getElementById('routeDistanceDisplay').value = calculatedDistanceKm;
+    }
+
     function calculateDistance() {
         if (!startMarker || !endMarker) return;
         const startLatLng = startMarker.getLatLng();
         const endLatLng = endMarker.getLatLng();
 
-        if (routingControl) map.removeControl(routingControl);
+        if (routingControl) { map.removeControl(routingControl); routingControl = null; }
 
         routingControl = L.Routing.control({
             waypoints: [
@@ -256,28 +274,27 @@
             addWaypoints: false,
             draggableWaypoints: false,
             fitSelectedRoutes: true,
-            lineOptions: {
-                styles: [{ color: 'blue', opacity: 0.7, weight: 5 }]
-            },
+            lineOptions: { styles: [{ color: 'blue', opacity: 0.7, weight: 5 }] },
             createMarker: function () { return null; }
         }).addTo(map);
 
         routingControl.on('routesfound', function (e) {
             const routes = e.routes;
-            const distance = routes[0].summary.totalDistance; // in meters
-            const duration = routes[0].summary.totalTime; // in seconds
-            const calculatedDistance = (distance / 1000).toFixed(2); // Convert to km
+            const distance = routes[0].summary.totalDistance;
+            const duration = routes[0].summary.totalTime;
+            setDistanceResult((distance/1000).toFixed(2), distance, duration, startLatLng, endLatLng);
+        });
 
-            const resultDiv = document.getElementById('result');
-            resultDiv.classList.remove('hidden');
-            resultDiv.innerHTML = `
-                <strong>{{ __('vender/busroot.distance') }}</strong> ${calculatedDistance} km (${distance.toFixed(0)} meters)<br>
-                <strong>{{ __('vender/busroot.duration') }}</strong> ${Math.floor(duration / 60)} min ${duration % 60} sec<br>
-                <strong>{{ __('vender/busroot.start') }}</strong> ${startLatLng.lat.toFixed(6)}, ${startLatLng.lng.toFixed(6)}<br>
-                <strong>{{ __('vender/busroot.end') }}</strong> ${endLatLng.lat.toFixed(6)}, ${endLatLng.lng.toFixed(6)}
-            `;
-            document.getElementById('routeDistance').value = calculatedDistance;
-            document.getElementById('routeDistanceDisplay').value = calculatedDistance;
+        routingControl.on('routingerror', function () {
+            map.removeControl(routingControl);
+            routingControl = null;
+            var fallbackKm = haversineKm(startLatLng.lat, startLatLng.lng, endLatLng.lat, endLatLng.lng).toFixed(2);
+            setDistanceResult(fallbackKm, null, null, startLatLng, endLatLng);
+            var resultDiv = document.getElementById('result');
+            if (resultDiv) {
+                resultDiv.className = 'p-3 rounded-md text-sm bg-amber-50 text-amber-800';
+                resultDiv.innerHTML = '{{ __("customer/busroot.routing_fallback") ?? "Route service unavailable; showing straight-line distance." }}<br>' + resultDiv.innerHTML;
+            }
         });
 
         map.fitBounds(L.latLngBounds(startLatLng, endLatLng));

@@ -417,7 +417,8 @@
             min: "{{ __('vender/mybus.min') }}",
             sec: "{{ __('vender/mybus.sec') }}",
             start: "{{ __('vender/mybus.start') }}",
-            end: "{{ __('vender/mybus.end') }}"
+            end: "{{ __('vender/mybus.end') }}",
+            routing_fallback: "{{ __('vender/mybus.routing_fallback') }}"
         };
 
         let map, startMarker, endMarker, routingControl, activeInput;
@@ -459,11 +460,28 @@
             return marker;
         }
 
+        function haversineKm(lat1, lon1, lat2, lon2) {
+            const R = 6371, dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+
+        function setDistanceResult(calculatedDistanceKm, distanceMeters, durationSec, s, e, isFallback) {
+            calculatedDistance = calculatedDistanceKm;
+            const res = document.getElementById('result');
+            if (res) {
+                res.style.display = 'block';
+                const durationStr = durationSec != null ? Math.floor(durationSec/60) + ' ' + translations.min + ' ' + (durationSec%60) + ' ' + translations.sec : '–';
+                const distStr = distanceMeters != null ? distanceMeters.toFixed(0) : (calculatedDistanceKm * 1000).toFixed(0);
+                res.innerHTML = (isFallback ? '<p class="text-amber-700 text-sm mb-2">' + (translations.routing_fallback || 'Route service unavailable; showing straight-line distance.') + '</p>' : '') + '<strong>' + translations.road_distance + '</strong> ' + calculatedDistanceKm + ' ' + translations.km + ' (' + distStr + ' ' + translations.meters + ')<br><strong>' + translations.estimated_travel_time + '</strong> ' + durationStr + '<br><strong>' + translations.start + '</strong> ' + s.lat.toFixed(6) + ', ' + s.lng.toFixed(6) + '<br><strong>' + translations.end + '</strong> ' + e.lat.toFixed(6) + ', ' + e.lng.toFixed(6);
+            }
+        }
+
         function calculateDistance() {
             if (!startMarker || !endMarker) return;
             const s = startMarker.getLatLng();
             const e = endMarker.getLatLng();
-            if (routingControl) map.removeControl(routingControl);
+            if (routingControl) { map.removeControl(routingControl); routingControl = null; }
 
             routingControl = L.Routing.control({
                 waypoints: [L.latLng(s.lat, s.lng), L.latLng(e.lat, e.lng)],
@@ -477,17 +495,16 @@
             }).addTo(map);
 
             routingControl.on('routesfound', function(ev) {
-                const distance = ev.routes[0].summary.totalDistance; // meters
-                const duration = ev.routes[0].summary.totalTime;     // seconds
-                calculatedDistance = (distance / 1000).toFixed(2);
-                const res = document.getElementById('result');
-                res.style.display = 'block';
-                res.innerHTML = `
-                    <strong>${translations.road_distance}</strong> ${calculatedDistance} ${translations.km} (${distance.toFixed(0)} ${translations.meters})<br>
-                    <strong>${translations.estimated_travel_time}</strong> ${Math.floor(duration / 60)} ${translations.min} ${duration % 60} ${translations.sec}<br>
-                    <strong>${translations.start}</strong> ${s.lat.toFixed(6)}, ${s.lng.toFixed(6)}<br>
-                    <strong>${translations.end}</strong> ${e.lat.toFixed(6)}, ${e.lng.toFixed(6)}
-                `;
+                const distance = ev.routes[0].summary.totalDistance;
+                const duration = ev.routes[0].summary.totalTime;
+                setDistanceResult((distance/1000).toFixed(2), distance, duration, s, e, false);
+            });
+
+            routingControl.on('routingerror', function() {
+                map.removeControl(routingControl);
+                routingControl = null;
+                const fallbackKm = haversineKm(s.lat, s.lng, e.lat, e.lng).toFixed(2);
+                setDistanceResult(fallbackKm, null, null, s, e, true);
             });
 
             map.fitBounds(L.latLngBounds(s, e));
