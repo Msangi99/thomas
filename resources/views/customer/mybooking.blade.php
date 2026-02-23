@@ -39,7 +39,7 @@
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
                                     <td class="px-4 py-3">{{ $book->booking_code }}</td>
-                                    <td class="px-4 py-3">{{ $book->amount }}</td>
+                                    <td class="px-4 py-3">{{ number_format($book->amount + ($book->fee ?? 0), 0) }}</td>
                                     <td class="px-4 py-3">{{ $book->campany->name }}</td>
                                     <td class="px-4 py-3">{{ $book->travel_date ?? '' }}</td>
                                     <td class="px-4 py-3">{{ $book->created_at }}</td>

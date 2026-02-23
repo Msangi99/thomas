@@ -83,7 +83,7 @@
                 </tr>
                 <tr>
                     <td>Route:</td>
-                    <td>{{ $data->pickup_point ?? ($data->bus->route->from ?? 'N/A') }} - {{ $data->dropping_point ?? ($data->bus->route->to ?? 'N/A') }}</td>
+                    <td>@if(isset($data->schedule) && $data->schedule){{ ($data->schedule->from ?? 'N/A') }} - {{ ($data->schedule->to ?? 'N/A') }}@else{{ $data->pickup_point ?? ($data->bus->route->from ?? 'N/A') }} - {{ $data->dropping_point ?? ($data->bus->route->to ?? 'N/A') }}@endif</td>
                 </tr>
                 <tr>
                     <td>Travel date:</td>
