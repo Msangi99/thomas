@@ -510,12 +510,15 @@
             map.fitBounds(L.latLngBounds(s, e));
         }
 
-        function geocodePlace(place, inputId) {
-            if (!place) return;
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place)}`)
+        function geocodePlace(place, inputId, retryCount) {
+            retryCount = retryCount || 0;
+            if (!place) return Promise.resolve();
+            return fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(place) + '&limit=1', {
+                headers: { 'Accept': 'application/json', 'User-Agent': 'HighlinkRoundTrip/1.0' }
+            })
                 .then(r => r.json())
                 .then(data => {
-                    if (data.length > 0) {
+                    if (data && data.length > 0) {
                         const lat = parseFloat(data[0].lat), lon = parseFloat(data[0].lon);
                         const ll = L.latLng(lat, lon);
                         document.getElementById(inputId).value = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
@@ -526,7 +529,10 @@
                         alert(translations.no_results_found.replace('{place}', place));
                     }
                 })
-                .catch(() => alert(translations.geocoding_error));
+                .catch(() => {
+                    if (retryCount < 1) return new Promise(r => setTimeout(r, 1100)).then(() => geocodePlace(place, inputId, 1));
+                    alert(translations.geocoding_error);
+                });
         }
 
         function handleInputChange(inputId) {
@@ -583,17 +589,25 @@
             const e = document.getElementById('end').value.trim();
             const re = /^-?\d+\.\d+,\s*-?\d+\.\d+$/;
 
-            if (s && !s.match(re)) geocodePlace(s, 'start');
-            else if (s) {
-                try { const [lat,lon] = s.split(',').map(x=>parseFloat(x.trim())); startMarker = updateMarker(startMarker, L.latLng(lat,lon), 'start'); }
-                catch { alert(translations.invalid_start_coords); }
+            function setStart() {
+                if (!s) return Promise.resolve();
+                if (s.match(re)) {
+                    try { const [lat,lon] = s.split(',').map(x=>parseFloat(x.trim())); startMarker = updateMarker(startMarker, L.latLng(lat,lon), 'start'); } catch { alert(translations.invalid_start_coords); }
+                    return Promise.resolve();
+                }
+                return geocodePlace(s, 'start');
             }
-            if (e && !e.match(re)) geocodePlace(e, 'end');
-            else if (e) {
-                try { const [lat,lon] = e.split(',').map(x=>parseFloat(x.trim())); endMarker = updateMarker(endMarker, L.latLng(lat,lon), 'end'); }
-                catch { alert(translations.invalid_end_coords); }
+            function setEnd() {
+                if (!e) return Promise.resolve();
+                if (e.match(re)) {
+                    try { const [lat,lon] = e.split(',').map(x=>parseFloat(x.trim())); endMarker = updateMarker(endMarker, L.latLng(lat,lon), 'end'); } catch { alert(translations.invalid_end_coords); }
+                    return Promise.resolve();
+                }
+                return geocodePlace(e, 'end');
             }
-            if (startMarker && endMarker) calculateDistance();
+            setStart().then(function() { return new Promise(r => setTimeout(r, 1100)); }).then(setEnd).then(function() {
+                if (startMarker && endMarker) { map.invalidateSize(); setTimeout(calculateDistance, 200); }
+            });
         });
 
         document.getElementById('clear').addEventListener('click', function() {

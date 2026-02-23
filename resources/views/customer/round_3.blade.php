@@ -303,7 +303,8 @@
         map.fitBounds(L.latLngBounds(startLatLng, endLatLng));
     }
 
-    function geocodePlace(place, inputId) {
+    function geocodePlace(place, inputId, retryCount) {
+        retryCount = retryCount || 0;
         if (!place) return Promise.resolve();
         const resultDiv = document.getElementById('result');
         const showResult = function (html, isError) {
@@ -313,10 +314,12 @@
                 resultDiv.innerHTML = html;
             }
         };
-        return fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(place) + '&limit=1', {
-            headers: { 'Accept': 'application/json', 'User-Agent': 'HighlinkRoundTrip/1.0' }
-        })
-            .then(function (response) { return response.json(); })
+        function doFetch() {
+            return fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(place) + '&limit=1', {
+                headers: { 'Accept': 'application/json', 'User-Agent': 'HighlinkRoundTrip/1.0' }
+            }).then(function (response) { return response.json(); });
+        }
+        return doFetch()
             .then(function (data) {
                 if (data && data.length > 0) {
                     const lat = parseFloat(data[0].lat);
@@ -337,6 +340,11 @@
                 }
             })
             .catch(function (error) {
+                if (retryCount < 1) {
+                    return new Promise(function (resolve) { setTimeout(resolve, 1100); }).then(function () {
+                        return geocodePlace(place, inputId, 1);
+                    });
+                }
                 console.error('Geocoding error:', error);
                 showResult('{{ __("customer/busroot.geocoding_error") }}', true);
                 document.getElementById(inputId).value = place;
@@ -425,9 +433,10 @@
             return geocodePlace(endValue, 'end');
         }
 
-        setStart().then(setEnd).then(function () {
+        setStart().then(function () {
+            return new Promise(function (resolve) { setTimeout(resolve, 1100); });
+        }).then(setEnd).then(function () {
             if (startMarker && endMarker) {
-                // Let map and markers settle so routing works on first click (fixes return trip)
                 map.invalidateSize();
                 setTimeout(function () { calculateDistance(); }, 200);
             }

@@ -345,48 +345,47 @@
             map.fitBounds(L.latLngBounds(startLatLng, endLatLng));
         }
 
-        function geocodePlace(place, inputId) {
-            if (!place) return;
-
-            // Show loading state
+        function geocodePlace(place, inputId, retryCount) {
+            retryCount = retryCount || 0;
+            if (!place) return Promise.resolve();
             const input = document.getElementById(inputId);
             input.classList.add('bg-blue-50');
             input.readOnly = true;
-
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place)}`)
+            function done() {
+                input.classList.remove('bg-blue-50');
+                input.readOnly = false;
+            }
+            return fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(place) + '&limit=1', {
+                headers: { 'Accept': 'application/json', 'User-Agent': 'HighlinkRoundTrip/1.0' }
+            })
                 .then(response => response.json())
                 .then(data => {
-                    if (data.length > 0) {
+                    if (data && data.length > 0) {
                         const lat = parseFloat(data[0].lat);
                         const lon = parseFloat(data[0].lon);
                         const latlng = L.latLng(lat, lon);
                         document.getElementById(inputId).value = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
-
                         if (inputId === 'start') {
                             startMarker = updateMarker(startMarker, latlng, 'start');
                         } else {
                             endMarker = updateMarker(endMarker, latlng, 'end');
                         }
-
-                        if (startMarker && endMarker) {
-                            calculateDistance();
-                        } else {
-                            map.setView(latlng, 12);
-                        }
+                        if (startMarker && endMarker) calculateDistance();
+                        else map.setView(latlng, 12);
                     } else {
-                    showAlert(`{{ __('all.error_no_results_found') }} "${place}"`, 'error');
-                    document.getElementById(inputId).value = '';
+                        showAlert('{{ __('all.error_no_results_found') }} "' + place + '"', 'error');
+                        document.getElementById(inputId).value = '';
                     }
                 })
                 .catch(error => {
+                    if (retryCount < 1) {
+                        return new Promise(r => setTimeout(r, 1100)).then(() => geocodePlace(place, inputId, 1));
+                    }
                     console.error('Geocoding error:', error);
                     showAlert('{{ __('all.error_geocoding_place_name_try_again') }}', 'error');
                     document.getElementById(inputId).value = '';
                 })
-                .finally(() => {
-                    input.classList.remove('bg-blue-50');
-                    input.readOnly = false;
-                });
+                .finally(done);
         }
 
         function showAlert(message, type = 'info') {
@@ -454,37 +453,41 @@
             }
         });
 
-        // Handle calculate button
+        // Handle calculate button (delay between geocodes for Nominatim 1 req/sec)
         document.getElementById('calculate').addEventListener('click', function() {
             const startValue = document.getElementById('start').value.trim();
             const endValue = document.getElementById('end').value.trim();
             const coordRegex = /^-?\d+\.\d+,\s*-?\d+\.\d+$/;
 
-            if (startValue && !startValue.match(coordRegex)) {
-                geocodePlace(startValue, 'start');
-            } else if (startValue) {
-                try {
-                    const startCoords = startValue.split(',').map(coord => parseFloat(coord.trim()));
-                    startMarker = updateMarker(startMarker, L.latLng(startCoords[0], startCoords[1]), 'start');
-                    if (startMarker && endMarker) calculateDistance();
-                } catch (e) {
-                    showAlert('{{ __('all.error_invalid_start_coordinates') }}',
-                        'error');
+            function setStart() {
+                if (!startValue) return Promise.resolve();
+                if (startValue.match(coordRegex)) {
+                    try {
+                        const parts = startValue.split(',').map(c => parseFloat(c.trim()));
+                        startMarker = updateMarker(startMarker, L.latLng(parts[0], parts[1]), 'start');
+                    } catch (e) { showAlert('{{ __('all.error_invalid_start_coordinates') }}', 'error'); }
+                    return Promise.resolve();
                 }
+                return geocodePlace(startValue, 'start');
+            }
+            function setEnd() {
+                if (!endValue) return Promise.resolve();
+                if (endValue.match(coordRegex)) {
+                    try {
+                        const parts = endValue.split(',').map(c => parseFloat(c.trim()));
+                        endMarker = updateMarker(endMarker, L.latLng(parts[0], parts[1]), 'end');
+                    } catch (e) { showAlert('{{ __('all.error_invalid_end_coordinates') }}', 'error'); }
+                    return Promise.resolve();
+                }
+                return geocodePlace(endValue, 'end');
             }
 
-            if (endValue && !endValue.match(coordRegex)) {
-                geocodePlace(endValue, 'end');
-            } else if (endValue) {
-                try {
-                    const endCoords = endValue.split(',').map(coord => parseFloat(coord.trim()));
-                    endMarker = updateMarker(endMarker, L.latLng(endCoords[0], endCoords[1]), 'end');
-                    if (startMarker && endMarker) calculateDistance();
-                } catch (e) {
-                    showAlert('{{ __('all.error_invalid_end_coordinates') }}',
-                        'error');
+            setStart().then(function() { return new Promise(r => setTimeout(r, 1100)); }).then(setEnd).then(function() {
+                if (startMarker && endMarker) {
+                    map.invalidateSize();
+                    setTimeout(calculateDistance, 200);
                 }
-            }
+            });
         });
 
         // Handle clear button
