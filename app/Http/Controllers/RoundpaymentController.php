@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Session;
 
 class RoundpaymentController extends Controller
 {
-    private function roundtrip($transToken = null, $companyRef = null, $verifyResponse = null, $code = null)
+    public function roundtrip($transToken = null, $companyRef = null, $verifyResponse = null, $code = null)
     {
         // Retrieve booking using CompanyRef (which should be booking_code)
         //$code = session('booking')->booking_code;
