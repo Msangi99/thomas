@@ -348,6 +348,23 @@
                 width: '100%'
             });
 
+            // Sync Select2 values to native selects before submit so first click works (no need to search twice)
+            function syncSelect2ToNative(selector) {
+                $(selector).each(function() {
+                    var $el = $(this);
+                    var v = $el.val();
+                    if (v !== undefined && v !== null && v !== '') {
+                        this.value = v;
+                    }
+                });
+            }
+            $('#one-way-form').on('submit', function() {
+                syncSelect2ToNative('#departure_city, #arrival_city, #bus_type');
+            });
+            $('#bus-name-form').on('submit', function() {
+                syncSelect2ToNative('#bus_name');
+            });
+
             // Set minimum date to today
             const today = new Date().toISOString().split('T')[0];
             $('#departure_date').attr('min', today);

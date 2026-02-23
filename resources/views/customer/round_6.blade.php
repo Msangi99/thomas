@@ -400,16 +400,26 @@
             startTimer(fiveMinutes, displayMinutes, displaySeconds);
         };
 
+        // Format phone to 255: if starts with 0 replace 0 with 255; else if not 255 prefix add 255. No +255.
+        function normalizePhoneTo255(str) {
+            if (!str) return '';
+            var digits = String(str).replace(/\D/g, '');
+            if (digits.charAt(0) === '0')
+                return '255' + digits.substring(1);
+            if (digits.substring(0, 3) !== '255')
+                return '255' + digits;
+            return digits;
+        }
+
         // Form submission handler for Tigo form
         document.getElementById('tigo').addEventListener('submit', function(event) {
             event.preventDefault();
 
-            // Get contact details
             const code = document.getElementById('countrycode').value;
-            const phone = document.getElementById('contactNumber').value;
+            const phone = normalizePhoneTo255(document.getElementById('contactNumber').value);
             const email = document.getElementById('contactEmail').value;
+            document.getElementById('paymentContact').value = normalizePhoneTo255(document.getElementById('paymentContact').value);
 
-            // Create hidden inputs
             const codeInput = document.createElement('input');
             codeInput.type = 'hidden';
             codeInput.name = 'countrycode';
@@ -425,12 +435,10 @@
             emailInput.name = 'contactEmail';
             emailInput.value = email;
 
-            // Append to form
             this.appendChild(codeInput);
             this.appendChild(phoneInput);
             this.appendChild(emailInput);
 
-            // Submit form
             this.submit();
         });
 
@@ -438,12 +446,11 @@
         document.getElementById('dpo').addEventListener('submit', function(event) {
             event.preventDefault();
 
-            // Get contact details
             const code = document.getElementById('countrycode').value;
-            const phone = document.getElementById('contactNumber').value;
+            const phone = normalizePhoneTo255(document.getElementById('contactNumber').value);
             const email = document.getElementById('contactEmail').value;
+            document.getElementById('phone').value = normalizePhoneTo255(document.getElementById('phone').value);
 
-            // Create hidden inputs
             const codeInput = document.createElement('input');
             codeInput.type = 'hidden';
             codeInput.name = 'countrycode';
@@ -459,12 +466,10 @@
             emailInput.name = 'contactEmail';
             emailInput.value = email;
 
-            // Append to form
             this.appendChild(codeInput);
             this.appendChild(phoneInput);
             this.appendChild(emailInput);
 
-            // Submit form
             this.submit();
         });
 
@@ -472,12 +477,10 @@
         document.getElementById('cash').addEventListener('submit', function(event) {
             event.preventDefault();
 
-            // Get contact details
             const code = document.getElementById('countrycode').value;
-            const phone = document.getElementById('contactNumber').value;
+            const phone = normalizePhoneTo255(document.getElementById('contactNumber').value);
             const email = document.getElementById('contactEmail').value;
 
-            // Create hidden inputs
             const codeInput = document.createElement('input');
             codeInput.type = 'hidden';
             codeInput.name = 'countrycode';
@@ -493,12 +496,40 @@
             emailInput.name = 'contactEmail';
             emailInput.value = email;
 
-            // Append to form
             this.appendChild(codeInput);
             this.appendChild(phoneInput);
             this.appendChild(emailInput);
 
-            // Submit form
+            this.submit();
+        });
+
+        // Form submission handler for ClickPesa form
+        document.getElementById('clickpesa').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const code = document.getElementById('countrycode').value;
+            const phone = normalizePhoneTo255(document.getElementById('contactNumber').value);
+            const email = document.getElementById('contactEmail').value;
+
+            const codeInput = document.createElement('input');
+            codeInput.type = 'hidden';
+            codeInput.name = 'countrycode';
+            codeInput.value = code;
+
+            const phoneInput = document.createElement('input');
+            phoneInput.type = 'hidden';
+            phoneInput.name = 'contactNumber';
+            phoneInput.value = phone;
+
+            const emailInput = document.createElement('input');
+            emailInput.type = 'hidden';
+            emailInput.name = 'contactEmail';
+            emailInput.value = email;
+
+            this.appendChild(codeInput);
+            this.appendChild(phoneInput);
+            this.appendChild(emailInput);
+
             this.submit();
         });
 

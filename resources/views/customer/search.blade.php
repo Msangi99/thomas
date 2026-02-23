@@ -85,10 +85,9 @@
         </div>
 
         <!-- One Way Form -->
-        <form action="/search" method="POST" class="search-form" id="one-way-form">
+        <form action="{{ route('customer.mybooking.search.form') }}" method="GET" class="search-form" id="one-way-form">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                    @csrf
                     <label class="block text-gray-300 text-sm mb-1">From</label>
                     <div class="relative">
                         <select name="departure_city" id="departure_city"
@@ -133,10 +132,9 @@
         </form>
 
         <!-- Bus Name Form -->
-        <form action="{{ route('customer.mybooking.search') }}" method="get" class="search-form hidden" id="bus-name-form">
+        <form action="{{ route('customer.mybooking.search') }}" method="GET" class="search-form hidden" id="bus-name-form">
             <div class="grid grid-cols-1 gap-4">
                 <div>
-                    @csrf
                     <label class="block text-gray-300 text-sm mb-1">Bus Name</label>
                     <div class="relative">
                         <select name="bus_name" id="bus_name"
@@ -167,6 +165,23 @@
                 placeholder: "Select an option",
                 allowClear: true,
                 width: '100%'
+            });
+
+            // Sync Select2 to native select before submit so first click works (no need to search twice)
+            function syncSelect2ToNative(selector) {
+                $(selector).each(function() {
+                    var $el = $(this);
+                    var v = $el.val();
+                    if (v !== undefined && v !== null && v !== '') {
+                        this.value = v;
+                    }
+                });
+            }
+            $('#one-way-form').on('submit', function() {
+                syncSelect2ToNative('#departure_city, #arrival_city');
+            });
+            $('#bus-name-form').on('submit', function() {
+                syncSelect2ToNative('#bus_name');
             });
 
             // Set minimum date to today

@@ -31,7 +31,7 @@
                             <label for="routeFrom" class="block text-sm text-gray-500 mb-1">
                                 <i class="fas fa-map-marker-alt mr-1"></i> {{ __('customer/busroot.from') }}
                             </label>
-                            <input type="text" name="from" value="{{ $car->schedule->from }}" readonly
+                            <input type="text" id="routeFrom" name="from" value="{{ $car->schedule->from }}" readonly
                                    class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         </div>
 
@@ -40,7 +40,7 @@
                             <label for="routeTo" class="block text-sm text-gray-500 mb-1">
                                 <i class="fas fa-map-marker-check mr-1"></i> {{ __('customer/busroot.to') }}
                             </label>
-                            <input type="text" name="to" value="{{ $car->schedule->to }}" readonly
+                            <input type="text" id="routeTo" name="to" value="{{ $car->schedule->to }}" readonly
                                    class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         </div>
                     </div>
@@ -407,8 +407,9 @@
 
         setStart().then(setEnd).then(function () {
             if (startMarker && endMarker) {
-                // Small delay so map/markers are ready; fixes distance only working on second click
-                setTimeout(function () { calculateDistance(); }, 50);
+                // Let map and markers settle so routing works on first click (fixes return trip)
+                map.invalidateSize();
+                setTimeout(function () { calculateDistance(); }, 200);
             }
         });
     });

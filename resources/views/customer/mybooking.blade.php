@@ -148,9 +148,8 @@
                                             <!-- Refund Button -->
                                             <div class="relative inline-block group">
                                                 <button type="button"
-                                                    class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-2 rounded"
-                                                    data-bs-toggle="modal" data-bs-target="#refundModal{{ $book->id }}"
-                                                    data-book-id="{{ $book->id }}"
+                                                    class="refund-trigger bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-2 rounded"
+                                                    data-refund-modal="refundModal{{ $book->id }}"
                                                     aria-label="Request refund for booking {{ $book->id }}"
                                                     title="Refund">
                                                     <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg"
@@ -166,17 +165,20 @@
                                                 </div>
                                             </div>
 
-                                            <!-- Refund Modal -->
-                                            <div class="modal fade" id="refundModal{{ $book->id }}"
-                                                tabindex="-1" aria-labelledby="refundModalLabel{{ $book->id }}"
-                                                aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="true">
-                                                <div class="modal-dialog modal-dialog-centered">
-                                                    <div class="modal-content rounded-lg shadow-xl p-6">
+                                            <!-- Refund Modal (Tailwind only) -->
+                                            <div class="refund-modal fixed inset-0 z-50 hidden" id="refundModal{{ $book->id }}"
+                                                aria-labelledby="refundModalLabel{{ $book->id }}" aria-modal="true" role="dialog">
+                                                <div class="fixed inset-0 bg-black/50" data-close-refund-modal="refundModal{{ $book->id }}"></div>
+                                                <div class="fixed inset-0 flex items-center justify-center p-4">
+                                                    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md relative">
                                                         <div class="flex justify-between items-center mb-4">
                                                             <h5 class="text-lg font-bold text-gray-800"
                                                                 id="refundModalLabel{{ $book->id }}">{{ __('all.refund_title') }} Request
                                                             </h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            <button type="button" class="text-gray-400 hover:text-gray-600 p-1 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                data-close-refund-modal="refundModal{{ $book->id }}" aria-label="Close">
+                                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                                                            </button>
                                                         </div>
                                                         <form action="{{ route('customer.refund') }}" method="POST"
                                                             id="refundForm{{ $book->id }}" class="needs-validation refund-form"
@@ -224,8 +226,8 @@
                                                             <div id="refundFormError{{ $book->id }}" class="text-red-600 text-sm mb-3 hidden" role="alert"></div>
                                                             <div class="flex justify-end gap-2">
                                                                 <button type="button"
-                                                                    class="bg-gray-500 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-md"
-                                                                    data-bs-dismiss="modal">{{ __('all.close_button') }}</button>
+                                                                    class="refund-modal-close bg-gray-500 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-md"
+                                                                    data-close-refund-modal="refundModal{{ $book->id }}">{{ __('all.close_button') }}</button>
                                                                 <button type="submit"
                                                                     class="bg-blue-500 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md">{{ __('all.submit_refund_request') }}</button>
                                                             </div>
@@ -324,12 +326,30 @@
             </div>
         </div>
     </div>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Refund modal: open
+            document.querySelectorAll('.refund-trigger').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var id = this.getAttribute('data-refund-modal');
+                    var modal = id ? document.getElementById(id) : null;
+                    if (modal) modal.classList.remove('hidden');
+                });
+            });
+
+            // Refund modal: close (backdrop, close button)
+            function closeRefundModal(id) {
+                var modal = id ? document.getElementById(id) : null;
+                if (modal) modal.classList.add('hidden');
+            }
+            document.querySelectorAll('[data-close-refund-modal]').forEach(function(el) {
+                el.addEventListener('click', function() {
+                    closeRefundModal(this.getAttribute('data-close-refund-modal'));
+                });
+            });
+
             // Refund form: require at least one of mobile or bank
             document.querySelectorAll('.refund-form').forEach(function(form) {
                 form.addEventListener('submit', function(event) {
@@ -374,10 +394,7 @@
             var refundBookingId = {{ json_encode(old('booking_id')) }};
             if (refundBookingId) {
                 var modalEl = document.getElementById('refundModal' + refundBookingId);
-                if (modalEl && typeof bootstrap !== 'undefined') {
-                    var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-                    modal.show();
-                }
+                if (modalEl) modalEl.classList.remove('hidden');
             }
         });
     </script>

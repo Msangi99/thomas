@@ -651,15 +651,23 @@ class RoundTripController extends Controller
         ]);
 
         //return $request->all();
-        // Process contact number
-        $contactNumber = $request->contactNumber;
-        if (substr($contactNumber, 0, 1) === '0') {
-            $contactNumber = '255' . substr($contactNumber, 1);
+        // Process contact number: 255 prefix, no +255
+        $contactNumber = preg_replace('/\D/', '', (string) ($request->contactNumber ?? ''));
+        if ($contactNumber !== '') {
+            if (strpos($contactNumber, '0') === 0) {
+                $contactNumber = '255' . substr($contactNumber, 1);
+            } elseif (substr($contactNumber, 0, 3) !== '255') {
+                $contactNumber = '255' . $contactNumber;
+            }
         }
 
         $bus_info['customer_number'] = $contactNumber;
         $bus_info['customer_email'] = $request->contactEmail;
-        $bus_info['customer_payment_number'] = $request->payment_contact ?? '';
+        $paymentContact = preg_replace('/\D/', '', (string) ($request->payment_contact ?? ''));
+        if ($paymentContact !== '') {
+            $paymentContact = (strpos($paymentContact, '0') === 0) ? '255' . substr($paymentContact, 1) : ((substr($paymentContact, 0, 3) !== '255') ? '255' . $paymentContact : $paymentContact);
+        }
+        $bus_info['customer_payment_number'] = $paymentContact;
         $bus_info['countrycode'] = $request->countrycode;
         $bus_info['customer_name'] = $request->customer_name ?? 'Customer'; // Add customer name
 
