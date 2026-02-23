@@ -46,7 +46,7 @@
          </nav>
 
          <!-- Main Content -->
-         <div class="main-content flex-1 ml-0 md:ml-64 transition-all duration-300">
+         {{-- <div class="main-content flex-1 ml-0 md:ml-64 transition-all duration-300">
              <nav class="bg-white shadow-md sticky top-0 z-[999]">
                  <div class="container-fluid px-4 py-3">
                      <div class="flex items-center justify-between">
@@ -105,7 +105,7 @@
              </main>
 
              @include('customer.footer')
-         </div>
+         </div> --}}
      </div>
 
      <!-- Custom JS for sidebar toggle -->
