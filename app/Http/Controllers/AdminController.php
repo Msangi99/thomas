@@ -774,14 +774,20 @@ $q->where('id', auth()->user()->campany->id);
 
     public function schedules()
     {
-        // Upcoming bus schedules from now: future dates, or today with start time after current time
+        // Upcoming bus schedules from now (using app timezone so date column doesn't show past dates)
+        $today = Carbon::now()->format('Y-m-d');
+        $currentTime = Carbon::now()->format('H:i:s');
+
         $schedules = Schedule::with(['bus.busname', 'route'])
             ->whereHas('bus', function ($query) {
                 $query->where('campany_id', auth()->user()->campany->id);
             })
-            ->whereRaw(
-                "(schedule_date > CURDATE()) OR (schedule_date = CURDATE() AND start > CURTIME())"
-            )
+            ->where(function ($query) use ($today, $currentTime) {
+                $query->where('schedule_date', '>', $today)
+                    ->orWhere(function ($q) use ($today, $currentTime) {
+                        $q->where('schedule_date', $today)->where('start', '>', $currentTime);
+                    });
+            })
             ->orderBy('schedule_date', 'asc')
             ->orderBy('start', 'asc')
             ->get();
