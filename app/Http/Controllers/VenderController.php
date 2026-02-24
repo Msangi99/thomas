@@ -6,6 +6,7 @@ use App\Http\Controllers\MixByYassController;
 use App\Http\Controllers\PDOController;
 use App\Http\Controllers\TigosecureController;
 use App\Http\Controllers\CashController;
+use App\Http\Controllers\ClickPesaController;
 use App\Http\Controllers\status\Fees;
 use App\Http\Controllers\status\Vender;
 use App\Mail\SendEmail;
@@ -721,6 +722,24 @@ class VenderController extends Controller
                 Log::error('DPO Payment initiation failed: ' . $e->getMessage());
                 // Optionally, redirect the user back with an error message
                 return $e->getMessage();
+            }
+        } elseif ($method == 'clickpesa') {
+            try {
+                Session::put('booking', $booking);
+                $clickpesa = new ClickPesaController();
+                return $clickpesa->VenderinitiatePayment(
+                    round($amount),
+                    session()->get('booking_form')['customer_name'],
+                    '',
+                    session()->get('booking_form')['customer_number'],
+                    session()->get('booking_form')['customer_email'],
+                    $xcode
+                );
+            } catch (\Exception $e) {
+                Log::error('Vender ClickPesa payment failed: ' . $e->getMessage(), [
+                    'booking_id' => $booking->id ?? null,
+                ]);
+                return redirect()->route('vender.pay')->with('error', 'ClickPesa error: ' . $e->getMessage())->withErrors(['payment_error' => $e->getMessage()]);
             }
         }
     }

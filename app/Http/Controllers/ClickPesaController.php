@@ -182,7 +182,7 @@ class ClickPesaController extends Controller
 
         if ($checkoutResponse && isset($checkoutResponse->checkout_url)) {
             $checkoutUrl = (string) $checkoutResponse->checkout_url;
-            $reference = (string) $checkoutResponse->reference;
+            $reference = (string) ($checkoutResponse->reference ?? preg_replace('/[^a-zA-Z0-9]/', '', $orderDetails['order_id']));
 
             Log::info('ClickPesa Checkout Created Successfully (Vendor)', [
                 'order_id' => $orderDetails['order_id'],
@@ -191,6 +191,16 @@ class ClickPesaController extends Controller
             ]);
 
             Session::put('vender', 'vender');
+
+            // Store reference on booking so callback can find it when user returns
+            $sessionBooking = session('booking');
+            if ($sessionBooking && isset($sessionBooking->booking_code)) {
+                try {
+                    Booking::where('booking_code', $sessionBooking->booking_code)->update(['transaction_ref_id' => $reference]);
+                } catch (\Exception $e) {
+                    Log::warning('ClickPesa Vendor: Could not store reference on booking', ['error' => $e->getMessage()]);
+                }
+            }
 
             // Redirect to ClickPesa checkout page
             return redirect()->away($checkoutUrl);
