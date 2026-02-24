@@ -20,6 +20,7 @@ use App\Models\SystemBalance;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Validation\Rule;
 use App\Models\AdminTransaction;
+use App\Models\Schedule;
 use PhpParser\Builder\Function_;
 use PhpParser\Node\Expr\FuncCall;
 use App\Http\Controllers\Pdf\Report;
@@ -416,14 +417,31 @@ class SystemController extends Controller
 
     public function bus_route()
     {
-        $cars = bus::with('campany', 'route', 'schedule')
-            ->whereHas('campany', function ($query) {
+        // Show only upcoming schedules from now (same logic as admin Bus Schedule)
+        $today = Carbon::now()->format('Y-m-d');
+        $currentTime = Carbon::now()->format('H:i:s');
+
+        $schedules = Schedule::with(['bus.campany', 'bus.route', 'route'])
+            ->whereHas('bus.campany', function ($query) {
                 $query->where('status', 1);
             })
-            ->whereHas('schedule', function ($query) {
-                $query->where('schedule_date', '>', now());
+            ->where(function ($query) use ($today, $currentTime) {
+                $query->where('schedule_date', '>', $today)
+                    ->orWhere(function ($q) use ($today, $currentTime) {
+                        $q->where('schedule_date', $today)->where('start', '>', $currentTime);
+                    });
             })
+            ->orderBy('schedule_date', 'asc')
+            ->orderBy('start', 'asc')
             ->get();
+
+        // Build $cars so the view stays unchanged: each row is the bus with its schedule set to this upcoming schedule
+        $cars = $schedules->map(function (Schedule $schedule) {
+            $bus = $schedule->bus;
+            $bus->setRelation('schedule', $schedule);
+            return $bus;
+        });
+
         return view('system.bus_route', compact('cars'));
     }
 
