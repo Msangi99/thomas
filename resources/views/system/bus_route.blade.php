@@ -117,7 +117,20 @@
                             <span class="font-medium text-indigo-600">Tsh {{ number_format($car->route->price) }}</span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ $car->schedule->route->route_start }} → {{ $car->schedule->route->route_end }}
+                            @php
+                                $route = $car->schedule->route;
+                                $timeStart = ($route && $route->route_start) ? $route->route_start : $car->schedule->start;
+                                $timeEnd = ($route && $route->route_end) ? $route->route_end : $car->schedule->end;
+                                $timeDisplay = '–';
+                                if ($timeStart && $timeEnd) {
+                                    $timeDisplay = \Carbon\Carbon::parse($timeStart)->format('H:i') . ' → ' . \Carbon\Carbon::parse($timeEnd)->format('H:i');
+                                } elseif ($timeStart) {
+                                    $timeDisplay = \Carbon\Carbon::parse($timeStart)->format('H:i') . ' → –';
+                                } elseif ($timeEnd) {
+                                    $timeDisplay = '– → ' . \Carbon\Carbon::parse($timeEnd)->format('H:i');
+                                }
+                            @endphp
+                            {{ $timeDisplay }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-sort-value="{{ $car->schedule->schedule_date ?? '' }}">
                             {{ $car->schedule->schedule_date ? \Carbon\Carbon::parse($car->schedule->schedule_date)->format('d M Y') : 'N/A' }}
