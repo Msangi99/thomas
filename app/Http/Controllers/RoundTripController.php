@@ -969,8 +969,8 @@ class RoundTripController extends Controller
                 $result2 = $cashController->cash($booking2, uniqid('Round_Cash_'));
                 Log::info('Cash Payment Result 2', ['result' => $result2]);
 
-                // Clear session data
-                session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
+                // Clear only booking_form; keep booking1/booking2/is_round for success page (paymentSuccess() will clear them)
+                session()->forget(['booking_form']);
 
                 return redirect()->route('round.trip.payment.success')->with('success', 'Round trip bookings created successfully via cash!');
             } catch (\Exception $e) {

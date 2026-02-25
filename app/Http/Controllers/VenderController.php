@@ -17,6 +17,7 @@ use App\Models\City;
 use App\Models\Discount;
 use App\Models\PaymentFees;
 use App\Models\route;
+use App\Models\Schedule;
 use App\Models\Setting;
 use App\Models\SystemBalance;
 use App\Models\Transaction;
@@ -768,14 +769,31 @@ class VenderController extends Controller
 
     public function bus_route()
     {
-        $cars = bus::with('campany', 'route', 'schedule')
-            ->whereHas('campany', function ($query) {
+        // Fetch current (today's not yet started) and upcoming schedules
+        $today = Carbon::now()->format('Y-m-d');
+        $currentTime = Carbon::now()->format('H:i:s');
+
+        $schedules = Schedule::with(['bus.campany', 'bus.route', 'route'])
+            ->whereHas('bus.campany', function ($query) {
                 $query->where('status', 1);
             })
-            ->whereHas('schedule', function ($query) {
-                $query->where('schedule_date', '>', now());
+            ->where(function ($query) use ($today, $currentTime) {
+                $query->where('schedule_date', '>', $today)
+                    ->orWhere(function ($q) use ($today, $currentTime) {
+                        $q->where('schedule_date', $today)->where('start', '>', $currentTime);
+                    });
             })
+            ->orderBy('schedule_date', 'asc')
+            ->orderBy('start', 'asc')
             ->get();
+
+        // Build $cars so the view stays unchanged: each row is the bus with its schedule set to this schedule
+        $cars = $schedules->map(function (Schedule $schedule) {
+            $bus = $schedule->bus;
+            $bus->setRelation('schedule', $schedule);
+            return $bus;
+        });
+
         return view('vender.bus_route', compact('cars'));
     }
 

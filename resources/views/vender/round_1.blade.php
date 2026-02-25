@@ -95,7 +95,7 @@
             <div class="flex space-x-2 mb-6 bg-gray-100 rounded-lg p-1">
                 <button
                     class="search-tab flex-1 py-2 px-4 rounded-lg bg-indigo-500 text-white font-medium text-sm uppercase transition-colors duration-200"
-                    data-tab="one-way">ROUTE</button>
+                    data-tab="one-way">{{ __('customer/busroot.one_way') }}</button>
                 <button
                     class="search-tab flex-1 py-2 px-4 rounded-lg text-gray-500 font-medium text-sm uppercase transition-colors duration-200"
                     data-tab="bus-name">{{ __('customer/busroot.bus_name') }}</button>

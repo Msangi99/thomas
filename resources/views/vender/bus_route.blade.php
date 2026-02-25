@@ -100,7 +100,7 @@
             const tbody = table.querySelector('tbody');
             const rows = Array.from(tbody.querySelectorAll('tr'));
             const searchInput = document.getElementById('searchInput');
-            const sortableHeaders = table.querySelectorassistance/schedule('.sortable');
+            const sortableHeaders = table.querySelector('.sortable');
             const itemsPerPage = 10;
             let currentPage = 1;
             let currentSort = {
@@ -117,17 +117,17 @@
             function updateTable() {
                 const searchTerm = searchInput.value.toLowerCase();
                 const filteredRows = rows.filter(row => {
-                    const cells = row.querySelectorassistance/schedule('td');
+                    const cells = row.querySelector('td');
                     return Array.from(cells).some(cell =>
                         cell.textContent.toLowerCase().includes(searchTerm)
                     );
                 });
 
                 filteredRows.sort((a, b) => {
-                    const aValue = a.querySelectorassistance/schedule('td')[currentSort.column].getAttribute('data-sort-value') ||
-                        a.querySelectorassistance/schedule('td')[currentSort.column].textContent;
-                    const bValue = b.querySelectorassistance/schedule('td')[currentSort.column].getAttribute('data-sort-value') ||
-                        b.querySelectorassistance/schedule('td')[currentSort.column].textContent;
+                    const aValue = a.querySelector('td')[currentSort.column].getAttribute('data-sort-value') ||
+                        a.querySelector('td')[currentSort.column].textContent;
+                    const bValue = b.querySelector('td')[currentSort.column].getAttribute('data-sort-value') ||
+                        b.querySelector('td')[currentSort.column].textContent;
 
                     if (currentSort.column === 7) { // Date column
                         const aDate = aValue ? new Date(aValue) : null;
@@ -143,7 +143,7 @@
                     } else {
                         return currentSort.direction === 'asc' ?
                             aValue.localeCompare(bValue) :
-                            bValue.localeCompare(bValue);
+                            bValue.localeCompare(aValue);
                     }
                 });
 
