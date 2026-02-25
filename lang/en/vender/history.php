@@ -40,6 +40,7 @@ return [
     'no_bookings_found' => 'No bookings found.',
     'print' => 'Print',
     'print_ticket' => 'Print Ticket',
+    'download_ticket' => 'Download Ticket',
     'print_service' => 'Print Service fees receipt',
     'booking_details' => 'Booking Details',
     'Route' => 'Route',

@@ -40,6 +40,7 @@ return [
     'no_bookings_found' => 'Hakuna uwekaji nafasi uliopatikana.',
     'print' => 'Chapisha',
     'print_ticket' => 'Chapisha Tiketi',
+    'download_ticket' => 'Pakua Tiketi',
     'print_service' => 'Chapisha Huduma',
     'booking_details' => 'Maelezo ya Uwekaji Nafasi',
     'Route' => 'Njia',
