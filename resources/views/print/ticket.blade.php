@@ -85,12 +85,11 @@
                     <td>Route:</td>
                     <td>@if(isset($data->schedule) && $data->schedule){{ ($data->schedule->from ?? 'N/A') }} - {{ ($data->schedule->to ?? 'N/A') }}@else{{ $data->pickup_point ?? ($data->bus->route->from ?? 'N/A') }} - {{ $data->dropping_point ?? ($data->bus->route->to ?? 'N/A') }}@endif</td>
                 </tr>
-                <tr>
-                    <td>Travel date:</td>
-                    <td>{{ $data->travel_date ?? 'N/A' }}</td>
-                </tr>
                 @php
-                    $travelDate = $data->travel_date ?? null;
+                    $travelDateRaw = $data->travel_date ?? null;
+                    $travelDateFormatted = $travelDateRaw ? \Carbon\Carbon::parse($travelDateRaw)->format('d M Y') : 'N/A';
+                    $insuranceDateFormatted = isset($data->insuranceDate) && $data->insuranceDate ? \Carbon\Carbon::parse($data->insuranceDate)->format('d M Y') : 'N/A';
+                    $travelDate = $travelDateRaw;
                     $departureTime = null;
                     $arrivalTime = null;
                     if (isset($data->schedule) && $data->schedule) {
@@ -104,6 +103,7 @@
                     $reportingTimeStr = 'N/A';
                     $departureTimeStr = 'N/A';
                     $arrivalTimeStr = 'N/A';
+                    $arrivalDateStr = $travelDateFormatted;
                     if ($travelDate && $departureTime) {
                         try {
                             $departureDt = \Carbon\Carbon::parse($travelDate . ' ' . $departureTime);
@@ -120,7 +120,8 @@
                             $arrivalTimeStr = $arrivalDt->format('h:i A');
                             if ($departureTime && $arrivalDt->format('H:i') < \Carbon\Carbon::parse($departureTime)->format('H:i')) {
                                 $arrivalDt->addDay();
-                                $arrivalTimeStr = $arrivalDt->format('M d, h:i A');
+                                $arrivalTimeStr = $arrivalDt->format('h:i A');
+                                $arrivalDateStr = $arrivalDt->format('d M Y');
                             }
                         } catch (\Exception $e) {
                             $arrivalTimeStr = is_string($arrivalTime) ? $arrivalTime : 'N/A';
@@ -128,16 +129,20 @@
                     }
                 @endphp
                 <tr>
+                    <td>Travel date:</td>
+                    <td>{{ $travelDateFormatted }}</td>
+                </tr>
+                <tr>
                     <td>Reporting time:</td>
-                    <td>{{ $travelDate ?? 'N/A' }} {{ $reportingTimeStr }}</td>
+                    <td>{{ $travelDateFormatted }} {{ $reportingTimeStr }}</td>
                 </tr>
                 <tr>
                     <td>Departure time:</td>
-                    <td>{{ $travelDate ?? 'N/A' }} {{ $departureTimeStr }}</td>
+                    <td>{{ $travelDateFormatted }} {{ $departureTimeStr }}</td>
                 </tr>
                 <tr>
                     <td>Arrival date and time:</td>
-                    <td>{{ $travelDate ?? 'N/A' }} {{ $arrivalTimeStr }}</td>
+                    <td>{{ $arrivalDateStr }} {{ $arrivalTimeStr }}</td>
                 </tr>
                 <tr>
                     <td>Seat number:</td>
@@ -165,11 +170,11 @@
                 </tr>
                 <tr>
                     <td>Date and time of issue:</td>
-                    <td>{{ $data->travel_date }}</td>
+                    <td>{{ $travelDateFormatted }}</td>
                 </tr>
                 <tr>
                     <td>Expire date and time:</td>
-                    <td>{{ $data->insuranceDate }}</td>
+                    <td>{{ $insuranceDateFormatted }}</td>
                 </tr>
                 <tr>
                     <td>Amount paid for insurance:</td>

@@ -7,7 +7,7 @@
     <div class="container mx-auto px-4 py-6">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-2xl font-bold text-gray-800">{{ __('assistance/dashboard.dashboard_overview') }}</h1>
-            <a href="{{ route('vender.bus_route') }}" class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-assistance/dashboard">
+            <a href="{{ route('vender.bus_route') }}" class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition">
                 <i class="fas fa-bus mr-2"></i> {{ __('assistance/dashboard.view_bus_routes') }}
             </a>
         </div>
@@ -38,7 +38,7 @@
             <div class="bg-white rounded-xl shadow-lg transition-transform hover:-translate-y-1">
                 <div class="bg-blue-600 text-white rounded-t-xl font-semibold p-4 flex justify-between items-center">
                     <span>{{ __('assistance/dashboard.available_balance') }}</span>
-                    <div class="text-3xl opacity-30"><i class="fas fa-wassistance/dashboardet"></i></div>
+                    <div class="text-3xl opacity-30"><i class="fas fa-wallet"></i></div>
                 </div>
                 <div class="p-6">
                     <div class="text-2xl font-bold text-gray-800">Tsh. {{ number_format(auth()->user()->VenderBalances->amount, 2) }}</div>
@@ -137,7 +137,7 @@
                         </ul>
                     </nav>
                     <a href="{{ route('vender.history') }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">
-                        {{ __('assistance/dashboard.view_assistance/dashboard_bookings') }} <i class="fas fa-arrow-right ml-2"></i>
+                        {{ __('assistance/dashboard.view_all_bookings') }} <i class="fas fa-arrow-right ml-2"></i>
                     </a>
                 </div>
             </div>
@@ -177,7 +177,7 @@
                 // Table elements
                 const table = document.getElementById('bookingsTable');
                 const tableBody = document.getElementById('bookingsTableBody');
-                const rows = Array.from(document.querySelectorassistance/dashboard('.booking-row'));
+                const rows = Array.from(document.querySelectorAll('.booking-row'));
                 const searchInput = document.getElementById('bookingSearch');
                 const rowsPerPageSelect = document.getElementById('rowsPerPage');
                 const paginationContainer = document.getElementById('bookingsPagination');
@@ -203,7 +203,7 @@
 
                 // Update row indices (1, 2, 3, etc.)
                 function updateRowIndices() {
-                    const indexCells = document.querySelectorassistance/dashboard('.row-index');
+                    const indexCells = document.querySelectorAll('.row-index');
                     indexCells.forEach((cell, index) => {
                         cell.textContent = index + 1;
                     });
@@ -258,7 +258,7 @@
 
                 // Render the current page of rows
                 function renderTable() {
-                    // Hide assistance/dashboard rows
+                    // Hide table rows
                     rows.forEach(row => {
                         row.style.display = 'none';
                     });
@@ -281,7 +281,7 @@
 
                     // Previous button
                     const prevLi = document.createElement('li');
-                    prevLi.className = `px-2 py-1 rounded ${currentPage === 1 ? 'text-gray-400 cursor-not-assistance/dashboardowed' : 'text-blue-600 hover:bg-blue-100'}`;
+                    prevLi.className = `px-2 py-1 rounded ${currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-100'}`;
                     prevLi.innerHTML = `<a class="page-link" href="#" aria-label="Previous">
             <span aria-hidden="true">«</span>
         </a>`;
@@ -372,7 +372,7 @@
 
                     // Next button
                     const nextLi = document.createElement('li');
-                    nextLi.className = `px-2 py-1 rounded ${currentPage === pageCount ? 'text-gray-400 cursor-not-assistance/dashboardowed' : 'text-blue-600 hover:bg-blue-100'}`;
+                    nextLi.className = `px-2 py-1 rounded ${currentPage === pageCount ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-100'}`;
                     nextLi.innerHTML = `<a class="page-link" href="#" aria-label="Next">
             <span aria-hidden="true">»</span>
         </a>`;
@@ -396,7 +396,7 @@
                     totalEntries.textContent = filteredRows.length;
                 }
 
-                // Update assistance/dashboard table components
+                // Update table components
                 function updateTable() {
                     renderTable();
                     renderPagination();
@@ -444,7 +444,7 @@
                 });
 
                 // Sortable columns
-                document.querySelectorassistance/dashboard('.sortable').forEach(header => {
+                document.querySelectorAll('.sortable').forEach(header => {
                     header.addEventListener('click', function() {
                         const column = this.dataset.sort;
 
@@ -457,7 +457,7 @@
                         }
 
                         // Update sort indicators
-                        document.querySelectorassistance/dashboard('.sortable').forEach(h => {
+                        document.querySelectorAll('.sortable').forEach(h => {
                             h.classList.remove('sort-asc', 'sort-desc');
                         });
 
@@ -503,7 +503,7 @@
                             display: false
                         },
                         tooltip: {
-                            cassistance/dashboardbacks: {
+                            callbacks: {
                                 label: context => `{{ __('assistance/dashboard.bookings') }}: ${context.parsed.y}`
                             }
                         }

@@ -95,7 +95,7 @@
                                         </td>
                                         <td class="py-2 px-4">
                                             <div class="flex flex-col">
-                                                <p class="font-medium mb-0 view-booking" data-id="{{ $booking->id }}" data-created-at="{{ $booking->created_at->format('Y-m-d') }}">{{ $booking->travel_date ?? __('vender/history.na') }}</p>
+                                                <p class="font-medium mb-0 view-booking" data-id="{{ $booking->id }}" data-created-at="{{ $booking->created_at->format('Y-m-d') }}">{{ $booking->travel_date ? \Carbon\Carbon::parse($booking->travel_date)->format('d M Y') : __('vender/history.na') }}</p>
                                                 <p class="text-gray-500 mb-0">{{ __('vender/history.seat') }} {{ $booking->seat ?? __('vender/history.na') }}</p>
                                                 <p class="text-gray-500 mb-0">{{ __('vender/history.pickup') }} {{ $booking->pickup_point ?? __('vender/history.na') }}</p>
                                                 <p class="text-gray-500 mb-0">{{ __('vender/history.drop_point') }} {{ $booking->dropping_point ?? __('vender/history.na') }}</p>

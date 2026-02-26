@@ -42,7 +42,7 @@
                                         <td class="px-4 py-3">Tsh. {{ $car->route->price }}</td>
                                         <td class="px-4 py-3">{{ $car->schedule->start }} -> {{ $car->schedule->end }}</td>
                                         <td class="px-4 py-3" data-sort-value="{{ $car->schedule->schedule_date ?? '' }}">
-                                            {{ $car->schedule->schedule_date ? \Carbon\Carbon::parse($car->schedule->schedule_date)->format('d M Y') : 'N/A' }}
+                                            {{ $car->schedule->schedule_date ? \Carbon\Carbon::parse($car->schedule->schedule_date)->format('d F Y') : 'N/A' }}
                                         </td>
                                     </tr>
                                 @empty
