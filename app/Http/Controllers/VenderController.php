@@ -218,14 +218,15 @@ class VenderController extends Controller
     public function mybooking_search(Request $request)
     {
         //return $request->all();
-        $busList = '';
-        if (!$request->query('query')) {
-            $currentTime = Carbon::now()->format('H:i:s');
-            $currentDate = Carbon::now()->format('Y-m-d');
+        $busList = collect([]);
+        $currentTime = Carbon::now()->format('H:i:s');
+        $currentDate = Carbon::now()->format('Y-m-d');
 
+        // Check if bus_id is provided (from bus-name tab)
+        if ($request->has('bus_id') && $request->bus_id) {
             $busList = Bus::with(['schedules' => function ($query) use ($currentDate) {
                 $query->where('schedule_date', '>', $currentDate)
-                    ->orwhere('schedule_date', '=', $currentDate);
+                    ->orWhere('schedule_date', '=', $currentDate);
                 //->where('start', '>=', Carbon::now()->format('H:i:s')); // Optional: future schedules
             }])
                 ->where('campany_id', $request->bus_id)
@@ -235,7 +236,11 @@ class VenderController extends Controller
                 })
                 ->get();
         }
-        return view('vender.route', compact('busList'));
+        
+        // Get cities for the form
+        $cities = City::all();
+        
+        return view('vender.route', compact('busList', 'cities'));
     }
 
     public function by_route_search(Request $request)
@@ -317,7 +322,10 @@ class VenderController extends Controller
                 });
             });
 
-        return view('vender.route', compact('busList', 'departureCityName', 'arrivalCityName', 'departure_date'));
+        // Get cities for the form
+        $cities = City::all();
+
+        return view('vender.route', compact('busList', 'departureCityName', 'arrivalCityName', 'departure_date', 'cities'));
     }
 
     public function booking_form($id, $from, $to)
@@ -726,21 +734,24 @@ class VenderController extends Controller
             }
         } elseif ($method == 'clickpesa') {
             try {
-                Session::put('booking', $booking);
                 $clickpesa = new ClickPesaController();
-                return $clickpesa->VenderinitiatePayment(
+                Session::put('booking', $booking);
+                // Use the same initiatePayment method that works correctly for customers
+                return $clickpesa->initiatePayment(
                     round($amount),
                     session()->get('booking_form')['customer_name'],
-                    '',
+                    session()->get('booking_form')['customer_name'],
                     session()->get('booking_form')['customer_number'],
                     session()->get('booking_form')['customer_email'],
                     $xcode
                 );
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 Log::error('Vender ClickPesa payment failed: ' . $e->getMessage(), [
                     'booking_id' => $booking->id ?? null,
+                    'trace' => $e->getTraceAsString(),
                 ]);
-                return redirect()->route('vender.pay')->with('error', 'ClickPesa error: ' . $e->getMessage())->withErrors(['payment_error' => $e->getMessage()]);
+                $msg = strlen($e->getMessage()) > 200 ? substr($e->getMessage(), 0, 200) . '…' : $e->getMessage();
+                return redirect()->route('vender.pay')->with('error', 'ClickPesa error: ' . $msg)->withErrors(['payment_error' => $msg]);
             }
         }
     }
@@ -769,32 +780,14 @@ class VenderController extends Controller
 
     public function bus_route()
     {
-        // Fetch current (today's not yet started) and upcoming schedules
-        $today = Carbon::now()->format('Y-m-d');
-        $currentTime = Carbon::now()->format('H:i:s');
-
-        $schedules = Schedule::with(['bus.campany', 'bus.route', 'route'])
-            ->whereHas('bus.campany', function ($query) {
-                $query->where('status', 1);
-            })
-            ->where(function ($query) use ($today, $currentTime) {
-                $query->where('schedule_date', '>', $today)
-                    ->orWhere(function ($q) use ($today, $currentTime) {
-                        $q->where('schedule_date', $today)->where('start', '>', $currentTime);
-                    });
-            })
+        $schedule = Schedule::with(['bus.campany', 'bus.route', 'route'])
+            ->where('schedule_date', '>', Carbon::now()->format('Y-m-d'))
             ->orderBy('schedule_date', 'asc')
             ->orderBy('start', 'asc')
             ->get();
 
-        // Build $cars so the view stays unchanged: each row is the bus with its schedule set to this schedule
-        $cars = $schedules->map(function (Schedule $schedule) {
-            $bus = $schedule->bus;
-            $bus->setRelation('schedule', $schedule);
-            return $bus;
-        });
-
-        return view('vender.bus_route', compact('cars'));
+        return view('vender.bus_route', compact('schedule'));
+    
     }
 
     public function transaction(Request $request)
