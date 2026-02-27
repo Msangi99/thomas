@@ -253,44 +253,167 @@
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.tailwindcss.min.js"></script>
     <script>
         $(document).ready(function() {
-            // Initialize Select2
-            $('#departure_city, #arrival_city, #bus_name, #bus_type').select2({
-                placeholder: "{{ __('customer/busroot.select_departure_city') }}", // Using a translation as a placeholder
-                allowClear: true,
-                width: '100%'
-            });
+            let dataTable = null;
+            
+            // Function to initialize Select2 for a specific form
+            function initSelect2ForForm(formSelector) {
+                const form = $(formSelector);
+                // Check if form is visible
+                if (form.hasClass('hidden') || form.is(':hidden')) {
+                    return false;
+                }
+                
+                let initialized = false;
+                form.find('select').each(function() {
+                    const $select = $(this);
+                    const selectId = $select.attr('id');
+                    
+                    // Completely remove Select2 if it exists
+                    if ($select.hasClass('select2-hidden-accessible')) {
+                        try {
+                            $select.select2('destroy');
+                        } catch(e) {
+                            // Ignore destroy errors
+                        }
+                    }
+                    
+                    // Remove any Select2 containers and restore original select
+                    $select.next('.select2-container').remove();
+                    $select.removeClass('select2-hidden-accessible');
+                    $select.removeAttr('data-select2-id');
+                    $select.css('width', '');
+                    
+                    // Ensure select is visible and enabled
+                    if ($select.is(':visible') && !$select.prop('disabled')) {
+                        // Initialize Select2 immediately (form is already visible)
+                        try {
+                            $select.select2({
+                                placeholder: selectId === 'bus_name' ? "{{ __('customer/busroot.select_bus_name') }}" : "{{ __('customer/busroot.select_departure_city') }}",
+                                allowClear: true,
+                                width: '100%',
+                                dropdownParent: form.closest('.container').length ? form.closest('.container') : $('body')
+                            });
+                            initialized = true;
+                        } catch(e) {
+                            console.error('Select2 initialization error:', e);
+                        }
+                    }
+                });
+                return initialized;
+            }
+            
+            // Initialize Select2 only for the visible form (one-way form by default)
+            initSelect2ForForm('#one-way-form');
 
             // Set minimum date to today
             const today = new Date().toISOString().split('T')[0];
             $('#departure_date').attr('min', today);
 
-            // Tab switching
-            $('.search-tab').click(function() {
+            // Function to initialize DataTable
+            function initDataTable() {
+                // Destroy existing DataTable if it exists
+                if (dataTable) {
+                    dataTable.destroy();
+                    dataTable = null;
+                }
+                
+                // Check if table exists and has data
+                if ($('#busTable').length && $('#busTable tbody tr').length > 0) {
+                    dataTable = $('#busTable').DataTable({
+                        responsive: true,
+                        paging: true,
+                        searching: true,
+                        ordering: true,
+                        language: {
+                            emptyTable: "{{ __('customer/busroot.no_buses_available') }}"
+                        }
+                    });
+                }
+            }
+
+            // Tab switching - remove any existing handlers first
+            $('.search-tab').off('click').on('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const tabName = $(this).data('tab');
+                const targetForm = `#${tabName}-form`;
+                const $targetForm = $(targetForm);
+                
+                // Update tab styles
                 $('.search-tab').removeClass('bg-indigo-500 text-white').addClass('text-gray-500');
                 $(this).addClass('bg-indigo-500 text-white').removeClass('text-gray-500');
-                $('.search-form').addClass('hidden');
-                $(`#${$(this).data('tab')}-form`).removeClass('hidden');
+                
+                // Hide all forms first and destroy their Select2 instances
+                $('.search-form').each(function() {
+                    $(this).addClass('hidden');
+                    $(this).find('select').each(function() {
+                        if ($(this).hasClass('select2-hidden-accessible')) {
+                            try {
+                                $(this).select2('destroy');
+                            } catch(e) {}
+                        }
+                    });
+                });
+                
+                // Show target form
+                $targetForm.removeClass('hidden');
+                
+                // Force a reflow to ensure the form is actually visible
+                $targetForm[0].offsetHeight;
+                
+                // Initialize Select2 after form is visible
+                // Use multiple frames to ensure DOM is fully updated
+                requestAnimationFrame(function() {
+                    requestAnimationFrame(function() {
+                        // Initialize Select2 - form should be visible now
+                        const success = initSelect2ForForm(targetForm);
+                        if (!success) {
+                            // If still not working, try one more time after a delay
+                            setTimeout(function() {
+                                initSelect2ForForm(targetForm);
+                            }, 200);
+                        }
+                    });
+                });
             });
+
+            // Preserve tab state after form submission
+            @if(request('bus_id'))
+                // If bus_id is present, activate bus-name tab
+                $('.search-tab[data-tab="bus-name"]').click();
+            @elseif(request('departure_city') || request('arrival_city'))
+                // If route search params are present, activate one-way tab
+                $('.search-tab[data-tab="one-way"]').click();
+            @endif
 
             // Ensure date input is clickable
             $('#departure_date').on('click', function() {
                 $(this).focus();
             });
 
-            // Initialize DataTable
-            $('#busTable').DataTable({
-                responsive: true,
-                paging: true,
-                searching: true,
-                ordering: true,
-                language: {
-                    emptyTable: "{{ __('customer/busroot.no_buses_available') }}"
+            // Initialize DataTable on page load
+            setTimeout(initDataTable, 200);
+
+            // Reinitialize DataTable when table content changes (using MutationObserver)
+            if (typeof MutationObserver !== 'undefined') {
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.addedNodes.length > 0) {
+                            setTimeout(initDataTable, 100);
+                        }
+                    });
+                });
+                
+                const tableBody = document.querySelector('#busTable tbody');
+                if (tableBody) {
+                    observer.observe(tableBody, { childList: true, subtree: true });
                 }
-            });
+            }
 
             // Modal logic
-            $('tbody tr').on('click', function(e) {
-                if ($(e.target).closest('button, a').length) return;
+            $(document).on('click', '#busTable tbody tr', function(e) {
+                if ($(e.target).closest('button, a, form').length) return;
                 const row = $(this);
                 if (row.find('td').eq(2).text() !== 'N/A') {
                     $('#modal-bus').text(row.data('bus'));

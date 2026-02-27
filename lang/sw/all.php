@@ -373,4 +373,5 @@ return [
     'waiting_for_confirmation' => 'Inasubiri uthibitisho wa malipo...',
     'page_will_refresh' => 'Ukurasa huu utajisasisha kiotomatiki kuangalia hali ya malipo',
     'check_status' => 'Angalia Hali',
+    'payment_completed_go_to_booking' => 'Malipo yamekamilika. Nenda kwenye uwekaji nafasi wako',
 ];

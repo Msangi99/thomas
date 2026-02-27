@@ -74,9 +74,26 @@ class ClickPesaController extends Controller
         $checkoutUrl = null;
         
         // For USSD-PUSH, we check if the request was successfully initiated
+        // IMPORTANT: Only proceed if status indicates success (not failed/error)
         if ($checkoutResponse && isset($checkoutResponse->id) && isset($checkoutResponse->status)) {
             $transactionId = (string) $checkoutResponse->id;
-            $status = (string) $checkoutResponse->status;
+            $status = strtolower((string) $checkoutResponse->status);
+            
+            // Check if status indicates failure - don't proceed if failed
+            if (in_array($status, ['failed', 'error', 'rejected', 'cancelled', 'invalid'])) {
+                $errorMessage = isset($checkoutResponse->message) 
+                    ? (string) $checkoutResponse->message 
+                    : "Payment request failed with status: " . $status;
+                Log::error('ClickPesa USSD-PUSH Request Failed - Invalid Status', [
+                    'order_id' => $orderDetails['order_id'],
+                    'transaction_id' => $transactionId,
+                    'status' => $status,
+                    'error_message' => $errorMessage,
+                    'response' => $checkoutResponse
+                ]);
+                return back()->with('error', 'ClickPesa Payment Failed: ' . $errorMessage);
+            }
+            
             // Use same alphanumeric format we send to ClickPesa so polling and callback work
             $orderRef = isset($checkoutResponse->orderReference)
                 ? (string) $checkoutResponse->orderReference
@@ -132,22 +149,47 @@ class ClickPesaController extends Controller
                 return back()->with('error', 'Could not load payment page: ' . $e->getMessage());
             }
         } else {
-            $errorMessage = isset($checkoutResponse->message)
-                ? (string) $checkoutResponse->message
-                : "Unknown error creating USSD-PUSH request";
+            // Response doesn't have expected success structure
+            // Check for any error indicators first
+            $errorMessage = '';
+            
+            if (isset($checkoutResponse->message)) {
+                $errorMessage = (string) $checkoutResponse->message;
+            } elseif (isset($checkoutResponse->error)) {
+                $errorMessage = is_string($checkoutResponse->error) 
+                    ? (string) $checkoutResponse->error 
+                    : json_encode($checkoutResponse->error);
+            } elseif (isset($checkoutResponse->status)) {
+                $status = strtolower(trim((string) $checkoutResponse->status));
+                if (in_array($status, ['failed', 'error', 'rejected', 'cancelled', 'invalid', 'declined'])) {
+                    $errorMessage = isset($checkoutResponse->message) 
+                        ? (string) $checkoutResponse->message 
+                        : "Payment request failed with status: " . $status;
+                }
+            }
+            
+            // If no specific error message found, use generic one
+            if (empty($errorMessage)) {
+                $errorMessage = "Unknown error creating USSD-PUSH request";
+            }
 
             $orderRefForLog = isset($checkoutResponse->orderReference)
                 ? (string) $checkoutResponse->orderReference
                 : preg_replace('/[^a-zA-Z0-9]/', '', $orderDetails['order_id']);
-            Log::error('ClickPesa USSD-PUSH Request Failed', [
+            
+            Log::error('ClickPesa USSD-PUSH Request Failed - Invalid Response Structure', [
                 'order_id' => $orderDetails['order_id'],
                 'order_reference' => $orderRefForLog,
                 'error' => $errorMessage,
                 'response' => $checkoutResponse,
-                'response_keys' => $checkoutResponse ? array_keys((array)$checkoutResponse) : []
+                'response_type' => gettype($checkoutResponse),
+                'response_keys' => $checkoutResponse && is_object($checkoutResponse) ? array_keys((array)$checkoutResponse) : 'N/A',
+                'has_id' => isset($checkoutResponse->id),
+                'has_status' => isset($checkoutResponse->status),
+                'has_checkout_url' => isset($checkoutResponse->checkout_url)
             ]);
 
-            return back()->with('error', $errorMessage);
+            return back()->with('error', 'ClickPesa Payment Failed: ' . $errorMessage);
         }
     }
 
@@ -177,17 +219,77 @@ class ClickPesaController extends Controller
                 'error' => $checkoutResponse,
             ]);
 
-            return back()->withErrors(['clickpesa_error' => $checkoutResponse]);
+            // Return redirect with error message that can be caught by VenderController
+            return redirect()->route('vender.pay')->with('error', 'ClickPesa Payment Failed: ' . $checkoutResponse)->withErrors(['clickpesa_error' => $checkoutResponse]);
         }
 
         if ($checkoutResponse && isset($checkoutResponse->checkout_url)) {
+            // CRITICAL: Check for ANY error indicators before proceeding
+            // Even if checkout_url exists, there might be an error message
+            $hasError = false;
+            $errorMessage = '';
+            
+            // Check for error message
+            if (isset($checkoutResponse->message)) {
+                $message = strtolower((string) $checkoutResponse->message);
+                if (stripos($message, 'checksum') !== false ||
+                    stripos($message, 'invalid') !== false ||
+                    stripos($message, 'error') !== false ||
+                    stripos($message, 'fail') !== false ||
+                    stripos($message, 'reject') !== false) {
+                    $hasError = true;
+                    $errorMessage = (string) $checkoutResponse->message;
+                }
+            }
+            
+            // Check for error field
+            if (!$hasError && isset($checkoutResponse->error)) {
+                $hasError = true;
+                $errorMessage = is_string($checkoutResponse->error) 
+                    ? (string) $checkoutResponse->error 
+                    : json_encode($checkoutResponse->error);
+            }
+            
+            // Check for failed status
+            if (!$hasError && isset($checkoutResponse->status)) {
+                $status = strtolower(trim((string) $checkoutResponse->status));
+                if (in_array($status, ['failed', 'error', 'rejected', 'cancelled', 'invalid', 'declined'])) {
+                    $hasError = true;
+                    $errorMessage = isset($checkoutResponse->message) 
+                        ? (string) $checkoutResponse->message 
+                        : "Payment failed with status: " . $status;
+                }
+            }
+            
+            if ($hasError) {
+                Log::error('ClickPesa Vendor Checkout Failed - Error Detected in Response', [
+                    'order_id' => $orderDetails['order_id'],
+                    'error_message' => $errorMessage,
+                    'full_response' => $checkoutResponse,
+                    'has_checkout_url' => isset($checkoutResponse->checkout_url)
+                ]);
+                return redirect()->route('vender.pay')->with('error', 'ClickPesa Payment Failed: ' . $errorMessage)->withErrors(['clickpesa_error' => $errorMessage]);
+            }
+            
+            // Validate checkout_url is not empty
             $checkoutUrl = (string) $checkoutResponse->checkout_url;
+            if (empty($checkoutUrl) || !filter_var($checkoutUrl, FILTER_VALIDATE_URL)) {
+                $errorMessage = "Invalid checkout URL received from ClickPesa";
+                Log::error('ClickPesa Vendor Checkout Failed - Invalid URL', [
+                    'order_id' => $orderDetails['order_id'],
+                    'checkout_url' => $checkoutUrl,
+                    'response' => $checkoutResponse
+                ]);
+                return redirect()->route('vender.pay')->with('error', 'ClickPesa Payment Failed: ' . $errorMessage)->withErrors(['clickpesa_error' => $errorMessage]);
+            }
+            
             $reference = (string) ($checkoutResponse->reference ?? preg_replace('/[^a-zA-Z0-9]/', '', $orderDetails['order_id']));
 
             Log::info('ClickPesa Checkout Created Successfully (Vendor)', [
                 'order_id' => $orderDetails['order_id'],
                 'reference' => $reference,
-                'amount' => $orderDetails['amount']
+                'amount' => $orderDetails['amount'],
+                'checkout_url_preview' => substr($checkoutUrl, 0, 50) . '...'
             ]);
 
             Session::put('vender', 'vender');
@@ -205,17 +307,42 @@ class ClickPesaController extends Controller
             // Redirect to ClickPesa checkout page
             return redirect()->away($checkoutUrl);
         } else {
-            $errorMessage = isset($checkoutResponse->message)
-                ? (string) $checkoutResponse->message
-                : "Unknown error creating checkout session";
+            // Response doesn't have checkout_url - check for error indicators
+            $errorMessage = '';
+            
+            if (isset($checkoutResponse->message)) {
+                $errorMessage = (string) $checkoutResponse->message;
+            } elseif (isset($checkoutResponse->error)) {
+                $errorMessage = is_string($checkoutResponse->error) 
+                    ? (string) $checkoutResponse->error 
+                    : json_encode($checkoutResponse->error);
+            } elseif (isset($checkoutResponse->status)) {
+                $status = strtolower(trim((string) $checkoutResponse->status));
+                if (in_array($status, ['failed', 'error', 'rejected', 'cancelled', 'invalid', 'declined'])) {
+                    $errorMessage = isset($checkoutResponse->message) 
+                        ? (string) $checkoutResponse->message 
+                        : "Payment failed with status: " . $status;
+                }
+            }
+            
+            // If no specific error message found, use generic one
+            if (empty($errorMessage)) {
+                $errorMessage = "Unknown error creating checkout session";
+            }
 
-            Log::error('ClickPesa Checkout Creation Failed', [
+            Log::error('ClickPesa Vendor Checkout Creation Failed - Invalid Response Structure', [
                 'order_id' => $orderDetails['order_id'],
                 'error' => $errorMessage,
-                'response' => $checkoutResponse
+                'response' => $checkoutResponse,
+                'response_type' => gettype($checkoutResponse),
+                'response_keys' => $checkoutResponse && is_object($checkoutResponse) ? array_keys((array)$checkoutResponse) : 'N/A',
+                'has_checkout_url' => isset($checkoutResponse->checkout_url),
+                'has_id' => isset($checkoutResponse->id),
+                'has_status' => isset($checkoutResponse->status)
             ]);
 
-            return back()->withErrors(['clickpesa_error' => $errorMessage]);
+            // Return redirect with error message that can be caught by VenderController
+            return redirect()->route('vender.pay')->with('error', 'ClickPesa Payment Failed: ' . $errorMessage)->withErrors(['clickpesa_error' => $errorMessage]);
         }
     }
 
@@ -686,13 +813,40 @@ class ClickPesaController extends Controller
         ];
 
         // Generate checksum (required when checksum is enabled in ClickPesa app)
+        // CRITICAL: Do NOT make API call if checksum fails - this prevents push notifications
         if (empty($this->checksumKey)) {
-            Log::error('ClickPesa checksum key is not set - checksum cannot be computed');
+            Log::error('ClickPesa checksum key is not set - checksum cannot be computed - ABORTING API CALL', [
+                'order_id' => $orderDetails['order_id'],
+                'order_reference' => $orderReference
+            ]);
             return "ClickPesa checksum key is not configured. Set CLICKPESA_CHECKSUM_KEY in .env.";
         }
 
-        $computedChecksum = $this->computeChecksum($payload);
-        $payload['checksum'] = $computedChecksum;
+        try {
+            $computedChecksum = $this->computeChecksum($payload);
+            if (empty($computedChecksum) || strlen($computedChecksum) < 10) {
+                Log::error('ClickPesa checksum computation returned invalid value - ABORTING API CALL', [
+                    'order_id' => $orderDetails['order_id'],
+                    'order_reference' => $orderReference,
+                    'checksum_length' => strlen($computedChecksum ?? '')
+                ]);
+                return "Failed to create checksum. Please check CLICKPESA_CHECKSUM_KEY configuration.";
+            }
+            $payload['checksum'] = $computedChecksum;
+            Log::debug('ClickPesa checksum computed successfully', [
+                'order_id' => $orderDetails['order_id'],
+                'order_reference' => $orderReference,
+                'checksum_length' => strlen($computedChecksum)
+            ]);
+        } catch (\Exception $e) {
+            Log::error('ClickPesa checksum computation failed with exception - ABORTING API CALL', [
+                'order_id' => $orderDetails['order_id'],
+                'order_reference' => $orderReference,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return "Failed to create checksum: " . $e->getMessage();
+        }
 
         $checksumKey = env('CLICKPESA_CHECKSUM_KEY', $this->clientId);
         $canonicalForLogging = $this->canonicalize(array_diff_key($payload, ['checksum' => 1]));
@@ -737,6 +891,15 @@ class ClickPesaController extends Controller
         $curlInfo = curl_getinfo($ch);
         curl_close($ch);
 
+        // Log the raw response for debugging
+        Log::debug('ClickPesa Raw API Response', [
+            'http_code' => $httpCode,
+            'response' => $response,
+            'curl_error' => $curlError,
+            'order_id' => $orderDetails['order_id'],
+            'order_reference' => $orderReference
+        ]);
+
         if ($httpCode != 200 && $httpCode != 201) {
             Log::error('ClickPesa Create Checkout HTTP Error', [
                 'http_code' => $httpCode,
@@ -748,8 +911,16 @@ class ClickPesaController extends Controller
                 'curl_info' => $curlInfo
             ]);
             
-            // Return full response as requested by user
-            return $response;
+            // Try to parse error message from response
+            $errorMessage = "HTTP Error $httpCode";
+            $jsonError = json_decode($response);
+            if ($jsonError && isset($jsonError->message)) {
+                $errorMessage = (string) $jsonError->message;
+            } elseif (!empty($response)) {
+                $errorMessage = "API Error: " . substr($response, 0, 200);
+            }
+            
+            return $errorMessage;
         }
 
         $jsonResponse = json_decode($response);
@@ -766,6 +937,120 @@ class ClickPesaController extends Controller
             'order_id' => $orderDetails['order_id'],
             'order_reference' => $orderReference,
             'response' => $jsonResponse
+        ]);
+
+        // CRITICAL: Check for ANY error indicators in response BEFORE proceeding
+        // Check for error message (even if other fields exist)
+        if (isset($jsonResponse->message)) {
+            $message = strtolower((string) $jsonResponse->message);
+            if (stripos($message, 'checksum') !== false ||
+                stripos($message, 'invalid') !== false ||
+                stripos($message, 'error') !== false ||
+                stripos($message, 'fail') !== false ||
+                stripos($message, 'reject') !== false ||
+                stripos($message, 'unauthorized') !== false) {
+                $errorMessage = (string) $jsonResponse->message;
+                Log::error('ClickPesa API Returned Error Message', [
+                    'order_id' => $orderDetails['order_id'],
+                    'order_reference' => $orderReference,
+                    'error_message' => $errorMessage,
+                    'full_response' => $jsonResponse
+                ]);
+                return "ClickPesa error: " . $errorMessage;
+            }
+        }
+
+        // Check for error field
+        if (isset($jsonResponse->error)) {
+            $errorMessage = is_string($jsonResponse->error) 
+                ? (string) $jsonResponse->error 
+                : json_encode($jsonResponse->error);
+            Log::error('ClickPesa API Returned Error Field', [
+                'order_id' => $orderDetails['order_id'],
+                'order_reference' => $orderReference,
+                'error' => $errorMessage,
+                'full_response' => $jsonResponse
+            ]);
+            return "ClickPesa error: " . $errorMessage;
+        }
+
+        // Check if status indicates failure (even if id exists)
+        if (isset($jsonResponse->status)) {
+            $status = strtolower(trim((string) $jsonResponse->status));
+            if (in_array($status, ['failed', 'error', 'rejected', 'cancelled', 'invalid', 'declined'])) {
+                $errorMessage = isset($jsonResponse->message) 
+                    ? (string) $jsonResponse->message 
+                    : "Payment request failed with status: " . $status;
+                Log::error('ClickPesa Payment Request Failed - Invalid Status', [
+                    'order_id' => $orderDetails['order_id'],
+                    'order_reference' => $orderReference,
+                    'status' => $status,
+                    'error_message' => $errorMessage,
+                    'full_response' => $jsonResponse
+                ]);
+                return $errorMessage;
+            }
+        }
+
+        // For USSD-PUSH: Check if we have required success indicators
+        // If response doesn't have id/status or checkout_url, it's likely an error
+        $hasSuccessIndicator = false;
+        $successStatus = null;
+        
+        if (isset($jsonResponse->id) && isset($jsonResponse->status)) {
+            $status = strtolower(trim((string) $jsonResponse->status));
+            if (in_array($status, ['pending', 'initiated', 'processing', 'success', 'completed'])) {
+                $hasSuccessIndicator = true;
+                $successStatus = $status;
+            } else {
+                // Status exists but indicates failure
+                $errorMessage = isset($jsonResponse->message) 
+                    ? (string) $jsonResponse->message 
+                    : "Payment request failed with status: " . $status;
+                Log::error('ClickPesa Response Has Failed Status', [
+                    'order_id' => $orderDetails['order_id'],
+                    'order_reference' => $orderReference,
+                    'status' => $status,
+                    'response' => $jsonResponse,
+                    'error_message' => $errorMessage
+                ]);
+                return $errorMessage;
+            }
+        } elseif (isset($jsonResponse->checkout_url)) {
+            // Validate checkout_url is actually a valid URL
+            $checkoutUrl = (string) $jsonResponse->checkout_url;
+            if (!empty($checkoutUrl) && filter_var($checkoutUrl, FILTER_VALIDATE_URL)) {
+                $hasSuccessIndicator = true;
+            }
+        }
+
+        if (!$hasSuccessIndicator) {
+            $errorMessage = isset($jsonResponse->message) 
+                ? (string) $jsonResponse->message 
+                : (isset($jsonResponse->error) 
+                    ? (is_string($jsonResponse->error) ? (string) $jsonResponse->error : json_encode($jsonResponse->error))
+                    : "Unknown error creating checkout session");
+            Log::error('ClickPesa Response Missing Success Indicators', [
+                'order_id' => $orderDetails['order_id'],
+                'order_reference' => $orderReference,
+                'response' => $jsonResponse,
+                'response_type' => gettype($jsonResponse),
+                'has_id' => isset($jsonResponse->id),
+                'has_status' => isset($jsonResponse->status),
+                'has_checkout_url' => isset($jsonResponse->checkout_url),
+                'error_message' => $errorMessage
+            ]);
+            return $errorMessage;
+        }
+
+        // Final validation: Log successful response for debugging
+        Log::info('ClickPesa API Call Successful', [
+            'order_id' => $orderDetails['order_id'],
+            'order_reference' => $orderReference,
+            'has_id' => isset($jsonResponse->id),
+            'has_status' => isset($jsonResponse->status),
+            'has_checkout_url' => isset($jsonResponse->checkout_url),
+            'status' => $successStatus ?? 'N/A'
         ]);
 
         return $jsonResponse;

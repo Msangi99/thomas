@@ -412,4 +412,5 @@ return [
     'waiting_for_confirmation' => 'Waiting for payment confirmation...',
     'page_will_refresh' => 'This page will auto-refresh to check payment status',
     'check_status' => 'Check Status',
+    'payment_completed_go_to_booking' => 'Payment completed. Go to your booking',
 ];

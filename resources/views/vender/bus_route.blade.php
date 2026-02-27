@@ -17,6 +17,11 @@
                     </div>
                 </div>
                 <div class="p-6">
+                    @if(config('app.debug'))
+                        <div class="mb-4 p-2 bg-yellow-100 text-yellow-800 text-sm">
+                            Debug: {{ count($schedule ?? []) }} schedules found
+                        </div>
+                    @endif
                     <div class="overflow-x-auto">
                         <table id="busesTable" class="w-full">
                             <thead>
@@ -31,31 +36,38 @@
                                     <th class="sortable px-4 py-3 text-left font-medium" data-sort="date">{{ __('vender/busroot.date') }}</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                @forelse ($cars as $car)
-                                    <tr class="hover:bg-gray-50 transition-colors duration-150">
-                                        <td class="px-4 py-3">{{ $loop->iteration }}</td>
-                                        <td class="px-4 py-3">{{ $car->campany->name }}</td>
-                                        <td class="px-4 py-3">{{ $car->bus_number }}</td>
-                                        <td class="px-4 py-3">{{ $car->route->from }} To {{ $car->route->to }}</td>
-                                        <td class="px-4 py-3">{{ $car->schedule->from }} To {{ $car->schedule->to }}</td>
-                                        <td class="px-4 py-3">Tsh. {{ $car->route->price }}</td>
-                                        <td class="px-4 py-3">{{ $car->schedule->start }} -> {{ $car->schedule->end }}</td>
-                                        <td class="px-4 py-3" data-sort-value="{{ $car->schedule->schedule_date ?? '' }}">
-                                            {{ $car->schedule->schedule_date ? \Carbon\Carbon::parse($car->schedule->schedule_date)->format('d F Y') : 'N/A' }}
-                                        </td>
-                                    </tr>
-                                @empty
+                            <tbody class="divide-y divide-gray-200" id="scheduleTableBody">
+                                @if(isset($schedule) && $schedule->count() > 0)
+                                    @foreach($schedule as $sched)
+                                        @php
+                                            $bus = $sched->bus ?? null;
+                                            $campany = $bus && $bus->campany ? $bus->campany : null;
+                                            $route = $sched->route ?? ($bus && $bus->route ? $bus->route : null);
+                                        @endphp
+                                        <tr class="hover:bg-gray-50 transition-colors duration-150">
+                                            <td class="px-4 py-3">{{ $loop->iteration }}</td>
+                                            <td class="px-4 py-3">{{ $campany ? $campany->name : 'N/A' }}</td>
+                                            <td class="px-4 py-3">{{ $bus ? $bus->bus_number : 'N/A' }}</td>
+                                            <td class="px-4 py-3">{{ $route ? ($route->from ?? 'N/A') . ' To ' . ($route->to ?? 'N/A') : 'N/A To N/A' }}</td>
+                                            <td class="px-4 py-3">{{ ($sched->from ?? 'N/A') }} To {{ ($sched->to ?? 'N/A') }}</td>
+                                            <td class="px-4 py-3">Tsh. {{ $route && isset($route->price) ? $route->price : '0' }}</td>
+                                            <td class="px-4 py-3">{{ $sched->start ?? 'N/A' }} -> {{ $sched->end ?? 'N/A' }}</td>
+                                            <td class="px-4 py-3" data-sort-value="{{ $sched->schedule_date ?? '' }}">
+                                                {{ $sched->schedule_date ? \Carbon\Carbon::parse($sched->schedule_date)->format('d F Y') : 'N/A' }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                @else
                                     <tr>
                                         <td colspan="8" class="px-4 py-3 text-center text-gray-500">{{ __('assistance/schedule.no_bus_routes_found') }}</td>
                                     </tr>
-                                @endforelse
+                                @endif
                             </tbody>
                         </table>
                     </div>
                     <div class="flex justify-between items-center mt-6">
                         <div class="text-sm text-gray-600">
-                            {{ __('vender/busroot.showing') }} <span id="startItem">1</span> {{ __('vender/busroot.to') }} <span id="endItem">10</span> {{ __('vender/busroot.of') }} <span id="totalItems">{{ count($cars) }}</span> {{ __('vender/busroot.entries') }}
+                            {{ __('vender/busroot.showing') }} <span id="startItem">1</span> {{ __('vender/busroot.to') }} <span id="endItem">10</span> {{ __('vender/busroot.of') }} <span id="totalItems">{{ count($schedule ?? []) }}</span> {{ __('vender/busroot.entries') }}
                         </div>
                         <nav>
                             <ul class="flex space-x-2" id="pagination">
@@ -97,10 +109,19 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const table = document.getElementById('busesTable');
+            if (!table) {
+                console.error('Table not found');
+                return;
+            }
             const tbody = table.querySelector('tbody');
+            if (!tbody) {
+                console.error('Tbody not found');
+                return;
+            }
             const rows = Array.from(tbody.querySelectorAll('tr'));
+            console.log('Rows found:', rows.length);
             const searchInput = document.getElementById('searchInput');
-            const sortableHeaders = table.querySelector('.sortable');
+            const sortableHeaders = table.querySelectorAll('.sortable');
             const itemsPerPage = 10;
             let currentPage = 1;
             let currentSort = {
@@ -109,6 +130,10 @@
             };
 
             function initTable() {
+                if (rows.length === 0) {
+                    console.warn('No rows found in table');
+                    return;
+                }
                 updateTable();
                 setupPagination();
                 updatePagination();
@@ -117,7 +142,7 @@
             function updateTable() {
                 const searchTerm = searchInput.value.toLowerCase();
                 const filteredRows = rows.filter(row => {
-                    const cells = row.querySelector('td');
+                    const cells = row.querySelectorAll('td');
                     return Array.from(cells).some(cell =>
                         cell.textContent.toLowerCase().includes(searchTerm)
                     );
