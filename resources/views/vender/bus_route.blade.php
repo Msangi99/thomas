@@ -17,11 +17,6 @@
                     </div>
                 </div>
                 <div class="p-6">
-                    @if(config('app.debug'))
-                        <div class="mb-4 p-2 bg-yellow-100 text-yellow-800 text-sm">
-                            Debug: {{ count($schedule ?? []) }} schedules found
-                        </div>
-                    @endif
                     <div class="overflow-x-auto">
                         <table id="busesTable" class="w-full">
                             <thead>

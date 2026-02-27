@@ -24,11 +24,23 @@
                     @endif
 
                     @if(isset($booking2) && $booking2)
+                        @php
+                            // For round trip, if second booking has same route as first, it should be reversed
+                            $secondFrom = $booking2->pickup_point;
+                            $secondTo = $booking2->dropping_point;
+                            if (isset($booking1) && $booking1) {
+                                // If routes are the same, swap them for the return trip
+                                if ($booking1->pickup_point == $secondFrom && $booking1->dropping_point == $secondTo) {
+                                    $secondFrom = $booking1->dropping_point;
+                                    $secondTo = $booking1->pickup_point;
+                                }
+                            }
+                        @endphp
                         <div class="alert alert-info mt-3">
                             <h5>Second Leg Booking Details:</h5>
                             <p><strong>Booking Code:</strong> {{ $booking2->booking_code }}</p>
-                            <p><strong>From:</strong> {{ $booking2->pickup_point }}</p>
-                            <p><strong>To:</strong> {{ $booking2->dropping_point }}</p>
+                            <p><strong>From:</strong> {{ $secondFrom }}</p>
+                            <p><strong>To:</strong> {{ $secondTo }}</p>
                             <p><strong>Travel Date:</strong> {{ $booking2->travel_date }}</p>
                             <p><strong>Seats:</strong> {{ $booking2->seat }}</p>
                             <p><strong>Amount Paid:</strong> TZS {{ number_format($booking2->amount, 2) }}</p>

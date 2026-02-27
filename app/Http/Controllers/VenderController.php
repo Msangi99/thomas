@@ -575,7 +575,17 @@ class VenderController extends Controller
 
         $bus_info['customer_number'] = $contactNumber;
         $bus_info['customer_email'] = $request->contactEmail;
-        $bus_info['customer_payment_number'] = $request->payment_contact;
+        
+        // Format payment contact number to start with 255
+        $paymentContact = $request->payment_contact;
+        if (!empty($paymentContact)) {
+            if (substr($paymentContact, 0, 1) === '0') {
+                $paymentContact = '255' . substr($paymentContact, 1);
+            } elseif (substr($paymentContact, 0, 3) !== '255') {
+                $paymentContact = '255' . $paymentContact;
+            }
+        }
+        $bus_info['customer_payment_number'] = $paymentContact;
         $bus_info['countrycode'] = $request->countrycode;
 
         $user = $request->user_id ?? "";
