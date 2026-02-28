@@ -35,6 +35,7 @@ return [
     'drop_point' => 'Drop-point:',
     'system' => 'Service cashFee:',
     'vendor' => 'Vendor:',
+    'vendor_service' => 'Vendor service:',
     'discount' => 'Discount:',
     'vat' => 'Levies:',
     'no_bookings_found' => 'No bookings found.',

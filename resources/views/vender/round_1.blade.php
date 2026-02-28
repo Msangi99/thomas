@@ -40,14 +40,6 @@
             color: white;
         }
 
-        /* Icon and input styling */
-        .fa-map-marker-alt,
-        .fa-bus,
-        .fa-calendar-day {
-            pointer-events: none;
-            z-index: 10;
-        }
-
         input[type="date"] {
             position: relative;
             z-index: 1;
@@ -152,13 +144,12 @@
                                 <option value="30" {{ old('bus_type') == '30' ? 'selected' : '' }}>lower-semiluxury</option>
                                 <option value="40" {{ old('bus_type') == '40' ? 'selected' : '' }}>ordinary</option>
                             </select>
-                            <i class="fas fa-bus absolute right-3 top-3 text-gray-500"></i>
                         </div>
                     </div>
                 </div>
                 <button
                     class="mt-4 w-full bg-indigo-500 hover:bg-indigo-600 text-white py-2 rounded-lg font-medium transition-colors duration-200">
-                    <i class="fas fa-search mr-2"></i> {{ __('customer/busroot.find_buses') }}
+                    {{ __('customer/busroot.find_buses') }}
                 </button>
             </form>
 
@@ -181,13 +172,12 @@
                                     <option>{{ __('customer/busroot.no_companies_found') }}</option>
                                 @endforelse
                             </select>
-                            <i class="fas fa-bus absolute right-3 top-3 text-gray-500"></i>
                         </div>
                     </div>
                 </div>
                 <button
                     class="mt-4 w-full bg-indigo-500 hover:bg-indigo-600 text-white py-2 rounded-lg font-medium transition-colors duration-200">
-                    <i class="fas fa-search mr-2"></i> {{ __('customer/busroot.find_buses') }}
+                    {{ __('customer/busroot.find_buses') }}
                 </button>
             </form>
 
@@ -245,7 +235,6 @@
                                                         value="{{ $schedule['schedule_date'] ?? '' }}">
                                                     <button type="submit"
                                                         class="inline-flex items-center px-3 py-1 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors">
-                                                        <i class="fas fa-ticket-alt mr-1"></i>
                                                         {{ __('customer/busroot.book') }}
                                                     </button>
                                                 </form>
@@ -277,7 +266,7 @@
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-lg font-semibold text-gray-800">{{ __('customer/busroot.schedule_details') }}</h2>
                 <button id="closeModal" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times"></i>
+                    {{ __('customer/busroot.close') }}
                 </button>
             </div>
             <div class="space-y-2 text-gray-700">

@@ -78,7 +78,7 @@
                             @if (isset($bookings) && $bookings->count())
                                 @foreach ($bookings as $index => $booking)
                                     <tr class="border-b border-gray-200 hover:bg-gray-50 transition">
-                                        <td class="py-2 px-4 text-center">{{ $index + 1 }}</td>
+                                        <td class="py-2 px-4 text-center">{{ ($bookings->currentPage() - 1) * $bookings->perPage() + $index + 1 }}</td>
                                         <td class="py-2 px-4">
                                             <div class="flex flex-col">
                                                 <p class="font-medium mb-0">{{ $booking->booking_code ?? __('vender/history.na') }}</p>
@@ -110,7 +110,7 @@
                                         </td>
                                         <td class="py-2 px-4">
                                             <div class="flex flex-col">
-                                                <p class="text-gray-500 mb-0 payment-amount" data-amount="{{ $booking->amount ?? '0' }}" data-vat="{{ $booking->vat ?? '0' }}" data-discount="{{ $booking->discount_amount ?? '0' }}" data-fee="{{ $booking->fee ?? '0' }}" data-vender_fee="{{ $booking->vender_fee ?? '0' }}" data-fee_vat="{{ $booking->fee_vat ?? '0' }}">
+                                                <p class="text-gray-500 mb-0 payment-amount" data-amount="{{ $booking->amount ?? '0' }}" data-vat="{{ $booking->vat ?? '0' }}" data-discount="{{ $booking->discount_amount ?? '0' }}" data-fee="{{ $booking->fee ?? '0' }}" data-vender_fee="{{ $booking->vender_fee ?? '0' }}" data-fee_vat="{{ $booking->fee_vat ?? '0' }}" data-service="{{ $booking->service ?? '0' }}" data-vender_service="{{ $booking->vender_service ?? '0' }}">
                                                     {{ $booking->amount + $booking->vat ?? __('vender/history.na') }}
                                                 </p>
                                             </div>
@@ -119,17 +119,18 @@
                                             <div class="flex flex-col">
                                                 <p class="text-gray-500 font-medium mb-0">{{ __('vender/history.system') }} {{ $booking->fee ?? __('vender/history.na') }}</p>
                                                 <p class="text-gray-500 font-medium mb-0">{{ __('vender/history.vendor') }} {{ $booking->vender_fee ?? __('vender/history.na') }}</p>
+                                                <p class="text-gray-500 font-medium mb-0">{{ __('vender/history.vendor_service') }} {{ $booking->vender_service ?? __('vender/history.na') }}</p>
                                                 <p class="text-gray-500 font-medium mb-0">{{ __('vender/history.discount') }} {{ $booking->discount_amount ?? __('vender/history.na') }}</p>
                                                 <p class="text-gray-500 font-medium mb-0">{{ __('vender/history.vat') }} {{ $booking->vat ?? __('vender/history.na') }}</p>
                                             </div>
                                         </td>
                                         <td class="py-2 px-4">
+                                            @php
+                                                $rowTotal = round(($booking->fee ?? 0) + ($booking->vender_fee ?? 0) + ($booking->amount ?? 0) + ($booking->vat ?? 0) + ($booking->fee_vat ?? 0) + ($booking->service ?? 0) + ($booking->vender_service ?? 0));
+                                            @endphp
                                             <div class="flex flex-col">
-                                                <p class="text-gray-500 font-medium mb-0 total-amount" data-total="{{ round($booking->fee + $booking->vender_fee + $booking->amount + $booking->vat + $booking->fee_vat) ?? '0' }}">
-                                                    {{ round($booking->fee + $booking->vender_fee + $booking->amount + $booking->vat + $booking->fee_vat) ?? __('vender/history.na') }}
-                                                </p>
-                                                <p class="hidden text-gray-500 font-medium mb-0">
-                                                    {{ round($booking->fee + $booking->vender_fee + $booking->amount + $booking->vat + $booking->service + $booking->vender_service + $booking->fee_vat) ?? __('vender/history.na') }}
+                                                <p class="text-gray-500 font-medium mb-0 total-amount" data-total="{{ $rowTotal }}">
+                                                    {{ $rowTotal }}
                                                 </p>
                                             </div>
                                         </td>
@@ -138,8 +139,8 @@
                                                 <form action="{{ route('ticket.print') }}" method="POST" class="inline">
                                                     @csrf
                                                     <input type="hidden" name="data" value='{{ json_encode(["id" => $booking->id]) }}'>
-                                                    <button type="submit" class="px-3 py-1 bg-white text-green-500 rounded-lg hover:bg-green-50 transition flex items-center gap-1 text-sm" title="{{ __('vender/history.download_ticket') }}">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <button type="submit" class="px-1.5 py-0.5 bg-white text-green-500 rounded hover:bg-green-50 transition inline-flex items-center gap-0.5 text-xs" title="{{ __('vender/history.download_ticket') }}">
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                                                         </svg>
                                                         {{ __('vender/history.download_ticket') }}
@@ -177,6 +178,11 @@
                         </tbody>
                     </table>
                 </div>
+                @if (isset($bookings) && method_exists($bookings, 'links'))
+                    <div class="px-4 py-3 border-t border-gray-200">
+                        {{ $bookings->links() }}
+                    </div>
+                @endif
             </div>
         </div>
     </div>
@@ -218,7 +224,7 @@
             DataTable.ext.errMode = 'none';
             const table = $('#busTable').DataTable({
                 responsive: true,
-                paging: true,
+                paging: false,
                 searching: true,
                 ordering: true,
                 language: {
@@ -356,22 +362,13 @@
                         amount: ($(row[5]).find('p').first().text().trim() || '{{ __('vender/history.na') }}'),
                         commision: ($(row[6]).find('p').first().text().replace('{{ __('vender/history.system') }} ', '').trim() || '{{ __('vender/history.na') }}'),
                         service: ($(row[6]).find('p').eq(1).text().replace('{{ __('vender/history.vendor') }} ', '').trim() || '{{ __('vender/history.na') }}'),
-                        discount: ($(row[6]).find('p').eq(2).text().replace('{{ __('vender/history.discount') }} ', '').trim() || '{{ __('vender/history.na') }}'),
-                        vat: ($(row[6]).find('p').eq(3).text().replace('{{ __('vender/history.vat') }} ', '').trim() || '{{ __('vender/history.na') }}'),
+                        vendor_service: ($(row[6]).find('p').eq(2).text().replace('{{ __('vender/history.vendor_service') }} ', '').trim() || '{{ __('vender/history.na') }}'),
+                        discount: ($(row[6]).find('p').eq(3).text().replace('{{ __('vender/history.discount') }} ', '').trim() || '{{ __('vender/history.na') }}'),
+                        vat: ($(row[6]).find('p').eq(4).text().replace('{{ __('vender/history.vat') }} ', '').trim() || '{{ __('vender/history.na') }}'),
                         total: (function() {
-                            // Calculate total from the data attributes
                             let paymentEl = $(row[5]).find('.payment-amount');
                             let totalEl = $(row[7]).find('.total-amount');
-                            let amount = parseFloat(paymentEl.data('amount')) || 0;
-                            let vat = parseFloat(paymentEl.data('vat')) || 0;
-                            let discount = parseFloat(paymentEl.data('discount')) || 0;
-                            let fee = parseFloat(paymentEl.data('fee')) || 0;
-                            let vender_fee = parseFloat(paymentEl.data('vender_fee')) || 0;
-                            let fee_vat = parseFloat(paymentEl.data('fee_vat')) || 0;
-                            
-                            // Calculate total: amount + vat + fee + vender_fee + fee_vat - discount
-                            let calculatedTotal = amount + vat + fee + vender_fee + fee_vat - discount;
-                            return calculatedTotal.toFixed(2);
+                            return (parseFloat(totalEl.data('total')) || 0).toFixed(2);
                         })()
                     });
                 });

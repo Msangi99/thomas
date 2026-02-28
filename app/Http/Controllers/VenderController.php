@@ -905,8 +905,7 @@ class VenderController extends Controller
             }
         }
 
-        $bookings = $query->where('payment_status', 'Paid')->latest()->get();
-        //return $bookings;
+        $bookings = $query->where('payment_status', 'Paid')->latest()->paginate(20);
         return view('vender.history', compact('bookings'));
     }
 

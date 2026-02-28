@@ -35,6 +35,7 @@ return [
     'drop_point' => 'Mahali pa Kushukia:',
     'system' => 'Mfumo:',
     'vendor' => 'Muuzaji:',
+    'vendor_service' => 'Huduma ya muuzaji:',
     'discount' => 'Punguzo:',
     'vat' => 'makato:',
     'no_bookings_found' => 'Hakuna uwekaji nafasi uliopatikana.',

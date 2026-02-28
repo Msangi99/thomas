@@ -16,7 +16,7 @@
                     <!-- Bus Operator -->
                     <div class="mb-4">
                         <label for="busOperator" class="block text-sm text-gray-500 mb-1">
-                            <i class="fas fa-building mr-1"></i> {{ __('customer/busroot.bus_operator') }}
+                            {{ __('customer/busroot.bus_operator') }}
                         </label>
                         <input type="text" name="bus_name" value="{{ $car->busname->name }}" readonly
                                class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -29,7 +29,7 @@
                         <!-- From -->
                         <div>
                             <label for="routeFrom" class="block text-sm text-gray-500 mb-1">
-                                <i class="fas fa-map-marker-alt mr-1"></i> {{ __('customer/busroot.from') }}
+                                {{ __('customer/busroot.from') }}
                             </label>
                             <input type="text" name="from" value="{{ $car->schedule->from }}" readonly
                                    class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -38,7 +38,7 @@
                         <!-- To -->
                         <div>
                             <label for="routeTo" class="block text-sm text-gray-500 mb-1">
-                                <i class="fas fa-map-marker-check mr-1"></i> {{ __('customer/busroot.to') }}
+                                {{ __('customer/busroot.to') }}
                             </label>
                             <input type="text" name="to" value="{{ $car->schedule->to }}" readonly
                                    class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -50,7 +50,7 @@
                         <!-- Pickup Point -->
                         <div>
                             <label for="pickupPoint" class="block text-sm text-gray-500 mb-1">
-                                <i class="fas fa-signpost mr-1"></i> {{ __('customer/busroot.pickup_point') }}
+                                {{ __('customer/busroot.pickup_point') }}
                             </label>
                             <select class="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     id="pickupPoint" name="pickup_point">
@@ -70,7 +70,7 @@
                         <!-- Dropoff Point -->
                         <div>
                             <label for="dropoffPoint" class="block text-sm text-gray-500 mb-1">
-                                <i class="fas fa-signpost mr-1"></i> {{ __('customer/busroot.dropoff_point') }}
+                                {{ __('customer/busroot.dropoff_point') }}
                             </label>
                             <select class="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     id="dropoffPoint" name="dropping_point">
@@ -103,14 +103,14 @@
                     <div class="mt-4">
                         <div class="mb-3">
                             <label for="start" class="block text-sm text-gray-500 mb-1">
-                                <i class="fas fa-map-marker-alt mr-1"></i> {{ __('customer/busroot.pickup_location') }}
+                                {{ __('customer/busroot.pickup_location') }}
                             </label>
                             <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-yellow-50"
                                    id="start" placeholder="{{ __('customer/busroot.search_pickup_location') }}" value="{{ $car->schedule->from }}">
                         </div>
                         <div class="mb-3">
                             <label for="end" class="block text-sm text-gray-500 mb-1">
-                                <i class="fas fa-map-marker-check mr-1"></i> {{ __('customer/busroot.dropping_location') }}
+                                {{ __('customer/busroot.dropping_location') }}
                             </label>
                             <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-yellow-50"
                                    id="end" placeholder="{{ __('customer/busroot.search_dropping_location') }}" value="{{ $car->schedule->to }}">
@@ -143,7 +143,7 @@
 
                     <button type="submit"
                             class="w-full py-2 mt-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-md font-medium hover:opacity-90 transition">
-                        <i class="fas fa-search mr-2"></i> {{ __('customer/busroot.search_available_buses') }}
+                        {{ __('customer/busroot.search_available_buses') }}
                     </button>
                     <input type="hidden" value="{{ $car->schedule->id }}" name="schedule_id">
                 </form>

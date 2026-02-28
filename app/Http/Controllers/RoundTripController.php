@@ -984,6 +984,25 @@ class RoundTripController extends Controller
             }
         } elseif ($method == 'clickpesa') {
             try {
+                // Normalize phone for ClickPesa: digits only, country code 255 without plus (e.g. 255681234567)
+                $phone = preg_replace('/\D/', '', (string) ($commonPaymentInfo['customer_number'] ?? ''));
+                if ($phone === '' && isset($booking1->customer_phone)) {
+                    $phone = preg_replace('/\D/', '', (string) $booking1->customer_phone);
+                }
+                if ($phone !== '') {
+                    if (strpos($phone, '0') === 0) {
+                        $phone = '255' . substr($phone, 1);
+                    } elseif (strlen($phone) < 12 && substr($phone, 0, 3) !== '255') {
+                        $phone = '255' . $phone;
+                    }
+                }
+                if ($phone === '') {
+                    return redirect()->route('round.trip.payment')->withErrors([
+                        'payment_error' => 'Valid phone number is required for ClickPesa. Please enter your mobile number with country code and without the plus sign (e.g. 255681234567).'
+                    ]);
+                }
+                $commonPaymentInfo['customer_number'] = $phone;
+
                 $clickpesa = new ClickPesaController();
 
                 // Clear roundtrip session data after storing in bookings
@@ -1001,7 +1020,7 @@ class RoundTripController extends Controller
                     $commonPaymentInfo['customer_name'] ?? 'Customer',
                     $commonPaymentInfo['customer_name'] ?? 'Customer',
                     $commonPaymentInfo['customer_number'],
-                    $commonPaymentInfo['customer_email'],
+                    $commonPaymentInfo['customer_email'] ?? '',
                     uniqid('Round_')
                 );
 
@@ -1023,6 +1042,14 @@ class RoundTripController extends Controller
 
         // Clear session data after retrieval
         session()->forget(['booking1', 'booking2', 'is_round']);
+
+        // Reload bookings with bus and company for landing page (bus name, company name)
+        if ($booking1 && $booking1->id) {
+            $booking1 = Booking::with(['bus', 'campany'])->find($booking1->id);
+        }
+        if ($booking2 && $booking2->id) {
+            $booking2 = Booking::with(['bus', 'campany'])->find($booking2->id);
+        }
 
         return $this->direction('round_payment_success', compact('booking1', 'booking2', 'isRound'));
     }

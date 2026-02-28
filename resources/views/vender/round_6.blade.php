@@ -509,6 +509,43 @@
             this.submit();
         });
 
+        // Form submission handler for ClickPesa form (must send contactNumber for valid phoneNumber)
+        document.getElementById('clickpesa').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const code = document.getElementById('countrycode').value;
+            const phone = document.getElementById('contactNumber').value;
+            const email = document.getElementById('contactEmail').value;
+            const customerName = document.getElementById('customer_name') ? document.getElementById('customer_name').value : 'Customer';
+
+            const codeInput = document.createElement('input');
+            codeInput.type = 'hidden';
+            codeInput.name = 'countrycode';
+            codeInput.value = code;
+
+            const phoneInput = document.createElement('input');
+            phoneInput.type = 'hidden';
+            phoneInput.name = 'contactNumber';
+            phoneInput.value = phone;
+
+            const emailInput = document.createElement('input');
+            emailInput.type = 'hidden';
+            emailInput.name = 'contactEmail';
+            emailInput.value = email;
+
+            const nameInput = document.createElement('input');
+            nameInput.type = 'hidden';
+            nameInput.name = 'customer_name';
+            nameInput.value = customerName;
+
+            this.appendChild(codeInput);
+            this.appendChild(phoneInput);
+            this.appendChild(emailInput);
+            this.appendChild(nameInput);
+
+            this.submit();
+        });
+
         // Tab functionality
         document.querySelectorAll('[role="tablist"] button').forEach(button => {
             button.addEventListener('click', () => {

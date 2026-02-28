@@ -21,21 +21,19 @@
                         <p><strong>{{ __('vender/busroot.travel_date') }}:</strong> {{ $booking1->travel_date }}</p>
                         <p><strong>{{ __('vender/busroot.seats') }}:</strong> {{ $booking1->seat }}</p>
                         <p><strong>{{ __('vender/busroot.amount_paid') }}:</strong> TZS {{ number_format($booking1->amount, 2) }}</p>
+                        <p class="mt-2">
+                            <strong>{{ __('vender/busroot.company') }}:</strong> {{ $booking1->campany->name ?? __('vender/history.na') }}
+                            <span class="mx-2">|</span>
+                            <strong>{{ __('vender/busroot.bus_number') }}:</strong> {{ $booking1->bus->bus_number ?? __('vender/history.na') }}
+                        </p>
                     </div>
                 @endif
 
                 @if(isset($booking2) && $booking2)
                     @php
-                        // For round trip, if second booking has same route as first, it should be reversed
-                        $secondFrom = $booking2->pickup_point;
-                        $secondTo = $booking2->dropping_point;
-                        if (isset($booking1) && $booking1) {
-                            // If routes are the same, swap them for the return trip
-                            if ($booking1->pickup_point == $secondFrom && $booking1->dropping_point == $secondTo) {
-                                $secondFrom = $booking1->dropping_point;
-                                $secondTo = $booking1->pickup_point;
-                            }
-                        }
+                        // Second leg is always the return: show reverse of first leg (B -> A)
+                        $secondFrom = isset($booking1) && $booking1 ? $booking1->dropping_point : $booking2->pickup_point;
+                        $secondTo   = isset($booking1) && $booking1 ? $booking1->pickup_point : $booking2->dropping_point;
                     @endphp
                     <div class="border border-gray-200 rounded-lg p-4 mb-4 bg-gray-50">
                         <h5 class="font-bold text-gray-800 mb-2">{{ __('vender/busroot.second_leg_booking_details') }}</h5>
@@ -45,6 +43,11 @@
                         <p><strong>{{ __('vender/busroot.travel_date') }}:</strong> {{ $booking2->travel_date }}</p>
                         <p><strong>{{ __('vender/busroot.seats') }}:</strong> {{ $booking2->seat }}</p>
                         <p><strong>{{ __('vender/busroot.amount_paid') }}:</strong> TZS {{ number_format($booking2->amount, 2) }}</p>
+                        <p class="mt-2">
+                            <strong>{{ __('vender/busroot.company') }}:</strong> {{ $booking2->campany->name ?? __('vender/history.na') }}
+                            <span class="mx-2">|</span>
+                            <strong>{{ __('vender/busroot.bus_number') }}:</strong> {{ $booking2->bus->bus_number ?? __('vender/history.na') }}
+                        </p>
                     </div>
                 @endif
 
