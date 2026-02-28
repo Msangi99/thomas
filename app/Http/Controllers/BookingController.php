@@ -714,9 +714,9 @@ class BookingController extends Controller
                     return $amount - $vatAmount;
                 };
 
-                // Define vendor function
+                // Define vendor function (vendor commission for vender_id bookings)
                 $vender = function ($amount, $state) use ($booking) {
-                    if ($booking->vender_id > 0 && $booking->vender->VenderAccount) {
+                    if ($booking->vender_id > 0 && $booking->vender && $booking->vender->VenderAccount) {
                         $vendorPercentage = $booking->vender->VenderAccount->percentage;
                         $vendorShare = $amount * ($vendorPercentage / 100);
 
