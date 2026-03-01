@@ -18,18 +18,18 @@
                         </svg>
                     </div>
                 </div>
-                <h1 class="result-title">{{ __('all.verification_error') ?? 'Verification Error' }}</h1>
-                <p class="result-subtitle">{{ __('all.verification_error_subtitle') ?? 'We could not verify your payment status.' }}</p>
+                <h1 class="result-title">{{ __('all.verification_error') }}</h1>
+                <p class="result-subtitle">{{ __('all.verification_error_subtitle') }}</p>
             </div>
 
             <div class="transaction-details">
                 <div class="detail-row">
-                    <span class="detail-label">{{ __('all.reference') ?? 'Reference' }}</span>
+                    <span class="detail-label">{{ __('all.reference') }}</span>
                     <span class="detail-value mono">{{ $reference ?? 'N/A' }}</span>
                 </div>
                 <div class="detail-divider"></div>
                 <div class="detail-row">
-                    <span class="detail-label">{{ __('all.status') ?? 'Status' }}</span>
+                    <span class="detail-label">{{ __('all.status') }}</span>
                     <div class="status-badge warning">
                         <span class="status-dot"></span>
                         <span class="status-text-badge">{{ strtoupper($status ?? 'VERIFICATION ERROR') }}</span>
@@ -42,8 +42,8 @@
                     <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
                 <div class="warning-content">
-                    <h4>{{ __('all.important_notice') ?? 'Important Notice' }}</h4>
-                    <p>{{ $message ?? 'If money was deducted from your account but your ticket is not issued, please contact our support team immediately with the reference number above.' }}</p>
+<h4>{{ __('all.important_notice') }}</h4>
+                <p>{{ $message ?? __('all.verification_notice_message') }}</p>
                 </div>
             </div>
 
@@ -59,7 +59,7 @@
 
             @if(isset($error))
             <div class="error-details">
-                <span class="error-label">{{ __('all.technical_details') ?? 'Technical Details' }}:</span>
+                <span class="error-label">{{ __('all.technical_details') }}:</span>
                 <code>{{ $error }}</code>
             </div>
             @endif
@@ -75,7 +75,7 @@
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
-                    {{ __('all.return_home') ?? 'Return Home' }}
+                    {{ __('all.return_home') }}
                 </a>
             </div>
 

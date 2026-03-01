@@ -121,6 +121,14 @@ class RedirectController extends Controller
             abort(404, 'One or both bookings not found.');
         }
 
+        // Eager-load schedule so second leg shows correct from/to (schedule route, not main route)
+        if ($bookingone instanceof Booking) {
+            $bookingone->load(['schedule', 'bus.route', 'bus.busname', 'campany', 'vender']);
+        }
+        if ($bookingtwo instanceof Booking) {
+            $bookingtwo->load(['schedule', 'bus.route', 'bus.busname', 'campany', 'vender']);
+        }
+
         // --- TRA INTEGRATION ---
         try {
             $tra = new \App\Services\TraVfdService();

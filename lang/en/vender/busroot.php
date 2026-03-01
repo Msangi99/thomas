@@ -75,6 +75,7 @@ return [
     'travel_date' => 'Travel Date',
     'seats' => 'Seats',
     'amount_paid' => 'Amount Paid',
+    'fee' => 'Fee',
     'round_payment_failed_title' => 'Round Trip Payment Failed',
     'round_payment_could_not_process' => 'Your round trip payment could not be processed.',
     'round_payment_try_again_or_support' => 'There was an issue with your payment. Please try again or contact support.',

@@ -37,7 +37,7 @@
                         <div class="space-y-3">
                             <div class="flex justify-between">
                                 <span class="text-gray-600">Route:</span>
-                                <span class="font-medium text-gray-600">{{ $bookingone->pickup_point ?? $bookingone->bus->route->from ?? 'N/A' }} → {{ $bookingone->dropping_point ?? $bookingone->bus->route->to ?? 'N/A' }}</span>
+                                <span class="font-medium text-gray-600">{{ $bookingone->pickup_point ?? optional($bookingone->schedule)->from ?? $bookingone->bus->route->from ?? 'N/A' }} → {{ $bookingone->dropping_point ?? optional($bookingone->schedule)->to ?? $bookingone->bus->route->to ?? 'N/A' }}</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-600">Bus:</span>
@@ -133,7 +133,7 @@
                         <div class="space-y-3">
                             <div class="flex justify-between">
                                 <span class="text-gray-600">Route:</span>
-                                <span class="font-medium text-gray-600">{{ $bookingtwo->pickup_point ?? $bookingtwo->bus->route->from ?? 'N/A' }} → {{ $bookingtwo->dropping_point ?? $bookingtwo->bus->route->to ?? 'N/A' }}</span>
+                                <span class="font-medium text-gray-600">{{ $bookingtwo->pickup_point ?? optional($bookingtwo->schedule)->from ?? $bookingtwo->bus->route->from ?? 'N/A' }} → {{ $bookingtwo->dropping_point ?? optional($bookingtwo->schedule)->to ?? $bookingtwo->bus->route->to ?? 'N/A' }}</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-600">Bus:</span>

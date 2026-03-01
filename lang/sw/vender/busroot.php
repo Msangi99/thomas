@@ -75,6 +75,7 @@ return [
     'travel_date' => 'Tarehe ya Safari',
     'seats' => 'Vitulo',
     'amount_paid' => 'Kiasi Kilicholipwa',
+    'fee' => 'Ada',
     'round_payment_failed_title' => 'Malipo ya Safari ya Rundi Yameshindwa',
     'round_payment_could_not_process' => 'Malipo yako ya safari ya urundi haikuweza kuchakatwa.',
     'round_payment_try_again_or_support' => 'Kulikuwa na tatizo na malipo yako. Tafadhali jaribu tena au wasiliana na msaada.',

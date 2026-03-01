@@ -41,7 +41,7 @@
                     </svg>
                 </div>
                 <p class="status-text">
-                    {{ $message ?? 'Payment request sent to your phone. Please check your mobile device and enter your PIN to complete the payment.' }}
+                    {{ $message ?? __('all.clickpesa_request_sent') }}
                 </p>
             </div>
 
@@ -119,7 +119,7 @@
                     {{ __('all.check_status') }}
                 </button>
                 <a href="{{ route('clickpesa.callback', ['reference' => $order_id ?? '', 'status' => 'success']) }}" class="btn-secondary completed-payment-link">
-                    {{ __('all.payment_completed_go_to_booking') ?? "I've completed payment – take me to my booking" }}
+                    {{ __('all.payment_completed_go_to_booking') }}
                 </a>
                 <a href="{{ route('home') }}" class="btn-secondary">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -674,12 +674,22 @@
         }
     </style>
 
-    {{-- Payment status polling script --}}
+    {{-- Payment status polling script (i18n from Blade) --}}
     <script>
+        window.clickpesa_i18n = {
+            checking: @json(__('all.checking_payment_status')),
+            timeout: @json(__('all.payment_check_timeout')),
+            success_redirecting: @json(__('all.payment_success_redirecting')),
+            payment_was: @json(__('all.payment_was_status')),
+            waiting_count: @json(__('all.waiting_check_count')),
+            error_retry: @json(__('all.error_checking_retry')),
+            success_badge: @json(__('all.payment_status_success'))
+        };
         (function() {
             const orderReference = '{{ $order_id }}';
             const checkStatusUrl = '{{ route("clickpesa.check-status") }}';
             const paymentCard = document.querySelector('.payment-card');
+            const i18n = window.clickpesa_i18n || {};
             
             let pollCount = 0;
             const maxPolls = 80;
@@ -693,7 +703,7 @@
             
             function updateUI(status, message) {
                 if (loadingText) {
-                    loadingText.textContent = message || 'Checking payment status...';
+                    loadingText.textContent = message || i18n.checking || 'Checking payment status...';
                 }
             }
             
@@ -701,7 +711,7 @@
                 paymentCard.classList.remove('failed');
                 paymentCard.classList.add('success');
                 if (statusTextBadge) {
-                    statusTextBadge.textContent = 'SUCCESS';
+                    statusTextBadge.textContent = (i18n.success_badge || 'SUCCESS').toUpperCase();
                 }
                 loadingDots.forEach(dot => dot.style.animationPlayState = 'paused');
             }
@@ -720,7 +730,7 @@
                 
                 if (pollCount > maxPolls) {
                     clearInterval(pollTimer);
-                    updateUI('timeout', 'Payment check timed out. Please check your phone or try again.');
+                    updateUI('timeout', i18n.timeout || 'Payment check timed out. Please check your phone or try again.');
                     console.log('Payment status polling stopped after timeout');
                     return;
                 }
@@ -742,22 +752,23 @@
                     if (isSuccess) {
                         clearInterval(pollTimer);
                         showSuccess();
-                        updateUI('success', 'Payment successful! Redirecting...');
+                        updateUI('success', (i18n.success_redirecting || 'Payment successful! Redirecting...'));
                         const fallbackUrl = '{{ url("/clickpesa/callback") }}?reference=' + encodeURIComponent(orderReference) + '&status=success';
                         const go = () => { window.location.href = redirectUrl || fallbackUrl; };
                         setTimeout(go, 800);
                     } else if (status === 'failed' || status === 'cancelled' || status === 'rejected') {
                         clearInterval(pollTimer);
                         showFailed(status);
-                        updateUI(status, data.message || 'Payment was ' + status);
+                        updateUI(status, data.message || (i18n.payment_was ? i18n.payment_was.replace(':status', status) : 'Payment was ' + status));
                         if (redirectUrl) setTimeout(() => { window.location.href = redirectUrl; }, 2000);
                     } else {
-                        updateUI('pending', 'Waiting for payment confirmation... (Check ' + pollCount + '/' + maxPolls + ')');
+                        var waitingMsg = i18n.waiting_count ? i18n.waiting_count.replace(':current', pollCount).replace(':max', maxPolls) : ('Waiting for payment confirmation... (Check ' + pollCount + '/' + maxPolls + ')');
+                        updateUI('pending', waitingMsg);
                     }
                 })
                 .catch(error => {
                     console.error('Error checking payment status:', error);
-                    updateUI('error', 'Error checking status. Retrying...');
+                    updateUI('error', i18n.error_retry || 'Error checking status. Retrying...');
                 });
             }
             

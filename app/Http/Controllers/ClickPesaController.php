@@ -138,7 +138,7 @@ class ClickPesaController extends Controller
                     'order_id' => $orderRef,
                     'amount' => $orderDetails['amount'],
                     'status' => $status,
-                    'message' => 'Payment request sent to your phone. Please check your mobile device and enter your PIN to complete the payment.'
+                    'message' => __('all.clickpesa_request_sent')
                 ]);
             } catch (\Throwable $e) {
                 Log::error('ClickPesa payment_waiting view failed', [
@@ -366,7 +366,7 @@ class ClickPesaController extends Controller
             return view('clickpesa.cancel', [
                 'reference' => $reference,
                 'status' => $status,
-                'message' => 'Transaction was cancelled by user'
+                'message' => __('all.transaction_cancelled_by_user')
             ]);
         }
 
@@ -422,14 +422,14 @@ class ClickPesaController extends Controller
                         if (is_array($data1) && isset($data1['errorMessage'])) {
                             session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
                             return view('clickpesa.error', [
-                                'message' => $data1['errorMessage'] ?? 'Booking not found',
+                                'message' => $data1['errorMessage'] ?? __('all.booking_not_found'),
                                 'reference' => $reference
                             ]);
                         }
                         if (is_array($data2) && isset($data2['errorMessage'])) {
                             session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
                             return view('clickpesa.error', [
-                                'message' => $data2['errorMessage'] ?? 'Booking not found',
+                                'message' => $data2['errorMessage'] ?? __('all.booking_not_found'),
                                 'reference' => $reference
                             ]);
                         }
@@ -450,7 +450,7 @@ class ClickPesaController extends Controller
                         session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
 
                         return view('clickpesa.error', [
-                            'message' => 'Failed to process round trip payment: ' . $e->getMessage(),
+                            'message' => __('all.round_trip_payment_process_failed', ['error' => $e->getMessage()]),
                             'reference' => $reference
                         ]);
                     }
@@ -470,13 +470,13 @@ class ClickPesaController extends Controller
                 
                 if (is_object($verifyResponse) && isset($verifyResponse->status)) {
                     $actualStatus = strtolower($verifyResponse->status);
-                    $errorMessage = $verifyResponse->message ?? 'Payment ' . $actualStatus;
+                    $errorMessage = $verifyResponse->message ?? __('all.payment_was_status', ['status' => $actualStatus]);
                 } elseif (is_string($verifyResponse)) {
                     // API returned error - this is critical! Money may have been deducted
                     $errorMessage = $verifyResponse;
                     $actualStatus = 'verification_error';
                 } else {
-                    $errorMessage = 'Unknown verification error';
+                    $errorMessage = __('all.something_went_wrong');
                     $actualStatus = 'unknown_error';
                 }
 
@@ -495,7 +495,7 @@ class ClickPesaController extends Controller
                     return view('clickpesa.verification_error', [
                         'reference' => $reference,
                         'status' => $actualStatus,
-                        'message' => 'Payment verification could not be completed. If money was deducted from your account, please contact support with reference: ' . $reference,
+                        'message' => __('all.payment_verification_incomplete', ['reference' => $reference]),
                         'error' => $errorMessage
                     ]);
                 }
@@ -515,7 +515,7 @@ class ClickPesaController extends Controller
             return view('clickpesa.cancel', [
                 'reference' => 'N/A',
                 'status' => 'error',
-                'message' => 'No transaction reference provided. Please contact support if payment was deducted.'
+                'message' => __('all.no_reference_contact_support')
             ]);
         }
     }
@@ -595,7 +595,7 @@ class ClickPesaController extends Controller
             'order_id' => $orderRef,
             'amount' => $orderDetails['amount'],
             'status' => $status,
-            'message' => 'Payment request sent again to your phone. Please check your mobile device and enter your PIN.'
+            'message' => __('all.clickpesa_request_sent_retry')
         ]);
     }
 
@@ -1177,7 +1177,7 @@ class ClickPesaController extends Controller
             return response()->json([
                 'success' => false,
                 'status' => 'pending',
-                'message' => 'Waiting for payment confirmation'
+                'message' => __('all.waiting_for_payment_confirmation')
             ]);
         }
 
@@ -1213,7 +1213,7 @@ class ClickPesaController extends Controller
             return response()->json([
                 'success' => true,
                 'status' => 'success',
-                'message' => 'Payment completed successfully',
+                'message' => __('all.payment_completed_successfully'),
                 'redirect_url' => route('clickpesa.callback', [
                     'reference' => $orderRefForApi,
                     'status' => 'success'
@@ -1223,7 +1223,7 @@ class ClickPesaController extends Controller
             return response()->json([
                 'success' => false,
                 'status' => strtolower($status),
-                'message' => $paymentData->message ?? 'Payment ' . strtolower($status),
+                'message' => $paymentData->message ?? __('all.payment_was_status', ['status' => strtolower($status)]),
                 'redirect_url' => route('clickpesa.cancel', [
                     'reference' => $orderReference,
                     'status' => strtolower($status)
@@ -1234,7 +1234,7 @@ class ClickPesaController extends Controller
             return response()->json([
                 'success' => false,
                 'status' => 'pending',
-                'message' => 'Waiting for payment confirmation'
+                'message' => __('all.waiting_for_payment_confirmation')
             ]);
         }
     }
@@ -1404,14 +1404,14 @@ class ClickPesaController extends Controller
                 if (is_array($data1) && isset($data1['errorMessage'])) {
                     session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
                     return view('clickpesa.error', [
-                        'message' => $data1['errorMessage'] ?? 'Booking not found',
+                        'message' => $data1['errorMessage'] ?? __('all.booking_not_found'),
                         'reference' => $transToken
                     ]);
                 }
                 if (is_array($data2) && isset($data2['errorMessage'])) {
                     session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
                     return view('clickpesa.error', [
-                        'message' => $data2['errorMessage'] ?? 'Booking not found',
+                        'message' => $data2['errorMessage'] ?? __('all.booking_not_found'),
                         'reference' => $transToken
                     ]);
                 }
@@ -1433,7 +1433,7 @@ class ClickPesaController extends Controller
                 session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
 
                 return view('clickpesa.error', [
-                    'message' => 'Failed to process round trip payment: ' . $e->getMessage(),
+                    'message' => __('all.round_trip_payment_process_failed', ['error' => $e->getMessage()]),
                     'reference' => $transToken
                 ]);
             }

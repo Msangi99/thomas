@@ -19,14 +19,14 @@
                         </svg>
                     </div>
                 </div>
-                <h1 class="result-title">{{ __('all.error_occurred') ?? 'An Error Occurred' }}</h1>
-                <p class="result-subtitle">{{ $message ?? 'Something went wrong while processing your payment.' }}</p>
+                <h1 class="result-title">{{ __('all.error_occurred') }}</h1>
+                <p class="result-subtitle">{{ $message ?? __('all.something_went_wrong') }}</p>
             </div>
 
             @if(isset($reference))
             <div class="transaction-details">
                 <div class="detail-row">
-                    <span class="detail-label">{{ __('all.reference') ?? 'Reference' }}</span>
+                    <span class="detail-label">{{ __('all.reference') }}</span>
                     <span class="detail-value mono">{{ $reference }}</span>
                 </div>
             </div>
@@ -38,7 +38,7 @@
                     <path d="M12 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                     <circle cx="12" cy="16" r="1" fill="currentColor"/>
                 </svg>
-                <p>{{ __('all.error_contact_support') ?? 'Please contact support if you believe this is an error, especially if money was deducted from your account.' }}</p>
+                <p>{{ __('all.error_contact_support') }}</p>
             </div>
 
             <div class="action-buttons">
@@ -47,20 +47,20 @@
                         <path d="M21 12a9 9 0 11-2.636-6.364" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                         <path d="M21 6v4h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
-                    {{ __('all.try_again') ?? 'Try Again' }}
+                    {{ __('all.try_again') }}
                 </a>
                 <a href="{{ route('home') }}" class="btn-secondary">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
-                    {{ __('all.return_home') ?? 'Return Home' }}
+                    {{ __('all.return_home') }}
                 </a>
             </div>
         </div>
 
         <div class="help-footer">
-            <p>{{ __('all.need_help') ?? 'Need help?' }}
-                <a href="{{ route('contact') }}">{{ __('all.contact_support') ?? 'Contact Support' }}</a>
+            <p>{{ __('all.need_help') }}
+                <a href="{{ route('contact') }}">{{ __('all.contact_support') }}</a>
             </p>
         </div>
     </div>

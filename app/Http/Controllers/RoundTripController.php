@@ -1043,12 +1043,12 @@ class RoundTripController extends Controller
         // Clear session data after retrieval
         session()->forget(['booking1', 'booking2', 'is_round']);
 
-        // Reload bookings with bus and company for landing page (bus name, company name)
+        // Reload bookings with bus, company and schedule (schedule used for second leg from/to)
         if ($booking1 && $booking1->id) {
-            $booking1 = Booking::with(['bus', 'campany'])->find($booking1->id);
+            $booking1 = Booking::with(['bus.route', 'campany', 'schedule'])->find($booking1->id);
         }
         if ($booking2 && $booking2->id) {
-            $booking2 = Booking::with(['bus', 'campany'])->find($booking2->id);
+            $booking2 = Booking::with(['bus.route', 'campany', 'schedule'])->find($booking2->id);
         }
 
         return $this->direction('round_payment_success', compact('booking1', 'booking2', 'isRound'));
