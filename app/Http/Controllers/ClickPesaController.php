@@ -621,7 +621,8 @@ class ClickPesaController extends Controller
     }
 
     /**
-     * Get ClickPesa access token
+     * Get ClickPesa access token (with retries and configurable timeout).
+     * Use CLICKPESA_TIMEOUT and CLICKPESA_CONNECT_TIMEOUT in .env if API is slow or far.
      */
     private function getAccessToken()
     {
@@ -635,50 +636,67 @@ class ClickPesaController extends Controller
         }
 
         $tokenEndpoint = 'https://api.clickpesa.com/third-parties/generate-token';
-        
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $tokenEndpoint);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'api-key: ' . $this->apiKey,
-            'client-id: ' . $this->clientId
-        ]);
-        
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlError = curl_error($ch);
-        curl_close($ch);
+        $timeout = (int) env('CLICKPESA_TIMEOUT', 45);       // total request timeout (seconds)
+        $connectTimeout = (int) env('CLICKPESA_CONNECT_TIMEOUT', 15); // connection timeout (seconds)
+        $maxAttempts = min(3, max(1, (int) env('CLICKPESA_TOKEN_RETRIES', 3)));
 
-        // Log curl errors
-        if ($curlError) {
-            Log::error('ClickPesa Token CURL Error', [
+        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $tokenEndpoint);
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $connectTimeout);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'api-key: ' . $this->apiKey,
+                'client-id: ' . $this->clientId
+            ]);
+
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
+            curl_close($ch);
+
+            if (!$curlError && $httpCode === 200 && !empty($response)) {
+                $token = $this->parseTokenFromResponse($response);
+                if ($token !== null) {
+                    return $token;
+                }
+            }
+
+            // Log and retry on failure (timeout, connection error, or non-200)
+            Log::warning('ClickPesa Token attempt failed', [
+                'attempt' => $attempt,
+                'max_attempts' => $maxAttempts,
                 'curl_error' => $curlError,
+                'http_code' => $httpCode,
                 'endpoint' => $tokenEndpoint
             ]);
-            return null;
+            if ($curlError) {
+                Log::error('ClickPesa Token CURL Error', [
+                    'curl_error' => $curlError,
+                    'endpoint' => $tokenEndpoint
+                ]);
+            }
+
+            if ($attempt < $maxAttempts) {
+                usleep(500000); // 0.5s delay before retry
+            }
         }
 
-        if ($httpCode != 200) {
-            Log::error('ClickPesa Token Error', [
-                'http_code' => $httpCode,
-                'response' => $response,
-                'endpoint' => $tokenEndpoint,
-                'api_key_preview' => substr($this->apiKey, 0, 10) . '...',
-                'client_id_preview' => substr($this->clientId, 0, 10) . '...'
-            ]);
-            return null;
-        }
+        return null;
+    }
 
+    /**
+     * Parse access token from ClickPesa generate-token JSON response.
+     */
+    private function parseTokenFromResponse($response)
+    {
         $jsonResponse = json_decode($response);
-        
-        // Handle different possible response formats
         $token = null;
-        
+
         // Format 1: {"success":true,"token":"Bearer eyJ..."}
         if (isset($jsonResponse->success) && $jsonResponse->success && isset($jsonResponse->token)) {
             $token = $jsonResponse->token;
@@ -695,20 +713,18 @@ class ClickPesaController extends Controller
         elseif (is_array($jsonResponse) && isset($jsonResponse[0]->token)) {
             $token = $jsonResponse[0]->token;
         }
-        
+
         if ($token) {
-            // Token might include "Bearer " prefix, so extract just the token part
             if (strpos($token, 'Bearer ') === 0) {
-                $token = substr($token, 7); // Remove "Bearer " prefix
+                $token = substr($token, 7);
             }
             Log::debug('ClickPesa Token Generated Successfully');
             return $token;
         }
-        
+
         Log::error('ClickPesa Token Response Invalid', [
             'response' => $jsonResponse,
             'raw_response' => $response,
-            'http_code' => $httpCode,
             'response_keys' => is_object($jsonResponse) ? array_keys((array)$jsonResponse) : 'not_object'
         ]);
         return null;

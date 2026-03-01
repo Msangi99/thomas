@@ -40,14 +40,20 @@ class VenderController extends Controller
         $venderId = auth()->user()->id;
         $filter = $request->get('filter', 'month'); // Default to 'month'
 
+        // Today's Bookings: leo tu, za vender huyu, zilizolipwa (Paid)
         $TodayBookings = Booking::whereDate('created_at', Carbon::today())
             ->where('vender_id', $venderId)
+            ->where('payment_status', 'Paid')
             ->get();
 
+        // Weekly Bookings: wiki hii, za vender huyu, zilizolipwa (Paid)
         $WeekBookings = Booking::whereBetween('created_at', [
             Carbon::now()->startOfWeek(),
             Carbon::now()->endOfWeek()
-        ])->where('vender_id', $venderId)->get();
+        ])
+            ->where('vender_id', $venderId)
+            ->where('payment_status', 'Paid')
+            ->get();
 
         $bookings = Booking::where('vender_id', $venderId)
             ->latest()
@@ -67,8 +73,9 @@ class VenderController extends Controller
                     $labels[] = $label;
 
                     $count = Booking::where('vender_id', $venderId)
-                        ->whereDate('created_at', Carbon::today()) // this is fine
-                        ->whereRaw('HOUR(created_at) = ?', [$hour]) // this is the FIX
+                        ->whereDate('created_at', Carbon::today())
+                        ->where('payment_status', 'Paid')
+                        ->whereRaw('HOUR(created_at) = ?', [$hour])
                         ->count();
 
                     $data[] = $count;
@@ -88,6 +95,7 @@ class VenderController extends Controller
 
                     $count = Booking::where('vender_id', $venderId)
                         ->whereDate('created_at', $day)
+                        ->where('payment_status', 'Paid')
                         ->count();
 
                     $data[] = $count;
@@ -103,6 +111,7 @@ class VenderController extends Controller
                 )
                     ->whereYear('created_at', Carbon::now()->year)
                     ->where('vender_id', $venderId)
+                    ->where('payment_status', 'Paid')
                     ->groupBy(DB::raw("MONTH(created_at)"))
                     ->orderBy('month')
                     ->get();
@@ -122,6 +131,7 @@ class VenderController extends Controller
                     ->whereYear('created_at', Carbon::now()->year)
                     ->whereMonth('created_at', Carbon::now()->month)
                     ->where('vender_id', $venderId)
+                    ->where('payment_status', 'Paid')
                     ->groupBy(DB::raw("DAY(created_at)"))
                     ->orderBy('day')
                     ->get();

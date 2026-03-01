@@ -166,7 +166,7 @@
                                 <option value="">{{ __('customer/busroot.select_bus_name') }}</option>
                                 @forelse (App\Models\Campany::all() as $bus)
                                     <option value="{{ $bus->id }}"
-                                        {{ request('bus_name') == $bus->id ? 'selected' : '' }}>{{ $bus->name ?? 'N/A' }}
+                                        {{ request('bus_id') == $bus->id ? 'selected' : '' }}>{{ $bus->name ?? 'N/A' }}
                                     </option>
                                 @empty
                                     <option>{{ __('customer/busroot.no_companies_found') }}</option>
@@ -290,40 +290,90 @@
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.tailwindcss.min.js"></script>
     <script>
         $(document).ready(function() {
-            // Initialize Select2
-            $('#departure_city, #arrival_city, #bus_name, #bus_type').select2({
-                placeholder: "{{ __('customer/busroot.select_departure_city') }}", // Using a translation as a placeholder
-                allowClear: true,
-                width: '100%'
-            });
+            // Initialize Select2 only for the visible form (one-way by default)
+            function initSelect2ForForm(formSelector) {
+                const form = $(formSelector);
+                if (form.hasClass('hidden') || form.is(':hidden')) return false;
+                let initialized = false;
+                form.find('select').each(function() {
+                    const $select = $(this);
+                    if ($select.hasClass('select2-hidden-accessible')) {
+                        try { $select.select2('destroy'); } catch (e) {}
+                    }
+                    $select.next('.select2-container').remove();
+                    $select.removeClass('select2-hidden-accessible').removeAttr('data-select2-id').css('width', '');
+                    if ($select.is(':visible') && !$select.prop('disabled')) {
+                        try {
+                            $select.select2({
+                                placeholder: $select.attr('id') === 'bus_name' ? "{{ __('customer/busroot.select_bus_name') }}" : "{{ __('customer/busroot.select_departure_city') }}",
+                                allowClear: true,
+                                width: '100%',
+                                dropdownParent: form.closest('.container').length ? form.closest('.container') : $('body')
+                            });
+                            initialized = true;
+                        } catch (e) { console.error('Select2 init:', e); }
+                    }
+                });
+                return initialized;
+            }
+            initSelect2ForForm('#one-way-form');
 
             // Set minimum date to today
             const today = new Date().toISOString().split('T')[0];
             $('#departure_date').attr('min', today);
 
-            // Tab switching
-            $('.search-tab').click(function() {
+            // Tab switching – ensure BUS NAME tab shows the bus-name form
+            $('.search-tab').off('click').on('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const tabName = $(this).data('tab');
+                const targetForm = '#' + tabName + '-form';
+                const $targetForm = $(targetForm);
+
                 $('.search-tab').removeClass('bg-indigo-500 text-white').addClass('text-gray-500');
                 $(this).addClass('bg-indigo-500 text-white').removeClass('text-gray-500');
-                $('.search-form').addClass('hidden');
-                $(`#${$(this).data('tab')}-form`).removeClass('hidden');
+
+                $('.search-form').each(function() {
+                    $(this).addClass('hidden');
+                    $(this).find('select').each(function() {
+                        if ($(this).hasClass('select2-hidden-accessible')) {
+                            try { $(this).select2('destroy'); } catch (e) {}
+                        }
+                    });
+                });
+
+                $targetForm.removeClass('hidden');
+                requestAnimationFrame(function() {
+                    requestAnimationFrame(function() {
+                        initSelect2ForForm(targetForm) || setTimeout(function() { initSelect2ForForm(targetForm); }, 200);
+                    });
+                });
             });
+
+            // Restore tab from URL params after submit
+            @if(request('bus_id'))
+                $('.search-tab[data-tab="bus-name"]').trigger('click');
+            @elseif(request('departure_city') || request('arrival_city'))
+                $('.search-tab[data-tab="one-way"]').trigger('click');
+            @endif
 
             // Ensure date input is clickable
             $('#departure_date').on('click', function() {
                 $(this).focus();
             });
 
-            // Initialize DataTable
-            $('#busTable').DataTable({
-                responsive: true,
-                paging: true,
-                searching: true,
-                ordering: true,
-                language: {
-                    emptyTable: "{{ __('customer/busroot.no_buses_available') }}"
-                }
-            });
+            // Initialize DataTable only if table exists
+            if ($('#busTable').length && $('#busTable tbody tr').length > 0) {
+                $('#busTable').DataTable({
+                    responsive: true,
+                    paging: true,
+                    searching: true,
+                    ordering: true,
+                    language: {
+                        emptyTable: "{{ __('customer/busroot.no_buses_available') }}"
+                    }
+                });
+            }
 
             // Modal logic
             $('tbody tr').on('click', function(e) {
