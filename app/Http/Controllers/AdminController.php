@@ -1254,9 +1254,9 @@ $q->where('id', auth()->user()->campany->id);
             $query->where('campany_id', $companyId);
         })
         ->where('payment_status', 'resaved')
-        ->with(['bus.busname', 'route_name', 'user'])
+        ->with(['bus.busname', 'schedule', 'user'])
         ->latest()
-        ->get();
+        ->paginate(15);
 
         return view('controller.resaved_tickets', compact('resavedBookings'));
     }

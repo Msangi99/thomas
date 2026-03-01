@@ -15,7 +15,7 @@
     @if (auth()->user()->hasAccess(\App\Models\Access::LINKS['CARDS']))
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <!-- Today's Amount Card -->
+            <!-- Today's Revenue (paid bookings only) -->
             <div class="bg-gradient-to-br from-teal-50 to-teal-100 border border-teal-100 rounded-xl p-6 transition-all hover:shadow-md hover:border-teal-200">
                 <div class="flex items-center justify-between">
                     <div>
@@ -28,10 +28,10 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-xs text-teal-500 mt-2">Total for today</p>
+                <p class="text-xs text-teal-500 mt-2">{{ $todayPaidCount }} paid {{ $todayPaidCount === 1 ? 'booking' : 'bookings' }} today</p>
             </div>
 
-            <!-- Total Amount Card -->
+            <!-- Total Revenue (paid bookings only) -->
             <div class="bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-100 rounded-xl p-6 transition-all hover:shadow-md hover:border-orange-200">
                 <div class="flex items-center justify-between">
                     <div>
@@ -44,7 +44,7 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-xs text-orange-500 mt-2">All time revenue</p>
+                <p class="text-xs text-orange-500 mt-2">{{ number_format($totalPaidCount) }} paid {{ $totalPaidCount === 1 ? 'booking' : 'bookings' }} (all time)</p>
             </div>
 
             <!-- Total Insurance Amount Card -->
@@ -139,7 +139,7 @@
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div class="p-6">
                 <div class="flex justify-between items-center mb-4">
-                    <h5 class="text-lg font-semibold text-gray-800">Weekly Booking Amounts</h5>
+                    <h5 class="text-lg font-semibold text-gray-800">Weekly Booking Amounts (Paid only)</h5>
                     <div class="flex space-x-2">
                         <button class="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded-lg">Week</button>
                         <button class="px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded-lg">Month</button>
@@ -202,7 +202,7 @@
     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div class="p-6">
             <div class="flex justify-between items-center mb-4">
-                <h5 class="text-lg font-semibold text-gray-800">Today's Bookings</h5>
+                <h5 class="text-lg font-semibold text-gray-800">Today's Bookings (Paid)</h5>
                 <div class="relative">
                     <input type="text" placeholder="Search bookings..." class="pl-8 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 absolute left-3 top-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -295,7 +295,7 @@
         data: {
             labels: labels,
             datasets: [{
-                label: 'Booking Amount (Tsh)',
+                label: 'Paid booking amount (Tsh)',
                 data: amounts,
                 borderColor: '#3B82F6',
                 backgroundColor: 'rgba(59, 130, 246, 0.05)',

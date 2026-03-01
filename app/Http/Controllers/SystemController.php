@@ -34,32 +34,40 @@ class SystemController extends Controller
 {
     public function index()
     {
-        $bookings = Booking::whereDate('created_at', today())->with(['bus', 'route', 'campany'])->where('payment_status', 'Paid')->get();
+        // All dashboard figures from PAID bookings only
+        $bookings = Booking::whereDate('created_at', today())
+            ->where('payment_status', 'Paid')
+            ->with(['bus', 'route', 'campany'])
+            ->get();
 
-        // Today's total amount
         $todayAmount = Booking::whereDate('created_at', today())->where('payment_status', 'Paid')->sum('amount');
-        
-        // Total amount paid (All time)
+        $todayPaidCount = Booking::whereDate('created_at', today())->where('payment_status', 'Paid')->count();
+
         $totalAmount = Booking::where('payment_status', 'Paid')->sum('amount');
-        
+        $totalPaidCount = Booking::where('payment_status', 'Paid')->count();
+
         $bima = Bima::sum('amount');
 
-        // Weekly amounts (last 7 days)
+        // Weekly amounts: only PAID bookings (last 7 days)
         $weeklyAmounts = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::today()->subDays($i);
-            $amount = Booking::whereDate('created_at', $date)->sum('amount');
+            $amount = Booking::whereDate('created_at', $date)->where('payment_status', 'Paid')->sum('amount');
             $weeklyAmounts[] = [
                 'date' => $date->format('Y-m-d'),
                 'amount' => $amount,
             ];
         }
+
         $service = SystemBalance::sum('balance');
         $fees = PaymentFees::sum('amount');
         $balance = AdminWallet::sum('balance');
         $cancelledAmount = CancelledBookings::sum('amount');
 
-        return view('system.dashboard', compact('bookings', 'todayAmount', 'totalAmount', 'weeklyAmounts', 'service', 'fees', 'bima', 'balance', 'cancelledAmount'));
+        return view('system.dashboard', compact(
+            'bookings', 'todayAmount', 'todayPaidCount', 'totalAmount', 'totalPaidCount',
+            'weeklyAmounts', 'service', 'fees', 'bima', 'balance', 'cancelledAmount'
+        ));
     }
 
     public function buses()
