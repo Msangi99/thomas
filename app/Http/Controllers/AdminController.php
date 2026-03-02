@@ -1061,7 +1061,22 @@ $q->where('id', auth()->user()->campany->id);
 
    public function print_service(Request $request)
     {
-        $data = json_decode($request->data);
+        $payload = json_decode($request->data);
+        $bookingId = is_object($payload) && isset($payload->id) ? $payload->id : null;
+        $bookingCode = is_object($payload) && isset($payload->booking_code) ? $payload->booking_code : null;
+
+        // Load full booking with relations so schedule times are available
+        $data = null;
+        if ($bookingId) {
+            $data = Booking::with(['bus.route', 'campany.busOwnerAccount', 'schedule', 'vender'])->find($bookingId);
+        }
+        if (!$data && $bookingCode) {
+            $data = Booking::with(['bus.route', 'campany.busOwnerAccount', 'schedule', 'vender'])->where('booking_code', $bookingCode)->first();
+        }
+        if (!$data) {
+            $data = $payload;
+        }
+
         $dns2d = new DNS2D();
 
         // Generate as HTML (easiest for Blade)

@@ -108,19 +108,79 @@
                 <tr>
                     <td>Reporting time:</td>
                     <td>
-                        {{ $data->travel_date ?? 'N/A' }} {{ $data->bus && $data->bus->route && $data->bus->route->route_start ? \Carbon\Carbon::parse($data->bus->route->route_start)->subMinutes(30)->format('h:i A') : 'N/A' }}
+                        @php
+                            $departureTime = null;
+                            if (isset($data->schedule) && $data->schedule) {
+                                $departureTime = $data->schedule->start ?? null;
+                            }
+                            if (!$departureTime && isset($data->bus->route) && $data->bus->route) {
+                                $departureTime = $data->bus->route->route_start ?? null;
+                            }
+                            $reportingTimeStr = 'N/A';
+                            if ($data->travel_date && $departureTime) {
+                                try {
+                                    $departureDt = \Carbon\Carbon::parse($data->travel_date . ' ' . $departureTime);
+                                    $reportingTimeStr = $departureDt->copy()->subMinutes(30)->format('h:i A');
+                                } catch (\Exception $e) {
+                                    $reportingTimeStr = is_string($departureTime) ? $departureTime : 'N/A';
+                                }
+                            }
+                        @endphp
+                        {{ $data->travel_date ?? 'N/A' }} {{ $reportingTimeStr }}
                     </td>
                 </tr>
                 <tr>
                     <td>Departure time:</td>
                     <td>
-                        {{ $data->travel_date ?? 'N/A' }} {{ $data->bus && $data->bus->route && $data->bus->route->route_start ? \Carbon\Carbon::parse($data->bus->route->route_start)->format('h:i A') : 'N/A' }}
+                        @php
+                            $departureTime = null;
+                            if (isset($data->schedule) && $data->schedule) {
+                                $departureTime = $data->schedule->start ?? null;
+                            }
+                            if (!$departureTime && isset($data->bus->route) && $data->bus->route) {
+                                $departureTime = $data->bus->route->route_start ?? null;
+                            }
+                            $departureTimeStr = 'N/A';
+                            if ($data->travel_date && $departureTime) {
+                                try {
+                                    $departureDt = \Carbon\Carbon::parse($data->travel_date . ' ' . $departureTime);
+                                    $departureTimeStr = $departureDt->format('h:i A');
+                                } catch (\Exception $e) {
+                                    $departureTimeStr = is_string($departureTime) ? $departureTime : 'N/A';
+                                }
+                            }
+                        @endphp
+                        {{ $data->travel_date ?? 'N/A' }} {{ $departureTimeStr }}
                     </td>
                 </tr>
                 <tr>
                     <td>Arrival date and time:</td>
                     <td>
-                        {{ $data->travel_date ?? 'N/A' }} {{ $data->bus && $data->bus->route && $data->bus->route->route_end ? \Carbon\Carbon::parse($data->bus->route->route_end)->format('h:i A') : 'N/A' }}
+                        @php
+                            $arrivalTime = null;
+                            if (isset($data->schedule) && $data->schedule) {
+                                $arrivalTime = $data->schedule->end ?? null;
+                            }
+                            if (!$arrivalTime && isset($data->bus->route) && $data->bus->route) {
+                                $arrivalTime = $data->bus->route->route_end ?? null;
+                            }
+                            $arrivalTimeStr = 'N/A';
+                            $arrivalDateStr = $data->travel_date ?? 'N/A';
+                            if ($data->travel_date && $arrivalTime) {
+                                try {
+                                    $arrivalDt = \Carbon\Carbon::parse($data->travel_date . ' ' . $arrivalTime);
+                                    $arrivalTimeStr = $arrivalDt->format('h:i A');
+                                    if ($departureTime && $arrivalDt->format('H:i') < \Carbon\Carbon::parse($departureTime)->format('H:i')) {
+                                        $arrivalDt->addDay();
+                                        $arrivalTimeStr = $arrivalDt->format('h:i A');
+                                        $arrivalDateStr = $arrivalDt->format('d M Y');
+                                    }
+                                } catch (\Exception $e) {
+                                    $arrivalTimeStr = is_string($arrivalTime) ? $arrivalTime : 'N/A';
+                                }
+                            }
+                        @endphp
+                        {{ $arrivalDateStr }} {{ $arrivalTimeStr }}
                     </td>
                 </tr>
                 <tr>
