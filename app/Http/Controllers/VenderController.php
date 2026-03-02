@@ -396,14 +396,15 @@ class VenderController extends Controller
             return back()->with('error', 'Calculate distance before continue');
         }
         $route = Route::find($request->route_id);
+        $schedule = Schedule::find($request->schedule_id);
         $bus_info = [
             'bus_id' => $request->bus_id,
-            'from' => $route->from,
-            'to' => $route->to,
+            'from' => $schedule ? $schedule->from : $route->from,
+            'to' => $schedule ? $schedule->to : $route->to,
             'schedule_id' => $request->schedule_id,
             'route_id' => $request->route_id,
-            'pickup_point' => $request->pickup_point ?? $route->from,
-            'dropping_point' => $request->dropping_point ?? $route->to,
+            'pickup_point' => $request->pickup_point ?? ($schedule ? $schedule->from : $route->from),
+            'dropping_point' => $request->dropping_point ?? ($schedule ? $schedule->to : $route->to),
             'travel_date' => session()->get('departure_date') ?? now()->format('Y-m-d'),
             'dropping_point_amount' => $request->dropping_point_amount ?? ($route ? $route->price : 0),
             'route_distance' => $request->route_distance ?? 0
