@@ -13,7 +13,7 @@ class RedirectController extends Controller
 {
     public function showBookingStatus($bookingId)
     {
-        $booking = Booking::with('bus.route', 'campany.busOwnerAccount', 'campany.user')
+        $booking = Booking::with('bus.route', 'schedule', 'campany.busOwnerAccount', 'campany.user')
             ->where('id', $bookingId)
             ->orwhere('transaction_ref_id', $bookingId)
             ->first();
@@ -26,7 +26,7 @@ class RedirectController extends Controller
     }
     public function _redirect($transactionRefId)
     {
-        $data = Booking::with('bus.route', 'campany.busOwnerAccount', 'campany.user')
+        $data = Booking::with('bus.route', 'schedule', 'campany.busOwnerAccount', 'campany.user')
             ->where('transaction_ref_id', $transactionRefId)
             ->orWhere('id', $transactionRefId)
             ->first();
@@ -65,7 +65,7 @@ class RedirectController extends Controller
         $sendConductorSms = $settings ? (bool) $settings->enable_conductor_sms_notifications : true;
         $sendConductorEmail = $settings ? (bool) $settings->enable_conductor_email_notifications : true;
 
-        $customerMessage = "Dear {$data->customer_name}, Karibu {$data->campany->name}. Utasafiri na basi namba {$data->bus->bus_number} Tarehe {$data->travel_date} kutoka {$data->pickup_point} kwenda {$data->dropping_point} muda wa kuondoka ni {$data->bus->route->route_start} tafadhali report kituoni mapema kwa safari.Namba ya kiti chako ni {$data->seat} na namba yako ya safari ni {$data->booking_code}. Kwa mawasiliano piga {$data->bus->conductor}. HIGHLINK ISGC inakutakia safari njema";
+        $customerMessage = "Dear {$data->customer_name}, Karibu {$data->campany->name}. Utasafiri na basi namba {$data->bus->bus_number} Tarehe {$data->travel_date} kutoka {$data->pickup_point} kwenda {$data->dropping_point} muda wa kuondoka ni " . ($data->schedule->start ?? 'N/A') . " tafadhali report kituoni mapema kwa safari.Namba ya kiti chako ni {$data->seat} na namba yako ya safari ni {$data->booking_code}. Kwa mawasiliano piga {$data->bus->conductor}. HIGHLINK ISGC inakutakia safari njema";
         $conductorMessage = "Dear conductor, Kiti {$data->seat} katika basi namba {$data->bus->bus_number} kimeuzwa kwa {$data->customer_name} kwa safari ya kutoka {$data->pickup_point} kwenda {$data->dropping_point} tarehe {$data->travel_date} namba ya safari yake ni {$data->booking_code} wasiliana naye kwa namba {$data->customer_phone} HIGHLINK ISGC inawatakia safari njema";
 
         if ($sendCustomerSms && !empty($data->customer_phone)) {

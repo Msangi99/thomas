@@ -896,7 +896,7 @@ class VenderController extends Controller
 
     public function history(Request $request)
     {
-        $query = Booking::with(['campany', 'route_name', 'user', 'bus.route', 'vender'])->where('vender_id', auth()->user()->id);
+        $query = Booking::with(['campany', 'schedule', 'user', 'bus.route', 'vender'])->where('vender_id', auth()->user()->id);
 
         if ($request->has('period')) {
             switch ($request->period) {
