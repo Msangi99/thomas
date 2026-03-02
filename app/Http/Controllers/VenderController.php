@@ -1039,9 +1039,28 @@ class VenderController extends Controller
             'email' => $request->input('email', 'user@example.com')
         ];
 
-        Mail::to($data['email'])->send(new SendEmail($data));
+        // Check if email notifications are enabled
+        $settings = Setting::first();
+        $sendEmail = $settings ? (bool) ($settings->enable_customer_email_notifications ?? true) : true;
 
-        return response()->json(['message' => 'Email sent successfully']);
+        if (!$sendEmail) {
+            return response()->json(['message' => 'Email notifications are disabled'], 200);
+        }
+
+        if (empty($data['email'])) {
+            return response()->json(['message' => 'Email address is required'], 400);
+        }
+
+        try {
+            Mail::to($data['email'])->send(new SendEmail($data));
+            return response()->json(['message' => 'Email sent successfully']);
+        } catch (\Exception $e) {
+            Log::error("Failed to send email: " . $e->getMessage(), [
+                'email' => $data['email'],
+                'error' => $e->getMessage(),
+            ]);
+            return response()->json(['message' => 'Failed to send email. Please try again later.'], 500);
+        }
     }
 
     private function applyDiscount($amount)

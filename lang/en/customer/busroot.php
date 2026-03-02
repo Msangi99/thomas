@@ -140,6 +140,7 @@ return [
     'boarding_point_and_time' => 'Boarding Point & Time',
     'plate_no' => 'Plate No.',
     'price_summary' => 'Price Summary',
+    'order_summary' => 'Order Summary',
     'discount' => 'Discount',
     'system_charge' => 'System Charge',
     'bus_fare' => 'Bus Fare',

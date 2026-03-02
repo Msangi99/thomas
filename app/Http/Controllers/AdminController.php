@@ -582,7 +582,7 @@ class AdminController extends Controller
     /////////////history///////////////
     public function history(Request $request)
     {
-        $query = Booking::with(['campany', 'route_name', 'user', 'bus.route', 'vender', 'campany.busOwnerAccount'])
+        $query = Booking::with(['campany', 'schedule', 'user', 'bus.route', 'vender', 'campany.busOwnerAccount'])
             ->whereHas('campany', function ($q) {
 $q->where('id', auth()->user()->campany->id);
             });
@@ -644,7 +644,7 @@ $q->where('id', auth()->user()->campany->id);
 
     public function show($id)
     {
-        $booking = Booking::with(['bus_name', 'route_name', 'user'])->where('payment_status', 'Paid')->findOrFail($id);
+        $booking = Booking::with(['bus_name', 'schedule', 'user'])->where('payment_status', 'Paid')->findOrFail($id);
 
         $html = view('admin.bookings.partials.modal_content', compact('booking'))->render();
 

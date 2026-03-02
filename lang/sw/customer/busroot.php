@@ -140,6 +140,7 @@ return [
     'boarding_point_and_time' => 'Mahali na Muda wa Kupanda',
     'plate_no' => 'Nambari ya Gari',
     'price_summary' => 'Muhtasari wa Bei',
+    'order_summary' => 'Muhtasari wa Oda',
     'discount' => 'Punguzo',
     'system_charge' => 'Gharama ya Mfumo',
     'bus_fare' => 'Nauli ya Basi',

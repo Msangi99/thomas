@@ -8,6 +8,7 @@ use App\Models\Booking;
 use App\Models\Bus;
 use App\Models\Route;
 use App\Models\Schedule;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Mail;
 
@@ -55,9 +56,24 @@ class ScheduleController extends Controller
             /////////////////notify user////////////////////
 
             if(count($bookings) > 0) {
-                foreach($bookings as $booking) {
-                    //UpdateUsersJob::dispatch($booking);
-                    Mail::to($booking->customer_email)->send(new UpdateUsersMail($booking)); // pass $schedule
+                // Check if email notifications are enabled
+                $settings = Setting::first();
+                $sendEmail = $settings ? (bool) ($settings->enable_customer_email_notifications ?? true) : true;
+
+                if ($sendEmail) {
+                    foreach($bookings as $booking) {
+                        //UpdateUsersJob::dispatch($booking);
+                        if (!empty($booking->customer_email)) {
+                            try {
+                                Mail::to($booking->customer_email)->send(new UpdateUsersMail($booking)); // pass $schedule
+                            } catch (\Exception $e) {
+                                \Illuminate\Support\Facades\Log::error("Failed to send schedule update email: " . $e->getMessage(), [
+                                    'booking_id' => $booking->id ?? null,
+                                    'customer_email' => $booking->customer_email,
+                                ]);
+                            }
+                        }
+                    }
                 }
             }
             

@@ -79,7 +79,14 @@ class RedirectController extends Controller
         }
 
         if ($sendCustomerEmail && !empty($data->customer_email)) {
-            Mail::to($data->customer_email)->send(new SendEmail($customerMessage));
+            try {
+                Mail::to($data->customer_email)->send(new SendEmail($customerMessage));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Failed to send customer email: " . $e->getMessage(), [
+                    'booking_id' => $data->id ?? null,
+                    'customer_email' => $data->customer_email,
+                ]);
+            }
         }
 
         $conductorEmail = $data->bus && $data->bus->campany && $data->bus->campany->user
@@ -87,7 +94,14 @@ class RedirectController extends Controller
             : ($data->campany && $data->campany->user ? $data->campany->user->email : null);
 
         if ($sendConductorEmail && !empty($conductorEmail)) {
-            Mail::to($conductorEmail)->send(new SendEmail($conductorMessage));
+            try {
+                Mail::to($conductorEmail)->send(new SendEmail($conductorMessage));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Failed to send conductor email: " . $e->getMessage(), [
+                    'booking_id' => $data->id ?? null,
+                    'conductor_email' => $conductorEmail,
+                ]);
+            }
         }
 
         // After ClickPesa (or other) payment success, send customers to My Ticket with message

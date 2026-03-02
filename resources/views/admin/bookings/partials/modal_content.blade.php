@@ -12,7 +12,7 @@
                 </div>
                 <div class="d-flex justify-content-between mb-2">
                     <span class="text-muted">Route:</span>
-                    <span class="fw-bold">{{ $booking->route_name->from }} to {{ $booking->route_name->to }}</span>
+                    <span class="fw-bold">{{ $booking->schedule->from ?? 'N/A' }} to {{ $booking->schedule->to ?? 'N/A' }}</span>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
                     <span class="text-muted">Travel Date:</span>
