@@ -39,4 +39,5 @@ return [
     'save_schedule' => 'Save Schedule',
     'close' => 'Close',
     'route' => 'Route',
+    'no_buses_found' => 'No schedules found',
 ];

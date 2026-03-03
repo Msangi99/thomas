@@ -48,4 +48,5 @@ return [
     'no_route_points' => 'Tafadhali ongeza angalau kituo kimoja cha njia.',
     'enter_via_location' => 'Ingiza mahali pa kupitia',
     'select' => 'Chagua',
+    'no_buses_found' => 'Hakuna mabasi yaliyopatikana',
 ];

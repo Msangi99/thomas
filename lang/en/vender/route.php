@@ -48,4 +48,5 @@ return [
     'no_route_points' => 'Please add at least one route point.',
     'enter_via_location' => 'Enter via location',
     'select' => 'Select',
+    'no_buses_found' => 'No buses found',
 ];

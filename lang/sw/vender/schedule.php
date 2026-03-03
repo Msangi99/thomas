@@ -39,4 +39,5 @@ return [
     'save_schedule' => 'Hifadhi Ratiba',
     'close' => 'Funga',
     'route' => 'Njia',
+    'no_buses_found' => 'Hakuna ratiba zilizopatikana',
 ];
