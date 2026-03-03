@@ -961,6 +961,7 @@ $q->where('id', auth()->user()->campany->id);
 
             // Update or create bus owner account details
             if ($user->campany && $user->campany->busOwnerAccount) {
+                $boa = $user->campany->busOwnerAccount;
                 $user->campany->busOwnerAccount->update([
                     'registration_number' => $request->input('registration_number'),
                     'tin' => $request->input('tin'),
@@ -972,8 +973,9 @@ $q->where('id', auth()->user()->campany->id);
                     'city' => $request->input('city'),
                     'region' => $request->input('region'),
                     'whatsapp_number' => $request->input('whatsapp_number'),
-                    'bank_name' => $request->input('bank_name'),
-                    'bank_number' => $request->input('account_number'),
+                    // Keep existing bank info when fields are hidden (not in request)
+                    'bank_name' => $request->has('bank_name') ? $request->input('bank_name') : $boa->bank_name,
+                    'bank_number' => $request->has('account_number') ? $request->input('account_number') : $boa->bank_number,
                 ]);
             } elseif ($user->campany && (
                 $request->input('registration_number') ||
