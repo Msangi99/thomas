@@ -830,11 +830,41 @@ class BookingController extends Controller
 
                 // --- TRA INTEGRATION ---
                 try {
+                    Log::channel('tigo')->info('TRA Fiscalization Starting (Mix by YAS Payment)', [
+                        'booking_id' => $booking->id,
+                        'booking_code' => $booking->booking_code,
+                        'payment_method' => 'mixx',
+                        'amount' => $booking->amount,
+                        'transaction_ref_id' => $transactionRefId,
+                    ]);
+                    
                     $tra = new \App\Services\TraVfdService();
                     // We need to refresh the booking to ensure we have latest data
-                    $tra->fiscalize($booking->refresh()); 
+                    $fiscalized = $tra->fiscalize($booking->refresh());
+                    
+                    if ($fiscalized) {
+                        Log::channel('tigo')->info('TRA Fiscalization Successful (Mix by YAS Payment)', [
+                            'booking_id' => $booking->id,
+                            'booking_code' => $booking->booking_code,
+                            'tra_status' => $booking->tra_status,
+                            'tra_vnum' => $booking->tra_vnum ?? 'N/A',
+                        ]);
+                    } else {
+                        Log::channel('tigo')->warning('TRA Fiscalization Returned False (Mix by YAS Payment)', [
+                            'booking_id' => $booking->id,
+                            'booking_code' => $booking->booking_code,
+                            'tra_status' => $booking->tra_status ?? 'N/A',
+                            'tra_error' => $booking->tra_error ?? 'N/A',
+                        ]);
+                    }
                 } catch (\Exception $e) {
-                    Log::channel('tigo')->error("TRA Fiscalization Failed: " . $e->getMessage());
+                    Log::channel('tigo')->error("TRA Fiscalization Failed (Mix by YAS Payment): " . $e->getMessage(), [
+                        'booking_id' => $booking->id,
+                        'booking_code' => $booking->booking_code,
+                        'transaction_ref_id' => $transactionRefId,
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]);
                 }
                 // -----------------------
 

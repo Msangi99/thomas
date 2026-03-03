@@ -50,12 +50,41 @@ class RedirectController extends Controller
         // Payment is Paid - show success, send notifications
         // --- TRA INTEGRATION ---
         try {
+            \Illuminate\Support\Facades\Log::info('TRA Fiscalization Starting (Single Booking Payment)', [
+                'booking_id' => $data->id,
+                'booking_code' => $data->booking_code,
+                'payment_method' => $data->payment_method ?? 'unknown',
+                'amount' => $data->amount,
+            ]);
+            
             $tra = new \App\Services\TraVfdService();
-            $tra->fiscalize($data);
+            $fiscalized = $tra->fiscalize($data);
+            
             // Refresh data to get TRA tokens if updated
             $data->refresh();
+            
+            if ($fiscalized) {
+                \Illuminate\Support\Facades\Log::info('TRA Fiscalization Successful (Single Booking Payment)', [
+                    'booking_id' => $data->id,
+                    'booking_code' => $data->booking_code,
+                    'tra_status' => $data->tra_status,
+                    'tra_vnum' => $data->tra_vnum ?? 'N/A',
+                ]);
+            } else {
+                \Illuminate\Support\Facades\Log::warning('TRA Fiscalization Returned False (Single Booking Payment)', [
+                    'booking_id' => $data->id,
+                    'booking_code' => $data->booking_code,
+                    'tra_status' => $data->tra_status ?? 'N/A',
+                    'tra_error' => $data->tra_error ?? 'N/A',
+                ]);
+            }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error("TRA Error: " . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error("TRA Fiscalization Failed (Single Booking Payment): " . $e->getMessage(), [
+                'booking_id' => $data->id,
+                'booking_code' => $data->booking_code,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
         }
         // -----------------------
 
@@ -146,14 +175,72 @@ class RedirectController extends Controller
         // --- TRA INTEGRATION ---
         try {
             $tra = new \App\Services\TraVfdService();
-            if($bookingone instanceof Booking && $bookingone->payment_status == 'Paid') $tra->fiscalize($bookingone);
-            if($bookingtwo instanceof Booking && $bookingtwo->payment_status == 'Paid') $tra->fiscalize($bookingtwo);
             
-            if($bookingone instanceof Booking) $bookingone->refresh();
-            if($bookingtwo instanceof Booking) $bookingtwo->refresh();
+            // Fiscalize first leg booking
+            if($bookingone instanceof Booking && $bookingone->payment_status == 'Paid') {
+                \Illuminate\Support\Facades\Log::info('TRA Fiscalization Starting (Round Trip - First Leg)', [
+                    'booking_id' => $bookingone->id,
+                    'booking_code' => $bookingone->booking_code,
+                    'payment_method' => $bookingone->payment_method ?? 'unknown',
+                    'amount' => $bookingone->amount,
+                ]);
+                
+                $fiscalized1 = $tra->fiscalize($bookingone);
+                $bookingone->refresh();
+                
+                if ($fiscalized1) {
+                    \Illuminate\Support\Facades\Log::info('TRA Fiscalization Successful (Round Trip - First Leg)', [
+                        'booking_id' => $bookingone->id,
+                        'booking_code' => $bookingone->booking_code,
+                        'tra_status' => $bookingone->tra_status,
+                        'tra_vnum' => $bookingone->tra_vnum ?? 'N/A',
+                    ]);
+                } else {
+                    \Illuminate\Support\Facades\Log::warning('TRA Fiscalization Returned False (Round Trip - First Leg)', [
+                        'booking_id' => $bookingone->id,
+                        'booking_code' => $bookingone->booking_code,
+                        'tra_status' => $bookingone->tra_status ?? 'N/A',
+                        'tra_error' => $bookingone->tra_error ?? 'N/A',
+                    ]);
+                }
+            }
+            
+            // Fiscalize second leg booking
+            if($bookingtwo instanceof Booking && $bookingtwo->payment_status == 'Paid') {
+                \Illuminate\Support\Facades\Log::info('TRA Fiscalization Starting (Round Trip - Second Leg)', [
+                    'booking_id' => $bookingtwo->id,
+                    'booking_code' => $bookingtwo->booking_code,
+                    'payment_method' => $bookingtwo->payment_method ?? 'unknown',
+                    'amount' => $bookingtwo->amount,
+                ]);
+                
+                $fiscalized2 = $tra->fiscalize($bookingtwo);
+                $bookingtwo->refresh();
+                
+                if ($fiscalized2) {
+                    \Illuminate\Support\Facades\Log::info('TRA Fiscalization Successful (Round Trip - Second Leg)', [
+                        'booking_id' => $bookingtwo->id,
+                        'booking_code' => $bookingtwo->booking_code,
+                        'tra_status' => $bookingtwo->tra_status,
+                        'tra_vnum' => $bookingtwo->tra_vnum ?? 'N/A',
+                    ]);
+                } else {
+                    \Illuminate\Support\Facades\Log::warning('TRA Fiscalization Returned False (Round Trip - Second Leg)', [
+                        'booking_id' => $bookingtwo->id,
+                        'booking_code' => $bookingtwo->booking_code,
+                        'tra_status' => $bookingtwo->tra_status ?? 'N/A',
+                        'tra_error' => $bookingtwo->tra_error ?? 'N/A',
+                    ]);
+                }
+            }
 
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error("TRA Error (RoundTrip): " . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error("TRA Fiscalization Failed (RoundTrip): " . $e->getMessage(), [
+                'booking1_id' => $bookingone instanceof Booking ? $bookingone->id : 'N/A',
+                'booking2_id' => $bookingtwo instanceof Booking ? $bookingtwo->id : 'N/A',
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
         }
         // -----------------------
 

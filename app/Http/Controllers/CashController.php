@@ -215,6 +215,43 @@ class CashController extends Controller
 
             DB::commit();
 
+            // --- TRA INTEGRATION ---
+            try {
+                Log::info('TRA Fiscalization Starting (Cash Payment)', [
+                    'booking_id' => $booking->id,
+                    'booking_code' => $booking->booking_code,
+                    'payment_method' => 'cash',
+                    'amount' => $booking->amount,
+                ]);
+                
+                $tra = new \App\Services\TraVfdService();
+                $fiscalized = $tra->fiscalize($booking->refresh());
+                
+                if ($fiscalized) {
+                    Log::info('TRA Fiscalization Successful (Cash Payment)', [
+                        'booking_id' => $booking->id,
+                        'booking_code' => $booking->booking_code,
+                        'tra_status' => $booking->tra_status,
+                        'tra_vnum' => $booking->tra_vnum ?? 'N/A',
+                    ]);
+                } else {
+                    Log::warning('TRA Fiscalization Returned False (Cash Payment)', [
+                        'booking_id' => $booking->id,
+                        'booking_code' => $booking->booking_code,
+                        'tra_status' => $booking->tra_status ?? 'N/A',
+                        'tra_error' => $booking->tra_error ?? 'N/A',
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::error("TRA Fiscalization Failed (Cash Payment): " . $e->getMessage(), [
+                    'booking_id' => $booking->id,
+                    'booking_code' => $booking->booking_code,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+            }
+            // -----------------------
+
             Log::info('DPO Payment processed successfully', [
                 'booking_id' => $booking->id,
                 'company_id' => $bus->campany->id,

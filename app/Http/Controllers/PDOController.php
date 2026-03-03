@@ -654,10 +654,40 @@ class PDOController extends Controller
             
             // --- TRA INTEGRATION ---
             try {
+                Log::info('TRA Fiscalization Starting (DPO Payment)', [
+                    'booking_id' => $booking->id,
+                    'booking_code' => $booking->booking_code,
+                    'payment_method' => 'dpo',
+                    'amount' => $booking->amount,
+                    'transaction_token' => $transToken,
+                ]);
+                
                 $tra = new \App\Services\TraVfdService();
-                $tra->fiscalize($booking->refresh());
+                $fiscalized = $tra->fiscalize($booking->refresh());
+                
+                if ($fiscalized) {
+                    Log::info('TRA Fiscalization Successful (DPO Payment)', [
+                        'booking_id' => $booking->id,
+                        'booking_code' => $booking->booking_code,
+                        'tra_status' => $booking->tra_status,
+                        'tra_vnum' => $booking->tra_vnum ?? 'N/A',
+                    ]);
+                } else {
+                    Log::warning('TRA Fiscalization Returned False (DPO Payment)', [
+                        'booking_id' => $booking->id,
+                        'booking_code' => $booking->booking_code,
+                        'tra_status' => $booking->tra_status ?? 'N/A',
+                        'tra_error' => $booking->tra_error ?? 'N/A',
+                    ]);
+                }
             } catch (\Exception $e) {
-                Log::error("TRA Fiscalization Failed (DPO): " . $e->getMessage());
+                Log::error("TRA Fiscalization Failed (DPO Payment): " . $e->getMessage(), [
+                    'booking_id' => $booking->id,
+                    'booking_code' => $booking->booking_code,
+                    'transaction_token' => $transToken,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
             }
             // -----------------------
 
