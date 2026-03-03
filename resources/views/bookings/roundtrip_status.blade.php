@@ -49,7 +49,7 @@
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-600">Travel Date:</span>
-                                <span class="font-medium text-gray-600">{{ $bookingone->travel_date }} {{ $bookingone->bus->route->route_start }}</span>
+                                <span class="font-medium text-gray-600">{{ $bookingone->travel_date }} {{ $bookingone->schedule->start ?? $bookingone->bus->route->route_start ?? 'N/A' }}</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-600">Seat:</span>
@@ -145,7 +145,7 @@
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-600">Travel Date:</span>
-                                <span class="font-medium text-gray-600">{{ $bookingtwo->travel_date }} {{ $bookingtwo->bus->route->route_start }}</span>
+                                <span class="font-medium text-gray-600">{{ $bookingtwo->travel_date }} {{ $bookingtwo->schedule->start ?? $bookingtwo->bus->route->route_start ?? 'N/A' }}</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-600">Seat:</span>

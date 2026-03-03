@@ -47,14 +47,36 @@
                         </div>
                     @endif
 
-                    <p class="text-center mt-4">
-                        <a href="{{ route('home') }}" class="btn btn-primary">Go to Home</a>
-                        @if(auth()->check() && auth()->user()->isCustomer())
-                            <a href="{{ route('customer.mybooking') }}" class="btn btn-secondary">View My Bookings</a>
-                        @elseif(auth()->check() && auth()->user()->isVender())
-                            <a href="{{ route('vender.history') }}" class="btn btn-secondary">View My Bookings</a>
+                    <div class="text-center mt-4">
+                        <div class="mb-3">
+                            <a href="{{ route('home') }}" class="btn btn-primary">Go to Home</a>
+                            @if(auth()->check() && auth()->user()->isCustomer())
+                                <a href="{{ route('customer.mybooking') }}" class="btn btn-secondary">View My Bookings</a>
+                            @elseif(auth()->check() && auth()->user()->isVender())
+                                <a href="{{ route('vender.history') }}" class="btn btn-secondary">View My Bookings</a>
+                            @endif
+                        </div>
+                        
+                        @if(isset($booking1) && $booking1)
+                            <form action="{{ route('ticket.print') }}" method="POST" class="d-inline">
+                                @csrf
+                                <input type="hidden" name="data" value='{{ json_encode(["id" => $booking1->id]) }}'>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-download"></i> Download Ticket (First Leg)
+                                </button>
+                            </form>
                         @endif
-                    </p>
+                        
+                        @if(isset($booking2) && $booking2)
+                            <form action="{{ route('ticket.print') }}" method="POST" class="d-inline">
+                                @csrf
+                                <input type="hidden" name="data" value='{{ json_encode(["id" => $booking2->id]) }}'>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-download"></i> Download Ticket (Second Leg)
+                                </button>
+                            </form>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>

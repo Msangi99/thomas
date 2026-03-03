@@ -54,6 +54,32 @@
                 <div class="flex flex-wrap gap-3 justify-center mt-6">
                     <a href="{{ route('home') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">{{ __('all.return_home') }}</a>
                     <a href="{{ route('vender.history') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">{{ __('all.view_my_bookings') }}</a>
+                    
+                    @if(isset($booking1) && $booking1)
+                        <form action="{{ route('ticket.print') }}" method="POST" class="inline">
+                            @csrf
+                            <input type="hidden" name="data" value='{{ json_encode(["id" => $booking1->id]) }}'>
+                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                                <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                </svg>
+                                {{ __('vender/history.print_ticket') }} ({{ __('vender/busroot.first_leg_booking_details') }})
+                            </button>
+                        </form>
+                    @endif
+                    
+                    @if(isset($booking2) && $booking2)
+                        <form action="{{ route('ticket.print') }}" method="POST" class="inline">
+                            @csrf
+                            <input type="hidden" name="data" value='{{ json_encode(["id" => $booking2->id]) }}'>
+                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                                <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                </svg>
+                                {{ __('vender/history.print_ticket') }} ({{ __('vender/busroot.second_leg_booking_details') }})
+                            </button>
+                        </form>
+                    @endif
                 </div>
             </div>
         </div>
