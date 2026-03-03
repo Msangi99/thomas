@@ -6,12 +6,14 @@ use App\Models\AdminWallet;
 use App\Models\Bima;
 use App\Models\Booking;
 use App\Models\bus;
+use App\Models\Campany;
 use App\Models\PaymentFees;
 use App\Models\SystemBalance;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
+use App\Http\Controllers\PercentController;
 
 class CashController extends Controller
 {
@@ -151,8 +153,17 @@ class CashController extends Controller
 
             // Calculate system shares
             $bus = bus::with(['busname', 'route', 'campany.balance'])->find($booking->bus_id);
-            $companyPercentage = $bus->campany->percentage;
-            $systemShares = $busOwnerAmount * ($companyPercentage / 100);
+            $campanyModel = $bus->campany;
+            
+            // Commission Logic: Priority Percentage > Amount > Default
+            if ($campanyModel->percentage > 0) {
+                $systemShares = $busOwnerAmount * ($campanyModel->percentage / 100);
+            } elseif ($campanyModel->commission_amount > 0) {
+                $systemShares = $campanyModel->commission_amount;
+            } else {
+                // Fallback to default system percentage (0.05 = 5%)
+                $systemShares = $busOwnerAmount * PercentController::PERCENTAGE;
+            }
             $busOwnerAmount -= $systemShares;
 
             // Apply vendor share calculations

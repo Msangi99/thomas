@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\BimaController;
+use App\Http\Controllers\PercentController;
 use App\Http\Controllers\SmsController;
 use App\Http\Controllers\status\Fees;
 use App\Http\Controllers\status\Vender;
@@ -12,7 +13,7 @@ use App\Models\AdminWallet;
 use App\Models\Bima;
 use App\Models\Booking;
 use App\Models\bus;
-use App\Models\campany;
+use App\Models\Campany;
 use App\Models\City;
 use App\Models\Discount;
 use App\Models\PaymentFees;
@@ -764,8 +765,17 @@ class BookingController extends Controller
 
 
                 // Calculate system shares
-                $companyPercentage = $bus->campany->percentage;
-                $systemShares = $busOwnerAmount * ($companyPercentage / 100);
+                $campanyModel = $bus->campany;
+                
+                // Commission Logic: Priority Percentage > Amount > Default
+                if ($campanyModel->percentage > 0) {
+                    $systemShares = $busOwnerAmount * ($campanyModel->percentage / 100);
+                } elseif ($campanyModel->commission_amount > 0) {
+                    $systemShares = $campanyModel->commission_amount;
+                } else {
+                    // Fallback to default system percentage (0.05 = 5%)
+                    $systemShares = $busOwnerAmount * PercentController::PERCENTAGE;
+                }
                 $busOwnerAmount -= $systemShares;
 
                 // Apply vendor share calculations
