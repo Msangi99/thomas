@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container mx-auto px-4 py-8">
-        <h1 class="text-2xl font-bold mb-6">Add New Schedule</h1>
+        <h1 class="text-2xl font-bold mb-6">{{ __('vender/schedule.add_new_schedule') }}</h1>
 
         @if ($errors->any())
             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -20,9 +20,9 @@
             @csrf
             <!-- Bus Selection -->
             <div class="mb-4">
-                <label for="bus_id" class="block text-gray-700 text-sm font-bold mb-2">Bus</label>
+                <label for="bus_id" class="block text-gray-700 text-sm font-bold mb-2">{{ __('vender/schedule.bus') }}</label>
                 <select name="bus_id" id="bus_id" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-                    <option value="">Select Bus</option>
+                    <option value="">{{ __('vender/schedule.select_bus') }}</option>
                     @foreach ($buses as $bus)
                         <option value="{{ $bus->id }}" data-routes='@json($bus->route ? [$bus->route] : [])'>
                             {{ $bus->busname->name }} ({{ $bus->bus_number }})
@@ -33,9 +33,9 @@
 
             <!-- Route Selection -->
             <div class="mb-4">
-                <label for="route_id" class="block text-gray-700 text-sm font-bold mb-2">Route</label>
+                <label for="route_id" class="block text-gray-700 text-sm font-bold mb-2">{{ __('vender/schedule.route') }}</label>
                 <select name="route_id" id="route_id" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-                    <option value="">Select Route</option>
+                    <option value="">{{ __('vender/schedule.select_route') }}</option>
                 </select>
             </div>
 
@@ -43,47 +43,46 @@
             <div id="schedule_rows">
                 <div class="schedule-row mb-4 grid grid-cols-12 gap-4">
                     <div class="col-span-2">
-                        <label for="from" class="block text-gray-700 text-sm font-bold mb-2">From</label>
+                        <label for="from" class="block text-gray-700 text-sm font-bold mb-2">{{ __('vender/schedule.from') }}</label>
                         <select name="schedules[0][from]" class="from-select shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-                            <option value="">Select From</option>
+                            <option value="">{{ __('vender/schedule.select_from') }}</option>
                         </select>
                     </div>
                     <div class="col-span-2">
-                        <label for="to" class="block text-gray-700 text-sm font-bold mb-2">To</label>
+                        <label for="to" class="block text-gray-700 text-sm font-bold mb-2">{{ __('vender/schedule.to') }}</label>
                         <select name="schedules[0][to]" class="to-select shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-                            <option value="">Select To</option>
+                            <option value="">{{ __('vender/schedule.select_to') }}</option>
                         </select>
                     </div>
                     <div class="col-span-2">
-                        <label for="schedule_date" class="block text-gray-700 text-sm font-bold mb-2">Schedule Date</label>
+                        <label for="schedule_date" class="block text-gray-700 text-sm font-bold mb-2">{{ __('vender/schedule.schedule_date') }}</label>
                         <input type="date" name="schedules[0][schedule_date]" id="first_date" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
                     </div>
                     <div class="col-span-2">
-                        <label for="start" class="block text-gray-700 text-sm font-bold mb-2">Departure Time</label>
+                        <label for="start" class="block text-gray-700 text-sm font-bold mb-2">{{ __('vender/schedule.departure_time') }}</label>
                         <input type="time" name="schedules[0][start]" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" step="60" required>
                     </div>
                     <div class="col-span-2">
-                        <label for="end" class="block text-gray-700 text-sm font-bold mb-2">Arrival Time</label>
+                        <label for="end" class="block text-gray-700 text-sm font-bold mb-2">{{ __('vender/schedule.arrival_time') }}</label>
                         <input type="time" name="schedules[0][end]" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" step="60" required>
                     </div>
                     <div class="col-span-2 flex items-end gap-2">
-                        <button type="button" class="edit-date bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Lock</button>
-                        <button type="button" class="remove-row bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hidden">Remove</button>
+                        <button type="button" class="edit-date bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">{{ __('vender/schedule.lock') }}</button>
+                        <button type="button" class="remove-row bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hidden">{{ __('vender/schedule.remove') }}</button>
                     </div>
                 </div>
             </div>
 
             <!-- Add Row Button -->
             <div class="mb-4">
-                <button type="button" id="add_row" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Add Another Schedule</button>
+                <button type="button" id="add_row" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">{{ __('vender/schedule.add_another_schedule') }}</button>
             </div>
 
-            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Save Schedule</button>
+            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">{{ __('vender/schedule.save_schedule') }}</button>
         </form>
     </div>
 
     <script>
-        // Define today globally
         const today = new Date().toISOString().split('T')[0];
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -116,15 +115,15 @@
             const fromSelect = row.querySelector('.from-select');
             const toSelect = row.querySelector('.to-select');
             fromSelect.innerHTML =
-                `<option value="">Select From</option>${from ? `<option value="${from}">${from}</option>` : ''}${to ? `<option value="${to}">${to}</option>` : ''}`;
+                `<option value="">{{ __("vender/schedule.select_from") }}</option>${from ? `<option value="${from}">${from}</option>` : ''}${to ? `<option value="${to}">${to}</option>` : ''}`;
             toSelect.innerHTML =
-                `<option value="">Select To</option>${from ? `<option value="${from}">${from}</option>` : ''}${to ? `<option value="${to}">${to}</option>` : ''}`;
+                `<option value="">{{ __("vender/schedule.select_to") }}</option>${from ? `<option value="${from}">${from}</option>` : ''}${to ? `<option value="${to}">${to}</option>` : ''}`;
         }
 
         document.addEventListener('click', function(e) {
             if (e.target.classList.contains('edit-date')) {
                 isEditMode = !isEditMode;
-                e.target.textContent = isEditMode ? 'Unlock' : 'Lock';
+                e.target.textContent = isEditMode ? "{{ __("vender/schedule.unlock") }}" : "{{ __("vender/schedule.lock") }}";
                 e.target.classList.toggle('bg-blue-500');
                 e.target.classList.toggle('bg-blue-700');
                 e.target.classList.toggle('bg-gray-500');
@@ -217,35 +216,35 @@
 
             newRow.innerHTML = `
                 <div class="col-span-2">
-                    <label for="from" class="block text-gray-700 text-sm font-bold mb-2">From</label>
+                    <label for="from" class="block text-gray-700 text-sm font-bold mb-2">{{ __("vender/schedule.from") }}</label>
                     <select name="schedules[${rowCount}][from]" class="from-select shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-                        <option value="">Select From</option>
+                        <option value="">{{ __("vender/schedule.select_from") }}</option>
                         ${from ? `<option value="${from}" ${lockedFrom === from ? 'selected' : ''}>${from}</option>` : ''}
                         ${to ? `<option value="${to}" ${lockedFrom === to ? 'selected' : ''}>${to}</option>` : ''}
                     </select>
                 </div>
                 <div class="col-span-2">
-                    <label for="to" class="block text-gray-700 text-sm font-bold mb-2">To</label>
+                    <label for="to" class="block text-gray-700 text-sm font-bold mb-2">{{ __("vender/schedule.to") }}</label>
                     <select name="schedules[${rowCount}][to]" class="to-select shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-                        <option value="">Select To</option>
+                        <option value="">{{ __("vender/schedule.select_to") }}</option>
                         ${from ? `<option value="${from}" ${lockedTo === from ? 'selected' : ''}>${from}</option>` : ''}
                         ${to ? `<option value="${to}" ${lockedTo === to ? 'selected' : ''}>${to}</option>` : ''}
                     </select>
                 </div>
                 <div class="col-span-2">
-                    <label for="schedule_date" class="block text-gray-700 text-sm font-bold mb-2">Schedule Date</label>
+                    <label for="schedule_date" class="block text-gray-700 text-sm font-bold mb-2">{{ __("vender/schedule.schedule_date") }}</label>
                     <input type="date" name="schedules[${rowCount}][schedule_date]" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="${incrementedDate}" ${isEditMode ? 'readonly' : ''} required min="${today}">
                 </div>
                 <div class="col-span-2">
-                    <label for="start" class="block text-gray-700 text-sm font-bold mb-2">Departure Time</label>
+                    <label for="start" class="block text-gray-700 text-sm font-bold mb-2">{{ __("vender/schedule.departure_time") }}</label>
                     <input type="time" name="schedules[${rowCount}][start]" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="${lockedStartTime}" step="60" required>
                 </div>
                 <div class="col-span-2">
-                    <label for="end" class="block text-gray-700 text-sm font-bold mb-2">Arrival Time</label>
+                    <label for="end" class="block text-gray-700 text-sm font-bold mb-2">{{ __("vender/schedule.arrival_time") }}</label>
                     <input type="time" name="schedules[${rowCount}][end]" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="${lockedEndTime}" step="60" required>
                 </div>
                 <div class="col-span-2 flex items-end gap-2">
-                    <button type="button" class="remove-row bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Remove</button>
+                    <button type="button" class="remove-row bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">{{ __("vender/schedule.remove") }}</button>
                 </div>
             `;
             container.appendChild(newRow);
@@ -280,7 +279,7 @@
             const selectedOption = this.options[this.selectedIndex];
             const routes = selectedOption ? JSON.parse(selectedOption.getAttribute('data-routes')) : [];
 
-            routeSelect.innerHTML = '<option value="">Select Route</option>';
+            routeSelect.innerHTML = '<option value="">{{ __("vender/schedule.select_route") }}</option>';
 
             routes.forEach(route => {
                 const option = new Option(`${route.from} to ${route.to}`, route.id);
@@ -357,35 +356,35 @@
                                     
                                     newRow.innerHTML = `
                                         <div class="col-span-2">
-                                            <label for="from" class="block text-gray-700 text-sm font-bold mb-2">From</label>
+                                            <label for="from" class="block text-gray-700 text-sm font-bold mb-2">{{ __("vender/schedule.from") }}</label>
                                             <select name="schedules[${rowCount}][from]" class="from-select shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-                                                <option value="">Select From</option>
+                                                <option value="">{{ __("vender/schedule.select_from") }}</option>
                                                 <option value="${schedule.from}" ${lockedFrom === schedule.from ? 'selected' : ''}>${schedule.from}</option>
                                                 <option value="${schedule.to}" ${lockedFrom === schedule.to ? 'selected' : ''}>${schedule.to}</option>
                                             </select>
                                         </div>
                                         <div class="col-span-2">
-                                            <label for="to" class="block text-gray-700 text-sm font-bold mb-2">To</label>
+                                            <label for="to" class="block text-gray-700 text-sm font-bold mb-2">{{ __("vender/schedule.to") }}</label>
                                             <select name="schedules[${rowCount}][to]" class="to-select shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-                                                <option value="">Select To</option>
+                                                <option value="">{{ __("vender/schedule.select_to") }}</option>
                                                 <option value="${schedule.from}" ${lockedTo === schedule.from ? 'selected' : ''}>${schedule.from}</option>
                                                 <option value="${schedule.to}" ${lockedTo === schedule.to ? 'selected' : ''}>${schedule.to}</option>
                                             </select>
                                         </div>
                                         <div class="col-span-2">
-                                            <label for="schedule_date" class="block text-gray-700 text-sm font-bold mb-2">Schedule Date</label>
+                                            <label for="schedule_date" class="block text-gray-700 text-sm font-bold mb-2">{{ __("vender/schedule.schedule_date") }}</label>
                                             <input type="date" name="schedules[${rowCount}][schedule_date]" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="${schedule.schedule_date}" ${isEditMode ? 'readonly' : ''} required min="${today}">
                                         </div>
                                         <div class="col-span-2">
-                                            <label for="start" class="block text-gray-700 text-sm font-bold mb-2">Departure Time</label>
+                                            <label for="start" class="block text-gray-700 text-sm font-bold mb-2">{{ __("vender/schedule.departure_time") }}</label>
                                             <input type="time" name="schedules[${rowCount}][start]" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="${lockedStartTime}" step="60" required>
                                         </div>
                                         <div class="col-span-2">
-                                            <label for="end" class="block text-gray-700 text-sm font-bold mb-2">Arrival Time</label>
+                                            <label for="end" class="block text-gray-700 text-sm font-bold mb-2">{{ __("vender/schedule.arrival_time") }}</label>
                                             <input type="time" name="schedules[${rowCount}][end]" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="${lockedEndTime}" step="60" required>
                                         </div>
                                         <div class="col-span-2 flex items-end gap-2">
-                                            <button type="button" class="remove-row bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Remove</button>
+                                            <button type="button" class="remove-row bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">{{ __("vender/schedule.remove") }}</button>
                                         </div>
                                     `;
                                     container.appendChild(newRow);
@@ -394,7 +393,7 @@
                             });
                         } else {
                             console.log('No schedules found for this bus.');
-                            errorDiv.textContent = 'No unbooked schedules found for this bus.';
+                            errorDiv.textContent = "{{ __("vender/schedule.no_unbooked_schedules") }}";
                             errorDiv.classList.remove('hidden');
                             const firstRow = container.querySelector('.schedule-row');
                             firstRow.querySelector('.from-select').value = '';
@@ -406,7 +405,7 @@
                     })
                     .catch(error => {
                         console.error('Error fetching schedules:', error);
-                        errorDiv.textContent = `Failed to fetch schedules: ${error.message}`;
+                        errorDiv.textContent = "{{ __("vender/schedule.failed_to_fetch_schedules") }} " + error.message;
                         errorDiv.classList.remove('hidden');
                     });
             }

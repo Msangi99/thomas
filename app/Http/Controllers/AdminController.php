@@ -1004,7 +1004,7 @@ $q->where('id', auth()->user()->campany->id);
                 ]);
             }
 
-            return back()->with('success', 'Profile updated successfully');
+            return back()->with('success', __('vender/profile.profile_updated_success'));
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Failed to update profile: ' . $e->getMessage()])->withInput();
         }

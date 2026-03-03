@@ -719,8 +719,9 @@ class BookingController extends Controller
                 // Define vendor function (vendor commission for vender_id bookings)
                 $vender = function ($amount, $state) use ($booking) {
                     if ($booking->vender_id > 0 && $booking->vender && $booking->vender->VenderAccount) {
-                        $vendorPercentage = $booking->vender->VenderAccount->percentage;
+                        $vendorPercentage = min((float) ($booking->vender->VenderAccount->percentage ?? 0), 100);
                         $vendorShare = $amount * ($vendorPercentage / 100);
+                        $vendorShare = min($vendorShare, max($amount, 0));
 
                         $booking->vender->VenderBalances->increment('amount', $vendorShare);
 

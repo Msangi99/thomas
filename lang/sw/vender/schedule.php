@@ -37,4 +37,6 @@ return [
     'select_route' => 'Chagua Njia',
     'select_bus' => 'Chagua Basi',
     'save_schedule' => 'Hifadhi Ratiba',
+    'close' => 'Funga',
+    'route' => 'Njia',
 ];

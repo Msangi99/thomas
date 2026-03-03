@@ -20,27 +20,27 @@
         <div class="flex justify-between items-center mb-4">
             <div>
                 <h1 class="text-2xl font-bold text-gray-800">{{ trans('vendor_sidebar.resaved_tickets') }}</h1>
-                <p class="mt-1 text-sm text-gray-500">Tiketi zilizohifadhiwa (bila malipo bado) za kampuni yako.</p>
+                <p class="mt-1 text-sm text-gray-500">{{ __('vender/resaved_tickets.subtitle') }}</p>
             </div>
         </div>
 
         @if ($resavedBookings->isEmpty())
-            <p class="text-gray-600 py-6">Hakuna tiketi zilizohifadhiwa za kampuni yako.</p>
+            <p class="text-gray-600 py-6">{{ __('vender/resaved_tickets.no_tickets') }}</p>
         @else
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Booking Code</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bus Number</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer Name</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Route</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Travel Date</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seats</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Resaved Until</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('vender/resaved_tickets.booking_code') }}</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('vender/resaved_tickets.bus_number') }}</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('vender/resaved_tickets.customer_name') }}</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('vender/resaved_tickets.route') }}</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('vender/resaved_tickets.travel_date') }}</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('vender/resaved_tickets.seats') }}</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('vender/resaved_tickets.amount') }}</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('vender/resaved_tickets.resaved_until') }}</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('vender/resaved_tickets.status') }}</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('vender/resaved_tickets.actions') }}</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -55,10 +55,10 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $booking->amount ? number_format($booking->amount, 0) : '0' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $booking->resaved_until ? \Carbon\Carbon::parse($booking->resaved_until)->format('Y-m-d H:i') : 'N/A' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">{{ ucfirst($booking->payment_status ?? 'resaved') }}</span>
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">{{ ucfirst($booking->payment_status ?? __('vender/resaved_tickets.resaved')) }}</span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <a href="#" class="text-indigo-600 hover:text-indigo-900" title="Booking: {{ $booking->booking_code }}">View</a>
+                                    <a href="#" class="text-indigo-600 hover:text-indigo-900" title="Booking: {{ $booking->booking_code }}">{{ __('vender/resaved_tickets.view') }}</a>
                                 </td>
                             </tr>
                         @endforeach

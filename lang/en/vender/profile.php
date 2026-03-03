@@ -30,4 +30,5 @@ return [
     'leave_blank_password' => 'Leave blank to keep current password',
     'save_changes' => 'Save Changes',
     'cancel' => 'Cancel',
+    'profile_updated_success' => 'Profile updated successfully',
 ];

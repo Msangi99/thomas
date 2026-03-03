@@ -5,8 +5,9 @@
      <meta charset="UTF-8">
      <meta name="viewport" content="width=device-width, initial-scale=1.0">
      <title>HIGHLINK ISGC - @yield('title')</title>
-     <!-- Tailwind CSS CDN --> 
+     <!-- Tailwind CSS CDN -->
      <script src="https://cdn.tailwindcss.com"></script>
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
      <style>
          /* Custom scrollbar for sidebar */
          .sidebar::-webkit-scrollbar {
@@ -89,6 +90,23 @@
          </div>
      </div>
 
+     <!-- jQuery and Toastr for notifications -->
+     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+     <script>
+         toastr.options = { "closeButton": true, "progressBar": true, "positionClass": "toast-top-right" };
+         @if (session('success'))
+             toastr.success("{{ session('success') }}");
+         @endif
+         @if (session('error'))
+             toastr.error("{{ session('error') }}");
+         @endif
+         @if ($errors->any())
+             @foreach ($errors->all() as $error)
+                 toastr.error("{{ $error }}");
+             @endforeach
+         @endif
+     </script>
      <!-- Custom JS for sidebar toggle -->
      <script>
          document.addEventListener('DOMContentLoaded', function() {

@@ -304,6 +304,10 @@ class SystemController extends Controller
     
     public function vender_percent(Request $request)
     {
+        $request->validate([
+            'percent' => ['required', 'numeric', 'min:0', 'max:100'],
+            'vender_id' => ['required', 'exists:users,id'],
+        ]);
         $user = user::find($request->vender_id);
         $user->VenderAccount->update(['percentage' => $request->percent]);
         return back()->with('success','account updated');

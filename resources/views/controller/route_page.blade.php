@@ -80,7 +80,8 @@
                             @endforeach
                         @empty
                             <tr>
-                                <td colspan="6" class="px-4 py-3 text-center text-gray-500">{{ __('vender/route.no_buses_found') }}</td>
+                                <td class="px-4 py-3 text-center text-gray-500">{{ __('vender/route.no_buses_found') }}</td>
+                                <td></td><td></td><td></td><td></td><td></td>
                             </tr>
                         @endforelse
                     </tbody>

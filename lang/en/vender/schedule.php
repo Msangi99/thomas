@@ -37,4 +37,6 @@ return [
     'select_route' => 'Select Route',
     'select_bus' => 'Select Bus',
     'save_schedule' => 'Save Schedule',
+    'close' => 'Close',
+    'route' => 'Route',
 ];

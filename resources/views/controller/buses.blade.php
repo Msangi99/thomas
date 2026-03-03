@@ -123,7 +123,8 @@
                             @endforeach
                         @else
                             <tr>
-                                <td colspan="7" class="py-3 text-center text-gray-500">{{ __('vender/mybus.no_buses_found') }}</td>
+                                <td class="py-3 text-center text-gray-500">{{ __('vender/mybus.no_buses_found') }}</td>
+                                <td></td><td></td><td></td><td></td><td></td><td></td>
                             </tr>
                         @endif
                         </tbody>

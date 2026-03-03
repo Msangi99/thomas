@@ -43,7 +43,7 @@
                              </tr>
                          </thead>
                          <tbody>
-                             @foreach ($schedules as $schedule)
+                             @forelse ($schedules as $schedule)
                                  <tr class="border-b border-gray-200 hover:bg-gray-50">
                                      <td class="px-4 py-3">{{ $schedule->bus->busname->name ?? __('vender/schedule.na') }}
                                          ({{ $schedule->bus->bus_number ?? __('vender/schedule.na') }})</td>
@@ -108,7 +108,12 @@
                                          </div>
                                      </td>
                                  </tr>
-                             @endforeach
+                             @empty
+                                 <tr>
+                                     <td class="px-4 py-3 text-center text-gray-500">{{ __('vender/schedule.no_buses_found') }}</td>
+                                     <td></td><td></td><td></td><td></td><td></td>
+                                 </tr>
+                             @endforelse
                          </tbody>
                      </table>
                  </div>

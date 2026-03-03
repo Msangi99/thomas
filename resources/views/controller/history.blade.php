@@ -213,8 +213,8 @@
                                 @endforeach
                             @else
                                 <tr>
-                                    <td colspan="9" class="py-2 px-4 text-center text-gray-500">
-                                        {{ __('vender/history.no_bookings_found') }}</td>
+                                    <td class="py-2 px-4 text-center text-gray-500">{{ __('vender/history.no_bookings_found') }}</td>
+                                    <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
                                 </tr>
                             @endif
                         </tbody>

@@ -29,5 +29,6 @@ return [
     'change_password' => 'Badilisha Nenosiri',
     'leave_blank_password' => 'Acha wazi ili kuweka nenosiri la sasa',
     'save_changes' => 'Hifadhi Mabadiliko',
-    'cancel' => 'katisha',
+    'cancel' => 'Katisha',
+    'profile_updated_success' => 'Wasifu umesasishwa kikamilifu',
 ];
