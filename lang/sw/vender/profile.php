@@ -28,6 +28,7 @@ return [
     'security_settings' => 'Mipangilio ya Usalama',
     'change_password' => 'Badilisha Nenosiri',
     'leave_blank_password' => 'Acha wazi ili kuweka nenosiri la sasa',
+    'password_min_8' => 'Nenosiri lazima liwe na angalau herufi 8.',
     'save_changes' => 'Hifadhi Mabadiliko',
     'cancel' => 'Katisha',
     'profile_updated_success' => 'Wasifu umesasishwa kikamilifu',

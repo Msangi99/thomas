@@ -931,6 +931,12 @@ $q->where('id', auth()->user()->campany->id);
     public function update_profile(Request $request)
     {
         try {
+            $request->validate([
+                'password' => ['nullable', 'string', 'min:8'],
+            ], [
+                'password.min' => __('vender/profile.password_min_8'),
+            ]);
+
             // Get the authenticated user
             $user = Auth::user();
 

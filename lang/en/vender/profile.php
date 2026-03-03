@@ -28,6 +28,7 @@ return [
     'security_settings' => 'Security Settings',
     'change_password' => 'Change Password',
     'leave_blank_password' => 'Leave blank to keep current password',
+    'password_min_8' => 'Password must be at least 8 characters.',
     'save_changes' => 'Save Changes',
     'cancel' => 'Cancel',
     'profile_updated_success' => 'Profile updated successfully',
