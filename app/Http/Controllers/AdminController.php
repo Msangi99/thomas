@@ -409,7 +409,7 @@ class AdminController extends Controller
             'seate_json' => $request->seate_json,
         ];
 
-        $bus = bus::where('id', $request->bus_id)->update($data);
+        bus::where('id', $request->bus_id)->update($data);
 
         $info = [
             'from' => $request->route_from,
@@ -419,12 +419,16 @@ class AdminController extends Controller
             'price' => $request->route_price ?? '',
         ];
 
-        $res = route::where('bus_id', $request->bus_id)->update($info);
-        if ($res) {
-            return back()->with('success', 'update successful');
+        $existingRoute = route::where('bus_id', $request->bus_id)->first();
+        if ($existingRoute) {
+            $existingRoute->update($info);
         } else {
-            return back()->with('error', 'update fail');
+            $info['bus_id'] = $request->bus_id;
+            $info['distance'] = 0;
+            route::create($info);
         }
+
+        return back()->with('success', 'update successful');
     }
 
     public function delete_bus(Request $request)
