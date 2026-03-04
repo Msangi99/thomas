@@ -100,9 +100,10 @@ class TraVfdService
 
         Log::info("TRA Registration Request to $url");
 
+        $certSerialHex = $this->getCertSerialHex();
         $response = Http::withHeaders([
             'Content-Type' => 'application/xml',
-            'Cert-Serial' => base64_encode($this->getCertSerialHex()), // Needs hex converted to base64? The doc says "Serial of the Key certificate... open certificate file and look for serial number". "Should be base64 encoded."
+            'Cert-Serial' => base64_encode(hex2bin($certSerialHex)), // Same as receipt: base64 of serial bytes (TRA expects this format)
             'Client' => 'WEBAPI'
         ])->send('POST', $url, ['body' => $xml]);
 

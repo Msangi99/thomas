@@ -31,7 +31,7 @@
                      </div>
                  @endif
                  <div class="overflow-x-auto">
-                     <table id="busTable" class="w-full table-auto text-sm text-gray-700">
+                     <table id="busTable" class="w-full table-auto text-sm text-gray-700 display" cellspacing="0" width="100%">
                          <thead class="bg-gray-100 text-xs uppercase text-gray-500 font-semibold">
                              <tr>
                                  <th class="px-4 py-3 text-left">{{ __('vender/schedule.bus') }}</th>
@@ -159,19 +159,35 @@
      <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
      <script>
          $(document).ready(function() {
-             // Define translation strings for JavaScript
              const translations = {
                  empty_table: "{{ __('vender/schedule.no_buses_found') }}",
-                 confirm_delete_schedule: "{{ __('vender/schedule.confirm_delete_schedule') }}"
+                 confirm_delete_schedule: "{{ __('vender/schedule.confirm_delete_schedule') }}",
+                 na: "{{ __('vender/schedule.na') }}"
              };
 
              $('#busTable').DataTable({
                  responsive: true,
                  paging: true,
+                 pageLength: 10,
                  searching: true,
                  ordering: true,
+                 order: [[4, 'asc']],
+                 columnDefs: [
+                     { orderable: false, targets: -1 }
+                 ],
                  language: {
-                     emptyTable: translations.empty_table
+                     emptyTable: translations.empty_table,
+                     search: "{{ __('vender/schedule.search') }}:",
+                     lengthMenu: "{{ __('vender/schedule.show') }} _MENU_ {{ __('vender/schedule.entries') }}",
+                     info: "{{ __('vender/schedule.info') }}",
+                     infoEmpty: "{{ __('vender/schedule.info_empty') }}",
+                     infoFiltered: "{{ __('vender/schedule.info_filtered') }}",
+                     paginate: {
+                         first: "{{ __('vender/schedule.first') }}",
+                         last: "{{ __('vender/schedule.last') }}",
+                         next: "{{ __('vender/schedule.next') }}",
+                         previous: "{{ __('vender/schedule.previous') }}"
+                     }
                  }
              });
 
