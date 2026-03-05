@@ -30,6 +30,7 @@ use App\Http\Controllers\VenderWalletController;
 use App\Http\Controllers\SpecialHireController;
 use App\Http\Controllers\ParcelController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 
@@ -139,6 +140,17 @@ Route::any('/vender/dpo/cancel', [VenderWalletController::class, 'handlePdoCallb
 Route::view('/dpo/example', 'dpo.example')->name('dpo.example');
 // General Routes (Accessible to all authenticated users)
 Route::get('/', function () {
+    // Check if user is authenticated and requires 2FA
+    if (Auth::check()) {
+        $user = Auth::user();
+        $requires2FA = in_array($user->role, ['admin', 'bus_campany', 'vender', 'local_bus_owner']);
+        
+        if ($requires2FA && is_null($user->two_factor_confirmed_at)) {
+            return redirect()->route('two-factor.login')
+                ->with('error', 'Please complete Two-Factor Authentication to continue.');
+        }
+    }
+    
     $todaySchedules = \App\Models\Schedule::whereDate('schedule_date', \Carbon\Carbon::today())
         ->with(['bus.campany', 'route'])
         ->whereHas('bus', function ($q) {

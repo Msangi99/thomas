@@ -12,7 +12,6 @@
         <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
             <div class="p-4 bg-gradient-to-r from-blue-500 to-blue-400 text-white flex flex-col sm:flex-row justify-between items-center gap-4">
                 <h2 class="text-lg font-semibold">Requested Transactions</h2>
-                <span class="text-sm font-medium">Total: {{ $currency }} <span id="pendingTotal">0</span></span>
             </div>
             <div class="p-4">
                 <div class="flex flex-col sm:flex-row gap-4 mb-4">

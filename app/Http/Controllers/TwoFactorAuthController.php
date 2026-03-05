@@ -45,16 +45,30 @@ class TwoFactorAuthController extends Controller
 
      public function showTwoFactorSetupTwo(Request $request)
     {
-        if (is_null(Auth::user()->two_factor_secret)) {
-            app(EnableTwoFactorAuthentication::class)(Auth::user());
+        // Ensure user is authenticated
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'Please login first.');
+        }
+        
+        $user = Auth::user();
+        
+        // Check if user requires 2FA
+        if (!in_array($user->role, ['admin', 'bus_campany', 'vender', 'local_bus_owner'])) {
+            return $this->redirectByRole($user);
+        }
+        
+        // If 2FA is not set up, redirect to setup
+        if (is_null($user->two_factor_secret)) {
+            return redirect()->route('two-factor.setup')
+                ->with('error', 'Please enable Two-Factor Authentication first.');
         }
 
-        $qrCodeSvg = $request->user()->twoFactorQrCodeSvg();
+        $qrCodeSvg = $user->twoFactorQrCodeSvg();
 
         return view('auth.two-login', [
-            'user' => $request->user(),
+            'user' => $user,
             'qrCodeSvg' => $qrCodeSvg,
-            'recoveryCodes' => json_decode(decrypt($request->user()->two_factor_recovery_codes), true),
+            'recoveryCodes' => json_decode(decrypt($user->two_factor_recovery_codes), true),
         ]);
     }
 
@@ -117,14 +131,23 @@ class TwoFactorAuthController extends Controller
             'recovery_code' => 'nullable|string',
         ]);
 
+        // Get user from session or authenticated user
         $userId = session('two_factor:id');
-        if (! $userId) {
+        $user = null;
+        
+        if ($userId) {
+            $user = \App\Models\User::find($userId);
+        } elseif (Auth::check()) {
+            $user = Auth::user();
+        }
+        
+        if (! $user) {
             return redirect()->route('login')->withErrors(['email' => 'Session expired. Please sign in again.']);
         }
 
-        $user = \App\Models\User::find($userId);
-        if (! $user) {
-            return redirect()->route('login')->withErrors(['email' => 'User not found. Please sign in again.']);
+        // Ensure user requires 2FA
+        if (!in_array($user->role, ['admin', 'bus_campany', 'vender', 'local_bus_owner'])) {
+            return $this->redirectByRole($user);
         }
 
         $verified = false;
@@ -159,9 +182,16 @@ class TwoFactorAuthController extends Controller
             ]);
         }
 
-        // Success: log them in for real
-        session()->forget(['two_factor:id','two_factor:remember']);
-        Auth::login($user, (bool) session('two_factor:remember', false));
+        // Success: Mark 2FA as verified for this session
+        $user->two_factor_confirmed_at = now();
+        $user->save();
+        
+        // Log them in if not already logged in
+        if (!Auth::check()) {
+            session()->forget(['two_factor:id','two_factor:remember']);
+            Auth::login($user, (bool) session('two_factor:remember', false));
+        }
+        
         $request->session()->regenerate();
 
         return $this->redirectByRole($user);

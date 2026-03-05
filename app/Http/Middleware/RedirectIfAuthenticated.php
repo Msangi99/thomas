@@ -21,6 +21,30 @@ class RedirectIfAuthenticated
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
+                $user = Auth::guard($guard)->user();
+                
+                // Check if user requires 2FA and if it's verified
+                $requires2FA = in_array($user->role, ['admin', 'bus_campany', 'vender', 'local_bus_owner']);
+                
+                if ($requires2FA) {
+                    // If 2FA is not verified, redirect to 2FA login
+                    if (is_null($user->two_factor_confirmed_at)) {
+                        return redirect()->route('two-factor.login')
+                            ->with('error', 'Please complete Two-Factor Authentication to continue.');
+                    }
+                }
+                
+                // Redirect based on role if 2FA is verified (or not required)
+                if ($user->role === 'bus_campany' || $user->role === 'local_bus_owner') {
+                    return redirect()->route('index');
+                } elseif ($user->role === 'admin') {
+                    return redirect()->route('system.index');
+                } elseif ($user->role === 'vender') {
+                    return redirect()->route('vender.index');
+                } elseif ($user->role === 'customer') {
+                    return redirect()->route('customer.index');
+                }
+                
                 return redirect(RouteServiceProvider::HOME);
             }
         }

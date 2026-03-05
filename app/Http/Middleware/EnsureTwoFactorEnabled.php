@@ -17,17 +17,22 @@ class EnsureTwoFactorEnabled
             return redirect()->route('login');
         }
 
-        // If user does not have 2FA enabled or confirmed
-        if (is_null($user->two_factor_secret) || is_null($user->two_factor_recovery_codes) || is_null($user->two_factor_confirmed_at)) {
-            return redirect()->route('two-factor.setup')
-                ->with('error', 'Please enable Two-Factor Authentication before accessing this section.');
+        // Check if user requires 2FA (admin, vender, bus_owner)
+        $requires2FA = in_array($user->role, ['admin', 'bus_campany', 'vender', 'local_bus_owner']);
+        
+        if ($requires2FA) {
+            // If user does not have 2FA enabled
+            if (is_null($user->two_factor_secret) || is_null($user->two_factor_recovery_codes)) {
+                return redirect()->route('two-factor.setup')
+                    ->with('error', 'Please enable Two-Factor Authentication before accessing this section.');
+            }
+            
+            // If 2FA is enabled but not verified in this session, redirect to verification
+            if (is_null($user->two_factor_confirmed_at)) {
+                return redirect()->route('two-factor.login')
+                    ->with('error', 'Please complete Two-Factor Authentication to continue.');
+            }
         }
-
-        // If you want to ensure it’s also confirmed (optional, depends on your logic)
-        // if (! $user->two_factor_confirmed_at) {
-        //     return redirect()->route('two-factor.confirm')
-        //         ->with('error', 'Please confirm your Two-Factor Authentication before continuing.');
-        // }
 
         return $next($request);
     }

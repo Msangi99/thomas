@@ -82,13 +82,20 @@ class AuthController extends Controller
                 // Reset failed attempts and locked_until on successful login
                 $user->failed_attempts = 0;
                 $user->locked_until = null;
+                
+                // Reset 2FA verification status on login (force re-verification)
+                if (in_array($user->role, ['admin', 'bus_campany', 'vender', 'local_bus_owner'])) {
+                    $user->two_factor_confirmed_at = null;
+                }
+                
                 $user->save();
 
                 // Check for MFA setup for specific roles (customers skip email verification and MFA)
-                if (in_array($user->role, ['admin', 'bus_campany', 'vender'])) {
+                if (in_array($user->role, ['admin', 'bus_campany', 'vender', 'local_bus_owner'])) {
                     if ($user->two_factor_secret == null) {
                         return redirect()->route('two-factor.setup')->with('status', 'Please enable Two-Factor Authentication for your account.');
                     } else {
+                        // Force 2FA verification - user must verify before accessing any page
                         return redirect()->route('two-factor.login')->with('status', 'Please complete Two-Factor Authentication to continue.');
                     }
                 }
