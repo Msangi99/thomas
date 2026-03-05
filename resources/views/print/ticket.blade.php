@@ -52,13 +52,29 @@
     <div class="ticket-container">
         <div class="header">
             <h2>BUS TICKET</h2>
-            <p style="font-weight: bold; font-size: 15px;">{{ $data->campany->name ?? 'N/A' }}</p>
-            <p>P. O. Box {{ $data->campany->bus_owner_account->box ?? 'N/A' }}</p>
-            <p>{{ $data->campany->bus_owner_account->region ?? 'N/A/' }},
-                {{ $data->campany->bus_owner_account->country ?? 'N/A' }}</p>
-            <p>Reg. No: {{ $data->campany->bus_owner_account->registration_number ?? 'N/A' }}</p>
-            <p>TIN: {{ $data->campany->bus_owner_account->tin ?? 'N/A' }}</p>
-            <p>VRN: {{ $data->campany->bus_owner_account->vrn ?? 'N/A' }}</p>
+            @php
+                // Get bus owner account from the bus's company (prioritize bus's company settings)
+                $busCompany = null;
+                $busOwnerAccount = null;
+                
+                if (isset($data->bus) && $data->bus && isset($data->bus->campany) && $data->bus->campany) {
+                    $busCompany = $data->bus->campany;
+                    $busOwnerAccount = $busCompany->busOwnerAccount ?? null;
+                }
+                
+                // Fallback to booking's company if bus company not available
+                if (!$busOwnerAccount && isset($data->campany) && $data->campany) {
+                    $busCompany = $data->campany;
+                    $busOwnerAccount = $data->campany->busOwnerAccount ?? null;
+                }
+            @endphp
+            <p style="font-weight: bold; font-size: 15px;">{{ $busCompany->name ?? ($data->campany->name ?? 'N/A') }}</p>
+            <p>P. O. Box {{ $busOwnerAccount->box ?? 'N/A' }}</p>
+            <p>{{ $busOwnerAccount->region ?? 'N/A/' }},
+                {{ $busOwnerAccount->country ?? 'N/A' }}</p>
+            <p>Reg. No: {{ $busOwnerAccount->registration_number ?? 'N/A' }}</p>
+            <p>TIN: {{ $busOwnerAccount->tin ?? 'N/A' }}</p>
+            <p>VRN: {{ $busOwnerAccount->vrn ?? 'N/A' }}</p>
         </div>
 
         <div class="divider"></div>
@@ -71,7 +87,7 @@
                 </tr>
                 <tr>
                     <td>Traveller Contact:</td>
-                    <td>{{ $data->customer_phone ?? 'N/A' }}</td>
+                    <td>{{ $data->customer_phone ?? ($data->payment_number ?? 'N/A') }}</td>
                 </tr>
                 <tr>
                     <td>Booking number:</td>

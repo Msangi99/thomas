@@ -1152,15 +1152,24 @@ class BookingController extends Controller
         $bookingCode = $payload->booking_code ?? null;
 
         // Load full booking with relations so route/schedule times are available for the ticket
+        // Include bus->campany->busOwnerAccount to ensure bus owner settings are from the bus's company
         $data = null;
         if ($bookingId) {
-            $data = Booking::with(['bus.route', 'campany.busOwnerAccount', 'schedule', 'vender'])->find($bookingId);
+            $data = Booking::with(['bus.route', 'bus.campany.busOwnerAccount', 'campany.busOwnerAccount', 'schedule', 'vender'])->find($bookingId);
         }
         if (!$data && $bookingCode) {
-            $data = Booking::with(['bus.route', 'campany.busOwnerAccount', 'schedule', 'vender'])->where('booking_code', $bookingCode)->first();
+            $data = Booking::with(['bus.route', 'bus.campany.busOwnerAccount', 'campany.busOwnerAccount', 'schedule', 'vender'])->where('booking_code', $bookingCode)->first();
         }
         if (!$data) {
             $data = $payload;
+        }
+
+        // Load transaction to get payment_number if customer_phone is not available
+        if (isset($data->transaction_ref_id) && $data->transaction_ref_id) {
+            $transaction = \App\Models\Transaction::where('reference_number', $data->transaction_ref_id)->first();
+            if ($transaction && $transaction->payment_number) {
+                $data->payment_number = $transaction->payment_number;
+            }
         }
 
         $dns2d = new DNS2D();
