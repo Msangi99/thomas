@@ -272,6 +272,7 @@
                         paging: true,
                         searching: true,
                         ordering: true,
+                        orderCellsTop: true, // Enable searching in header cells
                         language: {
                             emptyTable: "No bookings found."
                         },
@@ -368,12 +369,42 @@
                         table.draw();
                     });
 
-                    // Column-specific search
-                    $('#busTable thead tr:first-child th').each(function(index) {
-                        if (index === 0 || index === 8) return; // Skip SN and Action columns
-                        $(this).find('input').on('keyup change', function() {
-                            table.column(index).search(this.value.trim()).draw();
-                        });
+                    // Column-specific search - properly map inputs to columns
+                    // The first row contains search inputs, second row contains headers
+                    // DataTable columns: 0=SN, 1=booking_id, 2=bus_route, 3=travel_details, 4=passenger, 5=seats_payment, 6=commission, 7=total, 8=action
+                    $('#busTable thead tr:first-child').find('th').each(function(index) {
+                        const input = $(this).find('input.search-input');
+                        if (input.length > 0) {
+                            // Skip the first column (SN at index 0) and last column (Action at index 8)
+                            if (index === 0 || index === 8) {
+                                return;
+                            }
+                            
+                            // Map input index to DataTable column index (they match: index 1-7)
+                            let columnIndex = index;
+                            
+                            // Add debounce for better performance
+                            let searchTimeout;
+                            
+                            // Add event listeners for search
+                            input.on('keyup change paste', function() {
+                                clearTimeout(searchTimeout);
+                                const $input = $(this);
+                                searchTimeout = setTimeout(function() {
+                                    const searchValue = $input.val().trim();
+                                    // Use column search with regex for better matching
+                                    table.column(columnIndex).search(searchValue, false, false).draw();
+                                }, 300); // 300ms delay
+                            });
+                            
+                            // Clear search when input is cleared
+                            input.on('input', function() {
+                                if ($(this).val() === '') {
+                                    clearTimeout(searchTimeout);
+                                    table.column(columnIndex).search('').draw();
+                                }
+                            });
+                        }
                     });
 
                     // Handle form submissions for filtered data
@@ -434,71 +465,15 @@
                             });
                         });
 
+                        // Validate that we have data before submitting
+                        if (filteredData.length === 0) {
+                            alert('No data available to print. Please ensure there are bookings in the table.');
+                            return false;
+                        }
+
                         form.find('input[name="data"]').val(JSON.stringify(filteredData));
                         form.off('submit').submit(); // Prevent infinite loop and submit
                     });
-
-            // Handle form submissions for filtered data
-            $('#manifestForm, #incomeForm').on('submit', function(e) {
-                e.preventDefault();
-                let form = $(this);
-                let filteredData = [];
-
-                table.rows({
-                    filter: 'applied'
-                }).every(function() {
-                    let row = this.data();
-                    filteredData.push({
-                        booking_code: ($(row[1]).find('p').first().text().trim() || 'N/A'),
-                        company_name: ($(row[2]).find('h6').text().trim() || 'N/A'),
-                        route_from: ($(row[2]).find('p').eq(0).text().split(' to ')[0]
-                            ?.trim() || 'N/A'),
-                        route_to: ($(row[2]).find('p').eq(0).text().split(' to ')[1]
-                            ?.trim() || 'N/A'),
-                        bus_number: ($(row[2]).find('p').eq(1).text().trim() || 'N/A'),
-                        travel_date: ($(row[3]).find('[data-created-at]').data('created-at') || 'N/A'),
-                        seat: ($(row[3]).find('p').eq(1).text().replace('Seat: ', '')
-                            .trim() || 'N/A'),
-                        pickup_point: ($(row[3]).find('p').eq(2).text().replace('Pickup: ',
-                            '').trim() || 'N/A'),
-                        customer_name: ($(row[4]).find('p').first().text().trim() || 'N/A'),
-                        customer_phone: ($(row[4]).find('p').eq(1).text().trim() || 'N/A'),
-                        excess_luggage: ($(row[5]).find('p').first().text().trim() ===
-                            'Yes' ? 1 : 0),
-                        excess_luggage_description: ($(row[5]).find('p').eq(1).text()
-                            .replace('Desc: ', '').trim() || null),
-                        excess_luggage_fee: ($(row[5]).find('p').eq(2).text().replace(
-                            'Fee: ', '').trim() || 0),
-                        amount: ($(row[6]).find('p').first().text().trim() || '0'),
-                        commision: ($(row[7]).find('p').first().text().replace('System: ',
-                            '').trim() || 'N/A'),
-                        service: ($(row[7]).find('p').eq(1).text().replace('Vendor: ', '')
-                            .trim() || 'N/A'),
-                        discount: ($(row[7]).find('p').eq(2).text().replace('Discount: ',
-                            '').trim() || 'N/A'),
-                        vat: ($(row[7]).find('p').eq(3).text().replace('VAT: ', '')
-                            .trim() || 'N/A'),
-                        total: (function() {
-                            // Calculate total from the data attributes
-                            let paymentEl = $(row[6]).find('.payment-amount');
-                            let totalEl = $(row[8]).find('.total-amount');
-                            let amount = parseFloat(paymentEl.data('amount')) || 0;
-                            let vat = parseFloat(paymentEl.data('vat')) || 0;
-                            let discount = parseFloat(paymentEl.data('discount')) || 0;
-                            let fee = parseFloat(paymentEl.data('fee')) || 0;
-                            let vender_fee = parseFloat(paymentEl.data('vender_fee')) || 0;
-                            let fee_vat = parseFloat(paymentEl.data('fee_vat')) || 0;
-                            
-                            // Calculate total: amount + vat + fee + vender_fee + fee_vat - discount
-                            let calculatedTotal = amount + vat + fee + vender_fee + fee_vat - discount;
-                            return calculatedTotal.toFixed(2);
-                        })()
-                    });
-                });
-
-                form.find('input[name="data"]').val(JSON.stringify(filteredData));
-                form.off('submit').submit(); // Prevent infinite loop and submit
-            });
 
             // View booking details
             $(document).on('click', '.view-booking', function() {

@@ -887,13 +887,34 @@ $q->where('id', auth()->user()->campany->id);
     public function print(Request $request)
     {
         $data = $request->data;
+        
+        // Validate that data exists
+        if (empty($data)) {
+            return redirect()->back()->with('error', 'No data provided for income report generation.');
+        }
+        
         $data = json_decode($data, true);
+        
+        // Validate JSON decode was successful
+        if ($data === null || !is_array($data)) {
+            return redirect()->back()->with('error', 'Invalid data format. Please try again.');
+        }
+        
+        // Validate that data array is not empty
+        if (empty($data)) {
+            return redirect()->back()->with('error', 'No booking data found for income report generation.');
+        }
 
         return $this->generatePDF($data);
     }
 
     public function generatePDF($data)
     {
+        // Ensure data is an array before passing to view
+        if (!is_array($data)) {
+            $data = [];
+        }
+        
         $pdf = Pdf::loadView('print.report', ['bookings' => $data]);
 
         return $pdf->download('income-' . now() . '.pdf');
@@ -902,12 +923,39 @@ $q->where('id', auth()->user()->campany->id);
     public function manifest(Request $request)
     {
         $data = $request->data;
+        
+        // Validate that data exists
+        if (empty($data)) {
+            return redirect()->back()->with('error', 'No data provided for manifest generation.');
+        }
+        
         $data = json_decode($data, true);
+        
+        // Validate JSON decode was successful
+        if ($data === null || !is_array($data)) {
+            return redirect()->back()->with('error', 'Invalid data format. Please try again.');
+        }
+        
+        // Validate that data array is not empty
+        if (empty($data) || !isset($data[0])) {
+            return redirect()->back()->with('error', 'No booking data found for manifest generation.');
+        }
+        
+        // Validate that bus_number exists in the first booking
+        if (!isset($data[0]['bus_number']) || empty($data[0]['bus_number'])) {
+            return redirect()->back()->with('error', 'Bus number not found in booking data.');
+        }
+        
         $number = $data[0]['bus_number'];
 
         $bus = bus::where('bus_number', $number)->first();
+        
+        // Validate that bus exists
+        if (!$bus) {
+            return redirect()->back()->with('error', 'Bus with number ' . $number . ' not found.');
+        }
 
-        return $this->generateManifest($data,$bus);
+        return $this->generateManifest($data, $bus);
     }
 
     public function generateManifest($data,$bus)

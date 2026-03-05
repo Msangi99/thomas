@@ -261,13 +261,34 @@ class SystemController extends Controller
     public function print(Request $request)
     {
         $data = $request->data;
+        
+        // Validate that data exists
+        if (empty($data)) {
+            return redirect()->back()->with('error', 'No data provided for income report generation.');
+        }
+        
         $data = json_decode($data, true);
+        
+        // Validate JSON decode was successful
+        if ($data === null || !is_array($data)) {
+            return redirect()->back()->with('error', 'Invalid data format. Please try again.');
+        }
+        
+        // Validate that data array is not empty
+        if (empty($data)) {
+            return redirect()->back()->with('error', 'No booking data found for income report generation.');
+        }
 
         return $this->generatePDF($data);
     }
 
     public function generatePDF($data)
     {
+        // Ensure data is an array before passing to view
+        if (!is_array($data)) {
+            $data = [];
+        }
+        
         $pdf = Pdf::loadView('print.report', ['bookings' => $data]);
 
         return $pdf->download('income-' . now() . '.pdf');

@@ -209,6 +209,7 @@
                 paging: true,
                 searching: true,
                 ordering: true,
+                orderCellsTop: true, // Enable searching in header cells
                 language: {
                     emptyTable: "No bookings found."
                 },
@@ -293,12 +294,42 @@
                 table.draw();
             });
 
-            // Column-specific search
-            $('#busTable thead tr:first-child th').each(function(index) {
-                if (index === 0 || index === 8) return; // Skip SN and Action columns
-                $(this).find('input').on('keyup change', function() {
-                    table.column(index).search(this.value.trim()).draw();
-                });
+            // Column-specific search - properly map inputs to columns
+            // The first row contains search inputs, second row contains headers
+            // DataTable columns: 0=SN, 1=booking_id, 2=bus_route, 3=travel_details, 4=passenger, 5=seats_payment, 6=commission, 7=total, 8=action
+            $('#busTable thead tr:first-child').find('th').each(function(index) {
+                const input = $(this).find('input.search-input');
+                if (input.length > 0) {
+                    // Skip the first column (SN at index 0) and last column (Action at index 8)
+                    if (index === 0 || index === 8) {
+                        return;
+                    }
+                    
+                    // Map input index to DataTable column index (they match: index 1-7)
+                    let columnIndex = index;
+                    
+                    // Add debounce for better performance
+                    let searchTimeout;
+                    
+                    // Add event listeners for search
+                    input.on('keyup change paste', function() {
+                        clearTimeout(searchTimeout);
+                        const $input = $(this);
+                        searchTimeout = setTimeout(function() {
+                            const searchValue = $input.val().trim();
+                            // Use column search with regex for better matching
+                            table.column(columnIndex).search(searchValue, false, false).draw();
+                        }, 300); // 300ms delay
+                    });
+                    
+                    // Clear search when input is cleared
+                    input.on('input', function() {
+                        if ($(this).val() === '') {
+                            clearTimeout(searchTimeout);
+                            table.column(columnIndex).search('').draw();
+                        }
+                    });
+                }
             });
 
             // Handle form submissions for filtered data

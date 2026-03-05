@@ -79,30 +79,6 @@
                                                      </svg>
                                                  </button>
                                              </form>
-                                             <button
-                                                 class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-600 rounded-md hover:bg-blue-200 transition-colors view-schedule"
-                                                 data-schedule='@json($schedule)'
-                                                 aria-label="{{ __('vender/schedule.view_schedule') }}">
-                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                     viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                         d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm6.293-3.293a1 1 0 011.414 1.414l-2.5 2.5a1 1 0 01-1.414 0l-2.5-2.5a1 1 0 011.414-1.414L20 10.586V8a1 1 0 011-1zm-18.586 0a1 1 0 011.414 0l2.5 2.5a1 1 0 01-1.414 1.414l-2.5-2.5a1 1 0 010-1.414zM12 4a8 8 0 00-8 8 8 8 0 008 8 8 8 0 008-8 8 8 0 00-8-8zm0 14a6 6 0 01-6-6 6 6 0 016-6 6 6 0 016 6 6 6 0 01-6 6z">
-                                                     </path>
-                                                 </svg>
-                                             </button>
-                                             <form action="{{ route('cancel.schedule', ['id' => $schedule->id]) }}" method="GET">
-                                                <input type="hidden" value="{{ $schedule->id }}" name="schedule_id">
-                                                <input type="hidden" value="{{ $schedule->route->id }}" name="route_id">
-                                                 <button
-                                                     class="inline-flex items-center px-3 py-1 bg-red-100 text-red-600 rounded-md hover:bg-red-200 transition-colors"
-                                                     aria-label="{{ __('vender/schedule.cancel_schedule') }}">
-                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                         viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                         <path stroke-linecap="round" stroke-linejoin="round"
-                                                             stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                                     </svg>
-                                                 </button>
-                                             </form>
                                          </div>
                                      </td>
                                  </tr>
