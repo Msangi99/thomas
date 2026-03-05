@@ -1153,23 +1153,112 @@ class BookingController extends Controller
 
         // Load full booking with relations so route/schedule times are available for the ticket
         // Include bus->campany->busOwnerAccount to ensure bus owner settings are from the bus's company
+        // Include user to get contact number as fallback
         $data = null;
         if ($bookingId) {
-            $data = Booking::with(['bus.route', 'bus.campany.busOwnerAccount', 'campany.busOwnerAccount', 'schedule', 'vender'])->find($bookingId);
+            $data = Booking::with(['bus.route', 'bus.campany.busOwnerAccount', 'campany.busOwnerAccount', 'schedule', 'vender', 'user'])->find($bookingId);
         }
         if (!$data && $bookingCode) {
-            $data = Booking::with(['bus.route', 'bus.campany.busOwnerAccount', 'campany.busOwnerAccount', 'schedule', 'vender'])->where('booking_code', $bookingCode)->first();
+            $data = Booking::with(['bus.route', 'bus.campany.busOwnerAccount', 'campany.busOwnerAccount', 'schedule', 'vender', 'user'])->where('booking_code', $bookingCode)->first();
         }
         if (!$data) {
             $data = $payload;
         }
 
         // Load transaction to get payment_number if customer_phone is not available
-        if (isset($data->transaction_ref_id) && $data->transaction_ref_id) {
-            $transaction = \App\Models\Transaction::where('reference_number', $data->transaction_ref_id)->first();
-            if ($transaction && $transaction->payment_number) {
-                $data->payment_number = $transaction->payment_number;
+        // Handle both Booking model and stdClass object from payload
+        $customerPhone = is_object($data) ? ($data->customer_phone ?? null) : ($data['customer_phone'] ?? null);
+        
+        if (empty($customerPhone) || $customerPhone == 'N/A' || !$customerPhone) {
+            $transaction = null;
+            $paymentNumber = null;
+            
+            // Get booking properties (handle both model and object)
+            $transactionRefId = is_object($data) ? ($data->transaction_ref_id ?? null) : ($data['transaction_ref_id'] ?? null);
+            $campanyId = is_object($data) ? ($data->campany_id ?? null) : ($data['campany_id'] ?? null);
+            $userId = is_object($data) ? ($data->user_id ?? null) : ($data['user_id'] ?? null);
+            $bookingCode = is_object($data) ? ($data->booking_code ?? null) : ($data['booking_code'] ?? null);
+            $amount = is_object($data) ? ($data->amount ?? null) : ($data['amount'] ?? null);
+            $createdAt = is_object($data) ? ($data->created_at ?? null) : ($data['created_at'] ?? null);
+            
+            // Try multiple methods to find the transaction and payment_number
+            if ($transactionRefId) {
+                // Method 1: Find by reference_number matching transaction_ref_id
+                $transaction = \App\Models\Transaction::where('reference_number', $transactionRefId)->first();
+                if ($transaction && $transaction->payment_number) {
+                    $paymentNumber = $transaction->payment_number;
+                }
             }
+            
+            // Method 2: If not found, try by campany_id and user_id (for bus owner withdrawals)
+            if (!$paymentNumber && $campanyId && $userId) {
+                $transaction = \App\Models\Transaction::where('campany_id', $campanyId)
+                    ->where('user_id', $userId)
+                    ->where('status', 'Completed')
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+                if ($transaction && $transaction->payment_number) {
+                    $paymentNumber = $transaction->payment_number;
+                }
+            }
+            
+            // Method 3: Try by booking_code if available
+            if (!$paymentNumber && $bookingCode) {
+                // Some transactions might be linked by booking_code in reference_number
+                $transaction = \App\Models\Transaction::where('reference_number', 'like', '%' . $bookingCode . '%')
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+                if ($transaction && $transaction->payment_number) {
+                    $paymentNumber = $transaction->payment_number;
+                }
+            }
+            
+            // Method 4: Try to find transaction by matching amount and date (for payment transactions)
+            if (!$paymentNumber && $amount && $createdAt) {
+                try {
+                    $createdDate = is_string($createdAt) ? \Carbon\Carbon::parse($createdAt)->format('Y-m-d') : $createdAt->format('Y-m-d');
+                    $transaction = \App\Models\Transaction::where('amount', $amount)
+                        ->where('campany_id', $campanyId ?? 0)
+                        ->whereDate('created_at', $createdDate)
+                        ->where('status', 'Completed')
+                        ->orderBy('created_at', 'desc')
+                        ->first();
+                    if ($transaction && $transaction->payment_number) {
+                        $paymentNumber = $transaction->payment_number;
+                    }
+                } catch (\Exception $e) {
+                    // Ignore date parsing errors
+                }
+            }
+            
+            // Method 5: Get from user's contact if user exists
+            if (!$paymentNumber && $userId) {
+                $user = \App\Models\User::find($userId);
+                if ($user && $user->contact) {
+                    $paymentNumber = $user->contact;
+                }
+            }
+            
+            // Set payment_number if found (handle both model and object)
+            if ($paymentNumber) {
+                if (is_object($data) && !($data instanceof \App\Models\Booking)) {
+                    // For stdClass objects from json_decode
+                    $data->payment_number = $paymentNumber;
+                } elseif (is_object($data) && ($data instanceof \App\Models\Booking)) {
+                    // For Booking model instances - use setAttribute or dynamic property
+                    $data->setAttribute('payment_number', $paymentNumber);
+                    // Also set as dynamic property for easy access in view
+                    $data->payment_number = $paymentNumber;
+                } elseif (is_array($data)) {
+                    // For arrays
+                    $data['payment_number'] = $paymentNumber;
+                }
+            }
+        }
+        
+        // Ensure payment_number is accessible even if not set above
+        if (is_object($data) && !isset($data->payment_number)) {
+            $data->payment_number = null;
         }
 
         $dns2d = new DNS2D();

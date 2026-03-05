@@ -70,8 +70,7 @@
             @endphp
             <p style="font-weight: bold; font-size: 15px;">{{ $busCompany->name ?? ($data->campany->name ?? 'N/A') }}</p>
             <p>P. O. Box {{ $busOwnerAccount->box ?? 'N/A' }}</p>
-            <p>{{ $busOwnerAccount->region ?? 'N/A/' }},
-                {{ $busOwnerAccount->country ?? 'N/A' }}</p>
+            
             <p>Reg. No: {{ $busOwnerAccount->registration_number ?? 'N/A' }}</p>
             <p>TIN: {{ $busOwnerAccount->tin ?? 'N/A' }}</p>
             <p>VRN: {{ $busOwnerAccount->vrn ?? 'N/A' }}</p>
@@ -87,7 +86,24 @@
                 </tr>
                 <tr>
                     <td>Traveller Contact:</td>
-                    <td>{{ $data->customer_phone ?? ($data->payment_number ?? 'N/A') }}</td>
+                    <td>
+                        @php
+                            $contact = null;
+                            // First try customer_phone
+                            if (isset($data->customer_phone) && !empty($data->customer_phone) && $data->customer_phone != 'N/A') {
+                                $contact = $data->customer_phone;
+                            }
+                            // If not available, try payment_number
+                            if (!$contact && isset($data->payment_number) && !empty($data->payment_number) && $data->payment_number != 'N/A') {
+                                $contact = $data->payment_number;
+                            }
+                            // If still not available, try user contact
+                            if (!$contact && isset($data->user) && $data->user && isset($data->user->contact) && !empty($data->user->contact)) {
+                                $contact = $data->user->contact;
+                            }
+                        @endphp
+                        {{ $contact ?? 'N/A' }}
+                    </td>
                 </tr>
                 <tr>
                     <td>Booking number:</td>
