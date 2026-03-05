@@ -349,7 +349,7 @@
 
                             <div class="flex justify-between">
                                 <span class="text-sm text-gray-600">{{ __('customer/busroot.bus_fare') }}</span>
-                                <span class="text-sm font-medium text-gray-500">TZS
+                                <span class="text-sm font-medium text-gray-500">{{ $currency }}
                                     {{ convert_money($price - $ins) }}</span>
                             </div>
 

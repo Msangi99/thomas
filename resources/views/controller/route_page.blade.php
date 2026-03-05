@@ -51,7 +51,7 @@
                                         <span class="inline-block px-2 py-1 text-xs font-medium text-white bg-blue-500 rounded">{{ count($route->points) }} {{ __('vender/route.stops') }}</span>
                                     </td>
                                     <td class="px-4 py-3">
-                                        <p class="text-sm font-medium text-gray-800">{{ __('vender/route.tsh') }} {{ $route->price }}</p>
+                                        <p class="text-sm font-medium text-gray-800">{{ $currency }} {{ convert_money($route->price) }}</p>
                                     </td>
                                     <td class="px-4 py-3">
                                         <span class="inline-block px-2 py-1 text-xs font-medium rounded {{ $route->status == 'active' ? 'bg-green-500 text-white' : 'bg-red-500 text-white' }}">

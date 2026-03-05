@@ -19,7 +19,7 @@
                             <p><strong>To:</strong> {{ $booking1->dropping_point }}</p>
                             <p><strong>Travel Date:</strong> {{ $booking1->travel_date }}</p>
                             <p><strong>Seats:</strong> {{ $booking1->seat }}</p>
-                            <p><strong>Amount Paid:</strong> TZS {{ number_format($booking1->amount, 2) }}</p>
+                            <p><strong>Amount Paid:</strong> {{ $currency }} {{ convert_money($booking1->amount) }}</p>
                         </div>
                     @endif
 
@@ -43,7 +43,7 @@
                             <p><strong>To:</strong> {{ $secondTo }}</p>
                             <p><strong>Travel Date:</strong> {{ $booking2->travel_date }}</p>
                             <p><strong>Seats:</strong> {{ $booking2->seat }}</p>
-                            <p><strong>Amount Paid:</strong> TZS {{ number_format($booking2->amount, 2) }}</p>
+                            <p><strong>Amount Paid:</strong> {{ $currency }} {{ convert_money($booking2->amount) }}</p>
                         </div>
                     @endif
 

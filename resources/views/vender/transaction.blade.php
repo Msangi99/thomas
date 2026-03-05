@@ -17,7 +17,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="bg-white rounded-xl shadow-lg p-6 transition-all hover:shadow-xl">
                 <h3 class="text-lg font-semibold text-gray-700 text-center">{{ __('assistance/transaction.balance') }}</h3>
-                <p class="text-2xl font-bold text-gray-900 text-center mt-2">Tsh. {{ number_format(auth()->user()->VenderBalances->amount ?? 0, 2) }}</p>
+                <p class="text-2xl font-bold text-gray-900 text-center mt-2">{{ $currency }} {{ convert_money(auth()->user()->VenderBalances->amount ?? 0) }}</p>
                 <div class="mt-4 text-center">
                     <a href="{{ route('vender.wallet.deposit') }}" class="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                         deposit
@@ -27,11 +27,11 @@
             
             <div class="bg-white rounded-xl shadow-lg p-6 transition-all hover:shadow-xl">
                 <h3 class="text-lg font-semibold text-gray-700 text-center">{{ __('assistance/transaction.pending') }}</h3>
-                <p class="text-2xl font-bold text-gray-900 text-center mt-2">Tsh. {{ number_format($pending) }}</p>
+                <p class="text-2xl font-bold text-gray-900 text-center mt-2">{{ $currency }} {{ convert_money($pending) }}</p>
             </div>
             <div class="bg-white rounded-xl shadow-lg p-6 transition-all hover:shadow-xl">
                 <h3 class="text-lg font-semibold text-gray-700 text-center">{{ __('assistance/transaction.withdrawn') }}</h3>
-                <p class="text-2xl font-bold text-gray-900 text-center mt-2">Tsh. {{ number_format($accept) }}</p>
+                <p class="text-2xl font-bold text-gray-900 text-center mt-2">{{ $currency }} {{ convert_money($accept) }}</p>
             </div>
         </div>
 

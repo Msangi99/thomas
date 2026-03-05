@@ -20,7 +20,7 @@
                         <p><strong>{{ __('vender/busroot.to') }}:</strong> {{ $booking1->dropping_point }}</p>
                         <p><strong>{{ __('vender/busroot.travel_date') }}:</strong> {{ $booking1->travel_date }}</p>
                         <p><strong>{{ __('vender/busroot.seats') }}:</strong> {{ $booking1->seat }}</p>
-                        <p><strong>{{ __('vender/busroot.amount_paid') }}:</strong> TZS {{ number_format($booking1->amount + ($booking1->fee ?? 0), 2) }}</p>
+                        <p><strong>{{ __('vender/busroot.amount_paid') }}:</strong> {{ $currency }} {{ convert_money($booking1->amount + ($booking1->fee ?? 0)) }}</p>
                         <p class="mt-2">
                             <strong>{{ __('vender/busroot.company') }}:</strong> {{ $booking1->campany->name ?? __('vender/history.na') }}
                             <span class="mx-2">|</span>
@@ -42,7 +42,7 @@
                         <p><strong>{{ __('vender/busroot.to') }}:</strong> {{ $secondTo }}</p>
                         <p><strong>{{ __('vender/busroot.travel_date') }}:</strong> {{ $booking2->travel_date }}</p>
                         <p><strong>{{ __('vender/busroot.seats') }}:</strong> {{ $booking2->seat }}</p>
-                        <p><strong>{{ __('vender/busroot.amount_paid') }}:</strong> TZS {{ number_format($booking2->amount + ($booking2->fee ?? 0), 2) }}</p>
+                        <p><strong>{{ __('vender/busroot.amount_paid') }}:</strong> {{ $currency }} {{ convert_money($booking2->amount + ($booking2->fee ?? 0)) }}</p>
                         <p class="mt-2">
                             <strong>{{ __('vender/busroot.company') }}:</strong> {{ $booking2->campany->name ?? __('vender/history.na') }}
                             <span class="mx-2">|</span>

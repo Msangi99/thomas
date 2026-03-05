@@ -66,7 +66,7 @@
                                         <td>{{ $booking->route ? $booking->route->name : 'N/A' }}</td>
                                         <td>{{ \Carbon\Carbon::parse($booking->travel_date)->format('d M Y') }}</td>
                                         <td>{{ $booking->seat }}</td>
-                                        <td>₦{{ number_format($booking->amount, 2) }}</td>
+                                        <td>{{ $currency }} {{ convert_money($booking->amount) }}</td>
                                         <td>
                                             <span class="badge {{ $booking->payment_status == 'paid' ? 'bg-success' : 'bg-warning' }}">
                                                 {{ ucfirst($booking->payment_status) }}
@@ -94,7 +94,7 @@
         data: {
             labels: labels,
             datasets: [{
-                label: 'Booking Amount (₦)',
+                label: 'Booking Amount ({{ $currency }})',
                 data: amounts,
                 borderColor: '#007bff',
                 backgroundColor: 'rgba(0, 123, 255, 0.1)',
@@ -109,7 +109,7 @@
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Amount (₦)'
+                        text: 'Amount ({{ $currency }})'
                     }
                 },
                 x: {

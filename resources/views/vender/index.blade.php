@@ -41,7 +41,7 @@
                     <div class="text-3xl opacity-30"><i class="fas fa-wallet"></i></div>
                 </div>
                 <div class="p-6">
-                    <div class="text-2xl font-bold text-gray-800">Tsh. {{ number_format(auth()->user()->VenderBalances->amount, 2) }}</div>
+                    <div class="text-2xl font-bold text-gray-800">{{ $currency }} {{ convert_money(auth()->user()->VenderBalances->amount) }}</div>
                     <div class="text-sm text-gray-600 mt-1">{{ __('assistance/dashboard.current_available_balance') }}</div>
                 </div>
             </div>
@@ -116,7 +116,7 @@
                                     <td class="px-4 py-2">{{ $booking->bus->busname->name ?? 'N/A' }}</td>
                                     <td class="px-4 py-2">{{ $booking->created_at->format('M d, Y h:i A') }}</td>
                                     <td class="px-4 py-2">{{ $booking->seat }}</td>
-                                    <td class="px-4 py-2 font-semibold text-green-600">Tsh. {{ number_format($booking->amount, 2) }}</td>
+                                    <td class="px-4 py-2 font-semibold text-green-600">{{ $currency }} {{ convert_money($booking->amount) }}</td>
                                     <td class="px-4 py-2">
                                         
                                     </td>

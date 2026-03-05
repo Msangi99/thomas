@@ -13,7 +13,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-500">Today's Revenue</p>
-                    <h3 class="text-2xl font-bold text-gray-900 mt-1">Tsh {{ number_format($todayRevenue) }}</h3>
+                    <h3 class="text-2xl font-bold text-gray-900 mt-1">{{ $currency }} {{ convert_money($todayRevenue) }}</h3>
                 </div>
                 <div class="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -22,7 +22,7 @@
                 </div>
             </div>
             <div class="mt-4 flex items-center text-sm">
-                <span class="text-gray-500">Month: Tsh {{ number_format($monthRevenue) }}</span>
+                <span class="text-gray-500">Month: {{ $currency }} {{ convert_money($monthRevenue) }}</span>
             </div>
         </div>
 
@@ -113,7 +113,7 @@
                                     <p class="text-xs text-gray-500">{{ $order->pickup_location }} → {{ $order->dropoff_location }}</p>
                                 </div>
                                 <div class="text-right">
-                                    <p class="text-sm font-bold text-gray-900">Tsh {{ number_format($order->total_amount) }}</p>
+                                    <p class="text-sm font-bold text-gray-900">{{ $currency }} {{ convert_money($order->total_amount) }}</p>
                                     <span class="inline-block px-2 py-1 text-xs font-medium rounded-full bg-{{ $order->getStatusColor() }}-100 text-{{ $order->getStatusColor() }}-700">
                                         {{ ucfirst($order->order_status) }}
                                     </span>
@@ -195,7 +195,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <h3 class="text-xl font-bold">Total Revenue</h3>
-                <p class="text-3xl font-bold mt-2">Tsh {{ number_format($totalRevenue) }}</p>
+                <p class="text-3xl font-bold mt-2">{{ $currency }} {{ convert_money($totalRevenue) }}</p>
                 <p class="text-teal-200 text-sm mt-1">All time earnings</p>
             </div>
             <div class="hidden md:block">

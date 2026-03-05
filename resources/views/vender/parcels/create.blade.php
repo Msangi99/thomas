@@ -118,7 +118,7 @@
                             <label for="amount_paid" class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Amount Paid</label>
                             <div class="relative rounded-lg shadow-sm">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <span class="text-gray-500 font-bold text-xs">Tsh</span>
+                                    <span class="text-gray-500 font-bold text-xs">{{ $currency }}</span>
                                 </div>
                                 <input type="number" name="amount_paid" id="amount_paid" step="0.01"
                                     value="{{ old('amount_paid') }}" required

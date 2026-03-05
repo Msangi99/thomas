@@ -59,8 +59,8 @@
                                                 <span class="text-gray-400 italic">Not scheduled</span>
                                             @endif
                                         </td>
-                                        <td class="px-4 py-3 text-green-600 font-bold">Tsh.
-                                            {{ number_format($parcel->amount_paid, 2) }}</td>
+                                        <td class="px-4 py-3 text-green-600 font-bold">{{ $currency }}
+                                            {{ convert_money($parcel->amount_paid) }}</td>
                                         <td class="px-4 py-3 text-gray-600">{{ $parcel->created_at->format('d M Y H:i') }}</td>
                                         <td class="px-4 py-3">
                                             <span
