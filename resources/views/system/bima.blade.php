@@ -13,7 +13,7 @@
             <div class="p-4 bg-gradient-to-r from-blue-500 to-blue-400 text-white flex flex-col sm:flex-row justify-between items-center gap-4">
                 <h2 class="text-lg font-semibold">Travel Insurance Data</h2>
                 <h3 class="text-base font-medium">HIGHLINK ISGC</h3>
-                <span class="text-sm font-medium">Total: Tsh <span id="bimaTotal">0</span></span>
+                <span class="text-sm font-medium">Total: {{ $currency }} <span id="bimaTotal">0</span></span>
             </div>
 
             <div class="p-4">
@@ -91,8 +91,8 @@
                                     <td class="py-2 px-4" data-date="{{ \Carbon\Carbon::parse($bima->start_date)->format('Y-m-d') }}">{{ \Carbon\Carbon::parse($bima->start_date)->format('d M Y') }}</td>
                                     <td class="py-2 px-4" data-date="{{ \Carbon\Carbon::parse($bima->end_date)->format('Y-m-d') }}">{{ \Carbon\Carbon::parse($bima->end_date)->format('d M Y') }}</td>
                                     <td class="py-2 px-4">{{ $bima->valid_days }} days</td>
-                                    <td class="py-2 px-4 amount" data-amount="{{ $bima->amount }}">Tsh {{ number_format($bima->amount, 2, '.', ',') }}</td>
-                                    <td class="py-2 px-4 amount" data-amount="{{ $bima->bima_vat }}">Tsh {{ number_format($bima->bima_vat, 2, '.', ',') }}</td>
+                                    <td class="py-2 px-4 amount" data-amount="{{ $bima->amount }}">{{ $currency }} {{ number_format($bima->amount, 2, '.', ',') }}</td>
+                                    <td class="py-2 px-4 amount" data-amount="{{ $bima->bima_vat }}">{{ $currency }} {{ number_format($bima->bima_vat, 2, '.', ',') }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

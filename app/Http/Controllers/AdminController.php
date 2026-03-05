@@ -1158,10 +1158,10 @@ $q->where('id', auth()->user()->campany->id);
                 'campany_id' => $user->campany->id,
             ]);
 
-            return redirect()->route('local.bus.owners')->with('success', 'Local Bus Owner created successfully.');
+            return redirect()->route('local.bus.owners')->with('success', __('local_bus_owners.local_bus_owner_created_successfully'));
         } catch (\Exception $e) {
             Log::error('Error creating local bus owner: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to create local bus owner. Please try again.');
+            return redirect()->back()->with('error', __('local_bus_owners.failed_to_create_local_bus_owner'));
         }
     }
 
@@ -1195,10 +1195,10 @@ $q->where('id', auth()->user()->campany->id);
                 'status' => $request->status,
             ]);
 
-            return redirect()->route('local.bus.owners')->with('success', 'Local Bus Owner updated successfully.');
+            return redirect()->route('local.bus.owners')->with('success', __('local_bus_owners.local_bus_owner_updated_successfully'));
         } catch (\Exception $e) {
             Log::error('Error updating local bus owner: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to update local bus owner. Please try again.');
+            return redirect()->back()->with('error', __('local_bus_owners.failed_to_update_local_bus_owner'));
         }
     }
 
@@ -1215,10 +1215,10 @@ $q->where('id', auth()->user()->campany->id);
                                  ->findOrFail($id);
             $localBusOwner->delete();
 
-            return redirect()->route('local.bus.owners')->with('success', 'Local Bus Owner deleted successfully.');
+            return redirect()->route('local.bus.owners')->with('success', __('local_bus_owners.local_bus_owner_deleted_successfully'));
         } catch (\Exception $e) {
             Log::error('Error deleting local bus owner: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to delete local bus owner. Please try again.');
+            return redirect()->back()->with('error', __('local_bus_owners.failed_to_delete_local_bus_owner'));
         }
     }
 

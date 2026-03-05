@@ -33,7 +33,7 @@
         </div>
         <div class="mt-4 md:mt-0 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <span class="text-sm font-medium text-gray-700">Total Balance:</span>
-            <span class="ml-2 font-bold text-indigo-600" id="companyTotal">Tsh 0.00</span>
+            <span class="ml-2 font-bold text-indigo-600" id="companyTotal">{{ $currency }} 0.00</span>
         </div>
     </div>
 
@@ -80,7 +80,7 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $campany->user->name }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $campany->user->contact }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 amount" data-amount="{{ $campany->balance->amount ?? 0 }}">
-                                        Tsh {{ number_format($campany->balance->amount ?? 0, 2) }}
+                                        {{ $currency }} {{ number_format($campany->balance->amount ?? 0, 2) }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center space-x-2">
@@ -185,7 +185,7 @@ $(document).ready(function() {
                     let amount = $(row).find('.amount').data('amount') || 0;
                     return sum + parseFloat(amount);
                 }, 0);
-            $('#companyTotal').text('Tsh ' + total.toLocaleString('en-US', { minimumFractionDigits: 2 }));
+            $('#companyTotal').text('{{ $currency }} ' + total.toLocaleString('en-US', { minimumFractionDigits: 2 }));
         }
     });
 

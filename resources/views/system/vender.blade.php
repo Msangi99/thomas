@@ -55,7 +55,7 @@
                         <td class="px-4 py-3 whitespace-nowrap font-medium text-gray-900">{{ $vendor->name }}</td>
                         <td class="px-4 py-3 whitespace-nowrap">{{ $vendor->contact }}</td>
                         <td class="px-4 py-3 whitespace-nowrap amount" data-amount="{{ $vendor->VenderBalances->amount ?? 0 }}">
-                            Tsh {{ number_format($vendor->VenderBalances->amount ?? 0, 2, '.', ',') }}
+                            {{ $currency }} {{ convert_money($vendor->VenderBalances->amount ?? 0) }}
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap">{{ $vendor->VenderAccount->work ?? 'N/A' }}</td>
                         <td class="px-4 py-3 whitespace-nowrap">
@@ -125,7 +125,7 @@
                         </span>
                     </p>
                     <p><span class="font-medium text-gray-700">Balance:</span> 
-                        Tsh {{ number_format($vendor->VenderBalances->amount ?? 0, 2, '.', ',') }}
+                        {{ $currency }} {{ convert_money($vendor->VenderBalances->amount ?? 0) }}
                     </p>
                 </div>
             </div>

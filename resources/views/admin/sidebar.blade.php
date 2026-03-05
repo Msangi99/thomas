@@ -1,7 +1,7 @@
  
 <div class="px-4">
     <div class="text-center mb-6 pt-4">
-        <h4 class="text-white text-xl font-semibold tracking-tight">Bus Owner Panel</h4>
+        <h4 class="text-white text-xl font-semibold tracking-tight">{{ trans('vendor_sidebar.bus_owner_panel') }}</h4>
         <hr class="border-gray-300/50 mt-2">
     </div>
     

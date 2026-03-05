@@ -16,10 +16,10 @@
                 <div class="flex flex-col">
                     <h2 class="text-lg font-semibold mb-2">Booking History</h2>
                     <div class="flex flex-wrap gap-3 text-sm font-medium">
-                        <span>Total Payment: Tsh <span id="totalPayment">0</span></span>
-                        <span>Total Discount: Tsh <span id="totalDiscount">0</span></span>
-                        <span>Total VAT: Tsh <span id="totalVAT">0</span></span>
-                        <span>Grand Total: Tsh <span id="grandTotal">0</span></span>
+                        <span>Total Payment: {{ $currency }} <span id="totalPayment">0</span></span>
+                        <span>Total Discount: {{ $currency }} <span id="totalDiscount">0</span></span>
+                        <span>Total VAT: {{ $currency }} <span id="totalVAT">0</span></span>
+                        <span>Grand Total: {{ $currency }} <span id="grandTotal">0</span></span>
                     </div>
                 </div>
                 <div class="flex flex-col sm:flex-row items-center gap-2">

@@ -49,7 +49,7 @@
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">Total Amount</dt>
-                            <dd class="text-lg font-medium text-gray-900">TSh {{ number_format($totalAmount) }}</dd>
+                            <dd class="text-lg font-medium text-gray-900">{{ $currency }} {{ convert_money($totalAmount) }}</dd>
                         </dl>
                     </div>
                 </div>
@@ -85,7 +85,7 @@
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">Today Amount</dt>
-                            <dd class="text-lg font-medium text-gray-900">TSh {{ number_format($todayAmount) }}</dd>
+                            <dd class="text-lg font-medium text-gray-900">{{ $currency }} {{ convert_money($todayAmount) }}</dd>
                         </dl>
                     </div>
                 </div>
@@ -181,7 +181,7 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                                    TSh {{ number_format($cancelled->amount) }}
+                                    {{ $currency }} {{ convert_money($cancelled->amount) }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                     {{ \Carbon\Carbon::parse($cancelled->created_at)->format('M d, Y H:i') }}

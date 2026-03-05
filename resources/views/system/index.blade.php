@@ -8,14 +8,14 @@
     <div class="col-md-4">
         <div class="card text-center p-4">
             <h5 class="card-title">Today's Total Amount</h5>
-            <h2 class="card-text text-success">Tsh.{{ number_format($todayAmount, 2) }}</h2>
+            <h2 class="card-text text-success">{{ $currency }} {{ convert_money($todayAmount) }}</h2>
         </div>
     </div>
 
     <div class="col-md-4">
         <div class="card text-center p-4">
             <h5 class="card-title">System Total Amount</h5>
-            <h2 class="card-text text-success">Tsh.{{ number_format($system, 2) }}</h2>
+            <h2 class="card-text text-success">{{ $currency }} {{ convert_money($system) }}</h2>
         </div>
     </div>
 </div>

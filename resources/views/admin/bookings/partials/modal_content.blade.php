@@ -60,7 +60,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between mb-2">
                     <span class="text-muted">Amount:</span>
-                    <span class="fw-bold">Tsh {{ $booking->amount }}</span>
+                    <span class="fw-bold">{{ $currency }} {{ convert_money($booking->amount) }}</span>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
                     <span class="text-muted">Payment Method:</span>

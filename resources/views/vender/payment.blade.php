@@ -305,14 +305,24 @@
         function updateTotalPayable() {
             const excessLuggageCheckbox = document.getElementById('excess_luggage');
             const totalPayableElement = document.getElementById('total_payable_amount_vender_payment');
+            // Get base total in TZS
             let currentTotal = parseFloat("{{ $fees + $price }}");
-            const excessLuggageFee = 2500; // Defined in the controller later
+            const excessLuggageFee = 2500; // TZS amount
 
             if (excessLuggageCheckbox.checked) {
                 currentTotal += excessLuggageFee;
             }
 
-            totalPayableElement.innerHTML = "{{ $currency }}. " + formatMoney(currentTotal);
+            // Check if currency is USD and convert
+            const currency = "{{ $currency }}";
+            const usdRate = {{ app('usdToTzs') ?? 2500 }};
+            
+            let displayAmount = currentTotal;
+            if (currency === 'USD') {
+                displayAmount = currentTotal / usdRate;
+            }
+
+            totalPayableElement.innerHTML = currency + ". " + formatMoney(displayAmount);
         }
 
         function formatMoney(amount) {

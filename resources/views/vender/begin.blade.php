@@ -81,7 +81,7 @@
                         <div class="flex items-center justify-between pt-2 border-t border-gray-100">
                             <div>
                                 <div class="text-xs text-gray-300">{{ __('assistance/booking.from_label') }}</div>
-                                <div class="font-bold text-indigo-600">Tsh. {{ number_format($bus->route->price ?? 0) }}</div>
+                                <div class="font-bold text-indigo-600">{{ $currency }} {{ convert_money($bus->route->price ?? 0) }}</div>
                             </div>
                             <div class="flex items-center space-x-2">
                                 <span class="text-xs text-white">

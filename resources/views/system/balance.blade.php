@@ -69,7 +69,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                Tsh {{ number_format($trans->amount, 2) }}
+                                {{ $currency }} {{ number_format($trans->amount, 2) }}
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $trans->payment_number }}</td>
@@ -149,10 +149,10 @@
                                     </div>
 
                                     <div>
-                                        <label for="amount" class="block text-sm font-medium text-gray-700">Amount (Tsh)</label>
+                                        <label for="amount" class="block text-sm font-medium text-gray-700">Amount ({{ $currency }})</label>
                                         <div class="mt-1 relative rounded-md shadow-sm">
                                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <span class="text-gray-500 sm:text-sm">Tsh</span>
+                                                <span class="text-gray-500 sm:text-sm">{{ $currency }}</span>
                                             </div>
                                             <input type="number" name="amount" id="amount" step="0.01" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-12 pr-12 sm:text-sm border-gray-300 rounded-md" placeholder="0.00">
                                         </div>

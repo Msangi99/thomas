@@ -12,7 +12,7 @@
         <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
             <div class="p-4 bg-gradient-to-r from-blue-500 to-blue-400 text-white flex flex-col sm:flex-row justify-between items-center gap-4">
                 <h2 class="text-lg font-semibold">Requested Transactions</h2>
-                <span class="text-sm font-medium">Total: Tsh <span id="pendingTotal">0</span></span>
+                <span class="text-sm font-medium">Total: {{ $currency }} <span id="pendingTotal">0</span></span>
             </div>
             <div class="p-4">
                 <div class="flex flex-col sm:flex-row gap-4 mb-4">
@@ -70,7 +70,7 @@
                                     <td class="py-2 px-4">{{ $transaction->user ? $transaction->user->name : 'Unknown' }}</td>
                                     <td class="py-2 px-4">{{ $transaction->payment_method ?? 'Unknown' }}</td>
                                     <td class="py-2 px-4">{{ $transaction->payment_number ?? 'Unknown' }}</td>
-                                    <td class="py-2 px-4 amount" data-amount="{{ $transaction->amount }}">Tsh {{ number_format($transaction->amount, 2, '.', ',') }}</td>
+                                    <td class="py-2 px-4 amount" data-amount="{{ $transaction->amount }}">{{ $currency }} {{ number_format($transaction->amount, 2, '.', ',') }}</td>
                                     <td class="py-2 px-4">
                                         <span class="inline-block px-2 py-1 text-xs font-semibold rounded {{ $transaction->status === 'Completed' ? 'bg-green-500 text-white' : ($transaction->status === 'Pending' ? 'bg-yellow-500 text-black' : 'bg-red-500 text-white') }}">
                                             {{ $transaction->status }}
@@ -106,7 +106,7 @@
             <div class="p-4 bg-gradient-to-r from-blue-500 to-blue-400 text-white flex flex-col sm:flex-row justify-between items-center gap-4">
                 <h2 class="text-lg font-semibold">All Transactions</h2>
                 <div class="flex flex-col sm:flex-row items-center gap-4">
-                    <span class="text-sm font-medium">Total: Tsh <span id="allTransactionsTotal">0</span></span>
+                    <span class="text-sm font-medium">Total: {{ $currency }} <span id="allTransactionsTotal">0</span></span>
                     <div class="flex flex-col sm:flex-row gap-4">
                         <div class="w-full sm:w-auto">
                             <label class="block text-xs font-medium text-white mb-1">Filter by:</label>
@@ -161,7 +161,7 @@
                                     <td class="py-2 px-4">{{ $index + 1 }}</td>
                                     <td class="py-2 px-4">{{ $transaction->campany ? $transaction->campany->name : 'Vender' }}</td>
                                     <td class="py-2 px-4">{{ $transaction->user ? $transaction->user->name : 'Unknown' }}</td>
-                                    <td class="py-2 px-4 amount" data-amount="{{ $transaction->amount }}">Tsh {{ number_format($transaction->amount, 2, '.', ',') }}</td>
+                                    <td class="py-2 px-4 amount" data-amount="{{ $transaction->amount }}">{{ $currency }} {{ number_format($transaction->amount, 2, '.', ',') }}</td>
                                     <td class="py-2 px-4">{{ $transaction->reference_number }}</td>
                                     <td class="py-2 px-4">
                                         <span class="inline-block px-2 py-1 text-xs font-semibold rounded {{ $transaction->status === 'Completed' ? 'bg-green-500 text-white' : ($transaction->status === 'Pending' ? 'bg-yellow-500 text-black' : 'bg-red-500 text-white') }}">
@@ -229,7 +229,7 @@
                     </div>
                     <div id="modalError" class="hidden text-red-500 text-sm mb-4"></div>
                     <div id="modalContent">
-                        <p class="text-sm text-gray-600 mb-4" id="transactionAmount">Update status for transaction of Tsh 0?</p>
+                        <p class="text-sm text-gray-600 mb-4" id="transactionAmount">Update status for transaction of {{ $currency }} 0?</p>
                         <div class="flex flex-col sm:flex-row gap-2">
                             <form class="flex-1" id="completeForm" action="" method="POST">
                                 @csrf
@@ -447,7 +447,7 @@
             }
 
             // Update the amount display
-            document.getElementById('transactionAmount').textContent = `Update status for transaction of Tsh ${amount}?`;
+            document.getElementById('transactionAmount').textContent = `Update status for transaction of {{ $currency }} ${amount}?`;
 
             // Update form action URLs
             const completeForm = document.getElementById('completeForm');
@@ -472,7 +472,7 @@
             modal.classList.add('hidden');
             modalError.classList.add('hidden');
             modalLoading.classList.add('hidden');
-            document.getElementById('transactionAmount').textContent = 'Update status for transaction of Tsh 0?';
+            document.getElementById('transactionAmount').textContent = 'Update status for transaction of {{ $currency }} 0?';
             document.getElementById('completeForm').action = '';
             document.getElementById('cancelForm').action = '';
         }

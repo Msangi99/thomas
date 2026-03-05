@@ -90,7 +90,7 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
-                                Tsh {{ number_format($parcel->amount_paid, 2) }}
+                                {{ $currency }} {{ convert_money($parcel->amount_paid) }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 

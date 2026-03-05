@@ -9,8 +9,8 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
-            <h3 class="text-2xl font-bold text-gray-900">Local Bus Owners</h3>
-            <p class="text-sm text-gray-600 mt-1">Manage all registered local bus owners in the system</p>
+            <h3 class="text-2xl font-bold text-gray-900">{{ __('local_bus_owners.local_bus_owners') }}</h3>
+            <p class="text-sm text-gray-600 mt-1">{{ __('local_bus_owners.manage_all_registered') }}</p>
         </div>
         <button type="button"
                 id="toggleCreateForm"
@@ -18,7 +18,7 @@
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
             </svg>
-            Add Local Bus Owner
+            {{ __('local_bus_owners.add_local_bus_owner') }}
         </button>
     </div>
 
@@ -42,45 +42,45 @@
 
     <!-- Create Form (Initially Hidden) -->
     <div id="createLocalBusOwnerForm" class="bg-white rounded-lg shadow-md p-6 mb-6 hidden max-w-lg mx-auto">
-        <h5 class="text-lg font-semibold text-gray-900 mb-4">Create Local Bus Owner</h5>
+        <h5 class="text-lg font-semibold text-gray-900 mb-4">{{ __('local_bus_owners.create_local_bus_owner') }}</h5>
         <form action="{{ route('local.bus.owners.create') }}" method="POST">
             @csrf
             <!-- Hidden field -->
             <input type="hidden" name="modal" value="create">
             <div class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('local_bus_owners.name') }}</label>
                     <input type="text" name="name" value="{{ old('name') }}"
                            class="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500 @error('name') border-red-500 @enderror" required>
                     @error('name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('local_bus_owners.email') }}</label>
                     <input type="email" name="email" value="{{ old('email') }}"
                            class="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500 @error('email') border-red-500 @enderror" required>
                     @error('email') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('local_bus_owners.password') }}</label>
                     <input type="password" name="password"
                            class="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500 @error('password') border-red-500 @enderror" required>
                     @error('password') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('local_bus_owners.confirm_password') }}</label>
                     <input type="password" name="password_confirmation"
                            class="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500" required>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Contact (Optional)</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('local_bus_owners.contact_optional') }}</label>
                     <input type="text" name="contact" value="{{ old('contact') }}"
                            class="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500 @error('contact') border-red-500 @enderror">
                     @error('contact') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>
             <div class="flex justify-end mt-4 space-x-2">
-                <button type="button" id="cancelCreateForm" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">Cancel</button>
-                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">Create</button>
+                <button type="button" id="cancelCreateForm" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">{{ __('local_bus_owners.cancel') }}</button>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">{{ __('local_bus_owners.create') }}</button>
             </div>
         </form>
     </div>
@@ -88,7 +88,7 @@
     <!-- Edit Form (Initially Hidden, Populated Dynamically) -->
     @forelse ($localBusOwners as $owner)
         <div id="editLocalBusOwnerForm{{ $owner->id }}" class="bg-white rounded-lg shadow-md p-6 mb-6 hidden max-w-lg mx-auto">
-            <h5 class="text-lg font-semibold text-gray-900 mb-4">Edit Local Bus Owner</h5>
+            <h5 class="text-lg font-semibold text-gray-900 mb-4">{{ __('local_bus_owners.edit_local_bus_owner') }}</h5>
             <form action="{{ route('local.bus.owners.update', $owner) }}" method="POST">
                 @csrf
                 @method('PUT')
@@ -98,35 +98,35 @@
                 <input type="hidden" name="id" value="{{ $owner->id }}">
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('local_bus_owners.name') }}</label>
                         <input type="text" name="name" value="{{ old('name', $owner->name) }}"
                                class="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500 @error('name') border-red-500 @enderror" required>
                         @error('name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('local_bus_owners.email') }}</label>
                         <input type="email" name="email" value="{{ old('email', $owner->email) }}"
                                class="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500 @error('email') border-red-500 @enderror" required>
                         @error('email') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Contact (Optional)</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('local_bus_owners.contact_optional') }}</label>
                         <input type="text" name="contact" value="{{ old('contact', $owner->contact) }}"
                                class="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500 @error('contact') border-red-500 @enderror">
                         @error('contact') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('local_bus_owners.status') }}</label>
                         <select name="status" class="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500 @error('status') border-red-500 @enderror" required>
-                            <option value="accept" {{ old('status', $owner->status) === 'accept' ? 'selected' : '' }}>Active</option>
-                            <option value="cancel" {{ old('status', $owner->status) === 'cancel' ? 'selected' : '' }}>Inactive</option>
+                            <option value="accept" {{ old('status', $owner->status) === 'accept' ? 'selected' : '' }}>{{ __('local_bus_owners.active') }}</option>
+                            <option value="cancel" {{ old('status', $owner->status) === 'cancel' ? 'selected' : '' }}>{{ __('local_bus_owners.inactive') }}</option>
                         </select>
                         @error('status') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                 </div>
                 <div class="flex justify-end mt-4 space-x-2">
-                    <button type="button" class="cancelEditForm" data-owner-id="{{ $owner->id }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">Update</button>
+                    <button type="button" class="cancelEditForm" data-owner-id="{{ $owner->id }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">{{ __('local_bus_owners.cancel') }}</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">{{ __('local_bus_owners.update') }}</button>
                 </div>
             </form>
         </div>
@@ -143,7 +143,7 @@
                     </svg>
                 </div>
                 <div>
-                    <p class="text-sm font-medium text-gray-600">Total Owners</p>
+                    <p class="text-sm font-medium text-gray-600">{{ __('local_bus_owners.total_owners') }}</p>
                     <p class="text-2xl font-bold text-gray-900">{{ $localBusOwners->count() }}</p>
                 </div>
             </div>
@@ -156,7 +156,7 @@
                     </svg>
                 </div>
                 <div>
-                    <p class="text-sm font-medium text-gray-600">Active Owners</p>
+                    <p class="text-sm font-medium text-gray-600">{{ __('local_bus_owners.active_owners') }}</p>
                     <p class="text-2xl font-bold text-gray-900">{{ $localBusOwners->where('status', 'accept')->count() }}</p>
                 </div>
             </div>
@@ -169,7 +169,7 @@
                     </svg>
                 </div>
                 <div>
-                    <p class="text-sm font-medium text-gray-600">Inactive Owners</p>
+                    <p class="text-sm font-medium text-gray-600">{{ __('local_bus_owners.inactive_owners') }}</p>
                     <p class="text-2xl font-bold text-gray-900">{{ $localBusOwners->where('status', 'cancel')->count() }}</p>
                 </div>
             </div>
@@ -183,10 +183,10 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('local_bus_owners.name') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('local_bus_owners.email') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('local_bus_owners.contact') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('local_bus_owners.status') }}</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
@@ -199,7 +199,7 @@
                             <td class="px-6 py-4 text-sm text-gray-900">{{ $owner->contact ?? 'N/A' }}</td>
                             <td class="px-6 py-4">
                                 <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $owner->status === 'accept' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                    {{ ucfirst($owner->status) }}
+                                    {{ $owner->status === 'accept' ? __('local_bus_owners.active') : __('local_bus_owners.inactive') }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-right text-sm font-medium">
@@ -208,7 +208,7 @@
                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-6 6m0-2a4 4 0 01-4-4m5 0a2 2 0 012 2h2a4 4 0 00-4-4v-1a3 3 0 300-3-3H3m6 1a9 9 0 1012-3m-10 10v4m0 0l3-3m-3 3l-3-3"></path>
                                         </svg>
-                                        Permissions
+                                        {{ __('local_bus_owners.permissions') }}
                                     </a>
                                     <button
                                         type="button"
@@ -217,18 +217,18 @@
                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                             </svg>
-                                        Edit
+                                        {{ __('local_bus_owners.edit') }}
                                         </button>
                                     <form action="{{ route('local.bus.owners.destroy', $owner) }}" method="POST" class="inline-block">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
                                                 class="text-red-600 hover:text-red-900 flex items-center"
-                                                onclick="return confirm('Are you sure you want to delete this local bus owner?')">
+                                                onclick="return confirm('{{ __('local_bus_owners.are_you_sure_delete') }}')">
                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                             </svg>
-                                            Delete
+                                            {{ __('local_bus_owners.delete') }}
                                         </button>
                                     </form>
                                 </div>
@@ -240,12 +240,12 @@
                                 <svg class="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                                <p class="mt-4 text-gray-500 text-lg">No local bus owners found</p>
-                                <p class="text-gray-400">Get started by adding your first local bus owner</p>
+                                <p class="mt-4 text-gray-500 text-lg">{{ __('local_bus_owners.no_local_bus_owners_found') }}</p>
+                                <p class="text-gray-400">{{ __('local_bus_owners.get_started_by_adding') }}</p>
                                 <button type="button"
                                         id="toggleCreateFormEmpty"
                                         class="mt-4 inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
-                                    Add Local Bus Owner
+                                    {{ __('local_bus_owners.add_local_bus_owner') }}
                                 </button>
                             </td>
                         </tr>

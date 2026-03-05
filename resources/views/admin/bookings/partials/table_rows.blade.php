@@ -26,7 +26,7 @@
         </td>
         <td>
             <div class="d-flex flex-column">
-                <p class="text-xs font-weight-bold mb-0">Tsh {{ $booking->amount }}</p>
+                <p class="text-xs font-weight-bold mb-0">{{ $currency }} {{ convert_money($booking->amount) }}</p>
             </div>
         </td>
         <td class="align-middle">

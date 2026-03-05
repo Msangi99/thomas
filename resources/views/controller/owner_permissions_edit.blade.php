@@ -35,7 +35,7 @@
                                         <option value="history">Booking History</option>
                                         <option value="resaved.tickets">Reserved Tickets</option>
                                         <option value="erning">Earnings Payments</option>
-                                        <option value="local.bus.owners">Local Bus Owners</option>
+                                        <option value="local.bus.owners">{{ __('local_bus_owners.local_bus_owners') }}</option>
                                         <option value="owner.permissions.view">Owner Permissions View</option>
                                         <option value="owner.permissions.edit">Owner Permissions Edit</option>
                                         <option value="profile">Profile</option>

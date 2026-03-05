@@ -15,7 +15,7 @@
             <div class="bg-white rounded-lg shadow-md overflow-hidden">
                 <div class="p-4 bg-gradient-to-r from-blue-500 to-blue-400 text-white text-center">
                     <h2 class="text-lg font-semibold">Commission Fees</h2>
-                    <span class="text-sm font-medium">Total: Tsh <span id="serviceTotal">{{ number_format($balances->sum('balance'), 2, '.', ',') }}</span></span>
+                    <span class="text-sm font-medium">Total: {{ $currency }} <span id="serviceTotal">{{ number_format($balances->sum('balance'), 2, '.', ',') }}</span></span>
                 </div>
                 <div class="p-4">
                     <div class="flex flex-col sm:flex-row gap-4 mb-4">
@@ -62,7 +62,7 @@
                                         <tr class="border-b border-gray-200 hover:bg-gray-50 transition">
                                             <td class="py-2 px-4">{{ $i++ }}</td>
                                             <td class="py-2 px-4">{{ $payment->campany->name }}</td>
-                                            <td class="py-2 px-4 amount" data-amount="{{ $payment->balance }}">Tsh {{ number_format($payment->balance, 2, '.', ',') }}</td>
+                                            <td class="py-2 px-4 amount" data-amount="{{ $payment->balance }}">{{ $currency }} {{ number_format($payment->balance, 2, '.', ',') }}</td>
                                             <td class="py-2 px-4" data-date="{{ $payment->created_at->format('Y-m-d') }}">{{ $payment->created_at->format('d M Y') }}</td>
                                         </tr>
                                     @endforeach
@@ -79,7 +79,7 @@
             <div class="bg-white rounded-lg shadow-md overflow-hidden">
                 <div class="p-4 bg-gradient-to-r from-blue-500 to-blue-400 text-white text-center">
                     <h2 class="text-lg font-semibold">Service Fees</h2>
-                    <span class="text-sm font-medium">Total: Tsh <span id="commissionTotal">{{ number_format($pays->sum('amount'), 2, '.', ',') }}</span></span>
+                    <span class="text-sm font-medium">Total: {{ $currency }} <span id="commissionTotal">{{ number_format($pays->sum('amount'), 2, '.', ',') }}</span></span>
                 </div>
                 <div class="p-4">
                     <div class="flex flex-col sm:flex-row gap-4 mb-4">
@@ -129,7 +129,7 @@
                                             <td class="py-2 px-4">{{ $p++ }}</td>
                                             <td class="py-2 px-4">{{ $payment->campany->name }}</td>
                                             <td class="py-2 px-4">{{ $payment->booking_id }}</td>
-                                            <td class="py-2 px-4 amount" data-amount="{{ $payment->amount }}">Tsh {{ number_format($payment->amount, 2, '.', ',') }}</td>
+                                            <td class="py-2 px-4 amount" data-amount="{{ $payment->amount }}">{{ $currency }} {{ number_format($payment->amount, 2, '.', ',') }}</td>
                                             <td class="py-2 px-4" data-date="{{ $payment->created_at->format('Y-m-d') }}">{{ $payment->created_at->format('d M Y') }}</td>
                                         </tr>
                                     @endforeach

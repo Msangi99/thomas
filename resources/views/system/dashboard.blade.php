@@ -20,7 +20,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-teal-600">Today's Revenue</p>
-                        <h3 class="text-2xl font-bold text-gray-800 mt-1">Tsh.{{ number_format($todayAmount, 2) }}</h3>
+                        <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ $currency }} {{ convert_money($todayAmount) }}</h3>
                     </div>
                     <div class="p-3 rounded-lg bg-teal-100 text-teal-600">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -36,7 +36,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-orange-600">Total Revenue</p>
-                        <h3 class="text-2xl font-bold text-gray-800 mt-1">Tsh.{{ number_format($totalAmount, 2) }}</h3>
+                        <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ $currency }} {{ convert_money($totalAmount) }}</h3>
                     </div>
                     <div class="p-3 rounded-lg bg-orange-100 text-orange-600">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -52,7 +52,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-blue-600">Insurance Amount</p>
-                        <h3 class="text-2xl font-bold text-gray-800 mt-1">Tsh.{{ number_format($bima, 2) }}</h3>
+                        <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ $currency }} {{ convert_money($bima) }}</h3>
                     </div>
                     <div class="p-3 rounded-lg bg-blue-100 text-blue-600">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -68,7 +68,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-purple-600">Commission Fees</p>
-                        <h3 class="text-2xl font-bold text-gray-800 mt-1">Tsh.{{ number_format($service, 2) }}</h3>
+                        <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ $currency }} {{ convert_money($service) }}</h3>
                     </div>
                     <div class="p-3 rounded-lg bg-purple-100 text-purple-600">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -84,7 +84,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-green-600">Service Fees</p>
-                        <h3 class="text-2xl font-bold text-gray-800 mt-1">Tsh.{{ number_format($fees, 2) }}</h3>
+                        <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ $currency }} {{ convert_money($fees) }}</h3>
                     </div>
                     <div class="p-3 rounded-lg bg-green-100 text-green-600">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -101,7 +101,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-indigo-600">Available Balance</p>
-                            <h3 class="text-2xl font-bold text-gray-800 mt-1">Tsh.{{ number_format($balance, 2) }}</h3>
+                            <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ $currency }} {{ convert_money($balance) }}</h3>
                         </div>
                         <div class="p-3 rounded-lg bg-indigo-100 text-indigo-600">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -120,7 +120,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-red-600">Cancellation Fees</p>
-                        <h3 class="text-2xl font-bold text-gray-800 mt-1">Tsh.{{ number_format($cancelledAmount, 2) }}</h3>
+                        <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ $currency }} {{ convert_money($cancelledAmount) }}</h3>
                     </div>
                     <div class="p-3 rounded-lg bg-red-100 text-red-600">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -165,7 +165,7 @@
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-800">New booking confirmed</p>
-                            <p class="text-xs text-gray-500">Booking #BK-2023-0567 for Tsh 45,000</p>
+                            <p class="text-xs text-gray-500">Booking #BK-2023-0567 for {{ $currency }} 45,000</p>
                             <p class="text-xs text-gray-400 mt-1">2 hours ago</p>
                         </div>
                     </div>
@@ -177,7 +177,7 @@
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-800">Payment processed</p>
-                            <p class="text-xs text-gray-500">Tsh 12,500 commission received</p>
+                            <p class="text-xs text-gray-500">{{ $currency }} 12,500 commission received</p>
                             <p class="text-xs text-gray-400 mt-1">5 hours ago</p>
                         </div>
                     </div>
@@ -247,7 +247,7 @@
                                         {{ \Carbon\Carbon::parse($booking->travel_date)->format('d M Y') }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        Tsh {{ number_format($booking->amount, 2) }}
+                                        {{ $currency }} {{ convert_money($booking->amount) }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
@@ -295,7 +295,7 @@
         data: {
             labels: labels,
             datasets: [{
-                label: 'Paid booking amount (Tsh)',
+                label: 'Paid booking amount ({{ $currency }})',
                 data: amounts,
                 borderColor: '#3B82F6',
                 backgroundColor: 'rgba(59, 130, 246, 0.05)',
@@ -330,7 +330,7 @@
                     displayColors: false,
                     callbacks: {
                         label: function(context) {
-                            return 'Amount: Tsh ' + context.parsed.y.toLocaleString();
+                            return 'Amount: {{ $currency }} ' + context.parsed.y.toLocaleString();
                         }
                     }
                 }
@@ -345,7 +345,7 @@
                     ticks: {
                         color: '#6B7280',
                         callback: function(value) {
-                            return 'Tsh ' + value.toLocaleString();
+                            return '{{ $currency }} ' + value.toLocaleString();
                         }
                     }
                 },

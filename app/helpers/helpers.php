@@ -3,10 +3,10 @@
 if (!function_exists('convert_to_usd')) {
     function convert_money($tzs)
     {
-        $currecy = session('currency');
+        $currency = session('currency');
         $usd = app('usdToTzs') ?? 2500;
 
-        if($currecy == 'Usd'){
+        if($currency == 'Usd'){
              return  number_format($tzs / $usd, 2);
         }else{
             return number_format($tzs, 2);

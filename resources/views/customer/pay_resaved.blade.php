@@ -251,30 +251,30 @@
                     <div class="space-y-3 mb-6">
                         <div class="flex justify-between">
                             <span class="text-sm text-gray-600">{{ __('customer/busroot.discount') }}</span>
-                            <span class="text-sm font-medium text-gray-500">TZS {{ number_format($dis, 2) }}</span>
+                            <span class="text-sm font-medium text-gray-500">{{ $currency }} {{ number_format($dis, 2) }}</span>
                         </div>
                         
                         @if(isset($ins) && $ins > 0)
                         <div class="flex justify-between">
                             <span class="text-sm text-gray-600">{{ __('customer/busroot.insurance') }}</span>
-                            <span class="text-sm font-medium text-gray-500">TZS {{ number_format($ins) }}</span>
+                            <span class="text-sm font-medium text-gray-500">{{ $currency }} {{ number_format($ins) }}</span>
                         </div>
                         @endif
                         
                         <div class="flex justify-between">
                             <span class="text-sm text-gray-600">{{ __('customer/busroot.system_charge') }}</span>
-                            <span class="text-sm font-medium text-gray-500">TZS {{ convert_money($fees) }}</span>
+                            <span class="text-sm font-medium text-gray-500">{{ $currency }} {{ convert_money($fees) }}</span>
                         </div>
                         
                         <div class="flex justify-between">
                             <span class="text-sm text-gray-600">{{ __('customer/busroot.bus_fare') }}</span>
-                            <span class="text-sm font-medium text-gray-500">TZS {{ convert_money($price - $ins) }}</span>
+                            <span class="text-sm font-medium text-gray-500">{{ $currency }} {{ convert_money($price - $ins) }}</span>
                         </div>
                         
                         <div class="border-t border-gray-200 pt-2 mt-2 flex justify-between">
                             <span class="text-base font-semibold">{{ __('customer/busroot.total_payable') }}</span>
                             <span class="text-base font-bold text-blue-600">
-                                TZS {{ convert_money($price + $fees) }}
+                                {{ $currency }} {{ convert_money($price + $fees) }}
                             </span>
                         </div>
                     </div>

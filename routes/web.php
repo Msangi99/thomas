@@ -80,8 +80,28 @@ Route::get('/set-locale', function (Request $request) {
 })->name('set.locale');
 
 Route::get('/currency/{currency}', function (Request $request, $currency) {
-    Session::put('currency', $currency);
-    return redirect()->back();
+    // Validate currency value
+    if (!in_array($currency, ['Tsh', 'Usd', 'TSH', 'USD'])) {
+        return redirect()->back()->with('error', 'Invalid currency selected');
+    }
+    
+    // Normalize currency value
+    $normalizedCurrency = ucfirst(strtolower($currency));
+    if ($normalizedCurrency === 'Tsh') {
+        $normalizedCurrency = 'Tsh';
+    } elseif ($normalizedCurrency === 'Usd') {
+        $normalizedCurrency = 'Usd';
+    }
+    
+    Session::put('currency', $normalizedCurrency);
+    
+    // Ensure we have a valid back URL, otherwise redirect to home
+    $backUrl = url()->previous();
+    if (!$backUrl || $backUrl === url()->current()) {
+        $backUrl = route('home');
+    }
+    
+    return redirect($backUrl);
 })->name('set.currency');
 
 

@@ -17,14 +17,16 @@ class Currency
     public function handle(Request $request, Closure $next): Response
     {
         $currencyValue = session('currency'); // Assign the session value to a variable
-        if(isset($currencyValue) && $currencyValue == 'Usd')
+        
+        // Handle currency conversion - check for both 'Usd' and 'USD' for compatibility
+        if(isset($currencyValue) && (strtolower($currencyValue) == 'usd' || $currencyValue == 'Usd'))
         {
             $currency = 'USD';
         }else{
-            $currency = 'TSH';
+            $currency = 'TSH'; // Default to TSH
         }
 
-        view::share('currency', $currency);
+        View::share('currency', $currency);
         app()->instance('currency', $currency);
 
         return $next($request);

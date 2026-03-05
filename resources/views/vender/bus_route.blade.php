@@ -45,7 +45,7 @@
                                             <td class="px-4 py-3">{{ $bus ? $bus->bus_number : 'N/A' }}</td>
                                             <td class="px-4 py-3">{{ $route ? ($route->from ?? 'N/A') . ' To ' . ($route->to ?? 'N/A') : 'N/A To N/A' }}</td>
                                             <td class="px-4 py-3">{{ ($sched->from ?? 'N/A') }} To {{ ($sched->to ?? 'N/A') }}</td>
-                                            <td class="px-4 py-3">Tsh. {{ $route && isset($route->price) ? $route->price : '0' }}</td>
+                                            <td class="px-4 py-3">{{ $currency }} {{ convert_money($route && isset($route->price) ? $route->price : 0) }}</td>
                                             <td class="px-4 py-3">{{ $sched->start ?? 'N/A' }} -> {{ $sched->end ?? 'N/A' }}</td>
                                             <td class="px-4 py-3" data-sort-value="{{ $sched->schedule_date ?? '' }}">
                                                 {{ $sched->schedule_date ? \Carbon\Carbon::parse($sched->schedule_date)->format('d F Y') : 'N/A' }}

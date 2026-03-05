@@ -114,7 +114,7 @@
                             {{ $car->schedule->from }} → {{ $car->schedule->to }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <span class="font-medium text-indigo-600">Tsh {{ number_format($car->route->price) }}</span>
+                            <span class="font-medium text-indigo-600">{{ $currency }} {{ convert_money($car->route->price) }}</span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             @php
