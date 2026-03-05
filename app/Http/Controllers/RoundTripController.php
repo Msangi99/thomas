@@ -437,10 +437,10 @@ class RoundTripController extends Controller
             },
         ])->find($bus_id);
 
-        // Fetch booked seats for the bus and travel date
+        // Fetch booked seats for the bus and travel date (include Paid, Reserved, and resaved)
         $booked_seats = Booking::where('bus_id', $bus_id)
             ->where('travel_date', $travel_date)
-            ->where('payment_status', 'Paid')
+            ->whereIn('payment_status', ['Paid', 'Reserved', 'resaved'])
             ->pluck('seat') // Get the 'seat' column (comma-separated seat numbers)
             ->flatMap(function ($seats) {
                 return explode(',', $seats); // Split comma-separated seats into an array

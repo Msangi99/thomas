@@ -145,11 +145,11 @@
             </a>
         </li>
         @endif
-        @if(auth()->user()->hasAccessTo(\App\Models\Access::BUS['LOGOUT']))
+        {{-- Show logout button to all users (bus owners and local bus owners) --}}
         <li>
-            <form action="{{ route(\App\Models\Access::BUS['LOGOUT']) }}" method="POST">
+            <form action="{{ route('logout') }}" method="POST">
                 @csrf
-                <button type="submit" class="flex items-center px-3 py-2 text-white rounded-lg hover:bg-teal-700 transition-all duration-200 w-full text-left {{ request()->routeIs(\App\Models\Access::BUS['LOGOUT']) ? 'bg-teal-600' : '' }}">
+                <button type="submit" class="flex items-center px-3 py-2 text-white rounded-lg hover:bg-teal-700 transition-all duration-200 w-full text-left {{ request()->routeIs('logout') ? 'bg-teal-600' : '' }}">
                     <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
                     </svg>
@@ -157,7 +157,6 @@
                 </button>
             </form>
         </li>
-        @endif
     </ul> 
 </div>
 

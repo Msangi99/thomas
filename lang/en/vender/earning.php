@@ -43,4 +43,7 @@ return [
     'search_status' => 'Search Status',
     'date' => 'Date',
     'actio' => 'Action',
+    'action' => 'Action',
+    'print' => 'Print',
+    'close' => 'Close',
 ];

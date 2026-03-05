@@ -93,11 +93,9 @@
                                              <form action="{{ route('cancel.schedule', ['id' => $schedule->id]) }}" method="GET">
                                                 <input type="hidden" value="{{ $schedule->id }}" name="schedule_id">
                                                 <input type="hidden" value="{{ $schedule->route->id }}" name="route_id">
-
                                                  <button
-                                                     class="inline-flex items-center px-3 py-1 bg-red-100 text-red-600 rounded-md hover:bg-red-200 transition-colors view-schedule"
-                                                     
-                                                     aria-label="{{ __('vender/schedule.view_schedule') }}">
+                                                     class="inline-flex items-center px-3 py-1 bg-red-100 text-red-600 rounded-md hover:bg-red-200 transition-colors"
+                                                     aria-label="{{ __('vender/schedule.cancel_schedule') }}">
                                                      <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                          viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                                          <path stroke-linecap="round" stroke-linejoin="round"

@@ -58,7 +58,11 @@
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">{{ ucfirst($booking->payment_status ?? __('vender/resaved_tickets.resaved')) }}</span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <a href="#" class="text-indigo-600 hover:text-indigo-900" title="Booking: {{ $booking->booking_code }}">{{ __('vender/resaved_tickets.view') }}</a>
+                                    <form action="{{ route('ticket.print') }}" method="POST" class="inline">
+                                        @csrf
+                                        <input type="hidden" name="data" value='{"id": {{ $booking->id }}, "booking_code": "{{ $booking->booking_code }}"}' />
+                                        <button type="submit" class="text-indigo-600 hover:text-indigo-900" title="Booking: {{ $booking->booking_code }}">{{ __('vender/resaved_tickets.view') }}</button>
+                                    </form>
                                 </td>
                             </tr>
                         @endforeach

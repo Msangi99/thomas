@@ -43,4 +43,7 @@ return [
     'search_status' => 'Tafuta Hali',
     'date' => 'Tarehe',
     'actio' => 'Kitendo',
+    'action' => 'Kitendo',
+    'print' => 'Chapisha',
+    'close' => 'Funga',
 ];

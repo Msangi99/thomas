@@ -20,13 +20,33 @@ class Reserved
         // Delete all schedules where schedule_date is before today
         //Schedule::where('schedule_date', '<', now()->startOfDay())->delete();
 
-        $bookings = Booking::where('payment_status', 'Reserved')->get();
+        $bookings = Booking::where('payment_status', 'Reserved')
+            ->orWhere('payment_status', 'resaved')
+            ->get();
 
         foreach ($bookings as $booking) {
-            $mda = Carbon::parse($booking->created_at)->addDays(1);
-            $now = Carbon::parse(now());
+            // Check if booking should be deleted 6 hours before trip
+            if ($booking->travel_date && $booking->schedule) {
+                try {
+                    $travelDateTime = Carbon::parse($booking->travel_date . ' ' . ($booking->schedule->start ?? '00:00:00'));
+                    $sixHoursBefore = $travelDateTime->copy()->subHours(6);
+                    $now = Carbon::now();
 
-            if($now > $mda) {
+                    // If it's 6 hours before trip and not paid, delete it
+                    if ($now >= $sixHoursBefore && $booking->payment_status !== 'Paid') {
+                        $booking->delete();
+                        continue;
+                    }
+                } catch (\Exception $e) {
+                    // If date parsing fails, continue with old logic
+                }
+            }
+
+            // Old logic: delete if created more than 1 day ago
+            $mda = Carbon::parse($booking->created_at)->addDays(1);
+            $now = Carbon::now();
+
+            if($now > $mda && $booking->payment_status !== 'Paid') {
                 $booking->delete();
             }
         }

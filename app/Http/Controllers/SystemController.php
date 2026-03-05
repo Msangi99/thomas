@@ -165,22 +165,11 @@ class SystemController extends Controller
             $transaction->save();
             $balance = balance::where('campany_id', $campany)->first();
             
-            // Commission Logic: Priority Percentage > Amount
-            $campanyModel = Campany::find($campany);
-            $commission = 0;
-
-            if ($campanyModel->percentage > 0) {
-                $commission = $transaction->amount * ($campanyModel->percentage / 100);
-            } elseif ($campanyModel->commission_amount > 0) {
-                $commission = $campanyModel->commission_amount;
-            } else {
-                 // Fallback to default system percentage if neither is set on company
-                 $percent = PercentController::PERCENTAGE; // Assuming this is 5 (0.05) or similar from controller constant
-                 $commission = $transaction->amount * ($percent / 100);
+            // Deduct the full transaction amount from bus owner's balance when approved
+            if ($balance) {
+                $balance->amount -= $transaction->amount;
+                $balance->save();
             }
-
-            $balance->amount -= $commission;
-            $balance->save();
 
             return redirect()->back()->with('success', 'Transaction marked as Completed.');
         } else if ($vender != 0) {
