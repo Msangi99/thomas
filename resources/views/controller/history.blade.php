@@ -3,8 +3,6 @@
 @section('content')
     <!-- DataTables CSS -->
     <link href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" rel="stylesheet">
-    <!-- Date Range Picker CSS -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
     <!-- Tailwind CSS -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
@@ -24,22 +22,6 @@
                     </div>
                 </div>
                 <div class="flex flex-col sm:flex-row items-center gap-2 flex-wrap">
-                    {{-- Date range filter: daterangepicker with callback submits form on Apply --}}
-                    <form action="{{ route('history') }}" method="GET" class="flex items-center gap-2 w-full sm:w-auto" id="dateRangeForm">
-                        <input type="hidden" name="start_date" id="filterStartDate" value="{{ request('start_date') }}">
-                        <input type="hidden" name="end_date" id="filterEndDate" value="{{ request('end_date') }}">
-                        <input type="text" readonly
-                            class="px-3 py-2 border rounded-lg bg-white text-gray-800 text-sm w-full sm:w-56 cursor-pointer"
-                            id="dateRangeFilter" placeholder="{{ __('vender/history.select_date_range') }}"
-                            value="{{ request('start_date') && request('end_date') ? request('start_date') . ' - ' . request('end_date') : '' }}">
-                        @if(request('start_date') || request('end_date'))
-                        <a href="{{ route('history') }}" class="p-2 bg-white/90 text-gray-700 rounded-lg hover:bg-white transition" title="Clear filter">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </a>
-                        @endif
-                    </form>
                     <div class="relative w-full sm:w-auto">
                         <button type="button"
                             class="px-3 py-2 bg-white text-blue-500 rounded-lg hover:bg-blue-50 transition flex items-center gap-1 text-sm w-full sm:w-auto"
@@ -50,18 +32,12 @@
                             {{ __('vender/history.actions') }}
                         </button>
                         <div class="dropdown-menu hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-10">
-                            {{-- Print Manifest: server uses start_date/end_date from current page --}}
                             <form action="{{ route('admin.print.manifest') }}" method="POST">
                                 @csrf
-                                <input type="hidden" name="start_date" value="{{ request('start_date') }}">
-                                <input type="hidden" name="end_date" value="{{ request('end_date') }}">
                                 <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full">{{ __('vender/history.print_manifest') }}</button>
                             </form>
-                            {{-- Print Income: server uses start_date/end_date from current page --}}
                             <form action="{{ route('admin.print') }}" method="POST">
                                 @csrf
-                                <input type="hidden" name="start_date" value="{{ request('start_date') }}">
-                                <input type="hidden" name="end_date" value="{{ request('end_date') }}">
                                 <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full">{{ __('vender/history.print_income') }}</button>
                             </form>
                         </div>
@@ -257,77 +233,25 @@
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <script>
         $(document).ready(function() {
-                    // Initialize DataTable (totals only; date filter is server-side)
-                    DataTable.ext.errMode = 'none';
-                    $('#busTable').DataTable({
-                        responsive: true,
-                        paging: true,
-                        searching: true,
-                        ordering: true,
-                        language: { emptyTable: "No bookings found." }
-                    });
-
-                    // Date Range Picker (https://www.daterangepicker.com) - attach to body so it is not clipped
-                    var startReq = '{{ request('start_date') }}';
-                    var endReq = '{{ request('end_date') }}';
-                    var start = (startReq && endReq) ? moment(startReq) : moment().startOf('month');
-                    var end = (startReq && endReq) ? moment(endReq) : moment().endOf('month');
-
-                    var $input = $('#dateRangeFilter');
-                    $input.daterangepicker({
-                        startDate: start,
-                        endDate: end,
-                        autoUpdateInput: false,
-                        parentEl: 'body',
-                        locale: {
-                            format: 'YYYY-MM-DD',
-                            separator: ' - ',
-                            applyLabel: 'Apply',
-                            cancelLabel: 'Cancel',
-                            fromLabel: 'From',
-                            toLabel: 'To',
-                            customRangeLabel: 'Custom Range',
-                            daysOfWeek: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
-                            monthNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-                            firstDay: 1
-                        },
-                        ranges: {
-                            'Today': [moment(), moment()],
-                            'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-                            'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-                            'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-                            'This Month': [moment().startOf('month'), moment().endOf('month')],
-                            'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-                        },
-                        opens: 'left',
-                        drops: 'down'
-                    });
-
-                    $input.on('apply.daterangepicker', function(ev, picker) {
-                        var startStr = picker.startDate.format('YYYY-MM-DD');
-                        var endStr = picker.endDate.format('YYYY-MM-DD');
-                        $input.val(startStr + ' - ' + endStr);
-                        $('#filterStartDate').val(startStr);
-                        $('#filterEndDate').val(endStr);
-                        // Defer submit so picker can close and form values are used correctly
-                        setTimeout(function() {
-                            $('#dateRangeForm').submit();
-                        }, 0);
-                    });
-
-                    $input.on('cancel.daterangepicker', function() {
-                        $input.val('');
-                        $('#filterStartDate').val('');
-                        $('#filterEndDate').val('');
-                        // Reload without date filter so results are cleared server-side
-                        setTimeout(function() {
-                            $('#dateRangeForm').submit();
-                        }, 0);
-                    });
+            DataTable.ext.errMode = 'none';
+            $('#busTable').DataTable({
+                responsive: true,
+                paging: true,
+                pageLength: 25,
+                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+                searching: true,
+                ordering: true,
+                order: [[1, 'desc']],
+                language: {
+                    emptyTable: "{{ __('vender/history.no_bookings_found') }}",
+                    search: "Search:",
+                    lengthMenu: "Show _MENU_ entries",
+                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                    paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
+                }
+            });
 
             // View booking details
             $(document).on('click', '.view-booking', function() {
@@ -367,25 +291,15 @@
     </script>
 
     <style>
-        .search-input {
-            width: 100%;
-            padding: 4px;
-            font-size: 12px;
+        .dataTables_wrapper .dataTables_filter input {
+            padding: 4px 8px;
             border-radius: 4px;
+            border: 1px solid #d1d5db;
         }
-
-        .daterangepicker {
-            z-index: 9999 !important;
+        .dataTables_wrapper .dataTables_length select {
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #d1d5db;
         }
-
-        #dateRangeFilter {
-            min-width: 150px;
-            text-align: center;
-        }
-
-        @media (max-width: 640px) {
-            #dateRangeFilter {
-                min-width: 100%;
-            }
     </style>
 @endsection
