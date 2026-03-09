@@ -230,28 +230,31 @@
     </div>
 
 
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    @push('scripts')
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script>
-        $(document).ready(function() {
-            DataTable.ext.errMode = 'none';
-            $('#busTable').DataTable({
-                responsive: true,
-                paging: true,
-                pageLength: 25,
-                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
-                searching: true,
-                ordering: true,
-                order: [[1, 'desc']],
-                language: {
-                    emptyTable: "{{ __('vender/history.no_bookings_found') }}",
-                    search: "Search:",
-                    lengthMenu: "Show _MENU_ entries",
-                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
-                    paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
-                }
-            });
+        (function() {
+            var $ = window.jQuery;
+            if (!$ || !$.fn.DataTable) return;
+            $(function() {
+                var $table = $('#busTable');
+                if (!$table.length || $table.hasClass('dataTable')) return;
+                $.fn.dataTable.ext.errMode = 'none';
+                $table.DataTable({
+                    paging: true,
+                    pageLength: 25,
+                    lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+                    searching: true,
+                    ordering: true,
+                    order: [[1, 'desc']],
+                    language: {
+                        emptyTable: "{{ __('vender/history.no_bookings_found') }}",
+                        search: "Search:",
+                        lengthMenu: "Show _MENU_ entries",
+                        info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                        paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
+                    }
+                });
 
             // View booking details
             $(document).on('click', '.view-booking', function() {
@@ -275,8 +278,12 @@
                     this.classList.add('hidden');
                 }
             });
-        });
+            });
+        })();
+    </script>
+    @endpush
 
+    <script>
         // Toggle dropdown
         function toggleDropdown(button) {
             const dropdown = button.nextElementSibling;

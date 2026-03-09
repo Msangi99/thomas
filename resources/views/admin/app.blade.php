@@ -93,6 +93,7 @@
      <!-- jQuery and Toastr for notifications -->
      <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
      <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+     @stack('scripts')
      <script>
          toastr.options = { "closeButton": true, "progressBar": true, "positionClass": "toast-top-right" };
          @if (session('success'))
