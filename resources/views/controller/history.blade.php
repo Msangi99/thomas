@@ -24,19 +24,16 @@
                     </div>
                 </div>
                 <div class="flex flex-col sm:flex-row items-center gap-2 flex-wrap">
-                    {{-- Date range filter form: GET so page reloads with filtered bookings --}}
+                    {{-- Date range filter: daterangepicker with callback submits form on Apply --}}
                     <form action="{{ route('history') }}" method="GET" class="flex items-center gap-2 w-full sm:w-auto" id="dateRangeForm">
                         <input type="hidden" name="start_date" id="filterStartDate" value="{{ request('start_date') }}">
                         <input type="hidden" name="end_date" id="filterEndDate" value="{{ request('end_date') }}">
                         <input type="text" readonly
-                            class="px-3 py-2 border rounded-lg bg-white text-gray-800 text-sm w-full sm:w-48 cursor-pointer"
+                            class="px-3 py-2 border rounded-lg bg-white text-gray-800 text-sm w-full sm:w-56 cursor-pointer"
                             id="dateRangeFilter" placeholder="{{ __('vender/history.select_date_range') }}"
                             value="{{ request('start_date') && request('end_date') ? request('start_date') . ' - ' . request('end_date') : '' }}">
-                        <button type="submit" class="px-3 py-2 bg-white text-teal-700 rounded-lg hover:bg-teal-50 transition text-sm font-medium">
-                            {{ __('vender/history.apply') }}
-                        </button>
                         @if(request('start_date') || request('end_date'))
-                        <a href="{{ route('history') }}" class="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition" title="Clear filter">
+                        <a href="{{ route('history') }}" class="p-2 bg-white/90 text-gray-700 rounded-lg hover:bg-white transition" title="Clear filter">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                             </svg>
@@ -292,27 +289,43 @@
                         }
                     });
 
-                    // Daterangepicker: only to fill the filter form so "Apply" submits with start_date & end_date
+                    // Date Range Picker with callback (https://www.daterangepicker.com/#usage)
+                    var start = '{{ request('start_date') }}' ? moment('{{ request('start_date') }}') : moment().startOf('month');
+                    var end = '{{ request('end_date') }}' ? moment('{{ request('end_date') }}') : moment().endOf('month');
+
                     $('#dateRangeFilter').daterangepicker({
+                        startDate: start,
+                        endDate: end,
                         autoUpdateInput: false,
                         locale: {
                             format: 'YYYY-MM-DD',
                             separator: ' - ',
                             applyLabel: 'Apply',
-                            cancelLabel: 'Clear',
+                            cancelLabel: 'Cancel',
                             fromLabel: 'From',
                             toLabel: 'To',
-                            customRangeLabel: 'Custom',
+                            customRangeLabel: 'Custom Range',
                             daysOfWeek: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
                             monthNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
                             firstDay: 1
-                        }
+                        },
+                        ranges: {
+                            'Today': [moment(), moment()],
+                            'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                            'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                            'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                            'This Month': [moment().startOf('month'), moment().endOf('month')],
+                            'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                        },
+                        opens: 'left',
+                        drops: 'down'
+                    }, function(startDate, endDate, label) {
+                        $('#dateRangeFilter').val(startDate.format('YYYY-MM-DD') + ' - ' + endDate.format('YYYY-MM-DD'));
+                        $('#filterStartDate').val(startDate.format('YYYY-MM-DD'));
+                        $('#filterEndDate').val(endDate.format('YYYY-MM-DD'));
+                        $('#dateRangeForm').submit();
                     });
-                    $('#dateRangeFilter').on('apply.daterangepicker', function(ev, picker) {
-                        $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
-                        $('#filterStartDate').val(picker.startDate.format('YYYY-MM-DD'));
-                        $('#filterEndDate').val(picker.endDate.format('YYYY-MM-DD'));
-                    });
+
                     $('#dateRangeFilter').on('cancel.daterangepicker', function() {
                         $(this).val('');
                         $('#filterStartDate').val('');
