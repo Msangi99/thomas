@@ -923,16 +923,30 @@ class VenderController extends Controller
 
     public function print(Request $request)
     {
-        $data = $request->data;
+        $venderId = Auth::id();
+        $data = null;
 
-        if (empty($data)) {
-            return redirect()->back()->with('error', __('No data provided for income report generation.'));
-        }
-
-        $data = json_decode($data, true);
-
-        if ($data === null || !is_array($data)) {
-            return redirect()->back()->with('error', __('Invalid data format. Please try again.'));
+        if ($request->filled('booking_ids')) {
+            $ids = is_array($request->booking_ids) ? $request->booking_ids : (array) json_decode($request->booking_ids, true);
+            $ids = array_filter(array_map('intval', $ids));
+            if (empty($ids)) {
+                return redirect()->back()->with('error', __('No booking data found for income report generation.'));
+            }
+            $bookings = Booking::with(['campany', 'schedule', 'bus.route'])
+                ->where('vender_id', $venderId)
+                ->whereIn('id', $ids)
+                ->where('payment_status', 'Paid')
+                ->get();
+            $data = $this->bookingsToReportArray($bookings);
+        } else {
+            $raw = $request->data;
+            if (empty($raw)) {
+                return redirect()->back()->with('error', __('No data provided for income report generation.'));
+            }
+            $data = json_decode($raw, true);
+            if ($data === null || !is_array($data)) {
+                return redirect()->back()->with('error', __('Invalid data format. Please try again.'));
+            }
         }
 
         if (empty($data)) {
@@ -940,6 +954,44 @@ class VenderController extends Controller
         }
 
         return $this->generatePDF($data);
+    }
+
+    /**
+     * Convert Booking models to the array format expected by print/report and print/manifest views.
+     */
+    private function bookingsToReportArray($bookings)
+    {
+        $out = [];
+        foreach ($bookings as $b) {
+            $rowTotal = round(($b->fee ?? 0) + ($b->vender_fee ?? 0) + ($b->amount ?? 0) + ($b->vat ?? 0) + ($b->fee_vat ?? 0));
+            $out[] = [
+                'booking_code' => $b->booking_code ?? 'N/A',
+                'company_name' => optional($b->campany)->name ?? 'N/A',
+                'route_from' => optional($b->schedule)->from ?? optional(optional($b->bus)->route)->from ?? 'N/A',
+                'route_to' => optional($b->schedule)->to ?? optional(optional($b->bus)->route)->to ?? 'N/A',
+                'bus_number' => optional($b->bus)->bus_number ?? 'N/A',
+                'travel_date' => $b->travel_date ? \Carbon\Carbon::parse($b->travel_date)->format('Y-m-d') : 'N/A',
+                'seat' => $b->seat ?? 'N/A',
+                'pickup_point' => $b->pickup_point ?? 'N/A',
+                'customer_name' => $b->customer_name ?? 'N/A',
+                'customer_phone' => $b->customer_phone ?? 'N/A',
+                'amount' => $b->amount ?? '0',
+                'commision' => $b->fee ?? 'N/A',
+                'service' => $b->vender_fee ?? 'N/A',
+                'vendor_service' => $b->vender_service ?? 'N/A',
+                'discount' => $b->discount_amount ?? 'N/A',
+                'vat' => $b->vat ?? 'N/A',
+                'total' => (string) $rowTotal,
+                'gender' => $b->gender ?? 'N/A',
+                'age' => $b->age ?? 'N/A',
+                'age_group' => $b->age_group ?? 'N/A',
+                'infant_child' => $b->infant_child ?? 0,
+                'excess_luggage' => $b->excess_luggage ?? 0,
+                'excess_luggage_description' => $b->excess_luggage_description ?? null,
+                'excess_luggage_fee' => $b->excess_luggage_fee ?? null,
+            ];
+        }
+        return $out;
     }
 
     public function generatePDF($data)
@@ -952,23 +1004,38 @@ class VenderController extends Controller
 
     public function manifest(Request $request)
     {
-        $data = $request->data;
+        $venderId = Auth::id();
+        $data = null;
 
-        if (empty($data)) {
-            return redirect()->back()->with('error', __('No data provided for manifest generation.'));
-        }
-
-        $data = json_decode($data, true);
-
-        if ($data === null || !is_array($data)) {
-            return redirect()->back()->with('error', __('Invalid data format. Please try again.'));
+        if ($request->filled('booking_ids')) {
+            $ids = is_array($request->booking_ids) ? $request->booking_ids : (array) json_decode($request->booking_ids, true);
+            $ids = array_filter(array_map('intval', $ids));
+            if (empty($ids)) {
+                return redirect()->back()->with('error', __('No booking data found for manifest generation.'));
+            }
+            $bookings = Booking::with(['campany', 'schedule', 'bus.route'])
+                ->where('vender_id', $venderId)
+                ->whereIn('id', $ids)
+                ->where('payment_status', 'Paid')
+                ->orderBy('seat')
+                ->get();
+            $data = $this->bookingsToReportArray($bookings);
+        } else {
+            $raw = $request->data;
+            if (empty($raw)) {
+                return redirect()->back()->with('error', __('No data provided for manifest generation.'));
+            }
+            $data = json_decode($raw, true);
+            if ($data === null || !is_array($data)) {
+                return redirect()->back()->with('error', __('Invalid data format. Please try again.'));
+            }
         }
 
         if (empty($data) || !isset($data[0])) {
             return redirect()->back()->with('error', __('No booking data found for manifest generation.'));
         }
 
-        if (!isset($data[0]['bus_number']) || empty($data[0]['bus_number'])) {
+        if (!isset($data[0]['bus_number']) || empty(trim($data[0]['bus_number'] ?? ''))) {
             return redirect()->back()->with('error', __('Bus number not found in booking data.'));
         }
 
