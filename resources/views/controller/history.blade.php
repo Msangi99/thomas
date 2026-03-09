@@ -50,14 +50,14 @@
                             <form action="{{ route('admin.print.manifest') }}" method="POST" id="manifestForm">
                                 @csrf
                                 <input type="hidden" name="booking_ids" id="manifestBookingIds" value="">
-                                <button type="submit"
-                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">{{ __('vender/history.print_manifest') }}</button>
+                                <button type="button" id="btnPrintManifest"
+                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full">{{ __('vender/history.print_manifest') }}</button>
                             </form>
                             <form action="{{ route('admin.print') }}" method="POST" id="incomeForm">
                                 @csrf
                                 <input type="hidden" name="booking_ids" id="incomeBookingIds" value="">
-                                <button type="submit"
-                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">{{ __('vender/history.print_income') }}</button>
+                                <button type="button" id="btnPrintIncome"
+                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full">{{ __('vender/history.print_income') }}</button>
                             </form>
                         </div>
                     </div>
@@ -269,20 +269,20 @@
                             emptyTable: "No bookings found."
                         },
                         footerCallback: function(row, data, start, end, display) {
-                            let totalPayment = 0;
-                            let totalDiscount = 0;
-                            let totalVAT = 0;
-                            let grandTotal = 0;
-                            const api = this.api();
+                            var totalPayment = 0;
+                            var totalDiscount = 0;
+                            var totalVAT = 0;
+                            var grandTotal = 0;
+                            var api = this.api();
 
                             api.rows({ page: 'current', search: 'applied' }).every(function() {
-                                const rowNode = this.node();
-                                const paymentEl = $(rowNode).find('.payment-amount');
-                                const totalEl = $(rowNode).find('.total-amount');
-                                const amount = parseFloat(paymentEl.data('amount')) || 0;
-                                const vat = parseFloat(paymentEl.data('vat')) || 0;
-                                const discount = parseFloat(paymentEl.data('discount')) || 0;
-                                const total = parseFloat(totalEl.data('total')) || 0;
+                                var rowNode = this.node();
+                                var paymentEl = $(rowNode).find('.payment-amount');
+                                var totalEl = $(rowNode).find('.total-amount');
+                                var amount = parseFloat(paymentEl.attr('data-amount')) || 0;
+                                var vat = parseFloat(paymentEl.attr('data-vat')) || 0;
+                                var discount = parseFloat(paymentEl.attr('data-discount')) || 0;
+                                var total = parseFloat(totalEl.attr('data-total')) || 0;
 
                                 totalPayment += amount + vat;
                                 totalDiscount += discount;
@@ -297,12 +297,13 @@
                         }
                     });
 
-                    // Date range filter: only for this table (#busTable)
+                    // Date range filter: only for this table (use daterangepicker range)
                     $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
                         if (!currentDateRange) return true;
-                        var tableId = (settings.nTable && settings.nTable.id) ? settings.nTable.id : '';
+                        var tbl = settings.nTable;
+                        var tableId = (tbl && tbl.id) ? tbl.id : (settings.sTableId || '');
                         if (tableId !== 'busTable') return true;
-                        var api = $(settings.nTable).DataTable();
+                        var api = $(tbl).DataTable();
                         var row = api.row(dataIndex).node();
                         if (!row) return false;
                         var createdDateStr = $(row).attr('data-created-at') || $(row).find('[data-created-at]').first().attr('data-created-at');
@@ -311,15 +312,14 @@
                         return createdDate.isValid() && !createdDate.isBefore(currentDateRange.start, 'day') && !createdDate.isAfter(currentDateRange.end, 'day');
                     });
 
-                    // Initialize date range picker
+                    // Initialize daterangepicker (date range picker JS)
                     $('#dateRangeFilter').daterangepicker({
                         autoUpdateInput: false,
                         locale: {
-                            cancelLabel: 'Clear',
                             format: 'YYYY-MM-DD',
                             separator: ' - ',
                             applyLabel: 'Apply',
-                            cancelLabel: 'Cancel',
+                            cancelLabel: 'Clear',
                             fromLabel: 'From',
                             toLabel: 'To',
                             customRangeLabel: 'Custom',
@@ -349,27 +349,36 @@
                         table.draw();
                     });
 
-                    // Collect visible row booking IDs (server will load data from DB)
+                    // Collect visible row booking IDs (from current table rows)
                     function getVisibleBookingIds() {
                         var ids = [];
-                        table.rows({ filter: 'applied', search: 'applied' }).every(function() {
+                        table.rows({ page: 'current', search: 'applied' }).every(function() {
                             var rowNode = this.node();
-                            var id = $(rowNode).attr('data-booking-id') || $(rowNode).find('[data-booking-id]').first().attr('data-booking-id');
+                            var id = $(rowNode).attr('data-booking-id');
                             if (id) ids.push(parseInt(id, 10));
                         });
                         return ids;
                     }
 
-                    $('#manifestForm, #incomeForm').on('submit', function(e) {
-                        e.preventDefault();
-                        var form = $(this);
+                    // Print Manifest: set booking_ids from visible rows then submit (no native form submit)
+                    $('#btnPrintManifest').on('click', function() {
                         var ids = getVisibleBookingIds();
                         if (ids.length === 0) {
-                            alert('No data available to print. Please ensure there are bookings in the table.');
-                            return false;
+                            alert('No data available to print. Select date range or ensure there are bookings in the table.');
+                            return;
                         }
-                        form.find('input[name="booking_ids"]').val(JSON.stringify(ids));
-                        form.off('submit').submit();
+                        $('#manifestBookingIds').val(JSON.stringify(ids));
+                        $('#manifestForm').submit();
+                    });
+
+                    $('#btnPrintIncome').on('click', function() {
+                        var ids = getVisibleBookingIds();
+                        if (ids.length === 0) {
+                            alert('No data available to print. Select date range or ensure there are bookings in the table.');
+                            return;
+                        }
+                        $('#incomeBookingIds').val(JSON.stringify(ids));
+                        $('#incomeForm').submit();
                     });
 
             // View booking details
