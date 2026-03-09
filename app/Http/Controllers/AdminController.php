@@ -591,7 +591,13 @@ class AdminController extends Controller
 $q->where('id', auth()->user()->campany->id);
             });
 
-        if ($request->has('period')) {
+        // Prefer explicit date range over period (date picker on history page)
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('created_at', [
+                Carbon::parse($request->start_date)->startOfDay(),
+                Carbon::parse($request->end_date)->endOfDay(),
+            ]);
+        } elseif ($request->has('period')) {
             switch ($request->period) {
                 case 'today':
                     $query->whereDate('created_at', today());
@@ -606,13 +612,6 @@ $q->where('id', auth()->user()->campany->id);
                     $query->whereYear('created_at', now()->year);
                     break;
             }
-        }
-
-        if ($request->filled('start_date') && $request->filled('end_date')) {
-            $query->whereBetween('created_at', [
-                Carbon::parse($request->start_date)->startOfDay(),
-                Carbon::parse($request->end_date)->endOfDay(),
-            ]);
         }
 
         $bookings = $query->where('payment_status', 'Paid')->latest()->get();

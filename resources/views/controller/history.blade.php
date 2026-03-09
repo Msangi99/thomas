@@ -308,16 +308,25 @@
                     });
 
                     $input.on('apply.daterangepicker', function(ev, picker) {
-                        $input.val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
-                        $('#filterStartDate').val(picker.startDate.format('YYYY-MM-DD'));
-                        $('#filterEndDate').val(picker.endDate.format('YYYY-MM-DD'));
-                        $('#dateRangeForm').submit();
+                        var startStr = picker.startDate.format('YYYY-MM-DD');
+                        var endStr = picker.endDate.format('YYYY-MM-DD');
+                        $input.val(startStr + ' - ' + endStr);
+                        $('#filterStartDate').val(startStr);
+                        $('#filterEndDate').val(endStr);
+                        // Defer submit so picker can close and form values are used correctly
+                        setTimeout(function() {
+                            $('#dateRangeForm').submit();
+                        }, 0);
                     });
 
                     $input.on('cancel.daterangepicker', function() {
                         $input.val('');
                         $('#filterStartDate').val('');
                         $('#filterEndDate').val('');
+                        // Reload without date filter so results are cleared server-side
+                        setTimeout(function() {
+                            $('#dateRangeForm').submit();
+                        }, 0);
                     });
 
             // View booking details
