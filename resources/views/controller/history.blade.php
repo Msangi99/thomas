@@ -49,13 +49,13 @@
                         <div class="dropdown-menu hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-10">
                             <form action="{{ route('admin.print.manifest') }}" method="POST" id="manifestForm">
                                 @csrf
-                                <input type="hidden" name="data" id="manifestData">
+                                <input type="hidden" name="booking_ids" id="manifestBookingIds" value="">
                                 <button type="submit"
                                     class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">{{ __('vender/history.print_manifest') }}</button>
                             </form>
                             <form action="{{ route('admin.print') }}" method="POST" id="incomeForm">
                                 @csrf
-                                <input type="hidden" name="data" id="incomeData">
+                                <input type="hidden" name="booking_ids" id="incomeBookingIds" value="">
                                 <button type="submit"
                                     class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">{{ __('vender/history.print_income') }}</button>
                             </form>
@@ -79,7 +79,7 @@
                         <tbody class="text-gray-600 text-xs">
                             @if (isset($bookings) && $bookings->count())
                                 @foreach ($bookings as $index => $booking)
-                                    <tr class="border-b border-gray-200 hover:bg-gray-50 transition">
+                                    <tr class="border-b border-gray-200 hover:bg-gray-50 transition" data-booking-id="{{ $booking->id }}" data-created-at="{{ $booking->created_at->format('Y-m-d') }}">
                                         <td class="py-2 px-4 text-center">{{ $index + 1 }}</td>
                                         <td class="py-2 px-4">
                                             <div class="flex flex-col">
@@ -297,13 +297,18 @@
                         }
                     });
 
+                    // Date range filter: only for this table (#busTable)
                     $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
                         if (!currentDateRange) return true;
-                        const row = table.row(dataIndex).node();
-                        const createdDateStr = $(row).find('[data-created-at]').data('created-at');
+                        var tableId = (settings.nTable && settings.nTable.id) ? settings.nTable.id : '';
+                        if (tableId !== 'busTable') return true;
+                        var api = $(settings.nTable).DataTable();
+                        var row = api.row(dataIndex).node();
+                        if (!row) return false;
+                        var createdDateStr = $(row).attr('data-created-at') || $(row).find('[data-created-at]').first().attr('data-created-at');
                         if (!createdDateStr) return false;
-                        const createdDate = moment(createdDateStr, 'YYYY-MM-DD');
-                        return createdDate.isValid() && createdDate.isBetween(currentDateRange.start, currentDateRange.end, null, '[]');
+                        var createdDate = moment(createdDateStr, 'YYYY-MM-DD');
+                        return createdDate.isValid() && !createdDate.isBefore(currentDateRange.start, 'day') && !createdDate.isAfter(currentDateRange.end, 'day');
                     });
 
                     // Initialize date range picker
@@ -344,48 +349,26 @@
                         table.draw();
                     });
 
-                    // Handle form submissions for filtered data (build from row DOM nodes)
-                    function getFilteredRowsData() {
-                        let filteredData = [];
-                        table.rows({ filter: 'applied' }).every(function() {
-                            const rowNode = this.node();
-                            const $row = $(rowNode);
-                            const totalEl = $row.find('.total-amount');
-                            const paymentEl = $row.find('.payment-amount');
-                            const tds = $row.find('td');
-                            const routeText = $(tds[2]).find('p').eq(0).text() || '';
-                            const routeParts = routeText.split(' to ');
-                            filteredData.push({
-                                booking_code: $(tds[1]).find('p').first().text().trim() || 'N/A',
-                                company_name: $(tds[2]).find('h6').text().trim() || 'N/A',
-                                route_from: (routeParts[0] || '').trim() || 'N/A',
-                                route_to: (routeParts[1] || '').trim() || 'N/A',
-                                bus_number: $(tds[2]).find('p').eq(1).text().trim() || 'N/A',
-                                travel_date: $row.find('[data-created-at]').data('created-at') || 'N/A',
-                                seat: $(tds[3]).find('p').eq(1).text().replace('Seat: ', '').trim() || 'N/A',
-                                pickup_point: $(tds[3]).find('p').eq(2).text().replace('Pickup: ', '').trim() || 'N/A',
-                                customer_name: $(tds[4]).find('p').first().text().trim() || 'N/A',
-                                customer_phone: $(tds[4]).find('p').eq(1).text().trim() || 'N/A',
-                                amount: $(tds[5]).find('p').first().text().trim() || '0',
-                                commision: $(tds[6]).find('p').first().text().replace('System: ', '').trim() || 'N/A',
-                                service: $(tds[6]).find('p').eq(1).text().replace('Vendor: ', '').trim() || 'N/A',
-                                discount: $(tds[6]).find('p').eq(2).text().replace('Discount: ', '').trim() || 'N/A',
-                                vat: $(tds[6]).find('p').eq(3).text().replace('VAT: ', '').trim() || 'N/A',
-                                total: (parseFloat(totalEl.data('total')) || 0).toFixed(2)
-                            });
+                    // Collect visible row booking IDs (server will load data from DB)
+                    function getVisibleBookingIds() {
+                        var ids = [];
+                        table.rows({ filter: 'applied', search: 'applied' }).every(function() {
+                            var rowNode = this.node();
+                            var id = $(rowNode).attr('data-booking-id') || $(rowNode).find('[data-booking-id]').first().attr('data-booking-id');
+                            if (id) ids.push(parseInt(id, 10));
                         });
-                        return filteredData;
+                        return ids;
                     }
 
                     $('#manifestForm, #incomeForm').on('submit', function(e) {
                         e.preventDefault();
-                        let form = $(this);
-                        let filteredData = getFilteredRowsData();
-                        if (filteredData.length === 0) {
+                        var form = $(this);
+                        var ids = getVisibleBookingIds();
+                        if (ids.length === 0) {
                             alert('No data available to print. Please ensure there are bookings in the table.');
                             return false;
                         }
-                        form.find('input[name="data"]').val(JSON.stringify(filteredData));
+                        form.find('input[name="booking_ids"]').val(JSON.stringify(ids));
                         form.off('submit').submit();
                     });
 
