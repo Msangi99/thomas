@@ -53,37 +53,37 @@
         <div class="header">
             <h2>BUS TICKET</h2>
             @php
-                // Get bus owner account from the busowner's profile (prioritize busowner profile data)
+                // Get bus owner account from the busowner's profile (company's busOwnerAccount contains busowner profile data)
+                // This works for all user types: customer, vendor, and busowner
+                // The controller loads booking with relationships, so we can access them directly
                 $busCompany = null;
                 $busOwnerAccount = null;
                 
-                // First, try to get busowner user from company and use their profile BusOwnerAccount
-                if (isset($data->bus) && $data->bus && isset($data->bus->campany) && $data->bus->campany) {
-                    $busCompany = $data->bus->campany;
-                    // Get busowner user from company
-                    if ($busCompany->user) {
-                        $busOwnerUser = $busCompany->user;
-                        // Try to get BusOwnerAccount linked to busowner user_id
-                        $busOwnerAccount = \App\Models\BusOwnerAccount::where('user_id', $busOwnerUser->id)->first();
+                // Get bus owner account from the bus's company (prioritize bus's company settings)
+                if (isset($data->bus) && $data->bus) {
+                    // Check if bus has campany relationship loaded (Booking model)
+                    if (isset($data->bus->campany) && $data->bus->campany) {
+                        $busCompany = $data->bus->campany;
+                        $busOwnerAccount = $busCompany->busOwnerAccount ?? null;
                     }
-                    // Fallback to company's busOwnerAccount if busowner profile not found
-                    if (!$busOwnerAccount) {
+                    // Fallback: if bus has campany_id but relationship not loaded, load it
+                    elseif (isset($data->bus->campany_id) && $data->bus->campany_id) {
+                        $busCompany = \App\Models\Campany::with('busOwnerAccount')->find($data->bus->campany_id);
                         $busOwnerAccount = $busCompany->busOwnerAccount ?? null;
                     }
                 }
                 
                 // Fallback to booking's company if bus company not available
-                if (!$busOwnerAccount && isset($data->campany) && $data->campany) {
-                    $busCompany = $data->campany;
-                    // Get busowner user from company
-                    if ($busCompany->user) {
-                        $busOwnerUser = $busCompany->user;
-                        // Try to get BusOwnerAccount linked to busowner user_id
-                        $busOwnerAccount = \App\Models\BusOwnerAccount::where('user_id', $busOwnerUser->id)->first();
+                if (!$busOwnerAccount && isset($data->campany)) {
+                    // Check if campany relationship is loaded (Booking model)
+                    if (is_object($data->campany) && isset($data->campany->busOwnerAccount)) {
+                        $busCompany = $data->campany;
+                        $busOwnerAccount = $data->campany->busOwnerAccount;
                     }
-                    // Fallback to company's busOwnerAccount if busowner profile not found
-                    if (!$busOwnerAccount) {
-                        $busOwnerAccount = $data->campany->busOwnerAccount ?? null;
+                    // Fallback: if campany has id but relationship not loaded, load it
+                    elseif (is_object($data->campany) && isset($data->campany->id)) {
+                        $busCompany = \App\Models\Campany::with('busOwnerAccount')->find($data->campany->id);
+                        $busOwnerAccount = $busCompany->busOwnerAccount ?? null;
                     }
                 }
             @endphp
