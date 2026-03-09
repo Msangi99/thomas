@@ -70,15 +70,6 @@
                     <table id="busTable" class="w-full table-auto">
                         <thead>
                             <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
-                                <th class="py-2 px-4 text-left font-medium"></th>
-                                @foreach (['booking_id', 'bus_route', 'travel_details', 'passenger', 'seats_payment', 'commission', 'total', 'action'] as $key)
-                                    <th class="py-2 px-4 text-left font-medium">
-                                        <input type="text" class="w-full px-2 py-1 border rounded text-xs search-input"
-                                            placeholder="{{ __('vender/history.search_' . $key) }}">
-                                    </th>
-                                @endforeach
-                            </tr>
-                            <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
                                 <th class="py-2 px-4 text-left font-medium">{{ __('vender/history.sn') }}</th>
                                 @foreach (['booking_id', 'bus_route', 'travel_details', 'passenger', 'seats_payment', 'commission', 'total', 'action'] as $key)
                                     <th class="py-2 px-4 text-left font-medium">{{ __('vender/history.' . $key) }}</th>
@@ -265,6 +256,8 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <script>
         $(document).ready(function() {
+                    let currentDateRange = null;
+
                     // Initialize DataTable
                     DataTable.ext.errMode = 'none';
                     const table = $('#busTable').DataTable({
@@ -272,49 +265,45 @@
                         paging: true,
                         searching: true,
                         ordering: true,
-                        orderCellsTop: true, // Enable searching in header cells
                         language: {
                             emptyTable: "No bookings found."
                         },
-                        footerCallback: function() {
+                        footerCallback: function(row, data, start, end, display) {
                             let totalPayment = 0;
                             let totalDiscount = 0;
                             let totalVAT = 0;
                             let grandTotal = 0;
+                            const api = this.api();
 
-                            this.api()
-                                .rows({
-                                    page: 'current'
-                                })
-                                .nodes()
-                                .toArray()
-                                .forEach(row => {
-                                    const paymentEl = $(row).find('.payment-amount');
-                                    const totalEl = $(row).find('.total-amount');
-                                    const amount = parseFloat(paymentEl.data('amount')) || 0;
-                                    const vat = parseFloat(paymentEl.data('vat')) || 0;
-                                    const discount = parseFloat(paymentEl.data('discount')) || 0;
-                                    const total = parseFloat(totalEl.data('total')) || 0;
+                            api.rows({ page: 'current', search: 'applied' }).every(function() {
+                                const rowNode = this.node();
+                                const paymentEl = $(rowNode).find('.payment-amount');
+                                const totalEl = $(rowNode).find('.total-amount');
+                                const amount = parseFloat(paymentEl.data('amount')) || 0;
+                                const vat = parseFloat(paymentEl.data('vat')) || 0;
+                                const discount = parseFloat(paymentEl.data('discount')) || 0;
+                                const total = parseFloat(totalEl.data('total')) || 0;
 
-                                    totalPayment += amount + vat;
-                                    totalDiscount += discount;
-                                    totalVAT += vat;
-                                    grandTotal += total;
-                                });
+                                totalPayment += amount + vat;
+                                totalDiscount += discount;
+                                totalVAT += vat;
+                                grandTotal += total;
+                            });
 
-                            $('#totalPayment').text(totalPayment.toLocaleString('en-US', {
-                                minimumFractionDigits: 2
-                            }));
-                            $('#totalDiscount').text(totalDiscount.toLocaleString('en-US', {
-                                minimumFractionDigits: 2
-                            }));
-                            $('#totalVAT').text(totalVAT.toLocaleString('en-US', {
-                                minimumFractionDigits: 2
-                            }));
-                            $('#grandTotal').text(grandTotal.toLocaleString('en-US', {
-                                minimumFractionDigits: 2
-                            }));
+                            $('#totalPayment').text(totalPayment.toLocaleString('en-US', { minimumFractionDigits: 2 }));
+                            $('#totalDiscount').text(totalDiscount.toLocaleString('en-US', { minimumFractionDigits: 2 }));
+                            $('#totalVAT').text(totalVAT.toLocaleString('en-US', { minimumFractionDigits: 2 }));
+                            $('#grandTotal').text(grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 }));
                         }
+                    });
+
+                    $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                        if (!currentDateRange) return true;
+                        const row = table.row(dataIndex).node();
+                        const createdDateStr = $(row).find('[data-created-at]').data('created-at');
+                        if (!createdDateStr) return false;
+                        const createdDate = moment(createdDateStr, 'YYYY-MM-DD');
+                        return createdDate.isValid() && createdDate.isBetween(currentDateRange.start, currentDateRange.end, null, '[]');
                     });
 
                     // Initialize date range picker
@@ -337,142 +326,67 @@
                         }
                     });
 
-                    // Apply date range filter
                     $('#dateRangeFilter').on('apply.daterangepicker', function(ev, picker) {
-                        $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format(
-                            'YYYY-MM-DD'));
-
-                        $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-                            const travelDateStr = data[3]; // Column index for travel date
-                            if (!travelDateStr) return false;
-
-                            const travelDate = moment(travelDateStr, 'YYYY-MM-DD');
-                            const startDate = picker.startDate;
-                            const endDate = picker.endDate;
-
-                            return travelDate.isValid() && travelDate.isBetween(startDate, endDate, null,
-                                '[]'); // Inclusive
-                        });
-
+                        $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
+                        currentDateRange = { start: picker.startDate, end: picker.endDate };
                         table.draw();
-                        $.fn.dataTable.ext.search.pop(); // Remove filter after applying
                     });
 
-                    // Clear date filter
                     $('#dateRangeFilter').on('cancel.daterangepicker', function() {
                         $(this).val('');
+                        currentDateRange = null;
                         table.draw();
                     });
 
                     $('#clearDateFilter').on('click', function() {
                         $('#dateRangeFilter').val('');
+                        currentDateRange = null;
                         table.draw();
                     });
 
-                    // Column-specific search - properly map inputs to columns
-                    // The first row contains search inputs, second row contains headers
-                    // DataTable columns: 0=SN, 1=booking_id, 2=bus_route, 3=travel_details, 4=passenger, 5=seats_payment, 6=commission, 7=total, 8=action
-                    $('#busTable thead tr:first-child').find('th').each(function(index) {
-                        const input = $(this).find('input.search-input');
-                        if (input.length > 0) {
-                            // Skip the first column (SN at index 0) and last column (Action at index 8)
-                            if (index === 0 || index === 8) {
-                                return;
-                            }
-                            
-                            // Map input index to DataTable column index (they match: index 1-7)
-                            let columnIndex = index;
-                            
-                            // Add debounce for better performance
-                            let searchTimeout;
-                            
-                            // Add event listeners for search
-                            input.on('keyup change paste', function() {
-                                clearTimeout(searchTimeout);
-                                const $input = $(this);
-                                searchTimeout = setTimeout(function() {
-                                    const searchValue = $input.val().trim();
-                                    // Use column search with regex for better matching
-                                    table.column(columnIndex).search(searchValue, false, false).draw();
-                                }, 300); // 300ms delay
+                    // Handle form submissions for filtered data (build from row DOM nodes)
+                    function getFilteredRowsData() {
+                        let filteredData = [];
+                        table.rows({ filter: 'applied' }).every(function() {
+                            const rowNode = this.node();
+                            const $row = $(rowNode);
+                            const totalEl = $row.find('.total-amount');
+                            const paymentEl = $row.find('.payment-amount');
+                            const tds = $row.find('td');
+                            const routeText = $(tds[2]).find('p').eq(0).text() || '';
+                            const routeParts = routeText.split(' to ');
+                            filteredData.push({
+                                booking_code: $(tds[1]).find('p').first().text().trim() || 'N/A',
+                                company_name: $(tds[2]).find('h6').text().trim() || 'N/A',
+                                route_from: (routeParts[0] || '').trim() || 'N/A',
+                                route_to: (routeParts[1] || '').trim() || 'N/A',
+                                bus_number: $(tds[2]).find('p').eq(1).text().trim() || 'N/A',
+                                travel_date: $row.find('[data-created-at]').data('created-at') || 'N/A',
+                                seat: $(tds[3]).find('p').eq(1).text().replace('Seat: ', '').trim() || 'N/A',
+                                pickup_point: $(tds[3]).find('p').eq(2).text().replace('Pickup: ', '').trim() || 'N/A',
+                                customer_name: $(tds[4]).find('p').first().text().trim() || 'N/A',
+                                customer_phone: $(tds[4]).find('p').eq(1).text().trim() || 'N/A',
+                                amount: $(tds[5]).find('p').first().text().trim() || '0',
+                                commision: $(tds[6]).find('p').first().text().replace('System: ', '').trim() || 'N/A',
+                                service: $(tds[6]).find('p').eq(1).text().replace('Vendor: ', '').trim() || 'N/A',
+                                discount: $(tds[6]).find('p').eq(2).text().replace('Discount: ', '').trim() || 'N/A',
+                                vat: $(tds[6]).find('p').eq(3).text().replace('VAT: ', '').trim() || 'N/A',
+                                total: (parseFloat(totalEl.data('total')) || 0).toFixed(2)
                             });
-                            
-                            // Clear search when input is cleared
-                            input.on('input', function() {
-                                if ($(this).val() === '') {
-                                    clearTimeout(searchTimeout);
-                                    table.column(columnIndex).search('').draw();
-                                }
-                            });
-                        }
-                    });
+                        });
+                        return filteredData;
+                    }
 
-                    // Handle form submissions for filtered data
                     $('#manifestForm, #incomeForm').on('submit', function(e) {
                         e.preventDefault();
                         let form = $(this);
-                        let filteredData = [];
-
-                        table.rows({
-                            filter: 'applied'
-                        }).every(function() {
-                            let row = this.data();
-                            filteredData.push({
-                                booking_code: ($(row[1]).find('p').first().text().trim() || 'N/A'),
-                                company_name: ($(row[2]).find('h6').text().trim() || 'N/A'),
-                                route_from: ($(row[2]).find('p').eq(0).text().split(' to ')[0]
-                                    ?.trim() || 'N/A'),
-                                route_to: ($(row[2]).find('p').eq(0).text().split(' to ')[1]
-                                    ?.trim() || 'N/A'),
-                                bus_number: ($(row[2]).find('p').eq(1).text().trim() || 'N/A'),
-                                travel_date: ($(row[3]).find('[data-created-at]').data('created-at') || 'N/A'),
-                                seat: ($(row[3]).find('p').eq(1).text().replace('Seat: ', '')
-                                    .trim() || 'N/A'),
-                                pickup_point: ($(row[3]).find('p').eq(2).text().replace('Pickup: ',
-                                    '').trim() || 'N/A'),
-                                customer_name: ($(row[4]).find('p').first().text().trim() || 'N/A'),
-                                customer_phone: ($(row[4]).find('p').eq(1).text().trim() || 'N/A'),
-                                excess_luggage: ($(row[5]).find('p').first().text().trim() ===
-                                    'Yes' ? 1 : 0),
-                                excess_luggage_description: ($(row[5]).find('p').eq(1).text()
-                                    .replace('Desc: ', '').trim() || null),
-                                excess_luggage_fee: ($(row[5]).find('p').eq(2).text().replace(
-                                    'Fee: ', '').trim() || 0),
-                                amount: ($(row[6]).find('p').first().text().trim() || '0'),
-                                commision: ($(row[7]).find('p').first().text().replace('System: ',
-                                    '').trim() || 'N/A'),
-                                service: ($(row[7]).find('p').eq(1).text().replace('Vendor: ', '')
-                                    .trim() || 'N/A'),
-                                discount: ($(row[7]).find('p').eq(2).text().replace('Discount: ',
-                                    '').trim() || 'N/A'),
-                                vat: ($(row[7]).find('p').eq(3).text().replace('VAT: ', '')
-                                    .trim() || 'N/A'),
-                                total: (function() {
-                                    // Calculate total from the data attributes
-                                    let paymentEl = $(row[6]).find('.payment-amount');
-                                    let totalEl = $(row[8]).find('.total-amount');
-                                    let amount = parseFloat(paymentEl.data('amount')) || 0;
-                                    let vat = parseFloat(paymentEl.data('vat')) || 0;
-                                    let discount = parseFloat(paymentEl.data('discount')) || 0;
-                                    let fee = parseFloat(paymentEl.data('fee')) || 0;
-                                    let vender_fee = parseFloat(paymentEl.data('vender_fee')) || 0;
-                                    let fee_vat = parseFloat(paymentEl.data('fee_vat')) || 0;
-                                    
-                                    // Calculate total: amount + vat + fee + vender_fee + fee_vat - discount
-                                    let calculatedTotal = amount + vat + fee + vender_fee + fee_vat - discount;
-                                    return calculatedTotal.toFixed(2);
-                                })()
-                            });
-                        });
-
-                        // Validate that we have data before submitting
+                        let filteredData = getFilteredRowsData();
                         if (filteredData.length === 0) {
                             alert('No data available to print. Please ensure there are bookings in the table.');
                             return false;
                         }
-
                         form.find('input[name="data"]').val(JSON.stringify(filteredData));
-                        form.off('submit').submit(); // Prevent infinite loop and submit
+                        form.off('submit').submit();
                     });
 
             // View booking details

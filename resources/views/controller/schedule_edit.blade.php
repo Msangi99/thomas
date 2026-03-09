@@ -1,4 +1,4 @@
-@extends('admin.app')
+@extends($layout ?? 'admin.app')
 
 @section('content')
     <div class="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
@@ -6,7 +6,7 @@
             <div class="p-4 sm:p-6 border-b border-gray-200">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <h1 class="text-xl font-bold text-gray-800">{{ __('vender/schedule.edit_bus_schedule') }}</h1>
-                    <a href="{{ route('schedules') }}"
+                    <a href="{{ route($backRoute ?? 'schedules') }}"
                         class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200 transition-colors">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             xmlns="http://www.w3.org/2000/svg">
@@ -28,7 +28,7 @@
                     </div>
                 @endif
 
-                <form action="{{ route('update_schedule', $schedule->id) }}" method="POST">
+                <form action="{{ route($updateRoute ?? 'update_schedule', $schedule->id) }}" method="POST">
                     @csrf
 
                     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">

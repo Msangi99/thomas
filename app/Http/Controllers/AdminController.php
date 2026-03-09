@@ -1128,10 +1128,10 @@ $q->where('id', auth()->user()->campany->id);
         // Load full booking with relations so schedule times are available
         $data = null;
         if ($bookingId) {
-            $data = Booking::with(['bus.route', 'campany.busOwnerAccount', 'schedule', 'vender'])->find($bookingId);
+            $data = Booking::with(['bus.route', 'campany.busOwnerAccount', 'schedule', 'vender.VenderBalances'])->find($bookingId);
         }
         if (!$data && $bookingCode) {
-            $data = Booking::with(['bus.route', 'campany.busOwnerAccount', 'schedule', 'vender'])->where('booking_code', $bookingCode)->first();
+            $data = Booking::with(['bus.route', 'campany.busOwnerAccount', 'schedule', 'vender.VenderBalances'])->where('booking_code', $bookingCode)->first();
         }
         if (!$data) {
             $data = $payload;

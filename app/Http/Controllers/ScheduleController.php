@@ -16,15 +16,26 @@ class ScheduleController extends Controller
 {
     public function edit($id)
     {
+        $user = auth()->user();
+        $companyId = $user->campany_id ?? $user->campany?->id ?? null;
+        if (!$companyId) {
+            abort(403, __('You do not have a company assigned. Only bus owners with a company can edit schedules.'));
+        }
+
         $schedule = Schedule::with(['bus.busname', 'route'])->findOrFail($id);
+        if ($schedule->bus->campany_id != $companyId) {
+            abort(403, __('You can only edit schedules for your company buses.'));
+        }
+
         $buses = Bus::with('busname', 'campany')
-            ->whereHas('campany', function ($query) {
-                $query->where('campany_id', auth()->user()->campany->id);
-            })
+            ->where('campany_id', $companyId)
             ->get();
         $routes = Route::all();
 
-        return view('controller.schedule_edit', compact('schedule', 'buses', 'routes'));
+        $layout = $user->role === 'vender' ? 'vender.app' : 'admin.app';
+        $backRoute = $user->role === 'vender' ? 'vender.bus_route' : 'schedules';
+        $updateRoute = $user->role === 'vender' ? 'vender.update_schedule' : 'update_schedule';
+        return view('controller.schedule_edit', compact('schedule', 'buses', 'routes', 'layout', 'backRoute', 'updateRoute'));
     }
 
     public function update(Request $request, $id)
@@ -40,8 +51,13 @@ class ScheduleController extends Controller
         ]);
 
         // Ensure the bus belongs to the user's company
+        $user = auth()->user();
+        $companyId = $user->campany_id ?? $user->campany?->id ?? null;
+        if (!$companyId) {
+            abort(403, __('You do not have a company assigned.'));
+        }
         $bus = Bus::findOrFail($validated['bus_id']);
-        if ($bus->campany_id !== auth()->user()->campany->id) {
+        if ($bus->campany_id != $companyId) {
             abort(403, 'Unauthorized action.');
         }
 

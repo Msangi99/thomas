@@ -29,6 +29,10 @@
                                     <th class="sortable px-4 py-3 text-left font-medium" data-sort="text">{{ __('vender/busroot.bus_fee') }}</th>
                                     <th class="sortable px-4 py-3 text-left font-medium" data-sort="text">{{ __('vender/busroot.time_24hrs') }}</th>
                                     <th class="sortable px-4 py-3 text-left font-medium" data-sort="date">{{ __('vender/busroot.date') }}</th>
+                                    @php $userCompanyId = auth()->user()->campany_id ?? auth()->user()->campany?->id ?? null; @endphp
+                                    @if($userCompanyId)
+                                        <th class="px-4 py-3 text-left font-medium">{{ __('vender/schedule.edit_bus_schedule') }}</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200" id="scheduleTableBody">
@@ -38,6 +42,7 @@
                                             $bus = $sched->bus ?? null;
                                             $campany = $bus && $bus->campany ? $bus->campany : null;
                                             $route = $sched->route ?? ($bus && $bus->route ? $bus->route : null);
+                                            $canEdit = $userCompanyId && $bus && $bus->campany_id == $userCompanyId;
                                         @endphp
                                         <tr class="hover:bg-gray-50 transition-colors duration-150">
                                             <td class="px-4 py-3">{{ $loop->iteration }}</td>
@@ -50,11 +55,20 @@
                                             <td class="px-4 py-3" data-sort-value="{{ $sched->schedule_date ?? '' }}">
                                                 {{ $sched->schedule_date ? \Carbon\Carbon::parse($sched->schedule_date)->format('d F Y') : 'N/A' }}
                                             </td>
+                                            @if($userCompanyId)
+                                                <td class="px-4 py-3">
+                                                    @if($canEdit)
+                                                        <a href="{{ route('vender.edit.schedule', $sched->id) }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">{{ __('vender/schedule.update_schedule') }}</a>
+                                                    @else
+                                                        <span class="text-gray-400">—</span>
+                                                    @endif
+                                                </td>
+                                            @endif
                                         </tr>
                                     @endforeach
                                 @else
                                     <tr>
-                                        <td colspan="8" class="px-4 py-3 text-center text-gray-500">{{ __('assistance/schedule.no_bus_routes_found') }}</td>
+                                        <td colspan="{{ $userCompanyId ? 9 : 8 }}" class="px-4 py-3 text-center text-gray-500">{{ __('assistance/schedule.no_bus_routes_found') }}</td>
                                     </tr>
                                 @endif
                             </tbody>

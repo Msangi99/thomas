@@ -407,6 +407,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/transaction_request', [VenderController::class, 'transaction_request'])->name('vender.transaction.request');
         Route::get('/history', [VenderController::class, 'history'])->name('vender.history');
         Route::post('/print', [VenderController::class, 'print'])->name('vender.print');
+        Route::post('/manifest', [VenderController::class, 'manifest'])->name('vender.print.manifest');
+
+        Route::get('schedule/{id}/edit', [ScheduleController::class, 'edit'])->name('vender.edit.schedule');
+        Route::post('update-schedule/{id}', [ScheduleController::class, 'update'])->name('vender.update_schedule');
 
         Route::post('/booking/payment/data', [VenderController::class, 'get_payment'])->name('vender.verify');
 

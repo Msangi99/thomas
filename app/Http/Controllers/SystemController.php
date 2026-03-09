@@ -156,10 +156,11 @@ class SystemController extends Controller
     {
         $transaction = Transaction::findOrFail($transaction);
 
-        // Optional: Validate that the transaction belongs to the company
-        if ($transaction->campany_id != $campany) {
+        // Validate company only when this is a company (not vender) transaction
+        if ($campany != 0 && (int) $transaction->campany_id !== (int) $campany) {
             return redirect()->back()->with('error', 'Invalid company for this transaction.');
-        } else if ($campany != 0) {
+        }
+        if ($campany != 0) {
             $transaction->status = 'Completed';
             $transaction->reference_number = $request->reference_number;
             $transaction->save();
@@ -177,8 +178,11 @@ class SystemController extends Controller
             $transaction->reference_number = $request->reference_number;
             $transaction->save();
             $user = User::find($vender);
-            $user->VenderBalances->amount -= $transaction->amount;
-            $user->VenderBalances->save();
+            $balance = $user->VenderBalances;
+            if ($balance) {
+                $balance->amount -= $transaction->amount;
+                $balance->save();
+            }
             return redirect()->back()->with('success', 'Transaction marked as Completed.');
         } else {
             return back()->with('error', 'invalid transaction');
@@ -189,8 +193,7 @@ class SystemController extends Controller
     {
         $transaction = Transaction::findOrFail($transaction);
 
-        // Optional: Validate that the transaction belongs to the company
-        if ($transaction->campany_id != $campany) {
+        if ($campany != 0 && (int) $transaction->campany_id !== (int) $campany) {
             return redirect()->back()->with('error', 'Invalid company for this transaction.');
         }
 

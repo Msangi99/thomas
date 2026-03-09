@@ -924,7 +924,20 @@ class VenderController extends Controller
     public function print(Request $request)
     {
         $data = $request->data;
+
+        if (empty($data)) {
+            return redirect()->back()->with('error', __('No data provided for income report generation.'));
+        }
+
         $data = json_decode($data, true);
+
+        if ($data === null || !is_array($data)) {
+            return redirect()->back()->with('error', __('Invalid data format. Please try again.'));
+        }
+
+        if (empty($data)) {
+            return redirect()->back()->with('error', __('No booking data found for income report generation.'));
+        }
 
         return $this->generatePDF($data);
     }
@@ -935,6 +948,39 @@ class VenderController extends Controller
         $pdf = Pdf::loadView('print.report', ['bookings' => $data]);
 
         return $pdf->download('income-' . now() . '.pdf');
+    }
+
+    public function manifest(Request $request)
+    {
+        $data = $request->data;
+
+        if (empty($data)) {
+            return redirect()->back()->with('error', __('No data provided for manifest generation.'));
+        }
+
+        $data = json_decode($data, true);
+
+        if ($data === null || !is_array($data)) {
+            return redirect()->back()->with('error', __('Invalid data format. Please try again.'));
+        }
+
+        if (empty($data) || !isset($data[0])) {
+            return redirect()->back()->with('error', __('No booking data found for manifest generation.'));
+        }
+
+        if (!isset($data[0]['bus_number']) || empty($data[0]['bus_number'])) {
+            return redirect()->back()->with('error', __('Bus number not found in booking data.'));
+        }
+
+        $bus = bus::where('bus_number', $data[0]['bus_number'])->first();
+
+        if (!$bus) {
+            return redirect()->back()->with('error', __('Bus with number ') . $data[0]['bus_number'] . __(' not found.'));
+        }
+
+        $pdf = Pdf::loadView('print.manifest', ['bookings' => $data, 'bus' => $bus]);
+
+        return $pdf->download('manifest-' . now() . '.pdf');
     }
 
     public function profile()

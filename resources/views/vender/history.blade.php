@@ -39,12 +39,12 @@
                             {{ __('vender/history.actions') }}
                         </button>
                         <div class="dropdown-menu hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-10">
-                            <form action="{{ route('admin.print.manifest') }}" method="POST" id="manifestForm">
+                            <form action="{{ route('vender.print.manifest') }}" method="POST" id="manifestForm">
                                 @csrf
                                 <input type="hidden" name="data" id="manifestData">
                                 <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">{{ __('vender/history.print_manifest') }}</button>
                             </form>
-                            <form action="{{ route('system.print') }}" method="POST" id="incomeForm">
+                            <form action="{{ route('vender.print') }}" method="POST" id="incomeForm">
                                 @csrf
                                 <input type="hidden" name="data" id="incomeData">
                                 <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">{{ __('vender/history.print_income') }}</button>
@@ -59,14 +59,6 @@
                 <div class="overflow-x-auto">
                     <table id="busTable" class="w-full table-auto">
                         <thead>
-                            <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
-                                <th class="py-2 px-4 text-left font-medium"></th>
-                                @foreach (['search_booking_id', 'search_bus_route', 'search_travel_details', 'search_passenger', 'search_seats_payment', 'search_commission', 'search_total', 'search_action'] as $searchKey)
-                                    <th class="py-2 px-4 text-left font-medium">
-                                        <input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="{{ __('vender/history.' . $searchKey) }}">
-                                    </th>
-                                @endforeach
-                            </tr>
                             <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
                                 <th class="py-2 px-4 text-left font-medium">{{ __('vender/history.sn') }}</th>
                                 @foreach (['booking_id', 'bus_route', 'travel_details', 'passenger', 'seats_payment', 'commission', 'total', 'action'] as $header)
@@ -162,7 +154,7 @@
                                                         </form>
                                                         <form action="{{ route('print.service') }}" method="POST">
                                                             @csrf
-                                                            <input type="hidden" name="data" value="{{ $booking }}">
+                                                            <input type="hidden" name="data" value='{{ json_encode(["id" => $booking->id]) }}'>
                                                             <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">{{ __('vender/history.print_service') }}</button>
                                                         </form>
                                                     </div>
@@ -221,6 +213,9 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <script>
         $(document).ready(function() {
+            // Persistent date range for filtering
+            let currentDateRange = null;
+
             // Initialize DataTable
             DataTable.ext.errMode = 'none';
             const table = $('#busTable').DataTable({
@@ -228,39 +223,46 @@
                 paging: false,
                 searching: true,
                 ordering: true,
-                orderCellsTop: true, // Enable searching in header cells
                 language: {
                     emptyTable: "{{ __('vender/history.no_bookings_found') }}"
                 },
-                footerCallback: function() {
+                footerCallback: function(row, data, start, end, display) {
                     let totalPayment = 0;
                     let totalDiscount = 0;
                     let totalVAT = 0;
                     let grandTotal = 0;
+                    const api = this.api();
 
-                    this.api()
-                        .rows({ page: 'current' })
-                        .nodes()
-                        .toArray()
-                        .forEach(row => {
-                            const paymentEl = $(row).find('.payment-amount');
-                            const totalEl = $(row).find('.total-amount');
-                            const amount = parseFloat(paymentEl.data('amount')) || 0;
-                            const vat = parseFloat(paymentEl.data('vat')) || 0;
-                            const discount = parseFloat(paymentEl.data('discount')) || 0;
-                            const total = parseFloat(totalEl.data('total')) || 0;
+                    api.rows({ page: 'current', search: 'applied' }).every(function() {
+                        const rowNode = this.node();
+                        const paymentEl = $(rowNode).find('.payment-amount');
+                        const totalEl = $(rowNode).find('.total-amount');
+                        const amount = parseFloat(paymentEl.data('amount')) || 0;
+                        const vat = parseFloat(paymentEl.data('vat')) || 0;
+                        const discount = parseFloat(paymentEl.data('discount')) || 0;
+                        const total = parseFloat(totalEl.data('total')) || 0;
 
-                            totalPayment += amount + vat;
-                            totalDiscount += discount;
-                            totalVAT += vat;
-                            grandTotal += total;
-                        });
+                        totalPayment += amount + vat;
+                        totalDiscount += discount;
+                        totalVAT += vat;
+                        grandTotal += total;
+                    });
 
                     $('#totalPayment').text(totalPayment.toLocaleString('en-US', { minimumFractionDigits: 2 }));
                     $('#totalDiscount').text(totalDiscount.toLocaleString('en-US', { minimumFractionDigits: 2 }));
                     $('#totalVAT').text(totalVAT.toLocaleString('en-US', { minimumFractionDigits: 2 }));
                     $('#grandTotal').text(grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 }));
                 }
+            });
+
+            // Custom search: filter by date range when set
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                if (!currentDateRange) return true;
+                const row = table.row(dataIndex).node();
+                const createdDateStr = $(row).find('[data-created-at]').data('created-at');
+                if (!createdDateStr) return false;
+                const createdDate = moment(createdDateStr, 'YYYY-MM-DD');
+                return createdDate.isValid() && createdDate.isBetween(currentDateRange.start, currentDateRange.end, null, '[]');
             });
 
             // Initialize date range picker
@@ -302,111 +304,68 @@
                 }
             });
 
-            // Apply date range filter
             $('#dateRangeFilter').on('apply.daterangepicker', function(ev, picker) {
                 $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
-
-                $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-                    // Get the row element to access data-created-at attribute
-                    const row = table.row(dataIndex).node();
-                    const createdDateStr = $(row).find('[data-created-at]').data('created-at');
-                    if (!createdDateStr) return false;
-
-                    const createdDate = moment(createdDateStr, 'YYYY-MM-DD');
-                    const startDate = picker.startDate;
-                    const endDate = picker.endDate;
-
-                    return createdDate.isValid() && createdDate.isBetween(startDate, endDate, null, '[]'); // Inclusive
-                });
-
+                currentDateRange = { start: picker.startDate, end: picker.endDate };
                 table.draw();
-                $.fn.dataTable.ext.search.pop(); // Remove filter after applying
             });
 
-            // Clear date filter
             $('#dateRangeFilter').on('cancel.daterangepicker', function() {
                 $(this).val('');
+                currentDateRange = null;
                 table.draw();
             });
 
             $('#clearDateFilter').on('click', function() {
                 $('#dateRangeFilter').val('');
+                currentDateRange = null;
                 table.draw();
             });
 
-            // Column-specific search - properly map inputs to columns
-            // The first row contains search inputs, second row contains headers
-            // DataTable columns: 0=SN, 1=booking_id, 2=bus_route, 3=travel_details, 4=passenger, 5=seats_payment, 6=commission, 7=total, 8=action
-            $('#busTable thead tr:first-child').find('th').each(function(index) {
-                const input = $(this).find('input.search-input');
-                if (input.length > 0) {
-                    // Skip the first column (SN at index 0) and last column (Action at index 8)
-                    if (index === 0 || index === 8) {
-                        return;
-                    }
-                    
-                    // Map input index to DataTable column index (they match: index 1-7)
-                    let columnIndex = index;
-                    
-                    // Add debounce for better performance
-                    let searchTimeout;
-                    
-                    // Add event listeners for search
-                    input.on('keyup change paste', function() {
-                        clearTimeout(searchTimeout);
-                        const $input = $(this);
-                        searchTimeout = setTimeout(function() {
-                            const searchValue = $input.val().trim();
-                            // Use column search with regex for better matching
-                            table.column(columnIndex).search(searchValue, false, false).draw();
-                        }, 300); // 300ms delay
+            // Build print data from visible row DOM nodes (not cell data arrays)
+            function getFilteredRowsData() {
+                let filteredData = [];
+                table.rows({ filter: 'applied' }).every(function() {
+                    const rowNode = this.node();
+                    const $row = $(rowNode);
+                    const tds = $row.find('td');
+                    const paymentEl = $row.find('.payment-amount');
+                    const totalEl = $row.find('.total-amount');
+                    const routeText = $(tds[2]).find('p').eq(0).text() || '';
+                    const routeParts = routeText.split(' {{ __('vender/history.route') }} ');
+                    filteredData.push({
+                        booking_code: $(tds[1]).find('p').first().text().trim() || '{{ __('vender/history.na') }}',
+                        company_name: $(tds[2]).find('h6').text().trim() || '{{ __('vender/history.na') }}',
+                        route_from: (routeParts[0] || '').trim() || '{{ __('vender/history.na') }}',
+                        route_to: (routeParts[1] || '').trim() || '{{ __('vender/history.na') }}',
+                        bus_number: $(tds[2]).find('p').eq(1).text().trim() || '{{ __('vender/history.na') }}',
+                        travel_date: $row.find('[data-created-at]').data('created-at') || '{{ __('vender/history.na') }}',
+                        seat: $(tds[3]).find('p').eq(1).text().replace('{{ __('vender/history.seat') }} ', '').trim() || '{{ __('vender/history.na') }}',
+                        pickup_point: $(tds[3]).find('p').eq(2).text().replace('{{ __('vender/history.pickup') }} ', '').trim() || '{{ __('vender/history.na') }}',
+                        customer_name: $(tds[4]).find('p').first().text().trim() || '{{ __('vender/history.na') }}',
+                        customer_phone: $(tds[4]).find('p').eq(1).text().trim() || '{{ __('vender/history.na') }}',
+                        amount: $(tds[5]).find('p').first().text().trim() || '{{ __('vender/history.na') }}',
+                        commision: $(tds[6]).find('p').first().text().replace('{{ __('vender/history.system') }} ', '').trim() || '{{ __('vender/history.na') }}',
+                        service: $(tds[6]).find('p').eq(1).text().replace('{{ __('vender/history.vendor') }} ', '').trim() || '{{ __('vender/history.na') }}',
+                        vendor_service: $(tds[6]).find('p').eq(2).text().replace('{{ __('vender/history.vendor_service') }} ', '').trim() || '{{ __('vender/history.na') }}',
+                        discount: $(tds[6]).find('p').eq(3).text().replace('{{ __('vender/history.discount') }} ', '').trim() || '{{ __('vender/history.na') }}',
+                        vat: $(tds[6]).find('p').eq(4).text().replace('{{ __('vender/history.vat') }} ', '').trim() || '{{ __('vender/history.na') }}',
+                        total: (parseFloat(totalEl.data('total')) || 0).toFixed(2)
                     });
-                    
-                    // Clear search when input is cleared
-                    input.on('input', function() {
-                        if ($(this).val() === '') {
-                            clearTimeout(searchTimeout);
-                            table.column(columnIndex).search('').draw();
-                        }
-                    });
-                }
-            });
+                });
+                return filteredData;
+            }
 
-            // Handle form submissions for filtered data
             $('#manifestForm, #incomeForm').on('submit', function(e) {
                 e.preventDefault();
                 let form = $(this);
-                let filteredData = [];
-
-                table.rows({ filter: 'applied' }).every(function() {
-                    let row = this.data();
-                    filteredData.push({
-                        booking_code: ($(row[1]).find('p').first().text().trim() || '{{ __('vender/history.na') }}'),
-                        company_name: ($(row[2]).find('h6').text().trim() || '{{ __('vender/history.na') }}'),
-                        route_from: ($(row[2]).find('p').eq(0).text().split(' {{ __('vender/history.route') }} ')[0]?.trim() || '{{ __('vender/history.na') }}'),
-                        route_to: ($(row[2]).find('p').eq(0).text().split(' {{ __('vender/history.route') }} ')[1]?.trim() || '{{ __('vender/history.na') }}'),
-                        bus_number: ($(row[2]).find('p').eq(1).text().trim() || '{{ __('vender/history.na') }}'),
-                        travel_date: ($(row[3]).find('[data-created-at]').data('created-at') || '{{ __('vender/history.na') }}'),
-                        seat: ($(row[3]).find('p').eq(1).text().replace('{{ __('vender/history.seat') }} ', '').trim() || '{{ __('vender/history.na') }}'),
-                        pickup_point: ($(row[3]).find('p').eq(2).text().replace('{{ __('vender/history.pickup') }} ', '').trim() || '{{ __('vender/history.na') }}'),
-                        customer_name: ($(row[4]).find('p').first().text().trim() || '{{ __('vender/history.na') }}'),
-                        customer_phone: ($(row[4]).find('p').eq(1).text().trim() || '{{ __('vender/history.na') }}'),
-                        amount: ($(row[5]).find('p').first().text().trim() || '{{ __('vender/history.na') }}'),
-                        commision: ($(row[6]).find('p').first().text().replace('{{ __('vender/history.system') }} ', '').trim() || '{{ __('vender/history.na') }}'),
-                        service: ($(row[6]).find('p').eq(1).text().replace('{{ __('vender/history.vendor') }} ', '').trim() || '{{ __('vender/history.na') }}'),
-                        vendor_service: ($(row[6]).find('p').eq(2).text().replace('{{ __('vender/history.vendor_service') }} ', '').trim() || '{{ __('vender/history.na') }}'),
-                        discount: ($(row[6]).find('p').eq(3).text().replace('{{ __('vender/history.discount') }} ', '').trim() || '{{ __('vender/history.na') }}'),
-                        vat: ($(row[6]).find('p').eq(4).text().replace('{{ __('vender/history.vat') }} ', '').trim() || '{{ __('vender/history.na') }}'),
-                        total: (function() {
-                            let paymentEl = $(row[5]).find('.payment-amount');
-                            let totalEl = $(row[7]).find('.total-amount');
-                            return (parseFloat(totalEl.data('total')) || 0).toFixed(2);
-                        })()
-                    });
-                });
-
+                let filteredData = getFilteredRowsData();
+                if (filteredData.length === 0) {
+                    alert('{{ __('vender/history.no_bookings_found') }}');
+                    return;
+                }
                 form.find('input[name="data"]').val(JSON.stringify(filteredData));
-                form.off('submit').submit(); // Prevent infinite loop and submit
+                form.off('submit').submit();
             });
 
             // View booking details

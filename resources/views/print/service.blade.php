@@ -189,7 +189,15 @@
                 </tr> 
                 <tr>
                     <td>Service Amount:</td>
-                    <td>{{ ceil($data->service + $data->vender_service ) ?? 'N/A' }}</td>
+                    <td>
+                        @php
+                            $serviceAmount = (float)($data->service ?? 0) + (float)($data->vender_service ?? 0);
+                            if ($serviceAmount <= 0 && isset($data->vender) && $data->vender && $data->vender->VenderBalances) {
+                                $serviceAmount = (float)($data->vender->VenderBalances->fees ?? 0);
+                            }
+                            echo $serviceAmount > 0 ? ceil($serviceAmount) : 'N/A';
+                        @endphp
+                    </td>
                 </tr>
             </table>
         </div>
