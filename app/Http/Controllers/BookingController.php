@@ -1152,14 +1152,14 @@ class BookingController extends Controller
         $bookingCode = $payload->booking_code ?? null;
 
         // Load full booking with relations so route/schedule times are available for the ticket
-        // Include bus->campany->busOwnerAccount to ensure bus owner settings are from the bus's company
+        // Include bus->campany->busOwnerAccount and bus->campany->user to get busowner profile data
         // Include user to get contact number as fallback
         $data = null;
         if ($bookingId) {
-            $data = Booking::with(['bus.route', 'bus.campany.busOwnerAccount', 'campany.busOwnerAccount', 'schedule', 'vender', 'user'])->find($bookingId);
+            $data = Booking::with(['bus.route', 'bus.campany.busOwnerAccount', 'bus.campany.user', 'campany.busOwnerAccount', 'campany.user', 'schedule', 'vender', 'user'])->find($bookingId);
         }
         if (!$data && $bookingCode) {
-            $data = Booking::with(['bus.route', 'bus.campany.busOwnerAccount', 'campany.busOwnerAccount', 'schedule', 'vender', 'user'])->where('booking_code', $bookingCode)->first();
+            $data = Booking::with(['bus.route', 'bus.campany.busOwnerAccount', 'bus.campany.user', 'campany.busOwnerAccount', 'campany.user', 'schedule', 'vender', 'user'])->where('booking_code', $bookingCode)->first();
         }
         if (!$data) {
             $data = $payload;

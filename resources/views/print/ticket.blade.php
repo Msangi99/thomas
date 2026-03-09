@@ -53,19 +53,38 @@
         <div class="header">
             <h2>BUS TICKET</h2>
             @php
-                // Get bus owner account from the bus's company (prioritize bus's company settings)
+                // Get bus owner account from the busowner's profile (prioritize busowner profile data)
                 $busCompany = null;
                 $busOwnerAccount = null;
                 
+                // First, try to get busowner user from company and use their profile BusOwnerAccount
                 if (isset($data->bus) && $data->bus && isset($data->bus->campany) && $data->bus->campany) {
                     $busCompany = $data->bus->campany;
-                    $busOwnerAccount = $busCompany->busOwnerAccount ?? null;
+                    // Get busowner user from company
+                    if ($busCompany->user) {
+                        $busOwnerUser = $busCompany->user;
+                        // Try to get BusOwnerAccount linked to busowner user_id
+                        $busOwnerAccount = \App\Models\BusOwnerAccount::where('user_id', $busOwnerUser->id)->first();
+                    }
+                    // Fallback to company's busOwnerAccount if busowner profile not found
+                    if (!$busOwnerAccount) {
+                        $busOwnerAccount = $busCompany->busOwnerAccount ?? null;
+                    }
                 }
                 
                 // Fallback to booking's company if bus company not available
                 if (!$busOwnerAccount && isset($data->campany) && $data->campany) {
                     $busCompany = $data->campany;
-                    $busOwnerAccount = $data->campany->busOwnerAccount ?? null;
+                    // Get busowner user from company
+                    if ($busCompany->user) {
+                        $busOwnerUser = $busCompany->user;
+                        // Try to get BusOwnerAccount linked to busowner user_id
+                        $busOwnerAccount = \App\Models\BusOwnerAccount::where('user_id', $busOwnerUser->id)->first();
+                    }
+                    // Fallback to company's busOwnerAccount if busowner profile not found
+                    if (!$busOwnerAccount) {
+                        $busOwnerAccount = $data->campany->busOwnerAccount ?? null;
+                    }
                 }
             @endphp
             <p style="font-weight: bold; font-size: 15px;">{{ $busCompany->name ?? ($data->campany->name ?? 'N/A') }}</p>

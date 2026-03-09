@@ -122,8 +122,10 @@ class AdminController extends Controller
         if ($request->amount > $user->campany->balance->amount) {
             return back()->with('error', 'Insufficient balance');
         }
-        // Create the transaction
+        // Create the transaction and deduct amount from balance (pending state)
         try {
+            \DB::beginTransaction();
+            
             $transaction = Transaction::create([
                 'campany_id' => $user->campany->id, // Update to company_id after migration
                 'user_id' => $user->id,
@@ -133,8 +135,17 @@ class AdminController extends Controller
                 'status' => 'pending',
             ]);
 
+            // Deduct the amount from balance when request is created (so it's in pending state)
+            $balance = $user->campany->balance;
+            if ($balance) {
+                $balance->amount -= $request->amount;
+                $balance->save();
+            }
+
+            \DB::commit();
             return back()->with('success', 'Transaction request sent successfully');
         } catch (\Exception $e) {
+            \DB::rollBack();
             // Log the error for debugging
 
             return back()->with('error', 'Transaction request failed');

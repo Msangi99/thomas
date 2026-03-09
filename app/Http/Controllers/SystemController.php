@@ -164,13 +164,10 @@ class SystemController extends Controller
             $transaction->status = 'Completed';
             $transaction->reference_number = $request->reference_number;
             $transaction->save();
-            $balance = balance::where('campany_id', $campany)->first();
             
-            // Deduct the full transaction amount from bus owner's balance when approved
-            if ($balance) {
-                $balance->amount -= $transaction->amount;
-                $balance->save();
-            }
+            // Amount was already deducted from balance when request was created (pending state)
+            // So we don't need to deduct again when approved - just mark as completed
+            // The balance already reflects the pending amount being removed
 
             return redirect()->back()->with('success', 'Transaction marked as Completed.');
         } else if ($vender != 0) {
@@ -195,6 +192,15 @@ class SystemController extends Controller
 
         if ($campany != 0 && (int) $transaction->campany_id !== (int) $campany) {
             return redirect()->back()->with('error', 'Invalid company for this transaction.');
+        }
+
+        // If transaction was pending, refund the amount back to balance
+        if ($transaction->status === 'Pending' && $campany != 0) {
+            $balance = balance::where('campany_id', $campany)->first();
+            if ($balance) {
+                $balance->amount += $transaction->amount;
+                $balance->save();
+            }
         }
 
         $transaction->status = 'Cancelled';
