@@ -17,10 +17,10 @@
                 <div class="flex flex-col">
                     <h2 class="text-lg font-semibold mb-2">{{ __('vender/history.booking_history') }}</h2>
                     <div class="flex flex-wrap gap-3 text-sm font-medium">
-                        <span>{{ __('vender/history.total_payment') }} <span id="totalPayment">0</span></span>
-                        <span>{{ __('vender/history.total_discount') }} <span id="totalDiscount">0</span></span>
-                        <span>{{ __('vender/history.total_vat') }} <span id="totalVAT">0</span></span>
-                        <span>{{ __('vender/history.grand_total') }} <span id="grandTotal">0</span></span>
+                        <span>{{ __('vender/history.total_payment') }} <span id="totalPayment">{{ number_format($totalPayment ?? 0, 2) }}</span></span>
+                        <span>{{ __('vender/history.total_discount') }} <span id="totalDiscount">{{ number_format($totalDiscount ?? 0, 2) }}</span></span>
+                        <span>{{ __('vender/history.total_vat') }} <span id="totalVAT">{{ number_format($totalVAT ?? 0, 2) }}</span></span>
+                        <span>{{ __('vender/history.grand_total') }} <span id="grandTotal">{{ number_format($grandTotal ?? 0, 2) }}</span></span>
                     </div>
                 </div>
                 <div class="flex flex-col sm:flex-row items-center gap-2 flex-wrap">
@@ -263,40 +263,26 @@
         $(document).ready(function() {
                     // Initialize DataTable (totals only; date filter is server-side)
                     DataTable.ext.errMode = 'none';
-                    var table = $('#busTable').DataTable({
+                    $('#busTable').DataTable({
                         responsive: true,
                         paging: true,
                         searching: true,
                         ordering: true,
-                        language: { emptyTable: "No bookings found." },
-                        footerCallback: function() {
-                            var totalPayment = 0, totalDiscount = 0, totalVAT = 0, grandTotal = 0;
-                            var api = this.api();
-                            api.rows({ page: 'current' }).every(function() {
-                                var rowNode = this.node();
-                                var paymentEl = $(rowNode).find('.payment-amount');
-                                var totalEl = $(rowNode).find('.total-amount');
-                                totalPayment += parseFloat(paymentEl.attr('data-amount')) || 0;
-                                totalPayment += parseFloat(paymentEl.attr('data-vat')) || 0;
-                                totalDiscount += parseFloat(paymentEl.attr('data-discount')) || 0;
-                                totalVAT += parseFloat(paymentEl.attr('data-vat')) || 0;
-                                grandTotal += parseFloat(totalEl.attr('data-total')) || 0;
-                            });
-                            $('#totalPayment').text(totalPayment.toLocaleString('en-US', { minimumFractionDigits: 2 }));
-                            $('#totalDiscount').text(totalDiscount.toLocaleString('en-US', { minimumFractionDigits: 2 }));
-                            $('#totalVAT').text(totalVAT.toLocaleString('en-US', { minimumFractionDigits: 2 }));
-                            $('#grandTotal').text(grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 }));
-                        }
+                        language: { emptyTable: "No bookings found." }
                     });
 
-                    // Date Range Picker with callback (https://www.daterangepicker.com/#usage)
-                    var start = '{{ request('start_date') }}' ? moment('{{ request('start_date') }}') : moment().startOf('month');
-                    var end = '{{ request('end_date') }}' ? moment('{{ request('end_date') }}') : moment().endOf('month');
+                    // Date Range Picker (https://www.daterangepicker.com) - attach to body so it is not clipped
+                    var startReq = '{{ request('start_date') }}';
+                    var endReq = '{{ request('end_date') }}';
+                    var start = (startReq && endReq) ? moment(startReq) : moment().startOf('month');
+                    var end = (startReq && endReq) ? moment(endReq) : moment().endOf('month');
 
-                    $('#dateRangeFilter').daterangepicker({
+                    var $input = $('#dateRangeFilter');
+                    $input.daterangepicker({
                         startDate: start,
                         endDate: end,
                         autoUpdateInput: false,
+                        parentEl: 'body',
                         locale: {
                             format: 'YYYY-MM-DD',
                             separator: ' - ',
@@ -319,15 +305,17 @@
                         },
                         opens: 'left',
                         drops: 'down'
-                    }, function(startDate, endDate, label) {
-                        $('#dateRangeFilter').val(startDate.format('YYYY-MM-DD') + ' - ' + endDate.format('YYYY-MM-DD'));
-                        $('#filterStartDate').val(startDate.format('YYYY-MM-DD'));
-                        $('#filterEndDate').val(endDate.format('YYYY-MM-DD'));
+                    });
+
+                    $input.on('apply.daterangepicker', function(ev, picker) {
+                        $input.val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
+                        $('#filterStartDate').val(picker.startDate.format('YYYY-MM-DD'));
+                        $('#filterEndDate').val(picker.endDate.format('YYYY-MM-DD'));
                         $('#dateRangeForm').submit();
                     });
 
-                    $('#dateRangeFilter').on('cancel.daterangepicker', function() {
-                        $(this).val('');
+                    $input.on('cancel.daterangepicker', function() {
+                        $input.val('');
                         $('#filterStartDate').val('');
                         $('#filterEndDate').val('');
                     });

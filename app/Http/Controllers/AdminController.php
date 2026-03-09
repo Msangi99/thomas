@@ -616,8 +616,19 @@ $q->where('id', auth()->user()->campany->id);
         }
 
         $bookings = $query->where('payment_status', 'Paid')->latest()->get();
-       // return $bookings;
-        return view('controller.history', compact('bookings'));
+
+        $totalPayment = 0;
+        $totalDiscount = 0;
+        $totalVAT = 0;
+        $grandTotal = 0;
+        foreach ($bookings as $b) {
+            $totalPayment += (float)($b->amount ?? 0) + (float)($b->vat ?? 0);
+            $totalDiscount += (float)($b->discount_amount ?? 0);
+            $totalVAT += (float)($b->vat ?? 0);
+            $grandTotal += round((float)($b->fee ?? 0) + (float)($b->vender_fee ?? 0) + (float)($b->amount ?? 0) + (float)($b->vat ?? 0) + (float)($b->fee_vat ?? 0));
+        }
+
+        return view('controller.history', compact('bookings', 'totalPayment', 'totalDiscount', 'totalVAT', 'grandTotal'));
     }
 
     public function search(Request $request)
