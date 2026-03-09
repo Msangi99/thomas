@@ -23,41 +23,49 @@
                         <span>{{ __('vender/history.grand_total') }} <span id="grandTotal">0</span></span>
                     </div>
                 </div>
-                <div class="flex flex-col sm:flex-row items-center gap-2">
-                    <div class="flex items-center gap-2 w-full sm:w-auto">
-                        <input type="text"
-                            class="px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm w-full sm:w-48"
-                            id="dateRangeFilter" placeholder="{{ __('vender/history.select_date_range') }}">
-                        <button class="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
-                            id="clearDateFilter">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
+                <div class="flex flex-col sm:flex-row items-center gap-2 flex-wrap">
+                    {{-- Date range filter form: GET so page reloads with filtered bookings --}}
+                    <form action="{{ route('history') }}" method="GET" class="flex items-center gap-2 w-full sm:w-auto" id="dateRangeForm">
+                        <input type="hidden" name="start_date" id="filterStartDate" value="{{ request('start_date') }}">
+                        <input type="hidden" name="end_date" id="filterEndDate" value="{{ request('end_date') }}">
+                        <input type="text" readonly
+                            class="px-3 py-2 border rounded-lg bg-white text-gray-800 text-sm w-full sm:w-48 cursor-pointer"
+                            id="dateRangeFilter" placeholder="{{ __('vender/history.select_date_range') }}"
+                            value="{{ request('start_date') && request('end_date') ? request('start_date') . ' - ' . request('end_date') : '' }}">
+                        <button type="submit" class="px-3 py-2 bg-white text-teal-700 rounded-lg hover:bg-teal-50 transition text-sm font-medium">
+                            {{ __('vender/history.apply') }}
                         </button>
-                    </div>
+                        @if(request('start_date') || request('end_date'))
+                        <a href="{{ route('history') }}" class="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition" title="Clear filter">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </a>
+                        @endif
+                    </form>
                     <div class="relative w-full sm:w-auto">
-                        <button
+                        <button type="button"
                             class="px-3 py-2 bg-white text-blue-500 rounded-lg hover:bg-blue-50 transition flex items-center gap-1 text-sm w-full sm:w-auto"
                             onclick="toggleDropdown(this)">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16">
-                                </path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
                             </svg>
                             {{ __('vender/history.actions') }}
                         </button>
                         <div class="dropdown-menu hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-10">
-                            <form action="{{ route('admin.print.manifest') }}" method="POST" id="manifestForm">
+                            {{-- Print Manifest: server uses start_date/end_date from current page --}}
+                            <form action="{{ route('admin.print.manifest') }}" method="POST">
                                 @csrf
-                                <input type="hidden" name="booking_ids" id="manifestBookingIds" value="">
-                                <button type="button" id="btnPrintManifest"
-                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full">{{ __('vender/history.print_manifest') }}</button>
+                                <input type="hidden" name="start_date" value="{{ request('start_date') }}">
+                                <input type="hidden" name="end_date" value="{{ request('end_date') }}">
+                                <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full">{{ __('vender/history.print_manifest') }}</button>
                             </form>
-                            <form action="{{ route('admin.print') }}" method="POST" id="incomeForm">
+                            {{-- Print Income: server uses start_date/end_date from current page --}}
+                            <form action="{{ route('admin.print') }}" method="POST">
                                 @csrf
-                                <input type="hidden" name="booking_ids" id="incomeBookingIds" value="">
-                                <button type="button" id="btnPrintIncome"
-                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full">{{ __('vender/history.print_income') }}</button>
+                                <input type="hidden" name="start_date" value="{{ request('start_date') }}">
+                                <input type="hidden" name="end_date" value="{{ request('end_date') }}">
+                                <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full">{{ __('vender/history.print_income') }}</button>
                             </form>
                         </div>
                     </div>
@@ -256,40 +264,27 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <script>
         $(document).ready(function() {
-                    let currentDateRange = null;
-
-                    // Initialize DataTable
+                    // Initialize DataTable (totals only; date filter is server-side)
                     DataTable.ext.errMode = 'none';
-                    const table = $('#busTable').DataTable({
+                    var table = $('#busTable').DataTable({
                         responsive: true,
                         paging: true,
                         searching: true,
                         ordering: true,
-                        language: {
-                            emptyTable: "No bookings found."
-                        },
-                        footerCallback: function(row, data, start, end, display) {
-                            var totalPayment = 0;
-                            var totalDiscount = 0;
-                            var totalVAT = 0;
-                            var grandTotal = 0;
+                        language: { emptyTable: "No bookings found." },
+                        footerCallback: function() {
+                            var totalPayment = 0, totalDiscount = 0, totalVAT = 0, grandTotal = 0;
                             var api = this.api();
-
-                            api.rows({ page: 'current', search: 'applied' }).every(function() {
+                            api.rows({ page: 'current' }).every(function() {
                                 var rowNode = this.node();
                                 var paymentEl = $(rowNode).find('.payment-amount');
                                 var totalEl = $(rowNode).find('.total-amount');
-                                var amount = parseFloat(paymentEl.attr('data-amount')) || 0;
-                                var vat = parseFloat(paymentEl.attr('data-vat')) || 0;
-                                var discount = parseFloat(paymentEl.attr('data-discount')) || 0;
-                                var total = parseFloat(totalEl.attr('data-total')) || 0;
-
-                                totalPayment += amount + vat;
-                                totalDiscount += discount;
-                                totalVAT += vat;
-                                grandTotal += total;
+                                totalPayment += parseFloat(paymentEl.attr('data-amount')) || 0;
+                                totalPayment += parseFloat(paymentEl.attr('data-vat')) || 0;
+                                totalDiscount += parseFloat(paymentEl.attr('data-discount')) || 0;
+                                totalVAT += parseFloat(paymentEl.attr('data-vat')) || 0;
+                                grandTotal += parseFloat(totalEl.attr('data-total')) || 0;
                             });
-
                             $('#totalPayment').text(totalPayment.toLocaleString('en-US', { minimumFractionDigits: 2 }));
                             $('#totalDiscount').text(totalDiscount.toLocaleString('en-US', { minimumFractionDigits: 2 }));
                             $('#totalVAT').text(totalVAT.toLocaleString('en-US', { minimumFractionDigits: 2 }));
@@ -297,22 +292,7 @@
                         }
                     });
 
-                    // Date range filter: only for this table (use daterangepicker range)
-                    $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-                        if (!currentDateRange) return true;
-                        var tbl = settings.nTable;
-                        var tableId = (tbl && tbl.id) ? tbl.id : (settings.sTableId || '');
-                        if (tableId !== 'busTable') return true;
-                        var api = $(tbl).DataTable();
-                        var row = api.row(dataIndex).node();
-                        if (!row) return false;
-                        var createdDateStr = $(row).attr('data-created-at') || $(row).find('[data-created-at]').first().attr('data-created-at');
-                        if (!createdDateStr) return false;
-                        var createdDate = moment(createdDateStr, 'YYYY-MM-DD');
-                        return createdDate.isValid() && !createdDate.isBefore(currentDateRange.start, 'day') && !createdDate.isAfter(currentDateRange.end, 'day');
-                    });
-
-                    // Initialize daterangepicker (date range picker JS)
+                    // Daterangepicker: only to fill the filter form so "Apply" submits with start_date & end_date
                     $('#dateRangeFilter').daterangepicker({
                         autoUpdateInput: false,
                         locale: {
@@ -324,61 +304,19 @@
                             toLabel: 'To',
                             customRangeLabel: 'Custom',
                             daysOfWeek: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
-                            monthNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
-                                'September', 'October', 'November', 'December'
-                            ],
+                            monthNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
                             firstDay: 1
                         }
                     });
-
                     $('#dateRangeFilter').on('apply.daterangepicker', function(ev, picker) {
                         $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
-                        currentDateRange = { start: picker.startDate, end: picker.endDate };
-                        table.draw();
+                        $('#filterStartDate').val(picker.startDate.format('YYYY-MM-DD'));
+                        $('#filterEndDate').val(picker.endDate.format('YYYY-MM-DD'));
                     });
-
                     $('#dateRangeFilter').on('cancel.daterangepicker', function() {
                         $(this).val('');
-                        currentDateRange = null;
-                        table.draw();
-                    });
-
-                    $('#clearDateFilter').on('click', function() {
-                        $('#dateRangeFilter').val('');
-                        currentDateRange = null;
-                        table.draw();
-                    });
-
-                    // Collect visible row booking IDs (from current table rows)
-                    function getVisibleBookingIds() {
-                        var ids = [];
-                        table.rows({ page: 'current', search: 'applied' }).every(function() {
-                            var rowNode = this.node();
-                            var id = $(rowNode).attr('data-booking-id');
-                            if (id) ids.push(parseInt(id, 10));
-                        });
-                        return ids;
-                    }
-
-                    // Print Manifest: set booking_ids from visible rows then submit (no native form submit)
-                    $('#btnPrintManifest').on('click', function() {
-                        var ids = getVisibleBookingIds();
-                        if (ids.length === 0) {
-                            alert('No data available to print. Select date range or ensure there are bookings in the table.');
-                            return;
-                        }
-                        $('#manifestBookingIds').val(JSON.stringify(ids));
-                        $('#manifestForm').submit();
-                    });
-
-                    $('#btnPrintIncome').on('click', function() {
-                        var ids = getVisibleBookingIds();
-                        if (ids.length === 0) {
-                            alert('No data available to print. Select date range or ensure there are bookings in the table.');
-                            return;
-                        }
-                        $('#incomeBookingIds').val(JSON.stringify(ids));
-                        $('#incomeForm').submit();
+                        $('#filterStartDate').val('');
+                        $('#filterEndDate').val('');
                     });
 
             // View booking details

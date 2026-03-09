@@ -608,6 +608,13 @@ $q->where('id', auth()->user()->campany->id);
             }
         }
 
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('created_at', [
+                Carbon::parse($request->start_date)->startOfDay(),
+                Carbon::parse($request->end_date)->endOfDay(),
+            ]);
+        }
+
         $bookings = $query->where('payment_status', 'Paid')->latest()->get();
        // return $bookings;
         return view('controller.history', compact('bookings'));
@@ -893,30 +900,47 @@ $q->where('id', auth()->user()->campany->id);
 
         $data = null;
 
-        if ($request->filled('booking_ids')) {
-            $ids = is_array($request->booking_ids) ? $request->booking_ids : (array) json_decode($request->booking_ids, true);
-            $ids = array_filter(array_map('intval', $ids));
-            if (empty($ids)) {
-                return redirect()->back()->with('error', 'No booking data found for income report generation.');
-            }
+        if ($request->filled('start_date') && $request->filled('end_date')) {
             $bookings = Booking::with(['campany', 'schedule', 'bus.route'])
                 ->where('campany_id', $companyId)
-                ->whereIn('id', $ids)
                 ->where('payment_status', 'Paid')
+                ->whereBetween('created_at', [
+                    Carbon::parse($request->start_date)->startOfDay(),
+                    Carbon::parse($request->end_date)->endOfDay(),
+                ])
+                ->latest()
                 ->get();
             $data = $this->bookingsToReportArray($bookings);
-        } else {
-            $raw = $request->data;
-            if (empty($raw)) {
-                return redirect()->back()->with('error', 'No data provided for income report generation.');
-            }
-            $data = json_decode($raw, true);
-            if ($data === null || !is_array($data)) {
-                return redirect()->back()->with('error', 'Invalid data format. Please try again.');
+        } elseif ($request->filled('booking_ids')) {
+            $ids = is_array($request->booking_ids) ? $request->booking_ids : (array) json_decode($request->booking_ids, true);
+            $ids = array_filter(array_map('intval', $ids));
+            if (!empty($ids)) {
+                $bookings = Booking::with(['campany', 'schedule', 'bus.route'])
+                    ->where('campany_id', $companyId)
+                    ->whereIn('id', $ids)
+                    ->where('payment_status', 'Paid')
+                    ->get();
+                $data = $this->bookingsToReportArray($bookings);
             }
         }
 
-        if (empty($data)) {
+        if ($data === null) {
+            $raw = $request->data;
+            if (!empty($raw)) {
+                $data = json_decode($raw, true);
+            }
+        }
+
+        if ($data === null) {
+            $bookings = Booking::with(['campany', 'schedule', 'bus.route'])
+                ->where('campany_id', $companyId)
+                ->where('payment_status', 'Paid')
+                ->latest()
+                ->get();
+            $data = $this->bookingsToReportArray($bookings);
+        }
+
+        if (empty($data) || !is_array($data)) {
             return redirect()->back()->with('error', 'No booking data found for income report generation.');
         }
 
@@ -982,31 +1006,47 @@ $q->where('id', auth()->user()->campany->id);
 
         $data = null;
 
-        if ($request->filled('booking_ids')) {
-            $ids = is_array($request->booking_ids) ? $request->booking_ids : (array) json_decode($request->booking_ids, true);
-            $ids = array_filter(array_map('intval', $ids));
-            if (empty($ids)) {
-                return redirect()->back()->with('error', 'No booking data found for manifest generation.');
-            }
+        if ($request->filled('start_date') && $request->filled('end_date')) {
             $bookings = Booking::with(['campany', 'schedule', 'bus.route'])
                 ->where('campany_id', $companyId)
-                ->whereIn('id', $ids)
                 ->where('payment_status', 'Paid')
+                ->whereBetween('created_at', [
+                    Carbon::parse($request->start_date)->startOfDay(),
+                    Carbon::parse($request->end_date)->endOfDay(),
+                ])
                 ->orderBy('seat')
+                ->latest()
                 ->get();
             $data = $this->bookingsToReportArray($bookings);
-        } else {
-            $raw = $request->data;
-            if (empty($raw)) {
-                return redirect()->back()->with('error', 'No data provided for manifest generation.');
-            }
-            $data = json_decode($raw, true);
-            if ($data === null || !is_array($data)) {
-                return redirect()->back()->with('error', 'Invalid data format. Please try again.');
+        } elseif ($request->filled('booking_ids')) {
+            $ids = is_array($request->booking_ids) ? $request->booking_ids : (array) json_decode($request->booking_ids, true);
+            $ids = array_filter(array_map('intval', $ids));
+            if (!empty($ids)) {
+                $bookings = Booking::with(['campany', 'schedule', 'bus.route'])
+                    ->where('campany_id', $companyId)
+                    ->whereIn('id', $ids)
+                    ->where('payment_status', 'Paid')
+                    ->orderBy('seat')
+                    ->get();
+                $data = $this->bookingsToReportArray($bookings);
             }
         }
 
-        if (empty($data) || !isset($data[0])) {
+        if ($data === null && $request->filled('data')) {
+            $data = json_decode($request->data, true);
+        }
+
+        if ($data === null) {
+            $bookings = Booking::with(['campany', 'schedule', 'bus.route'])
+                ->where('campany_id', $companyId)
+                ->where('payment_status', 'Paid')
+                ->orderBy('seat')
+                ->latest()
+                ->get();
+            $data = $this->bookingsToReportArray($bookings);
+        }
+
+        if (empty($data) || !is_array($data) || !isset($data[0])) {
             return redirect()->back()->with('error', 'No booking data found for manifest generation.');
         }
 
