@@ -820,15 +820,45 @@ class SystemController extends Controller
     /**
      * Run database migrations (for production when CLI is not available).
      * Only accessible by admin. Use with care.
+     *
+     * URL examples:
+     *   /admin/migrate                          — run all migrations
+     *   /admin/migrate/2026_03_12_013541_add_expires_at_to_discount_table.php
+     *   /admin/migrate/migration--2026_03_12_013541_add_expires_at_to_discount_table.php
      */
-    public function runMigrations(Request $request)
+    public function runMigrations(Request $request, $migration = null)
     {
-        $exitCode = Artisan::call('migrate', [
-            '--force' => true,
-        ]);
+        $path = null;
 
-        $output = trim(Artisan::output());
-        $success = $exitCode === 0;
+        if ($migration) {
+            // Allow "migration--filename.php" or plain "filename.php"
+            $filename = preg_replace('/^migration--/i', '', $migration);
+            // Only allow safe migration filenames (digits, underscores, letters, .php)
+            if (!preg_match('/^[a-z0-9_]+\.php$/i', $filename)) {
+                $output = 'Invalid migration filename. Use only: 2026_03_12_013541_add_expires_at_to_discount_table.php';
+                $exitCode = 1;
+                $success = false;
+            } else {
+                $fullPath = database_path('migrations/' . $filename);
+                if (!is_file($fullPath)) {
+                    $output = 'Migration file not found: ' . $filename;
+                    $exitCode = 1;
+                    $success = false;
+                } else {
+                    $path = 'database/migrations/' . $filename;
+                }
+            }
+        }
+
+        if (!isset($exitCode)) {
+            $params = ['--force' => true];
+            if ($path) {
+                $params['--path'] = $path;
+            }
+            $exitCode = Artisan::call('migrate', $params);
+            $output = trim(Artisan::output());
+            $success = $exitCode === 0;
+        }
 
         if ($request->wantsJson()) {
             return response()->json([

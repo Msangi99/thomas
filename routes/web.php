@@ -389,7 +389,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/refunds/{id}/approve', [SystemController::class, 'approveRefund'])->name('system.refunds.approve');
         Route::post('/refunds/{id}/reject', [SystemController::class, 'rejectRefund'])->name('system.refunds.reject');
 
-        Route::get('/migrate', [SystemController::class, 'runMigrations'])->name('system.migrate');
+        Route::get('/migrate/{migration?}', [SystemController::class, 'runMigrations'])->name('system.migrate');
     });
 
     Route::prefix('vender')->middleware(['role:vender', '2fa', 'vendor.enabled'])->group(function () {
