@@ -31,26 +31,6 @@
                             </svg>
                         </button>
                     </div>
-                    <div class="relative w-full sm:w-auto">
-                        <button class="px-3 py-2 bg-white text-blue-500 rounded-lg hover:bg-blue-50 transition flex items-center gap-1 text-sm w-full sm:w-auto" onclick="toggleDropdown(this)">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
-                            </svg>
-                            Actions
-                        </button>
-                        <div class="dropdown-menu hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-10">
-                            <form action="{{ route('system.print.manifest') }}" method="POST" id="manifestForm">
-                                @csrf
-                                <input type="hidden" name="data" id="manifestData">
-                                <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Print Manifest</button>
-                            </form>
-                            <form action="{{ route('system.print') }}" method="POST" id="incomeForm">
-                                @csrf
-                                <input type="hidden" name="data" id="incomeData">
-                                <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Print Income</button>
-                            </form>
-                        </div>
-                    </div>
                 </div>
             </div>
 
