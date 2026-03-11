@@ -40,6 +40,10 @@ class TraVfdService
     public function fiscalize(Booking $booking)
     {
         try {
+            if (!config('tra.enabled', true)) {
+                return true; // TRA fiscalization disabled
+            }
+
             if ($booking->tra_status === 'success') {
                 return true; // Already fiscalized
             }
@@ -267,13 +271,26 @@ class TraVfdService
 
     protected function getCertDetails()
     {
-        if (!file_exists($this->certPath)) {
-            throw new Exception("Certificate file not found at: " . $this->certPath);
+        if (empty($this->certPath) || !file_exists($this->certPath)) {
+            throw new Exception(
+                "TRA certificate file not found. Set TRA_CERT_PATH in .env to your .pfx file path (e.g. full path to certificate.pfx). " .
+                "Current value: " . ($this->certPath ?: '(empty)')
+            );
         }
 
         $certStore = file_get_contents($this->certPath);
+        if ($certStore === false) {
+            throw new Exception("Could not read certificate file: " . $this->certPath);
+        }
+
+        if (empty($this->password)) {
+            throw new Exception("TRA certificate password is not set. Set TRA_PASSWORD in .env to the password for your .pfx file.");
+        }
+
+        $certInfo = null;
         if (!openssl_pkcs12_read($certStore, $certInfo, $this->password)) {
-            throw new Exception("Failed to read certificate. Check password.");
+            $hint = "Check: (1) TRA_PASSWORD in .env matches the .pfx password, (2) the file is a valid PKCS#12 (.pfx) certificate.";
+            throw new Exception("Failed to read certificate. " . $hint);
         }
 
         return $certInfo;

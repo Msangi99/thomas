@@ -994,11 +994,8 @@ class RoundTripController extends Controller
 
                 // Process first booking
                 $result1 = $cashController->cash($booking1, uniqid('Round_Cash_'));
-                Log::info('Cash Payment Result 1', ['result' => $result1]);
-
                 // Process second booking  
                 $result2 = $cashController->cash($booking2, uniqid('Round_Cash_'));
-                Log::info('Cash Payment Result 2', ['result' => $result2]);
 
                 // Clear only booking_form; keep booking1/booking2/is_round for success page (paymentSuccess() will clear them)
                 session()->forget(['booking_form']);
