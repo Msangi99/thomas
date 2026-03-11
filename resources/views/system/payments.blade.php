@@ -8,14 +8,14 @@
     <!-- Tailwind CSS -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
-    <div class="container mx-auto px-4 py-6 max-w-4xl">
+    <div class="container mx-auto px-4 py-6 max-w-7xl">
         <h3 class="text-center text-blue-600 text-lg font-semibold mb-4">HIGHLINK ISGC</h3>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <!-- Service Fees Table -->
             <div class="bg-white rounded-lg shadow-md overflow-hidden">
                 <div class="p-4 bg-gradient-to-r from-blue-500 to-blue-400 text-white text-center">
                     <h2 class="text-lg font-semibold">Commission Fees</h2>
-                    <span class="text-sm font-medium">Total: {{ $currency }} <span id="serviceTotal">{{ number_format($balances->sum('balance'), 2, '.', ',') }}</span></span>
+                    <span class="text-sm font-medium">Total: {{ $currency }} <span id="serviceTotal">{{ convert_money($balances->sum('balance')) }}</span></span>
                 </div>
                 <div class="p-4">
                     <div class="flex flex-col sm:flex-row gap-4 mb-4">
@@ -40,19 +40,19 @@
                         </div>
                     </div>
                     <div class="overflow-x-auto">
-                        <table id="serviceTable" class="w-full table-auto">
+                        <table id="serviceTable" class="w-full table-auto border-collapse" style="min-width: 400px;">
                             <thead>
                                 <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
-                                    <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search No"></th>
+                                    <th class="py-2 px-4 text-left font-medium w-16"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search No"></th>
                                     <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Company"></th>
-                                    <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Amount"></th>
-                                    <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Date"></th>
+                                    <th class="py-2 px-4 text-right font-medium whitespace-nowrap"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Amount"></th>
+                                    <th class="py-2 px-4 text-left font-medium whitespace-nowrap"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Date"></th>
                                 </tr>
                                 <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
-                                    <th class="py-2 px-4 text-left font-medium">No</th>
+                                    <th class="py-2 px-4 text-left font-medium w-16">No</th>
                                     <th class="py-2 px-4 text-left font-medium">Company Name</th>
-                                    <th class="py-2 px-4 text-left font-medium">Amount</th>
-                                    <th class="py-2 px-4 text-left font-medium">Date</th>
+                                    <th class="py-2 px-4 text-right font-medium whitespace-nowrap">Amount</th>
+                                    <th class="py-2 px-4 text-left font-medium whitespace-nowrap">Date</th>
                                 </tr>
                             </thead>
                             <tbody class="text-gray-600 text-xs">
@@ -62,8 +62,8 @@
                                         <tr class="border-b border-gray-200 hover:bg-gray-50 transition">
                                             <td class="py-2 px-4">{{ $i++ }}</td>
                                             <td class="py-2 px-4">{{ $payment->campany->name }}</td>
-                                            <td class="py-2 px-4 amount" data-amount="{{ $payment->balance }}">{{ $currency }} {{ number_format($payment->balance, 2, '.', ',') }}</td>
-                                            <td class="py-2 px-4" data-date="{{ $payment->created_at->format('Y-m-d') }}">{{ $payment->created_at->format('d M Y') }}</td>
+                                            <td class="py-2 px-4 text-right amount" data-amount="{{ $payment->balance }}">{{ $currency }} {{ convert_money($payment->balance) }}</td>
+                                            <td class="py-2 px-4 whitespace-nowrap" data-date="{{ $payment->created_at->format('Y-m-d') }}">{{ $payment->created_at->format('d M Y') }}</td>
                                         </tr>
                                     @endforeach
                                 @else
@@ -79,7 +79,7 @@
             <div class="bg-white rounded-lg shadow-md overflow-hidden">
                 <div class="p-4 bg-gradient-to-r from-blue-500 to-blue-400 text-white text-center">
                     <h2 class="text-lg font-semibold">Service Fees</h2>
-                    <span class="text-sm font-medium">Total: {{ $currency }} <span id="commissionTotal">{{ number_format($pays->sum('amount'), 2, '.', ',') }}</span></span>
+                    <span class="text-sm font-medium">Total: {{ $currency }} <span id="commissionTotal">{{ convert_money($pays->sum('amount')) }}</span></span>
                 </div>
                 <div class="p-4">
                     <div class="flex flex-col sm:flex-row gap-4 mb-4">
@@ -104,21 +104,21 @@
                         </div>
                     </div>
                     <div class="overflow-x-auto">
-                        <table id="commissionTable" class="w-full table-auto">
+                        <table id="commissionTable" class="w-full table-auto border-collapse" style="min-width: 480px;">
                             <thead>
                                 <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
-                                    <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search No"></th>
+                                    <th class="py-2 px-4 text-left font-medium w-16"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search No"></th>
                                     <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Company"></th>
                                     <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Booking Code"></th>
-                                    <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Amount"></th>
-                                    <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Date"></th>
+                                    <th class="py-2 px-4 text-right font-medium whitespace-nowrap"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Amount"></th>
+                                    <th class="py-2 px-4 text-left font-medium whitespace-nowrap"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Date"></th>
                                 </tr>
                                 <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
-                                    <th class="py-2 px-4 text-left font-medium">No</th>
+                                    <th class="py-2 px-4 text-left font-medium w-16">No</th>
                                     <th class="py-2 px-4 text-left font-medium">Company Name</th>
                                     <th class="py-2 px-4 text-left font-medium">Booking Code</th>
-                                    <th class="py-2 px-4 text-left font-medium">Amount</th>
-                                    <th class="py-2 px-4 text-left font-medium">Date</th>
+                                    <th class="py-2 px-4 text-right font-medium whitespace-nowrap">Amount</th>
+                                    <th class="py-2 px-4 text-left font-medium whitespace-nowrap">Date</th>
                                 </tr>
                             </thead>
                             <tbody class="text-gray-600 text-xs">
@@ -129,8 +129,8 @@
                                             <td class="py-2 px-4">{{ $p++ }}</td>
                                             <td class="py-2 px-4">{{ $payment->campany->name }}</td>
                                             <td class="py-2 px-4">{{ $payment->booking_id }}</td>
-                                            <td class="py-2 px-4 amount" data-amount="{{ $payment->amount }}">{{ $currency }} {{ number_format($payment->amount, 2, '.', ',') }}</td>
-                                            <td class="py-2 px-4" data-date="{{ $payment->created_at->format('Y-m-d') }}">{{ $payment->created_at->format('d M Y') }}</td>
+                                            <td class="py-2 px-4 text-right amount" data-amount="{{ $payment->amount }}">{{ $currency }} {{ convert_money($payment->amount) }}</td>
+                                            <td class="py-2 px-4 whitespace-nowrap" data-date="{{ $payment->created_at->format('Y-m-d') }}">{{ $payment->created_at->format('d M Y') }}</td>
                                         </tr>
                                     @endforeach
                                 @else
@@ -154,6 +154,8 @@
     <script src="https://cdn.datatables.net/datetime/1.5.1/js/dataTables.dateTime.min.js"></script>
 
     <script>
+        window.paymentsCurrency = @json(session('currency', 'Tzs'));
+        window.paymentsUsdToTzs = {{ app('usdToTzs') ?? 2500 }};
         $(document).ready(function () {
             // Create date inputs for Service Fees Table
             var serviceMinDate = new DateTime($('#serviceMinDate'), {
@@ -237,7 +239,8 @@
                             let amount = $(row).find('.amount').data('amount') || 0;
                             return sum + parseFloat(amount);
                         }, 0);
-                    $('#serviceTotal').text(total.toLocaleString('en-US', { minimumFractionDigits: 2 }));
+                    let displayTotal = window.paymentsCurrency === 'Usd' ? (total / (window.paymentsUsdToTzs || 2500)).toLocaleString('en-US', { minimumFractionDigits: 2 }) : total.toLocaleString('en-US', { minimumFractionDigits: 2 });
+                    $('#serviceTotal').text(displayTotal);
                 }
             });
 
@@ -260,7 +263,8 @@
                             let amount = $(row).find('.amount').data('amount') || 0;
                             return sum + parseFloat(amount);
                         }, 0);
-                    $('#commissionTotal').text(total.toLocaleString('en-US', { minimumFractionDigits: 2 }));
+                    let displayTotal = window.paymentsCurrency === 'Usd' ? (total / (window.paymentsUsdToTzs || 2500)).toLocaleString('en-US', { minimumFractionDigits: 2 }) : total.toLocaleString('en-US', { minimumFractionDigits: 2 });
+                    $('#commissionTotal').text(displayTotal);
                 }
             });
 

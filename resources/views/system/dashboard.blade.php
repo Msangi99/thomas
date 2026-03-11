@@ -140,10 +140,10 @@
             <div class="p-6">
                 <div class="flex justify-between items-center mb-4">
                     <h5 class="text-lg font-semibold text-gray-800">Weekly Booking Amounts (Paid only)</h5>
-                    <div class="flex space-x-2">
-                        <button class="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded-lg">Week</button>
-                        <button class="px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded-lg">Month</button>
-                        <button class="px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded-lg">Year</button>
+                    <div class="flex space-x-2" id="chartPeriodButtons">
+                        <button type="button" class="chart-period-btn px-3 py-1 text-xs rounded-lg" data-period="week">Week</button>
+                        <button type="button" class="chart-period-btn px-3 py-1 text-xs rounded-lg" data-period="month">Month</button>
+                        <button type="button" class="chart-period-btn px-3 py-1 text-xs rounded-lg" data-period="year">Year</button>
                     </div>
                 </div>
                 <div class="w-full h-64">
@@ -152,47 +152,36 @@
             </div>
         </div>
 
-        <!-- Recent Activity (Placeholder - you can add actual content) -->
+        <!-- Recent Activity (real data) -->
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div class="p-6">
                 <h5 class="text-lg font-semibold text-gray-800 mb-4">Recent Activity</h5>
-                <div class="space-y-4">
-                    <div class="flex items-start">
-                        <div class="p-2 bg-green-100 rounded-lg text-green-600 mr-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                            </svg>
+                <div class="space-y-4 max-h-80 overflow-y-auto">
+                    @forelse ($recentActivity as $activity)
+                        <div class="flex items-start">
+                            <div class="p-2 rounded-lg mr-3 {{ $activity['type'] === 'booking' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600' }}">
+                                @if ($activity['type'] === 'booking')
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                @else
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                @endif
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-sm font-medium text-gray-800">{{ $activity['message'] }}</p>
+                                <p class="text-xs text-gray-500 truncate" title="{{ $activity['detail'] }}">{{ $activity['detail'] }}</p>
+                                @if (isset($activity['amount']) && $activity['amount'] > 0)
+                                    <p class="text-xs text-gray-500">{{ $currency }} {{ convert_money($activity['amount']) }}</p>
+                                @endif
+                                <p class="text-xs text-gray-400 mt-1">{{ $activity['time']->diffForHumans() }}</p>
+                            </div>
                         </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-800">New booking confirmed</p>
-                            <p class="text-xs text-gray-500">Booking #BK-2023-0567 for {{ $currency }} 45,000</p>
-                            <p class="text-xs text-gray-400 mt-1">2 hours ago</p>
-                        </div>
-                    </div>
-                    <div class="flex items-start">
-                        <div class="p-2 bg-blue-100 rounded-lg text-blue-600 mr-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-800">Payment processed</p>
-                            <p class="text-xs text-gray-500">{{ $currency }} 12,500 commission received</p>
-                            <p class="text-xs text-gray-400 mt-1">5 hours ago</p>
-                        </div>
-                    </div>
-                    <div class="flex items-start">
-                        <div class="p-2 bg-purple-100 rounded-lg text-purple-600 mr-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-800">Profile updated</p>
-                            <p class="text-xs text-gray-500">Company contact information changed</p>
-                            <p class="text-xs text-gray-400 mt-1">1 day ago</p>
-                        </div>
-                    </div>
+                    @empty
+                        <p class="text-sm text-gray-500">No recent activity.</p>
+                    @endforelse
                 </div>
             </div>
         </div>
@@ -283,83 +272,85 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Weekly Amounts Chart with enhanced styling
-    const ctx = document.getElementById('weeklyChart').getContext('2d');
-    const weeklyData = @json($weeklyAmounts);
+    const chartData = {
+        week: @json($weeklyAmounts),
+        month: @json($weeklyAmountsMonth),
+        year: @json($weeklyAmountsYear)
+    };
+    const currencySymbol = @json($currency);
+    let weeklyChart = null;
 
-    const labels = weeklyData.map(item => item.date);
-    const amounts = weeklyData.map(item => item.amount);
-
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Paid booking amount ({{ $currency }})',
-                data: amounts,
-                borderColor: '#3B82F6',
-                backgroundColor: 'rgba(59, 130, 246, 0.05)',
-                borderWidth: 2,
-                pointBackgroundColor: '#3B82F6',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2,
-                pointRadius: 4,
-                pointHoverRadius: 6,
-                fill: true,
-                tension: 0.3,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    backgroundColor: '#1F2937',
-                    titleFont: {
-                        size: 14,
-                        weight: 'bold'
-                    },
-                    bodyFont: {
-                        size: 12
-                    },
-                    padding: 12,
-                    cornerRadius: 8,
-                    displayColors: false,
-                    callbacks: {
-                        label: function(context) {
-                            return 'Amount: {{ $currency }} ' + context.parsed.y.toLocaleString();
-                        }
-                    }
-                }
+    function renderChart(period) {
+        const data = chartData[period] || chartData.week;
+        const labels = data.map(item => item.date);
+        const amounts = data.map(item => item.amount);
+        const ctx = document.getElementById('weeklyChart').getContext('2d');
+        if (weeklyChart) weeklyChart.destroy();
+        weeklyChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Paid booking amount (' + currencySymbol + ')',
+                    data: amounts,
+                    borderColor: '#3B82F6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#3B82F6',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    fill: true,
+                    tension: 0.3,
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        drawBorder: false,
-                        color: '#E5E7EB'
-                    },
-                    ticks: {
-                        color: '#6B7280',
-                        callback: function(value) {
-                            return '{{ $currency }} ' + value.toLocaleString();
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1F2937',
+                        callbacks: {
+                            label: function(context) {
+                                return 'Amount: ' + currencySymbol + ' ' + context.parsed.y.toLocaleString();
+                            }
                         }
                     }
                 },
-                x: {
-                    grid: {
-                        display: false,
-                        drawBorder: false
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { drawBorder: false, color: '#E5E7EB' },
+                        ticks: {
+                            color: '#6B7280',
+                            callback: function(value) { return currencySymbol + ' ' + value.toLocaleString(); }
+                        }
                     },
-                    ticks: {
-                        color: '#6B7280'
+                    x: {
+                        grid: { display: false, drawBorder: false },
+                        ticks: { color: '#6B7280' }
                     }
                 }
             }
-        }
+        });
+    }
+
+    document.querySelectorAll('.chart-period-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const period = this.getAttribute('data-period');
+            document.querySelectorAll('.chart-period-btn').forEach(function(b) {
+                b.classList.remove('bg-blue-50', 'text-blue-600');
+                b.classList.add('bg-gray-100', 'text-gray-600');
+            });
+            this.classList.remove('bg-gray-100', 'text-gray-600');
+            this.classList.add('bg-blue-50', 'text-blue-600');
+            renderChart(period);
+        });
     });
+    document.querySelector('[data-period="week"]').classList.add('bg-blue-50', 'text-blue-600');
+    document.querySelector('[data-period="week"]').classList.remove('bg-gray-100');
+    renderChart('week');
 </script>
 @endsection

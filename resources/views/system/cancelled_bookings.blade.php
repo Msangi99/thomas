@@ -274,7 +274,7 @@ $(document).ready(function() {
                 next: "Next",
                 previous: "Previous"
             },
-            emptyTable: "No cancelled bookings data available in table"
+            emptyTable: ""
         },
         initComplete: function() {
             // Add custom styling to search box

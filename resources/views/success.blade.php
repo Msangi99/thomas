@@ -44,14 +44,14 @@
                                                 <li class="mb-2"><strong>Booking Code:</strong> <span
                                                         class="float-right">{{ $data->booking_code }}</span></li>
                                                 <li class="mb-2"><strong>Bus Route:</strong> <span
-                                                        class="float-right">{{ $data->bus->route->from ?? 'N/A' }} To
-                                                        {{ $data->bus->route->to ?? 'N/A' }}</span></li>
+                                                        class="float-right">{{ $data->schedule->from ?? $data->bus->route->from ?? 'N/A' }} To
+                                                        {{ $data->schedule->to ?? $data->bus->route->to ?? 'N/A' }}</span></li>
                                                 <li class="mb-2"><strong>User Route:</strong> <span
                                                         class="float-right">{{ $data->pickup_point ?? 'N/A' }} To
                                                         {{ $data->dropping_point ?? 'N/A' }}</span></li>
                                                 <li class="mb-2"><strong>Travel Date:</strong> <span
                                                         class="float-right">{{ $data->travel_date }}
-                                                        {{ $data->bus->route->route_start ?? 'A/N'}}</span></li>
+                                                        {{ $data->schedule->start ?? $data->bus->route->route_start ?? 'A/N'}}</span></li>
                                                 <li class="mb-2"><strong>Seat:</strong> <span
                                                         class="float-right">{{ $data->seat }}</span></li>
                                             </ul>

@@ -8,7 +8,7 @@
     <!-- Tailwind CSS -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
-    <div class="container mx-auto px-4 py-6 max-w-4xl">
+    <div class="container mx-auto px-4 py-6 max-w-full">
         <div class="bg-white rounded-lg shadow-md overflow-hidden">
             <div class="p-4 bg-gradient-to-r from-blue-500 to-blue-400 text-white flex flex-col sm:flex-row justify-between items-center gap-4">
                 <h2 class="text-lg font-semibold">Travel Insurance Data</h2>
@@ -91,8 +91,8 @@
                                     <td class="py-2 px-4" data-date="{{ \Carbon\Carbon::parse($bima->start_date)->format('Y-m-d') }}">{{ \Carbon\Carbon::parse($bima->start_date)->format('d M Y') }}</td>
                                     <td class="py-2 px-4" data-date="{{ \Carbon\Carbon::parse($bima->end_date)->format('Y-m-d') }}">{{ \Carbon\Carbon::parse($bima->end_date)->format('d M Y') }}</td>
                                     <td class="py-2 px-4">{{ $bima->valid_days }} days</td>
-                                    <td class="py-2 px-4 amount" data-amount="{{ $bima->amount }}">{{ $currency }} {{ number_format($bima->amount, 2, '.', ',') }}</td>
-                                    <td class="py-2 px-4 amount" data-amount="{{ $bima->bima_vat }}">{{ $currency }} {{ number_format($bima->bima_vat, 2, '.', ',') }}</td>
+                                    <td class="py-2 px-4 amount" data-amount="{{ $bima->amount }}">{{ $currency }} {{ convert_money($bima->amount) }}</td>
+                                    <td class="py-2 px-4 amount" data-amount="{{ $bima->bima_vat }}">{{ $currency }} {{ convert_money($bima->bima_vat) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -112,6 +112,8 @@
     <script src="https://cdn.datatables.net/datetime/1.5.1/js/dataTables.dateTime.min.js"></script>
 
     <script>
+        window.bimaCurrency = @json(session('currency', 'Tzs'));
+        window.bimaUsdToTzs = {{ app('usdToTzs') ?? 2500 }};
         $(document).ready(function() {
             // Create date inputs
             var minDate = new DateTime($('#minDate'), {
@@ -180,7 +182,8 @@
                             let amount = $(row).find('.amount').data('amount') || 0;
                             return sum + parseFloat(amount);
                         }, 0);
-                    $('#bimaTotal').text(total.toLocaleString('en-US', { minimumFractionDigits: 2 }));
+                    let displayTotal = window.bimaCurrency === 'Usd' ? (total / (window.bimaUsdToTzs || 2500)).toLocaleString('en-US', { minimumFractionDigits: 2 }) : total.toLocaleString('en-US', { minimumFractionDigits: 2 });
+                    $('#bimaTotal').text(displayTotal);
                 }
             });
 

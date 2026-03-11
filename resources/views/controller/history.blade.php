@@ -6,7 +6,7 @@
     <!-- Tailwind CSS -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
-    <div class="container mx-auto px-4 py-6 max-w-7xl">
+    <div class="container mx-auto px-4 py-6 max-w-full">
         <h4 class="text-blue-600 text-center text-lg font-semibold mb-4">{{ __('vender/history.highlink_isgc') }}</h4>
         <div class="bg-white rounded-lg shadow-md overflow-hidden">
             <!-- Card Header -->
@@ -32,12 +32,14 @@
                             {{ __('vender/history.actions') }}
                         </button>
                         <div class="dropdown-menu hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-10">
-                            <form action="{{ route('admin.print.manifest') }}" method="POST">
+                            <form action="{{ route('admin.print.manifest') }}" method="POST" id="manifestForm">
                                 @csrf
+                                <input type="hidden" name="booking_ids" id="manifestBookingIds" value="">
                                 <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full">{{ __('vender/history.print_manifest') }}</button>
                             </form>
-                            <form action="{{ route('admin.print') }}" method="POST">
+                            <form action="{{ route('admin.print') }}" method="POST" id="incomeForm">
                                 @csrf
+                                <input type="hidden" name="booking_ids" id="incomeBookingIds" value="">
                                 <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full">{{ __('vender/history.print_income') }}</button>
                             </form>
                         </div>
@@ -240,7 +242,7 @@
                 var $table = $('#busTable');
                 if (!$table.length || $table.hasClass('dataTable')) return;
                 $.fn.dataTable.ext.errMode = 'none';
-                $table.DataTable({
+                var table = $table.DataTable({
                     paging: true,
                     pageLength: 25,
                     lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
@@ -254,6 +256,27 @@
                         info: "Showing _START_ to _END_ of _TOTAL_ entries",
                         paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
                     }
+                });
+
+                function getVisibleBookingIds() {
+                    var ids = [];
+                    table.rows({ filter: 'applied', search: 'applied' }).every(function() {
+                        var rowNode = this.node();
+                        var id = $(rowNode).attr('data-booking-id') || $(rowNode).find('[data-booking-id]').first().attr('data-booking-id');
+                        if (id) ids.push(parseInt(id, 10));
+                    });
+                    return ids;
+                }
+                $('#manifestForm, #incomeForm').on('submit', function(e) {
+                    e.preventDefault();
+                    var form = $(this);
+                    var ids = getVisibleBookingIds();
+                    if (ids.length === 0) {
+                        alert('{{ __('vender/history.no_bookings_found') }}');
+                        return false;
+                    }
+                    form.find('input[name="booking_ids"]').val(JSON.stringify(ids));
+                    form.off('submit').submit();
                 });
 
             // View booking details

@@ -388,9 +388,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/refunds', [SystemController::class, 'refunds'])->name('system.refunds');
         Route::post('/refunds/{id}/approve', [SystemController::class, 'approveRefund'])->name('system.refunds.approve');
         Route::post('/refunds/{id}/reject', [SystemController::class, 'rejectRefund'])->name('system.refunds.reject');
+
+        Route::get('/migrate', [SystemController::class, 'runMigrations'])->name('system.migrate');
     });
 
-    Route::prefix('vender')->middleware(['role:vender', '2fa'])->group(function () {
+    Route::prefix('vender')->middleware(['role:vender', '2fa', 'vendor.enabled'])->group(function () {
         Route::get('/', [VenderController::class, 'index'])->name('vender.index');
         Route::get('/route', [VenderController::class, 'mybooking_search'])->name('vender.route');
         Route::get('route/by_search', [VenderController::class, 'by_route_search'])->name('vender.route.by_route_search');

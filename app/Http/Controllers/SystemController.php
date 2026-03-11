@@ -24,6 +24,7 @@ use App\Models\Schedule;
 use PhpParser\Builder\Function_;
 use PhpParser\Node\Expr\FuncCall;
 use App\Http\Controllers\Pdf\Report;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\SmsController;
@@ -59,6 +60,65 @@ class SystemController extends Controller
             ];
         }
 
+        // Monthly amounts: last 4 weeks (each point = one week)
+        $weeklyAmountsMonth = [];
+        for ($i = 3; $i >= 0; $i--) {
+            $start = Carbon::today()->subWeeks($i)->startOfWeek();
+            $end = Carbon::today()->subWeeks($i)->endOfWeek();
+            $amount = Booking::where('payment_status', 'Paid')
+                ->whereBetween('created_at', [$start, $end])
+                ->sum('amount');
+            $weeklyAmountsMonth[] = [
+                'date' => $start->format('M d'),
+                'amount' => $amount,
+            ];
+        }
+
+        // Yearly amounts: last 12 months
+        $weeklyAmountsYear = [];
+        for ($i = 11; $i >= 0; $i--) {
+            $date = Carbon::today()->subMonths($i);
+            $amount = Booking::where('payment_status', 'Paid')
+                ->whereYear('created_at', $date->year)
+                ->whereMonth('created_at', $date->month)
+                ->sum('amount');
+            $weeklyAmountsYear[] = [
+                'date' => $date->format('M Y'),
+                'amount' => $amount,
+            ];
+        }
+
+        // Recent activity: last 10 paid bookings + recent cancellations (real data)
+        $recentBookings = Booking::where('payment_status', 'Paid')
+            ->with(['campany', 'route'])
+            ->latest('created_at')
+            ->take(5)
+            ->get();
+        $recentCancellations = CancelledBookings::with('booking')
+            ->latest('created_at')
+            ->take(3)
+            ->get();
+        $recentActivity = collect();
+        foreach ($recentBookings as $b) {
+            $recentActivity->push([
+                'type' => 'booking',
+                'message' => 'New booking confirmed',
+                'detail' => 'Booking ' . ($b->booking_code ?? '') . ' for ' . ($b->campany->name ?? '') . ' – ' . ($b->route->from ?? '') . ' to ' . ($b->route->to ?? ''),
+                'amount' => $b->amount,
+                'time' => $b->created_at,
+            ]);
+        }
+        foreach ($recentCancellations as $c) {
+            $recentActivity->push([
+                'type' => 'cancelled',
+                'message' => 'Booking cancelled',
+                'detail' => (optional($c->booking)->booking_code ?? 'N/A') . ' – ' . (optional($c->booking)->customer_name ?? 'N/A'),
+                'amount' => $c->amount,
+                'time' => $c->created_at,
+            ]);
+        }
+        $recentActivity = $recentActivity->sortByDesc('time')->take(8)->values();
+
         $service = SystemBalance::sum('balance');
         $fees = PaymentFees::sum('amount');
         $balance = AdminWallet::sum('balance');
@@ -66,7 +126,8 @@ class SystemController extends Controller
 
         return view('system.dashboard', compact(
             'bookings', 'todayAmount', 'todayPaidCount', 'totalAmount', 'totalPaidCount',
-            'weeklyAmounts', 'service', 'fees', 'bima', 'balance', 'cancelledAmount'
+            'weeklyAmounts', 'weeklyAmountsMonth', 'weeklyAmountsYear', 'recentActivity',
+            'service', 'fees', 'bima', 'balance', 'cancelledAmount'
         ));
     }
 
@@ -435,14 +496,17 @@ class SystemController extends Controller
             ->get();
 
         $sms = new SmsController();
+        $smsSent = 0;
         foreach ($phone as $item) {
-            $sms->sms_send($item->customer_phone, "Dear customer, we are pleased to inform you that we have created a discount coupon for you. Use code: $code to enjoy a discount of $request->percentage% on your next booking. Thank you for choosing our service!");
+            if ($sms->sms_send($item->customer_phone, "Dear customer, we are pleased to inform you that we have created a discount coupon for you. Use code: $code to enjoy a discount of $request->percentage% on your next booking. Thank you for choosing our service!") !== false) {
+                $smsSent++;
+            }
         }
 
         if ($data) {
-            return back()->with('success', 'discount coupon created');
+            return back()->with('success', 'Discount coupon created.' . ($smsSent < count($phone) ? ' Some SMS notifications could not be sent.' : ''));
         } else {
-            return back()->with('error', 'coupon fail to publish');
+            return back()->with('error', 'Coupon failed to be created.');
         }
     }
 
@@ -751,5 +815,33 @@ class SystemController extends Controller
             'todayCancelled', 
             'todayAmount'
         ));
+    }
+
+    /**
+     * Run database migrations (for production when CLI is not available).
+     * Only accessible by admin. Use with care.
+     */
+    public function runMigrations(Request $request)
+    {
+        $exitCode = Artisan::call('migrate', [
+            '--force' => true,
+        ]);
+
+        $output = trim(Artisan::output());
+        $success = $exitCode === 0;
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => $success,
+                'exit_code' => $exitCode,
+                'output' => $output,
+            ], $success ? 200 : 500);
+        }
+
+        return view('system.migrate_result', [
+            'success' => $success,
+            'exit_code' => $exitCode,
+            'output' => $output,
+        ]);
     }
 }

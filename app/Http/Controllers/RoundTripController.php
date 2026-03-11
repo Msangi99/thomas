@@ -469,11 +469,32 @@ class RoundTripController extends Controller
         $price = $request->total_amount;
 
         $bus_info = session()->get('booking_form', []);
+        if (empty($bus_info['bus_id']) || empty($bus_info['travel_date'])) {
+            return redirect()->route('round.trip')->with('error', 'Session expired. Please try again.');
+        }
+
+        $selected = is_array($seats) ? $seats : (is_string($seats) ? array_map('trim', explode(',', $seats)) : []);
+        $selected = array_filter($selected);
+
+        $booked = Booking::where('bus_id', $bus_info['bus_id'])
+            ->where('travel_date', $bus_info['travel_date'])
+            ->whereIn('payment_status', ['Paid', 'Reserved', 'resaved'])
+            ->pluck('seat')
+            ->flatMap(fn ($s) => explode(',', $s))
+            ->map(fn ($s) => trim($s))
+            ->unique()
+            ->values()
+            ->toArray();
+
+        $alreadyBooked = array_intersect($selected, $booked);
+        if (!empty($alreadyBooked)) {
+            return redirect()->route('round.trip.seats')->with('error', 'One or more selected seats (e.g. ' . implode(', ', array_slice($alreadyBooked, 0, 3)) . ') are no longer available. Please choose different seats.');
+        }
+
         $bus_info['total_amount'] = $price;
         $bus_info['seats'] = $seats;
 
         session()->put('booking_form', $bus_info);
-
 
         return redirect()->route('round.trip.payment');
     }
@@ -535,6 +556,16 @@ class RoundTripController extends Controller
         $bus_info['has_excess_luggage'] = $request->excess_luggage ?? 0;
         $bus_info['excess_luggage_fee'] = 0; // Initialize to 0
         session()->put('booking_form', $bus_info);
+
+        if (!empty($bus_info['discount'])) {
+            $couponCheck = Discount::where('code', $bus_info['discount'])->first();
+            if (!$couponCheck) {
+                return redirect()->route('round.trip.payment')->with('error', 'Invalid coupon code. Please check and try again.');
+            }
+            if (!$couponCheck->isValid()) {
+                return redirect()->route('round.trip.payment')->with('error', 'This coupon has expired or has reached its usage limit.');
+            }
+        }
 
         $ins = 0;
         $dis = 0;
@@ -1066,9 +1097,12 @@ class RoundTripController extends Controller
 
     private function applyDiscount($amount)
     {
-        $coupon = session()->get('booking_form')['discount'];
+        $coupon = session()->get('booking_form')['discount'] ?? '';
+        if (empty($coupon)) {
+            return session()->get('booking_form')['total_amount'];
+        }
         $discount = Discount::where('code', $coupon)->first();
-        if (is_null($discount) || is_null($discount->booking) || $discount->booking->count() >= $discount->used) {
+        if (is_null($discount) || !$discount->isValid()) {
             return session()->get('booking_form')['total_amount'];
         }
         $bus_info = session()->get('booking_form', []);

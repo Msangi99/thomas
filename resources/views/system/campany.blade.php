@@ -78,9 +78,16 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $i++ }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $campany->name }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $campany->user->name }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $campany->user->contact }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        @php
+                                            $contact = preg_replace('/\s+/', '', $campany->user->contact ?? '');
+                                            $contact = preg_replace('/^\+?255/', '', $contact);
+                                            $contact = ltrim($contact, '0');
+                                            echo $contact !== '' ? '255' . $contact : '—';
+                                        @endphp
+                                    </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 amount" data-amount="{{ $campany->balance->amount ?? 0 }}">
-                                        {{ $currency }} {{ number_format($campany->balance->amount ?? 0, 2) }}
+                                        {{ $currency }} {{ convert_money($campany->balance->amount ?? 0) }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center space-x-2">
@@ -141,6 +148,8 @@
 
 <script>
 $(document).ready(function() {
+    window.companyCurrency = @json(session('currency', 'Tzs'));
+    window.companyUsdToTzs = {{ app('usdToTzs') ?? 2500 }};
     const companyTable = $('#companyTable').DataTable({
         responsive: true,
         paging: true,
@@ -185,7 +194,8 @@ $(document).ready(function() {
                     let amount = $(row).find('.amount').data('amount') || 0;
                     return sum + parseFloat(amount);
                 }, 0);
-            $('#companyTotal').text('{{ $currency }} ' + total.toLocaleString('en-US', { minimumFractionDigits: 2 }));
+            let displayTotal = window.companyCurrency === 'Usd' ? (total / (window.companyUsdToTzs || 2500)).toLocaleString('en-US', { minimumFractionDigits: 2 }) : total.toLocaleString('en-US', { minimumFractionDigits: 2 });
+            $('#companyTotal').text('{{ $currency }} ' + displayTotal);
         }
     });
 
