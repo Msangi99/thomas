@@ -15,10 +15,10 @@
                 <div class="flex flex-col">
                     <h2 class="text-lg font-semibold mb-2">{{ __('vender/history.booking_history') }}</h2>
                     <div class="flex flex-wrap gap-3 text-sm font-medium">
-                        <span>{{ __('vender/history.total_payment') }} <span id="totalPayment">{{ number_format($totalPayment ?? 0, 2) }}</span></span>
-                        <span>{{ __('vender/history.total_discount') }} <span id="totalDiscount">{{ number_format($totalDiscount ?? 0, 2) }}</span></span>
-                        <span>{{ __('vender/history.total_vat') }} <span id="totalVAT">{{ number_format($totalVAT ?? 0, 2) }}</span></span>
-                        <span>{{ __('vender/history.grand_total') }} <span id="grandTotal">{{ number_format($grandTotal ?? 0, 2) }}</span></span>
+                        <span>{{ __('vender/history.total_payment') }} {{ $currency ?? 'TSH' }} <span id="totalPayment">{{ convert_money($totalPayment ?? 0) }}</span></span>
+                        <span>{{ __('vender/history.total_discount') }} {{ $currency ?? 'TSH' }} <span id="totalDiscount">{{ convert_money($totalDiscount ?? 0) }}</span></span>
+                        <span>{{ __('vender/history.total_vat') }} {{ $currency ?? 'TSH' }} <span id="totalVAT">{{ convert_money($totalVAT ?? 0) }}</span></span>
+                        <span>{{ __('vender/history.grand_total') }} {{ $currency ?? 'TSH' }} <span id="grandTotal">{{ convert_money($grandTotal ?? 0) }}</span></span>
                     </div>
                 </div>
                 <div class="flex flex-col sm:flex-row items-center gap-2 flex-wrap">
@@ -115,7 +115,7 @@
                                                     data-fee="{{ $booking->fee ?? '0' }}"
                                                     data-vender_fee="{{ $booking->vender_fee ?? '0' }}"
                                                     data-fee_vat="{{ $booking->fee_vat ?? '0' }}">
-                                                    {{ $booking->amount + $booking->vat ?? __('vender/history.na') }}
+                                                    {{ $currency ?? 'TSH' }} {{ convert_money(($booking->amount ?? 0) + ($booking->vat ?? 0)) }}
                                                 </p>
                                             </div>
                                         </td>
@@ -123,25 +123,26 @@
                                             <div class="flex flex-col">
                                                 <p class="text-gray-500 font-medium mb-0">
                                                     {{ __('vender/history.system') }}
-                                                    {{ $booking->fee ?? __('vender/history.na') }}</p>
+                                                    {{ $currency ?? 'TSH' }} {{ convert_money($booking->fee ?? 0) }}</p>
                                                 <p class="text-gray-500 font-medium mb-0">
                                                     {{ __('vender/history.vendor') }}
-                                                    {{ $booking->vender_fee ?? __('vender/history.na') }}</p>
+                                                    {{ $currency ?? 'TSH' }} {{ convert_money($booking->vender_fee ?? 0) }}</p>
                                                 <p class="text-gray-500 font-medium mb-0">
                                                     {{ __('vender/history.discount') }}
-                                                    {{ $booking->discount_amount ?? __('vender/history.na') }}</p>
+                                                    {{ $currency ?? 'TSH' }} {{ convert_money($booking->discount_amount ?? 0) }}</p>
                                                 <p class="text-gray-500 font-medium mb-0">{{ __('vender/history.vat') }}
-                                                    {{ $booking->vat ?? __('vender/history.na') }}</p>
+                                                    {{ $currency ?? 'TSH' }} {{ convert_money($booking->vat ?? 0) }}</p>
                                             </div>
                                         </td>
                                         <td class="py-2 px-4">
                                             <div class="flex flex-col">
+                                                @php $rowTotal = round(($booking->fee ?? 0) + ($booking->vender_fee ?? 0) + ($booking->amount ?? 0) + ($booking->vat ?? 0) + ($booking->fee_vat ?? 0)); @endphp
                                                 <p class="text-gray-500 font-medium mb-0 total-amount"
-                                                    data-total="{{ round($booking->fee + $booking->vender_fee + $booking->amount + $booking->vat + $booking->fee_vat) ?? '0' }}">
-                                                    {{ round($booking->fee + $booking->vender_fee + $booking->amount + $booking->vat + $booking->fee_vat) ?? __('vender/history.na') }}
+                                                    data-total="{{ $rowTotal }}">
+                                                    {{ $currency ?? 'TSH' }} {{ convert_money($rowTotal) }}
                                                 </p>
                                                 <p class="hidden text-gray-500 font-medium mb-0">
-                                                    {{ round($booking->fee + $booking->vender_fee + $booking->amount + $booking->vat + $booking->service + $booking->vender_service + $booking->fee_vat) ?? __('vender/history.na') }}
+                                                    {{ $currency ?? 'TSH' }} {{ convert_money(round(($booking->fee ?? 0) + ($booking->vender_fee ?? 0) + ($booking->amount ?? 0) + ($booking->vat ?? 0) + ($booking->service ?? 0) + ($booking->vender_service ?? 0) + ($booking->fee_vat ?? 0))) }}
                                                 </p>
                                             </div>
                                         </td>

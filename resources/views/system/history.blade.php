@@ -16,10 +16,10 @@
                 <div class="flex flex-col">
                     <h2 class="text-lg font-semibold mb-2">Booking History</h2>
                     <div class="flex flex-wrap gap-3 text-sm font-medium">
-                        <span>Total Payment: {{ $currency }} <span id="totalPayment">0</span></span>
-                        <span>Total Discount: {{ $currency }} <span id="totalDiscount">0</span></span>
-                        <span>Total VAT: {{ $currency }} <span id="totalVAT">0</span></span>
-                        <span>Grand Total: {{ $currency }} <span id="grandTotal">0</span></span>
+                        <span>Total Payment: {{ $currency }} <span id="totalPayment">{{ convert_money($totalPayment ?? 0) }}</span></span>
+                        <span>Total Discount: {{ $currency }} <span id="totalDiscount">{{ convert_money($totalDiscount ?? 0) }}</span></span>
+                        <span>Total VAT: {{ $currency }} <span id="totalVAT">{{ convert_money($totalVAT ?? 0) }}</span></span>
+                        <span>Grand Total: {{ $currency }} <span id="grandTotal">{{ convert_money($grandTotal ?? 0) }}</span></span>
                     </div>
                 </div>
                 <div class="flex flex-col sm:flex-row items-center gap-2">
@@ -91,25 +91,26 @@
                                         <td class="py-2 px-4">
                                             <div class="flex flex-col">
                                                 <p class="text-gray-500 mb-0 payment-amount" data-amount="{{ $booking->amount ?? '0' }}" data-vat="{{ $booking->vat ?? '0' }}" data-discount="{{ $booking->discount_amount ?? '0' }}" data-fee="{{ $booking->fee ?? '0' }}" data-vender_fee="{{ $booking->vender_fee ?? '0' }}" data-fee_vat="{{ $booking->fee_vat ?? '0' }}">
-                                                    {{ $booking->amount + $booking->vat ?? 'N/A' }}
+                                                    {{ $currency }} {{ convert_money(($booking->amount ?? 0) + ($booking->vat ?? 0)) }}
                                                 </p>
                                             </div>
                                         </td>
                                         <td class="py-2 px-4">
                                             <div class="flex flex-col">
-                                                <p class="text-gray-500 font-medium mb-0">System: {{ $booking->fee ?? 'N/A' }}</p>
-                                                <p class="text-gray-500 font-medium mb-0">Vendor: {{ $booking->vender_fee ?? 'N/A' }}</p>
-                                                <p class="text-gray-500 font-medium mb-0">Discount: {{ $booking->discount_amount ?? 'N/A' }}</p>
-                                                <p class="text-gray-500 font-medium mb-0">Levies: {{ $booking->vat ?? 'N/A' }}</p>
+                                                <p class="text-gray-500 font-medium mb-0">System: {{ $currency }} {{ convert_money($booking->fee ?? 0) }}</p>
+                                                <p class="text-gray-500 font-medium mb-0">Vendor: {{ $currency }} {{ convert_money($booking->vender_fee ?? 0) }}</p>
+                                                <p class="text-gray-500 font-medium mb-0">Discount: {{ $currency }} {{ convert_money($booking->discount_amount ?? 0) }}</p>
+                                                <p class="text-gray-500 font-medium mb-0">Levies: {{ $currency }} {{ convert_money($booking->vat ?? 0) }}</p>
                                             </div>
                                         </td>
                                         <td class="py-2 px-4">
                                             <div class="flex flex-col">
-                                                <p class="text-gray-500 font-medium mb-0 total-amount" data-total="{{ round($booking->fee + $booking->vender_fee + $booking->amount + $booking->vat + $booking->fee_vat) ?? '0' }}">
-                                                    {{ round($booking->fee + $booking->vender_fee + $booking->amount + $booking->vat + $booking->fee_vat) ?? 'N/A' }}
+                                                @php $rowTotal = round(($booking->fee ?? 0) + ($booking->vender_fee ?? 0) + ($booking->amount ?? 0) + ($booking->vat ?? 0) + ($booking->fee_vat ?? 0)); @endphp
+                                                <p class="text-gray-500 font-medium mb-0 total-amount" data-total="{{ $rowTotal }}">
+                                                    {{ $currency }} {{ convert_money($rowTotal) }}
                                                 </p>
                                                 <p class="hidden text-gray-500 font-medium mb-0">
-                                                    {{ round($booking->fee + $booking->vender_fee + $booking->amount + $booking->vat + $booking->service + $booking->vender_service + $booking->fee_vat) ?? 'N/A' }}
+                                                    {{ $currency }} {{ convert_money(round(($booking->fee ?? 0) + ($booking->vender_fee ?? 0) + ($booking->amount ?? 0) + ($booking->vat ?? 0) + ($booking->service ?? 0) + ($booking->vender_service ?? 0) + ($booking->fee_vat ?? 0))) }}
                                                 </p>
                                             </div>
                                         </td>
@@ -181,6 +182,16 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <script>
+        window.historyCurrency = @json(session('currency', 'Tsh'));
+        window.historyUsdToTzs = @json(app('usdToTzs') ?? 2500);
+
+        function formatAmount(tzsAmount) {
+            const isUsd = (window.historyCurrency || '').toLowerCase() === 'usd';
+            const rate = window.historyUsdToTzs || 2500;
+            const value = isUsd ? (tzsAmount / rate) : tzsAmount;
+            return parseFloat(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
         $(document).ready(function() {
             // Initialize DataTable
             DataTable.ext.errMode = 'none';
@@ -217,10 +228,10 @@
                             grandTotal += total;
                         });
 
-                    $('#totalPayment').text(totalPayment.toLocaleString('en-US', { minimumFractionDigits: 2 }));
-                    $('#totalDiscount').text(totalDiscount.toLocaleString('en-US', { minimumFractionDigits: 2 }));
-                    $('#totalVAT').text(totalVAT.toLocaleString('en-US', { minimumFractionDigits: 2 }));
-                    $('#grandTotal').text(grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 }));
+                    $('#totalPayment').text(formatAmount(totalPayment));
+                    $('#totalDiscount').text(formatAmount(totalDiscount));
+                    $('#totalVAT').text(formatAmount(totalVAT));
+                    $('#grandTotal').text(formatAmount(grandTotal));
                 }
             });
 

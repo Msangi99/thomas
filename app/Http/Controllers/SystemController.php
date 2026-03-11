@@ -324,8 +324,13 @@ class SystemController extends Controller
         }
 
         $bookings = $query->where('payment_status', 'Paid')->latest()->get();
-        return view('system.history', compact('bookings'));
-        //return $bookings;
+
+        $totalPayment = $bookings->sum(fn ($b) => ($b->amount ?? 0) + ($b->vat ?? 0));
+        $totalDiscount = $bookings->sum('discount_amount');
+        $totalVAT = $bookings->sum('vat');
+        $grandTotal = $bookings->sum(fn ($b) => round(($b->fee ?? 0) + ($b->vender_fee ?? 0) + ($b->amount ?? 0) + ($b->vat ?? 0) + ($b->fee_vat ?? 0)));
+
+        return view('system.history', compact('bookings', 'totalPayment', 'totalDiscount', 'totalVAT', 'grandTotal'));
     }
 
     public function print(Request $request)
