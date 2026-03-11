@@ -342,6 +342,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/history', [SystemController::class, 'history'])->name('system.history');
         Route::get('/cancelled-bookings', [SystemController::class, 'cancelled_bookings'])->name('system.cancelled_bookings');
         Route::post('/print', [SystemController::class, 'print'])->name('system.print');
+        Route::post('/manifest', [AdminController::class, 'manifest'])->name('system.print.manifest');
         Route::post('/transactions/filter', [SystemController::class, 'filter'])->name('transactions.filter');
         Route::post('/transactions/{transaction}/complete/{campany}/{vender}', [SystemController::class, 'complete'])->name('transactions.complete');
         Route::post('/transactions/{transaction}/cancel/{campany}/{vender}', [SystemController::class, 'cancel'])->name('transactions.cancel');

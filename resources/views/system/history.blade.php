@@ -39,7 +39,7 @@
                             Actions
                         </button>
                         <div class="dropdown-menu hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-10">
-                            <form action="{{ route('admin.print.manifest') }}" method="POST" id="manifestForm">
+                            <form action="{{ route('system.print.manifest') }}" method="POST" id="manifestForm">
                                 @csrf
                                 <input type="hidden" name="data" id="manifestData">
                                 <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Print Manifest</button>

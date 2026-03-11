@@ -1020,14 +1020,21 @@ $q->where('id', auth()->user()->campany->id);
 
     public function manifest(Request $request)
     {
-        $companyId = Auth::user()->campany->id ?? null;
-        if (!$companyId) {
+        $user = Auth::user();
+        $isAdmin = $user->isAdmin();
+        $companyId = $isAdmin ? null : ($user->campany->id ?? null);
+
+        if (!$isAdmin && !$companyId) {
             return redirect()->back()->with('error', 'No company associated with your account.');
+        }
+
+        if ($isAdmin && !$request->filled('data') && !$request->filled('booking_ids')) {
+            return redirect()->back()->with('error', 'Please select bookings for manifest.');
         }
 
         $data = null;
 
-        if ($request->filled('start_date') && $request->filled('end_date')) {
+        if ($request->filled('start_date') && $request->filled('end_date') && $companyId) {
             $bookings = Booking::with(['campany', 'schedule', 'bus.route'])
                 ->where('campany_id', $companyId)
                 ->where('payment_status', 'Paid')
@@ -1043,12 +1050,14 @@ $q->where('id', auth()->user()->campany->id);
             $ids = is_array($request->booking_ids) ? $request->booking_ids : (array) json_decode($request->booking_ids, true);
             $ids = array_filter(array_map('intval', $ids));
             if (!empty($ids)) {
-                $bookings = Booking::with(['campany', 'schedule', 'bus.route'])
-                    ->where('campany_id', $companyId)
+                $query = Booking::with(['campany', 'schedule', 'bus.route'])
                     ->whereIn('id', $ids)
                     ->where('payment_status', 'Paid')
-                    ->orderBy('seat')
-                    ->get();
+                    ->orderBy('seat');
+                if ($companyId) {
+                    $query->where('campany_id', $companyId);
+                }
+                $bookings = $query->get();
                 $data = $this->bookingsToReportArray($bookings);
             }
         }
@@ -1057,7 +1066,7 @@ $q->where('id', auth()->user()->campany->id);
             $data = json_decode($request->data, true);
         }
 
-        if ($data === null) {
+        if ($data === null && $companyId) {
             $bookings = Booking::with(['campany', 'schedule', 'bus.route'])
                 ->where('campany_id', $companyId)
                 ->where('payment_status', 'Paid')
