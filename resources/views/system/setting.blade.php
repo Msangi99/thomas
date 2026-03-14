@@ -60,11 +60,8 @@
                     <div>
                         <label for="international" class="block text-sm font-medium text-gray-700 mb-1">Foreign Insurance Amount</label>
                         <div class="relative rounded-md shadow-sm">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span class="text-gray-500 sm:text-sm">$</span>
-                            </div>
                             <input type="number" id="international" name="international" value="{{ old('international', $settings->international ?? '') }}" step="0.01" required
-                                   class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-12 py-2 border border-gray-300 rounded-md" placeholder="0.00">
+                                   class="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 pr-12 py-2 border border-gray-300 rounded-md" placeholder="0.00">
                         </div>
                         @error('international')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -75,11 +72,8 @@
                     <div>
                         <label for="local" class="block text-sm font-medium text-gray-700 mb-1">Local Insurance Amount</label>
                         <div class="relative rounded-md shadow-sm">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span class="text-gray-500 sm:text-sm">$</span>
-                            </div>
                             <input type="number" id="local" name="local" value="{{ old('local', $settings->local ?? '') }}" step="0.01" required
-                                   class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-12 py-2 border border-gray-300 rounded-md" placeholder="0.00">
+                                   class="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 pr-12 py-2 border border-gray-300 rounded-md" placeholder="0.00">
                         </div>
                         @error('local')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -103,11 +97,8 @@
                     <div>
                         <label for="service" class="block text-sm font-medium text-gray-700 mb-1">Service Amount</label>
                         <div class="relative rounded-md shadow-sm">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span class="text-gray-500 sm:text-sm">$</span>
-                            </div>
                             <input type="number" id="service" name="service" value="{{ old('service', $settings->service ?? '') }}" step="0.01" required
-                                   class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-12 py-2 border border-gray-300 rounded-md" placeholder="0.00">
+                                   class="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 pr-12 py-2 border border-gray-300 rounded-md" placeholder="0.00">
                         </div>
                         @error('service')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>

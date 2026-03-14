@@ -38,6 +38,7 @@
                                 <option value="system-income">System Income</option>
                                 <option value="payment-request">Payment Request</option>
                                 <option value="local-admins">Local Admins</option>
+                                <option value="refunds">Refunds</option>
                                 <option value="cards">Payments Cards</option>
                             </select>
                         </div>
