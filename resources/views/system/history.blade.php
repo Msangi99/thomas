@@ -69,7 +69,7 @@
                                         <td class="py-2 px-4">
                                             <div class="flex flex-col">
                                                 <h6 class="font-medium mb-0">{{ $booking->campany->name ?? 'N/A' }}</h6>
-                                                <p class="text-gray-500 mb-0">{{ $booking->route_name->from ?? 'N/A' }} to {{ $booking->route_name->to ?? 'N/A' }}</p>
+                                                <p class="text-gray-500 mb-0">{{ $booking->schedule->from ?? $booking->route_name->from ?? 'N/A' }} to {{ $booking->schedule->to ?? $booking->route_name->to ?? 'N/A' }}</p>
                                                 <p class="text-gray-500 mb-0">{{ $booking->bus->bus_number ?? 'N/A' }}</p>
                                             </div>
                                         </td>

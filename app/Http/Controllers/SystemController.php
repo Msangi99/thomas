@@ -296,15 +296,15 @@ class SystemController extends Controller
 
     public function system_payments()
     {
-        $balances = SystemBalance::all();
-        $pays = PaymentFees::all();
+        $balances = SystemBalance::with('campany')->orderByDesc('created_at')->get();
+        $pays = PaymentFees::with('campany')->orderByDesc('created_at')->get();
 
         return view('system.payments', compact('balances', 'pays'));
     }
 
     public function history(Request $request)
     {
-        $query = Booking::with(['campany', 'route_name', 'user', 'route', 'vender', 'bus.route', 'campany.busOwnerAccount']);
+        $query = Booking::with(['campany', 'schedule', 'user', 'route', 'vender', 'bus.route', 'campany.busOwnerAccount']);
         // Apply period filter from sidebar dropdown
         if ($request->has('period')) {
             switch ($request->period) {

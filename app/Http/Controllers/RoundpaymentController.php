@@ -145,18 +145,22 @@ class RoundpaymentController extends Controller
                 $adminWallet->increment('balance', $bimaAmount);
             }
 
-            // Update booking
+            // Update booking (persist fee/service and VAT/vendor splits for system income)
             $booking->update([
                 'payment_status' => 'Paid',
                 'trans_status' => 'success',
                 'trans_token' => $transToken,
                 'fee' => $bookingFee,
                 'service' => $bookingService,
+                'fee_vat' => $booking->fee_vat ?? 0,
+                'service_vat' => $booking->service_vat ?? 0,
+                'vender_fee' => $booking->vender_fee ?? 0,
+                'vender_service' => $booking->vender_service ?? 0,
                 'amount' => $busOwnerAmount, // Store bus owner share separately
                 'payment_method' => 'dpo',
             ]);
 
-            // Update SystemBalance
+            // Update SystemBalance (system income - commission)
             SystemBalance::create([
                 'campany_id' => $bus->campany->id,
                 'balance' => $systemBalanceAmount,
@@ -165,11 +169,11 @@ class RoundpaymentController extends Controller
             // Increment admin wallet for system balance
             $adminWallet->increment('balance', $systemBalanceAmount);
 
-            // Update PaymentFees
+            // Update PaymentFees (system income - service fee)
             PaymentFees::create([
                 'campany_id' => $bus->campany->id,
                 'amount' => $paymentFeesAmount,
-                'booking_id' => $booking->id,
+                'booking_id' => $booking->booking_code,
             ]);
 
             // Increment admin wallet for payment fees

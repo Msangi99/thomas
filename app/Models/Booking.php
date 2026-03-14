@@ -44,6 +44,8 @@ class Booking extends Model
         'vender_id',
         'fee',
         'service',
+        'fee_vat',
+        'service_vat',
         //////
         'vender_fee',
         'vender_service',

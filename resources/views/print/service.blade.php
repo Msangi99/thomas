@@ -87,7 +87,7 @@
                         @if(isset($data->schedule) && $data->schedule)
                             {{ ($data->schedule->from ?? 'N/A') }} - {{ ($data->schedule->to ?? 'N/A') }}
                         @else
-                            {{ $data->bus && $data->bus->route ? ($data->bus->route->from ?? 'N/A') . ' - ' . ($data->bus->route->to ?? 'N/A') : 'N/A' }}
+                            N/A
                         @endif
                     </td>
                 </tr>
@@ -113,9 +113,6 @@
                             if (isset($data->schedule) && $data->schedule) {
                                 $departureTime = $data->schedule->start ?? null;
                             }
-                            if (!$departureTime && isset($data->bus->route) && $data->bus->route) {
-                                $departureTime = $data->bus->route->route_start ?? null;
-                            }
                             $reportingTimeStr = 'N/A';
                             if ($data->travel_date && $departureTime) {
                                 try {
@@ -137,8 +134,8 @@
                             if (isset($data->schedule) && $data->schedule) {
                                 $departureTime = $data->schedule->start ?? null;
                             }
-                            if (!$departureTime && isset($data->bus->route) && $data->bus->route) {
-                                $departureTime = $data->bus->route->route_start ?? null;
+                            if (!$departureTime && isset($data->schedule) && $data->schedule) {
+                                $departureTime = $data->schedule->start ?? null;
                             }
                             $departureTimeStr = 'N/A';
                             if ($data->travel_date && $departureTime) {
@@ -161,8 +158,8 @@
                             if (isset($data->schedule) && $data->schedule) {
                                 $arrivalTime = $data->schedule->end ?? null;
                             }
-                            if (!$arrivalTime && isset($data->bus->route) && $data->bus->route) {
-                                $arrivalTime = $data->bus->route->route_end ?? null;
+                            if (!$arrivalTime && isset($data->schedule) && $data->schedule) {
+                                $arrivalTime = $data->schedule->end ?? null;
                             }
                             $arrivalTimeStr = 'N/A';
                             $arrivalDateStr = $data->travel_date ?? 'N/A';

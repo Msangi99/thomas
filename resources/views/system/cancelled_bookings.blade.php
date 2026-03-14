@@ -188,8 +188,9 @@
                                 </td>
                             </tr>
                         @empty
+                            {{-- Empty row must have 8 <td> cells so DataTables column count matches thead --}}
                             <tr>
-                                <td colspan="8" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                <td class="px-6 py-4 text-sm text-gray-500 text-center" colspan="8" data-orderable="false">
                                     <div class="flex flex-col items-center justify-center py-8">
                                         <svg class="h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -224,69 +225,74 @@
 
 <script>
 $(document).ready(function() {
-    $('#cancelledBookingsTable').DataTable({
-        responsive: true,
-        pageLength: 25,
-        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
-        order: [[7, 'desc']], // Sort by cancelled date descending by default
-        columnDefs: [
-            {
-                targets: [0], // First column (row number)
-                orderable: false,
-                searchable: false
+    var $table = $('#cancelledBookingsTable');
+    // Only init DataTable when table has data rows (8 columns). Empty state has 1 row with 1 cell (colspan=8) which causes "Incorrect column count".
+    var firstRowCells = $table.find('tbody tr:first td').length;
+    if (firstRowCells === 8) {
+        $table.DataTable({
+            responsive: true,
+            pageLength: 25,
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+            order: [[7, 'desc']], // Sort by cancelled date descending by default
+            columnDefs: [
+                {
+                    targets: [0], // First column (row number)
+                    orderable: false,
+                    searchable: false
+                },
+                {
+                    targets: [6], // Amount column
+                    type: 'num-fmt'
+                },
+                {
+                    targets: [7], // Cancelled date column
+                    type: 'date'
+                }
+            ],
+            dom: 'Bfrtip',
+            buttons: [
+                {
+                    extend: 'excel',
+                    text: 'Export Excel',
+                    className: 'bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium'
+                },
+                {
+                    extend: 'pdf',
+                    text: 'Export PDF',
+                    className: 'bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium'
+                },
+                {
+                    extend: 'print',
+                    text: 'Print',
+                    className: 'bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium'
+                }
+            ],
+            language: {
+                search: "Search cancelled bookings:",
+                lengthMenu: "Show _MENU_ entries per page",
+                info: "Showing _START_ to _END_ of _TOTAL_ cancelled bookings",
+                infoEmpty: "No cancelled bookings available",
+                infoFiltered: "(filtered from _MAX_ total cancelled bookings)",
+                paginate: {
+                    first: "First",
+                    last: "Last",
+                    next: "Next",
+                    previous: "Previous"
+                },
+                emptyTable: ""
             },
-            {
-                targets: [6], // Amount column
-                type: 'num-fmt'
-            },
-            {
-                targets: [7], // Cancelled date column
-                type: 'date'
+            initComplete: function() {
+                // Add custom styling to search box
+                $('.dataTables_filter input').addClass('ml-2 px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent');
+                
+                // Add custom styling to length select
+                $('.dataTables_length select').addClass('ml-2 px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent');
+                
+                // Add custom styling to buttons
+                $('.dt-buttons').addClass('mb-4');
             }
-        ],
-        dom: 'Bfrtip',
-        buttons: [
-            {
-                extend: 'excel',
-                text: 'Export Excel',
-                className: 'bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium'
-            },
-            {
-                extend: 'pdf',
-                text: 'Export PDF',
-                className: 'bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium'
-            },
-            {
-                extend: 'print',
-                text: 'Print',
-                className: 'bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium'
-            }
-        ],
-        language: {
-            search: "Search cancelled bookings:",
-            lengthMenu: "Show _MENU_ entries per page",
-            info: "Showing _START_ to _END_ of _TOTAL_ cancelled bookings",
-            infoEmpty: "No cancelled bookings available",
-            infoFiltered: "(filtered from _MAX_ total cancelled bookings)",
-            paginate: {
-                first: "First",
-                last: "Last",
-                next: "Next",
-                previous: "Previous"
-            },
-            emptyTable: ""
-        },
-        initComplete: function() {
-            // Add custom styling to search box
-            $('.dataTables_filter input').addClass('ml-2 px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent');
-            
-            // Add custom styling to length select
-            $('.dataTables_length select').addClass('ml-2 px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent');
-            
-            // Add custom styling to buttons
-            $('.dt-buttons').addClass('mb-4');
-        }
-    });
+        });
+    }
 });
 </script>
 

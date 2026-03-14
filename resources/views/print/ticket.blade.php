@@ -134,7 +134,7 @@
                 </tr>
                 <tr>
                     <td>Route:</td>
-                    <td>{{ $data->pickup_point ?? optional($data->schedule)->from ?? optional(optional($data->bus)->route)->from ?? 'N/A' }} - {{ $data->dropping_point ?? optional($data->schedule)->to ?? optional(optional($data->bus)->route)->to ?? 'N/A' }}</td>
+                    <td>{{ $data->pickup_point ?? optional($data->schedule)->from ?? 'N/A' }} - {{ $data->dropping_point ?? optional($data->schedule)->to ?? 'N/A' }}</td>
                 </tr>
                 @php
                     $travelDateRaw = $data->travel_date ?? null;
@@ -147,9 +147,9 @@
                         $departureTime = $data->schedule->start ?? null;
                         $arrivalTime = $data->schedule->end ?? null;
                     }
-                    if ((!$departureTime || !$arrivalTime) && isset($data->bus->route) && $data->bus->route) {
-                        if (!$departureTime) $departureTime = $data->bus->route->route_start ?? null;
-                        if (!$arrivalTime) $arrivalTime = $data->bus->route->route_end ?? null;
+                    if ((!$departureTime || !$arrivalTime) && isset($data->schedule) && $data->schedule) {
+                        if (!$departureTime) $departureTime = $data->schedule->start ?? null;
+                        if (!$arrivalTime) $arrivalTime = $data->schedule->end ?? null;
                     }
                     $reportingTimeStr = 'N/A';
                     $departureTimeStr = 'N/A';

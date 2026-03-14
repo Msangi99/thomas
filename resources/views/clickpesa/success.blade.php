@@ -126,4 +126,15 @@
 
         @media (max-width: 480px) { .action-buttons { grid-template-columns: 1fr; } }
     </style>
+    <script>
+        (function() {
+            var homeUrl = "{{ route('home') }}";
+            if (window.history && window.history.pushState) {
+                window.history.pushState({ ticketSuccess: true }, '', window.location.href);
+                window.addEventListener('popstate', function() {
+                    window.location.href = homeUrl;
+                });
+            }
+        })();
+    </script>
 @endsection

@@ -9,12 +9,14 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
     <div class="container mx-auto px-4 py-6 max-w-7xl">
+        <h1 class="text-2xl font-semibold text-gray-800 mb-2">System Income</h1>
+        <p class="text-gray-600 mb-6">Commission and service fees from all bookings (any seat, any payment method).</p>
         <h3 class="text-center text-blue-600 text-lg font-semibold mb-4">HIGHLINK ISGC</h3>
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <!-- Service Fees Table -->
+            <!-- System Income: Commission (from ticket) -->
             <div class="bg-white rounded-lg shadow-md overflow-hidden">
                 <div class="p-4 bg-gradient-to-r from-blue-500 to-blue-400 text-white text-center">
-                    <h2 class="text-lg font-semibold">Commission Fees</h2>
+                    <h2 class="text-lg font-semibold">Commission (System Income)</h2>
                     <span class="text-sm font-medium">Total: {{ $currency }} <span id="serviceTotal">{{ convert_money($balances->sum('balance')) }}</span></span>
                 </div>
                 <div class="p-4">
@@ -75,10 +77,10 @@
                 </div>
             </div>
 
-            <!-- Commission Fees Table -->
+            <!-- System Income: Service Fees -->
             <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <div class="p-4 bg-gradient-to-r from-blue-500 to-blue-400 text-white text-center">
-                    <h2 class="text-lg font-semibold">Service Fees</h2>
+                <div class="p-4 bg-gradient-to-r from-green-500 to-green-400 text-white text-center">
+                    <h2 class="text-lg font-semibold">Service Fees (System Income)</h2>
                     <span class="text-sm font-medium">Total: {{ $currency }} <span id="commissionTotal">{{ convert_money($pays->sum('amount')) }}</span></span>
                 </div>
                 <div class="p-4">

@@ -837,7 +837,7 @@ class BookingController extends Controller
                     $adminWallet->increment('balance', $bimaAmount);
                 }
 
-                // Update booking
+                // Update booking (persist fee/service and VAT/vendor splits for system income)
                 $booking->update([
                     'payment_status' => 'Paid',
                     'trans_status' => $transStatus,
@@ -845,6 +845,10 @@ class BookingController extends Controller
                     'verification_code' => $verificationCode,
                     'fee' => $bookingFee,
                     'service' => $bookingService,
+                    'fee_vat' => $booking->fee_vat ?? 0,
+                    'service_vat' => $booking->service_vat ?? 0,
+                    'vender_fee' => $booking->vender_fee ?? 0,
+                    'vender_service' => $booking->vender_service ?? 0,
                     'amount' => $busOwnerAmount, // Store bus owner share separately
                     'payment_method' => 'mixx',
                 ]);

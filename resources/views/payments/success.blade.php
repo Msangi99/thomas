@@ -226,4 +226,15 @@
             }
         }
     </style>
+    <script>
+        (function() {
+            var homeUrl = "{{ url('/') }}";
+            if (window.history && window.history.pushState) {
+                window.history.pushState({ ticketSuccess: true }, '', window.location.href);
+                window.addEventListener('popstate', function() {
+                    window.location.href = homeUrl;
+                });
+            }
+        })();
+    </script>
 @endsection

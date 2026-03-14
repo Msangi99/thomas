@@ -85,4 +85,15 @@
         </div>
     </div>
 </section>
+<script>
+    (function() {
+        var homeUrl = "{{ route('home') }}";
+        if (window.history && window.history.pushState) {
+            window.history.pushState({ ticketSuccess: true }, '', window.location.href);
+            window.addEventListener('popstate', function() {
+                window.location.href = homeUrl;
+            });
+        }
+    })();
+</script>
 @endsection
