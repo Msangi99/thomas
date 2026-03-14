@@ -333,6 +333,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('admin')->middleware(['role:admin', '2fa'])->group(function () {
         Route::get('/', [SystemController::class, 'index'])->name('system.index');
         Route::get('/companies', [SystemController::class, 'campany'])->name('system.campany');
+        Route::get('/companies/{campany}', [SystemController::class, 'campanyShow'])->name('system.campany.show');
         Route::post('/campany_status', [SystemController::class, 'campany_status'])->name('system.campany.status');
         Route::get('/buses', [SystemController::class, 'buses'])->name('system.buses');
         Route::get('/transaction', [SystemController::class, 'pay_request'])->name('pay.request');

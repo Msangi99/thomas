@@ -3,69 +3,146 @@
 @section('title', 'Refunds')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
-    <h1 class="text-2xl font-semibold text-gray-800 mb-6">Refund Requests</h1>
-
-    @if (session('success'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <span class="block sm:inline">{{ session('success') }}</span>
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {{-- Page header --}}
+        <div class="mb-8">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="p-2.5 rounded-xl bg-white/80 shadow-sm border border-slate-200/80">
+                    <svg class="w-7 h-7 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Refund Requests</h1>
+                    <p class="text-sm text-slate-500 mt-0.5">Review and manage customer refund requests</p>
+                </div>
+            </div>
         </div>
-    @endif
 
-    @if (session('error'))
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <span class="block sm:inline">{{ session('error') }}</span>
+        @if (session('success'))
+            <div class="mb-6 rounded-xl bg-emerald-50 border border-emerald-200/80 px-4 py-3 flex items-center gap-3 shadow-sm animate-[fadeIn_0.3s_ease-out]" role="alert">
+                <div class="flex-shrink-0 w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                </div>
+                <span class="text-sm font-medium text-emerald-800">{{ session('success') }}</span>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="mb-6 rounded-xl bg-red-50 border border-red-200/80 px-4 py-3 flex items-center gap-3 shadow-sm" role="alert">
+                <div class="flex-shrink-0 w-9 h-9 rounded-full bg-red-100 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </div>
+                <span class="text-sm font-medium text-red-800">{{ session('error') }}</span>
+            </div>
+        @endif
+
+        @php
+            $pendingCount = $refunds->where('status', 'Pending')->count();
+            $approvedCount = $refunds->where('status', 'Approved')->count();
+            $rejectedCount = $refunds->where('status', 'Rejected')->count();
+            $pendingTotal = $refunds->where('status', 'Pending')->sum('amount');
+            $approvedTotal = $refunds->where('status', 'Approved')->sum('amount');
+        @endphp
+
+        {{-- Summary cards --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="refund-card bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200">
+                <div class="p-5">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-amber-600">Pending</p>
+                    <p class="mt-1 text-2xl font-bold text-slate-800">{{ $pendingCount }}</p>
+                    <p class="mt-1 text-sm text-slate-500">{{ $currency }} {{ convert_money($pendingTotal) }}</p>
+                </div>
+                <div class="h-1 bg-amber-400"></div>
+            </div>
+            <div class="refund-card bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200">
+                <div class="p-5">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-emerald-600">Approved</p>
+                    <p class="mt-1 text-2xl font-bold text-slate-800">{{ $approvedCount }}</p>
+                    <p class="mt-1 text-sm text-slate-500">{{ $currency }} {{ convert_money($approvedTotal) }}</p>
+                </div>
+                <div class="h-1 bg-emerald-400"></div>
+            </div>
+            <div class="refund-card bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200">
+                <div class="p-5">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-red-600">Rejected</p>
+                    <p class="mt-1 text-2xl font-bold text-slate-800">{{ $rejectedCount }}</p>
+                </div>
+                <div class="h-1 bg-red-400"></div>
+            </div>
+            <div class="refund-card bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200">
+                <div class="p-5">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-indigo-600">Total Requests</p>
+                    <p class="mt-1 text-2xl font-bold text-slate-800">{{ $refunds->count() }}</p>
+                </div>
+                <div class="h-1 bg-indigo-400"></div>
+            </div>
         </div>
-    @endif
 
-    <div class="bg-white shadow-md rounded-lg overflow-hidden">
-        <div class="p-4">
-            <h2 class="text-xl font-semibold text-gray-700 mb-4">All Refunds</h2>
+        {{-- Table card --}}
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200/80 bg-slate-50/50">
+                <h2 class="text-lg font-semibold text-slate-800">All Refunds</h2>
+                <p class="text-sm text-slate-500 mt-0.5">Search, sort and take action on refund requests</p>
+            </div>
             <div class="overflow-x-auto">
-                <table id="refundsTable" class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+                <table id="refundsTable" class="min-w-full divide-y divide-slate-200/80">
+                    <thead class="bg-slate-50/80">
                         <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Booking ID</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fullname</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">No</th>
+                            <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Booking ID</th>
+                            <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Amount</th>
+                            <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</th>
+                            <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Phone</th>
+                            <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Full name</th>
+                            <th scope="col" class="px-6 py-3.5 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tbody class="bg-white divide-y divide-slate-100">
                         @forelse ($refunds as $refund)
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $loop->iteration }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $refund->booking_code }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ convert_money($refund->amount) }} {{ $currency }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $refund->status == 'Pending' ? 'bg-yellow-100 text-yellow-800' : ($refund->status == 'Approved' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800') }}">
-                                        {{ $refund->status }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $refund->phone }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $refund->fullname }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    @if ($refund->status == 'Pending')
-                                        <form action="{{ route('system.refunds.approve', $refund->id) }}" method="POST" class="inline-block">
-                                            @csrf
-                                            <button type="submit" class="text-green-600 hover:text-green-900 mr-3">Approve</button>
-                                        </form>
-                                        <form action="{{ route('system.refunds.reject', $refund->id) }}" method="POST" class="inline-block">
-                                            @csrf
-                                            <button type="submit" class="text-red-600 hover:text-red-900">Reject</button>
-                                        </form>
+                            <tr class="hover:bg-slate-50/50 transition-colors duration-150">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ $loop->iteration }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{{ $refund->booking_code }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ convert_money($refund->amount) }} {{ $currency }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if($refund->status == 'Pending')
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">Pending</span>
+                                    @elseif($refund->status == 'Approved')
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">Approved</span>
                                     @else
-                                        <span class="text-gray-500">No actions</span>
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">Rejected</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{{ $refund->phone }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{{ $refund->fullname }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    @if ($refund->status == 'Pending')
+                                        <div class="flex items-center justify-end gap-2">
+                                            <form action="{{ route('system.refunds.approve', $refund->id) }}" method="POST" class="inline-block">
+                                                @csrf
+                                                <button type="submit" class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-500 text-white hover:bg-emerald-600 transition-colors shadow-sm">Approve</button>
+                                            </form>
+                                            <form action="{{ route('system.refunds.reject', $refund->id) }}" method="POST" class="inline-block">
+                                                @csrf
+                                                <button type="submit" class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-red-500 text-white hover:bg-red-600 transition-colors shadow-sm">Reject</button>
+                                            </form>
+                                        </div>
+                                    @else
+                                        <span class="text-slate-400 text-xs">No actions</span>
                                     @endif
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                    No refund requests found.
+                                <td colspan="7" class="px-6 py-16 text-center">
+                                    <div class="flex flex-col items-center justify-center text-slate-400">
+                                        <svg class="w-14 h-14 mb-4 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                        <p class="text-sm font-medium text-slate-500">No refund requests found.</p>
+                                        <p class="text-xs text-slate-400 mt-1">New requests will appear here.</p>
+                                    </div>
                                 </td>
                             </tr>
                         @endforelse
@@ -74,25 +151,43 @@
             </div>
         </div>
     </div>
-</div> 
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- DataTables CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
-    <!-- DataTables JS -->
-    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+</div>
 
-    <script>
-        $(document).ready(function() {
-            $('#refundsTable').DataTable({
-                "paging": true,
-                "searching": true,
-                "ordering": true,
-                "info": true,
-                "columnDefs": [
-                    { "orderable": false, "targets": 6 } // Disable sorting on Actions column
-                ]
-            });
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script>
+$(document).ready(function() {
+    var $table = $('#refundsTable');
+    var firstRowCells = $table.find('tbody tr:first td').length;
+    if (firstRowCells === 7) {
+        $table.DataTable({
+            paging: true,
+            searching: true,
+            ordering: true,
+            info: true,
+            order: [[0, 'asc']],
+            language: {
+                search: '',
+                searchPlaceholder: 'Search refunds...',
+                lengthMenu: 'Show _MENU_ entries',
+                info: 'Showing _START_ to _END_ of _TOTAL_ refunds',
+                paginate: { first: 'First', last: 'Last', next: 'Next', previous: 'Prev' }
+            },
+            columnDefs: [{ orderable: false, targets: 6 }],
+            dom: '<"flex flex-wrap justify-between items-center gap-4 mb-4 px-2"lf>rt<"flex justify-between items-center gap-4 mt-4 px-2"ip>',
+            drawCallback: function() {
+                $('.dataTables_filter input').addClass('rounded-lg border-slate-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm');
+                $('.dataTables_length select').addClass('rounded-lg border-slate-300 text-sm');
+            }
         });
-    </script>
+    }
+});
+</script>
+<style>
+    .dataTables_wrapper .dataTables_paginate .paginate_button { border-radius: 0.5rem; padding: 0.375rem 0.75rem; margin: 0 0.125rem; }
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: #4f46e5 !important; color: #fff !important; border: none !important; }
+    .dataTables_wrapper .dataTables_paginate .paginate_button:hover { background: #e0e7ff !important; color: #4f46e5 !important; border: none !important; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
 @endsection

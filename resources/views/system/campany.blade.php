@@ -76,7 +76,9 @@
                                 <form action="{{ route('system.campany.status') }}" method="POST">
                                     @csrf
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $i++ }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $campany->name }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <a href="{{ route('system.campany.show', $campany) }}" class="text-indigo-600 hover:text-indigo-800 hover:underline transition-colors">{{ $campany->name }}</a>
+                                    </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $campany->user->name }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         @php

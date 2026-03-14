@@ -294,6 +294,50 @@ class SystemController extends Controller
         return back()->with('success', 'company edit successful');
     }
 
+    public function campanyShow($id)
+    {
+        $campany = Campany::with(['user', 'balance', 'busOwnerAccount', 'bus' => function ($q) {
+            $q->withCount('routes');
+        }])->findOrFail($id);
+
+        $busIds = $campany->bus->pluck('id')->toArray();
+
+        $bookings = Booking::where('campany_id', $campany->id)
+            ->where('payment_status', 'Paid')
+            ->with(['bus', 'schedule'])
+            ->orderByDesc('created_at')
+            ->limit(50)
+            ->get();
+
+        $bookingsChart = Booking::where('campany_id', $campany->id)
+            ->where('payment_status', 'Paid')
+            ->where('created_at', '>=', Carbon::now()->subDays(14))
+            ->selectRaw('DATE(created_at) as date, COUNT(*) as count, SUM(amount + COALESCE(fee,0) + COALESCE(service,0)) as total')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+
+        $schedules = Schedule::whereIn('bus_id', $busIds)
+            ->with(['bus', 'route'])
+            ->orderByDesc('schedule_date')
+            ->limit(30)
+            ->get();
+
+        $systemBalances = SystemBalance::where('campany_id', $campany->id)->orderByDesc('created_at')->limit(15)->get();
+        $paymentFees = PaymentFees::where('campany_id', $campany->id)->orderByDesc('created_at')->limit(15)->get();
+        $transactions = Transaction::where('campany_id', $campany->id)->with('user')->orderByDesc('created_at')->limit(20)->get();
+
+        $totalCommission = SystemBalance::where('campany_id', $campany->id)->sum('balance');
+        $totalServiceFees = PaymentFees::where('campany_id', $campany->id)->sum('amount');
+        $totalBookingsRevenue = Booking::where('campany_id', $campany->id)->where('payment_status', 'Paid')->sum('amount');
+
+        return view('system.campany_dashboard', compact(
+            'campany', 'bookings', 'bookingsChart', 'schedules',
+            'systemBalances', 'paymentFees', 'transactions',
+            'totalCommission', 'totalServiceFees', 'totalBookingsRevenue'
+        ));
+    }
+
     public function system_payments()
     {
         $balances = SystemBalance::with('campany')->orderByDesc('created_at')->get();
