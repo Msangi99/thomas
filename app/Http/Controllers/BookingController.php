@@ -204,9 +204,10 @@ class BookingController extends Controller
             },
             'route.points'
         ])->find($id);
+
         $time = [
-            'start' => $car->route->route_start,
-            'end' => $car->route->route_end,
+            'start' => optional($car->schedule)->start ?? optional($car->route)->route_start,
+            'end'   => optional($car->schedule)->end ?? optional($car->route)->route_end,
         ];
 
         session()->put('time', $time);
