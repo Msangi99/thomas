@@ -69,7 +69,7 @@
                                     <td class="py-2 px-4">{{ $transaction->user ? $transaction->user->name : 'Unknown' }}</td>
                                     <td class="py-2 px-4">{{ $transaction->payment_method ?? 'Unknown' }}</td>
                                     <td class="py-2 px-4">{{ $transaction->payment_number ?? 'Unknown' }}</td>
-                                    <td class="py-2 px-4 amount" data-amount="{{ $transaction->amount }}">{{ $currency }} {{ number_format($transaction->amount, 2, '.', ',') }}</td>
+                                    <td class="py-2 px-4 amount" data-amount="{{ $transaction->amount }}">{{ $currency }} {{ convert_money($transaction->amount) }}</td>
                                     <td class="py-2 px-4">
                                         <span class="inline-block px-2 py-1 text-xs font-semibold rounded {{ $transaction->status === 'Completed' ? 'bg-green-500 text-white' : ($transaction->status === 'Pending' ? 'bg-yellow-500 text-black' : 'bg-red-500 text-white') }}">
                                             {{ $transaction->status }}
@@ -160,7 +160,7 @@
                                     <td class="py-2 px-4">{{ $index + 1 }}</td>
                                     <td class="py-2 px-4">{{ $transaction->campany ? $transaction->campany->name : 'Vender' }}</td>
                                     <td class="py-2 px-4">{{ $transaction->user ? $transaction->user->name : 'Unknown' }}</td>
-                                    <td class="py-2 px-4 amount" data-amount="{{ $transaction->amount }}">{{ $currency }} {{ number_format($transaction->amount, 2, '.', ',') }}</td>
+                                    <td class="py-2 px-4 amount" data-amount="{{ $transaction->amount }}">{{ $currency }} {{ convert_money($transaction->amount) }}</td>
                                     <td class="py-2 px-4">{{ $transaction->reference_number }}</td>
                                     <td class="py-2 px-4">
                                         <span class="inline-block px-2 py-1 text-xs font-semibold rounded {{ $transaction->status === 'Completed' ? 'bg-green-500 text-white' : ($transaction->status === 'Pending' ? 'bg-yellow-500 text-black' : 'bg-red-500 text-white') }}">
@@ -259,6 +259,10 @@
     <script src="https://cdn.datatables.net/datetime/1.5.1/js/dataTables.dateTime.min.js"></script>
 
     <script>
+        // Expose current currency and USD rate for JS calculations
+        const CURRENT_CURRENCY = "{{ session('currency', 'Tsh') }}";
+        const USD_TO_TZS_RATE = {{ app('usdToTzs') ?? 2500 }};
+
         $(document).ready(function() {
             // Create date inputs for Pending Transactions Table
             $.fn.dataTable.ext.errMode = 'none';
@@ -345,7 +349,7 @@
                 ],
                 footerCallback: function(row, data, start, end, display) {
                     let api = this.api();
-                    let total = api
+                    let totalTzs = api
                         .rows({ page: 'current' })
                         .nodes()
                         .toArray()
@@ -353,7 +357,11 @@
                             let amount = $(row).find('.amount').data('amount') || 0;
                             return sum + parseFloat(amount);
                         }, 0);
-                    $('#pendingTotal').text(total.toLocaleString('en-US', { minimumFractionDigits: 2 }));
+                    let displayTotal = totalTzs;
+                    if (CURRENT_CURRENCY === 'Usd' && USD_TO_TZS_RATE > 0) {
+                        displayTotal = totalTzs / USD_TO_TZS_RATE;
+                    }
+                    $('#pendingTotal').text(displayTotal.toLocaleString('en-US', { minimumFractionDigits: 2 }));
                 }
             });
 
@@ -372,7 +380,7 @@
                 ],
                 footerCallback: function(row, data, start, end, display) {
                     let api = this.api();
-                    let total = api
+                    let totalTzs = api
                         .rows({ page: 'current' })
                         .nodes()
                         .toArray()
@@ -380,7 +388,11 @@
                             let amount = $(row).find('.amount').data('amount') || 0;
                             return sum + parseFloat(amount);
                         }, 0);
-                    $('#allTransactionsTotal').text(total.toLocaleString('en-US', { minimumFractionDigits: 2 }));
+                    let displayTotal = totalTzs;
+                    if (CURRENT_CURRENCY === 'Usd' && USD_TO_TZS_RATE > 0) {
+                        displayTotal = totalTzs / USD_TO_TZS_RATE;
+                    }
+                    $('#allTransactionsTotal').text(displayTotal.toLocaleString('en-US', { minimumFractionDigits: 2 }));
                 }
             });
 
