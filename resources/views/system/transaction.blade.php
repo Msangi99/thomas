@@ -335,11 +335,12 @@
             });
 
             // Initialize Pending Transactions Table
-            const pendingTable = $('#pendingTransactionsTable').DataTable({
-                responsive: true,
-                paging: true,
-                searching: true,
-                ordering: true,
+                const pendingTable = $('#pendingTransactionsTable').DataTable({
+                    responsive: true,
+                    paging: true,
+                    pageLength: 5,
+                    searching: true,
+                    ordering: true,
                 language: {
                     emptyTable: "No pending transactions found."
                 },
@@ -366,11 +367,12 @@
             });
 
             // Initialize All Transactions Table
-            const allTable = $('#allTransactionsTable').DataTable({
-                responsive: true,
-                paging: true,
-                searching: true,
-                ordering: true,
+                const allTable = $('#allTransactionsTable').DataTable({
+                    responsive: true,
+                    paging: true,
+                    pageLength: 5,
+                    searching: true,
+                    ordering: true,
                 language: {
                     emptyTable: "No transactions found."
                 },

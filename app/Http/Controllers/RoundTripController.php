@@ -387,13 +387,14 @@ class RoundTripController extends Controller
             $routeDistance = 0;
         }
         $route = Route::find($request->route_id);
+        $schedule = Schedule::find($request->schedule_id);
         $bus_info = [
             'bus_id' => $request->bus_id,
-            'from' => $route->from,
-            'to' => $route->to,
+            'from' => $schedule->from ?? $route->from,
+            'to' => $schedule->to ?? $route->to,
             'route_id' => $request->route_id,
-            'pickup_point' => $request->pickup_point ?? $route->from,
-            'dropping_point' => $request->dropping_point ?? $route->to,
+            'pickup_point' => $request->pickup_point ?? ($schedule->from ?? $route->from),
+            'dropping_point' => $request->dropping_point ?? ($schedule->to ?? $route->to),
             'travel_date' => session()->get('departure_date') ?? now()->format('Y-m-d'),
             'dropping_point_amount' => $request->dropping_point_amount ?? ($route ? $route->price : 0),
             'route_distance' => $routeDistance,

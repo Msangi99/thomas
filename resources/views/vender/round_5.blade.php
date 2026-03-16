@@ -43,7 +43,7 @@
                                                 <p class="text-sm text-gray-500">
                                                     {{ $busType }} | <span
                                                         class="text-red-500">{{ __('customer/busroot.via') }}
-                                                        {{ $car->route->via->name ?? __('customer/busroot.na') }}</span>
+                                                        {{ $car->schedule->route->via->name ?? __('customer/busroot.na') }}</span>
                                                 </p>
                                             </div>
                                             <div class="text-right">
@@ -63,7 +63,7 @@
                                             </div>
                                             <div class="text-center">
                                                 <p class="text-sm text-blue-600">{{ __('customer/busroot.via') }}
-                                                    {{ $car->route->via->name ?? __('customer/busroot.na') }}</p>
+                                                    {{ $car->schedule->route->via->name ?? __('customer/busroot.na') }}</p>
                                             </div>
                                             <div class="text-right sm:text-left">
                                                 <p class="text-sm text-gray-500">
