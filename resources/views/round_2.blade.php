@@ -50,10 +50,10 @@
                             <div class="text-gray-300 mx-2">
                                 @php
                                     $durationText = __('assistance/booking.na');
-                                    if ($bus->route && $bus->route->route_start && $bus->route->route_end) {
+                                    if ($bus->schedule && $bus->schedule->start && $bus->schedule->end) {
                                         try {
-                                            $startTime = \Carbon\Carbon::parse($bus->route->route_start);
-                                            $endTime = \Carbon\Carbon::parse($bus->route->route_end);
+                                            $startTime = \Carbon\Carbon::parse($bus->schedule->start);
+                                            $endTime = \Carbon\Carbon::parse($bus->schedule->end);
                                             if ($endTime->lessThan($startTime)) {
                                                 $endTime->addDay();
                                             }
@@ -73,15 +73,15 @@
 
                         <!-- Timing -->
                         <div class="flex justify-between text-xs text-white mb-3">
-                            <div>{{ $bus->route->route_start ?? __('assistance/booking.na') }}</div>
-                            <div>{{ $bus->route->route_end ?? __('assistance/booking.na') }}</div>
+                            <div>{{ $bus->schedule->start ?? __('assistance/booking.na') }}</div>
+                            <div>{{ $bus->schedule->end ?? __('assistance/booking.na') }}</div>
                         </div>
 
                         <!-- Price & CTA -->
                         <div class="flex items-center justify-between pt-2 border-t border-gray-100">
                             <div>
                                 <div class="text-xs text-gray-300">{{ __('assistance/booking.from_label') }}</div>
-                                <div class="font-bold text-indigo-600">Tsh. {{ number_format($bus->route->price ?? 0) }}</div>
+                                <div class="font-bold text-indigo-600">Tsh. {{ number_format($bus->schedule->route->price ?? 0) }}</div>
                             </div>
                             <div class="flex items-center space-x-2">
                                 <span class="text-xs text-white">

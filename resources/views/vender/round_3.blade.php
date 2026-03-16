@@ -22,7 +22,7 @@
                                class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
                     <input type="hidden" name="bus_id" value="{{ $car->id }}">
-                    <input type="hidden" name="route_id" value="{{ $car->route->id }}">
+                    <input type="hidden" name="route_id" value="{{ $car->schedule->route_id }}">
 
                     <!-- Route Selection -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
