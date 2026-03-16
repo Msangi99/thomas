@@ -77,7 +77,7 @@
                                 <i class="fas fa-map-marker-alt text-blue-500 mt-1 mr-3"></i>
                                 <div>
                                     <p class="text-sm font-medium text-gray-500">{{ __('customer/busroot.route') }}</p>
-                                    <p class="font-medium text-black">{{ $info['pickup_point'] ?? $car->schedule->from }} → {{ $info['dropping_point'] ?? $car->schedule->to }}</p>
+                                    <p class="font-medium text-black">{{ $infos['pickup_point'] ?? $car->schedule->from }} → {{ $infos['dropping_point'] ?? $car->schedule->to }}</p>
                                 </div>
                             </div>
                             <div class="flex items-start">

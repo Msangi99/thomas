@@ -419,7 +419,7 @@ class RoundTripController extends Controller
 
         //return $travel_date;
 
-        $info = session()->get('booking_form');
+        $infos = session()->get('booking_form');
         $car = Bus::with([
             'busname',
             'route',
@@ -457,9 +457,9 @@ class RoundTripController extends Controller
             'price' => $price,
         ];
 
-        //return $this->direction('round_4', $data);
+        return $this->direction('round_4', $data,$infos);
 
-        return $info;
+        //return $info;
 
         //return view('seates', compact('price', 'booked_seats', 'car'));
 
