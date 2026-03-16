@@ -457,7 +457,9 @@ class RoundTripController extends Controller
             'price' => $price,
         ];
 
-        return $this->direction('round_4', $data);
+        //return $this->direction('round_4', $data);
+
+        return $info;
 
         //return view('seates', compact('price', 'booked_seats', 'car'));
 
