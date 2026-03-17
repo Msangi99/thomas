@@ -515,6 +515,16 @@
         width: 100%;
         border-radius: 0.375rem; /* rounded-md */
     }
+    /* Ensure route info / directions panel next to the map is readable */
+    .leaflet-routing-container {
+        background-color: rgba(255, 255, 255, 0.95);
+        color: #111827 !important; /* text-gray-900 */
+        border-radius: 0.5rem;
+        padding: 0.75rem;
+    }
+    .leaflet-routing-container * {
+        color: #111827 !important;
+    }
     .toggle-password {
         float: right;
         cursor: pointer;

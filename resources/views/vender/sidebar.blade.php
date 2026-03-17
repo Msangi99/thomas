@@ -45,6 +45,20 @@
             </a>
         </li>
 
+        <li>
+            <a wire:navigate
+                class="flex items-center px-3 py-2 text-white rounded-lg hover:bg-gray-700 transition-colors {{ request()->routeIs('vender.transaction') ? 'bg-blue-500' : '' }} nav-link"
+                href="{{ route('vender.transaction') }}">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 10h2l1 2h10l1-2h2m-4 4H7a2 2 0 01-2-2V6h14v6a2 2 0 01-2 2zm-9 4h10v2H5v-2z">
+                    </path>
+                </svg>
+                {{ __('assistance/sidebar.transactions') }}
+            </a>
+        </li>
+
         @if (auth()->user()->status == 'accept')
             <li>
                 <a wire:navigate

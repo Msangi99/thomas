@@ -21,15 +21,18 @@
     <div class="container mx-auto px-3 sm:px-4 py-2.5 sm:py-3 flex justify-between items-center">
         <!-- Logo -->
         <div class="flex items-center space-x-1.5 sm:space-x-2 flex-shrink-0">
-            <img src="{{ asset('ChatGPT Image Jul 7, 2025, 12_18_13 PM.png') }}" alt="Bus icon"
-                class="h-8 w-8 sm:h-10 sm:w-10 rounded-2xl" loading="lazy">
-            <a href="{{ route('home') }}" wire:navigate
-                class="text-base sm:text-xl font-bold bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent whitespace-nowrap">Highlink ISGC</a>
+            <a href="{{ route('home') }}" class="flex items-center space-x-1.5 sm:space-x-2">
+                <img src="{{ asset('ChatGPT Image Jul 7, 2025, 12_18_13 PM.png') }}" alt="Bus icon"
+                    class="h-8 w-8 sm:h-10 sm:w-10 rounded-2xl" loading="lazy">
+                <span
+                    class="text-base sm:text-xl font-bold bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent whitespace-nowrap">Highlink
+                    ISGC</span>
+            </a>
         </div>
 
         <!-- Desktop Menu -->
         <div class="hidden md:flex items-center space-x-6">
-            <a wire:navigate href="{{ route('home') }}"
+            <a href="{{ route('home') }}"
                 class="text-gray-700 hover:text-indigo-600 font-medium transition-colors duration-200">Home</a>
             <a wire:navigate href="{{ route('about') }}"
                 class="text-gray-700 hover:text-indigo-600 font-medium transition-colors duration-200">About Us</a>
@@ -93,7 +96,7 @@
     <div id="mobile-menu"
         class="mobile-menu md:hidden absolute top-full left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 rounded-b-2xl shadow-lg">
         <div class="flex flex-col space-y-1 p-4">
-            <a wire:navigate href="{{ route('home') }}"
+            <a href="{{ route('home') }}"
                 class="px-4 py-3 text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors duration-200 font-medium">Home</a>
             <a wire:navigate href="{{ route('about') }}"
                 class="px-4 py-3 text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors duration-200 font-medium">About
