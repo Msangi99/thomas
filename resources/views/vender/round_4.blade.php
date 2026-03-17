@@ -136,11 +136,6 @@
                     <h4 class="font-medium text-gray-900">{{ __('customer/busroot.need_help') }}</h4>
                     <p class="text-gray-600 mt-1">{{ __('customer/busroot.call_our_conductor') }}</p>
                     <p class="text-lg font-bold text-blue-600 mt-2">{{ $car->conductor }}</p>
-                    <div class="mt-4 p-3 bg-blue-50 rounded-lg">
-                        <p class="text-sm text-blue-800">
-                            <i class="fas fa-tag mr-1"></i> {{ __('customer/busroot.return_ticket_discount') }} <span class="font-bold">{{ __('customer/busroot.five_percent_off') }}</span>
-                        </p>
-                    </div>
                 </div>
             </div>
         </div>
