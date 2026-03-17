@@ -304,7 +304,12 @@ class BookingController extends Controller
             ->values()
             ->toArray();
 
-        return view('seates', compact('price', 'booked_seats', 'car','info'));
+            return [
+                'car' => $car,
+                'info' => $info,
+            ];
+
+        //return view('seates', compact('price', 'booked_seats', 'car','info'));
 
         //return  $car;
     }
