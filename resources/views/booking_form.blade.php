@@ -584,6 +584,27 @@
             cursor: pointer;
         }
 
+        /* Make Leaflet routing (route info) panel readable on white background */
+        .leaflet-routing-container {
+            background-color: rgba(255, 255, 255, 0.96) !important;
+            color: #111827 !important;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            font-size: 0.85rem;
+        }
+        .leaflet-routing-container,
+        .leaflet-routing-container * ,
+        .leaflet-routing-alt,
+        .leaflet-routing-alt * {
+            color: #111827 !important;
+            background-color: transparent !important;
+        }
+        .leaflet-routing-alt {
+            background-color: rgba(255, 255, 255, 0.96) !important;
+            padding: 0.5rem 0.25rem;
+            border-radius: 0.5rem;
+        }
+
         /* Animation for route display */
         @keyframes fadeIn {
             from {

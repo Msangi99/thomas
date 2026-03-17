@@ -517,13 +517,23 @@
     }
     /* Ensure route info / directions panel next to the map is readable */
     .leaflet-routing-container {
-        background-color: rgba(255, 255, 255, 0.95);
-        color: #111827 !important; /* text-gray-900 */
+        background-color: rgba(255, 255, 255, 0.96) !important;
+        color: #111827 !important; /* dark text */
         border-radius: 0.5rem;
         padding: 0.75rem;
+        font-size: 0.85rem;
     }
-    .leaflet-routing-container * {
+    .leaflet-routing-container,
+    .leaflet-routing-container * ,
+    .leaflet-routing-alt,
+    .leaflet-routing-alt * {
         color: #111827 !important;
+        background-color: transparent !important;
+    }
+    .leaflet-routing-alt {
+        background-color: rgba(255, 255, 255, 0.96) !important;
+        padding: 0.5rem 0.25rem;
+        border-radius: 0.5rem;
     }
     .toggle-password {
         float: right;
