@@ -6,6 +6,7 @@ return [
     'bus' => 'Basi',
     'seats' => 'Viti',
     'seat' => 'Kiti',
+    'excess_luggage' => 'Mizigo ya Ziada',
     'explore_tanzania' => "Gundua maeneo maarufu zaidi ya Tanzania kwa huduma zetu za mabasi ya kifahari",
     'higlink_premium_travel' => 'HIGHLINK - Safari za Mabasi ya Kifahari Tanzania',
     'why_choose_higlink' => 'Kwa Nini Uchague ',

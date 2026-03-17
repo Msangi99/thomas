@@ -274,6 +274,7 @@ return [
     'submit_button' => 'Submit',
     'not_available' => 'N/A',
     'currency_prefix_tzs' => 'TZS',
+    'excess_luggage' => 'Excess Luggage',
     'complete_your_payment' => 'Complete Your Payment',
     'your_session_expires_in' => 'Your session expires in',
     'mins' => 'mins',
