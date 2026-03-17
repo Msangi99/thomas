@@ -304,12 +304,12 @@ class BookingController extends Controller
             ->values()
             ->toArray();
 
-            return [
-                'car' => $car,
-                'info' => $info,
-            ];
+            // return [
+            //     'car' => $car,
+            //     'info' => $info,
+            // ];
 
-        //return view('seates', compact('price', 'booked_seats', 'car','info'));
+        return view('seates', compact('price', 'booked_seats', 'car','info'));
 
         //return  $car;
     }

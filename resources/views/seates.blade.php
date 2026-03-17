@@ -84,21 +84,21 @@
                                 <i class="fas fa-calendar-day text-blue-500 mt-1 mr-3"></i>
                                 <div>
                                     <p class="text-sm font-medium text-gray-500">{{ __('customer/busroot.date') }}</p>
-                                    <p class="font-medium text-black">{{ $car->schedule->schedule_date }}</p>
+                                    <p class="font-medium text-black">{{ $info['travel_date'] }}</p>
                                 </div>
                             </div>
                             <div class="flex items-start">
                                 <i class="fas fa-clock text-blue-500 mt-1 mr-3"></i>
                                 <div>
                                     <p class="text-sm font-medium text-gray-500">{{ __('customer/busroot.departure') }}</p>
-                                    <p class="font-medium text-black">{{ $car->schedule->start ?? $car->route->route_start }}</p>
+                                    <p class="font-medium text-black">{{ $info['start'] ?? $car->schedule->start }}</p>
                                 </div>
                             </div>
                             <div class="flex items-start">
                                 <i class="fas fa-flag-checkered text-blue-500 mt-1 mr-3"></i>
                                 <div>
                                     <p class="text-sm font-medium text-gray-500">{{ __('customer/busroot.arrival') }}</p>
-                                    <p class="font-medium text-black">{{ $car->schedule->end ?? $car->route->route_end }}</p>
+                                    <p class="font-medium text-black">{{ $info['end'] ?? $car->schedule->end }}</p>
                                 </div>
                             </div>
                             <div class="flex items-start">
