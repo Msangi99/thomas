@@ -108,7 +108,7 @@
                                                                     {{ __('all.session_expiry_warning') }}</p>
                                                                 <p class="text-lg font-bold text-green-600">
                                                                     {{ __('all.total') }} {{ $currency }}.
-                                                                    {{ convert_money($price + $fees) }}</p>
+                                                                    {{ convert_money($price + $fees + ($excess_luggage_fee ?? 0)) }}</p>
                                                             </div>
 
                                                             <p class="text-gray-700">{{ __('all.enter_yas_mobile_number') }}
@@ -124,7 +124,7 @@
                                                                     required>
                                                             </div>
 
-                                                            <input type="hidden" name="amount" value="{{ $price + $fees }}">
+                                                            <input type="hidden" name="amount" value="{{ $price + $fees + ($excess_luggage_fee ?? 0) }}">
 
                                                             <div class="flex items-start">
                                                                 <div class="flex items-center h-5">
@@ -170,58 +170,17 @@
                                                                                 class="text-sm font-medium text-gray-500">{{ __('all.currency_prefix_tzs') }}
                                                                                 {{ convert_money($fees) }}</span>
                                                                         </div>
-                                                                        <div class="flex justify-between">
-                                                                            <span
-                                                                                class="text-sm text-gray-600">{{ __('all.bus_fare') }}</span>
-                                                                            <span
-                                                                                class="text-sm font-medium text-gray-500">{{ __('all.currency_prefix_tzs') }}
-                                                                                {{ convert_money($price - $ins) }}</span>
-                                                                        </div>
-                                                                        <div
-                                                                            class="border-t border-gray-200 pt-2 mt-2 flex justify-between">
-                                                                            <span
-                                                                                class="text-base font-semibold">{{ __('all.total_payable') }}</span>
-                                                                            <span class="text-base font-bold text-blue-600">
-                                                                                {{ __('all.currency_prefix_tzs') }}
-                                                                                {{ convert_money($price + $fees) }}
-                                                                            </span>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-
-                                                            <div class="bg-white rounded-xl shadow-md overflow-hidden mt-4">
-                                                                <div class="p-4">
-                                                                    <h4 class="text-md font-semibold text-gray-800 mb-3">
-                                                                        <i class="fas fa-receipt mr-2 text-blue-500"></i>
-                                                                        {{ __('all.order_summary') }}
-                                                                    </h4>
-                                                                    <div class="space-y-2">
-                                                                        <div class="flex justify-between">
-                                                                            <span
-                                                                                class="text-sm text-gray-600">{{ __('all.discount') }}</span>
-                                                                            <span
-                                                                                class="text-sm font-medium text-gray-500">{{ __('all.currency_prefix_tzs') }}
-                                                                                {{ number_format($dis, 2) }}</span>
-                                                                        </div>
-                                                                        @if(isset($ins) && $ins > 0)
+                                                                        @if(($excess_luggage_fee ?? 0) > 0)
                                                                             <div class="flex justify-between">
-                                                                                <span
-                                                                                    class="text-sm text-gray-600">{{ __('all.insurance') }}</span>
-                                                                                <span
-                                                                                    class="text-sm font-medium text-gray-500">{{ __('all.currency_prefix_tzs') }}
-                                                                                    {{ number_format($ins) }}</span>
+                                                                                <span class="text-sm text-gray-600">{{ __('all.excess_luggage') }}</span>
+                                                                                <span class="text-sm font-medium text-gray-500">
+                                                                                    {{ __('all.currency_prefix_tzs') }}
+                                                                                    {{ convert_money($excess_luggage_fee) }}
+                                                                                </span>
                                                                             </div>
                                                                         @endif
                                                                         <div class="flex justify-between">
                                                                             <span
-                                                                                class="text-sm text-gray-600">{{ __('all.system_charge') }}</span>
-                                                                            <span
-                                                                                class="text-sm font-medium text-gray-500">{{ __('all.currency_prefix_tzs') }}
-                                                                                {{ convert_money($fees) }}</span>
-                                                                        </div>
-                                                                        <div class="flex justify-between">
-                                                                            <span
                                                                                 class="text-sm text-gray-600">{{ __('all.bus_fare') }}</span>
                                                                             <span
                                                                                 class="text-sm font-medium text-gray-500">{{ __('all.currency_prefix_tzs') }}
@@ -233,7 +192,7 @@
                                                                                 class="text-base font-semibold">{{ __('all.total_payable') }}</span>
                                                                             <span class="text-base font-bold text-blue-600">
                                                                                 {{ __('all.currency_prefix_tzs') }}
-                                                                                {{ convert_money($price + $fees) }}
+                                                                                {{ convert_money($price + $fees + ($excess_luggage_fee ?? 0)) }}
                                                                             </span>
                                                                         </div>
                                                                     </div>
@@ -259,18 +218,18 @@
                                                                     {{ __('all.session_expiry_warning') }}</p>
                                                                 <p class="text-lg font-bold text-green-600">
                                                                     {{ __('all.total') }} {{ $currency }}.
-                                                                    {{ convert_money($price + $fees) }}</p>
+                                                                    {{ convert_money($price + $fees + ($excess_luggage_fee ?? 0)) }}</p>
                                                             </div>
 
                                                             <div>
                                                                 <label for="dpo_amount"
                                                                     class="block text-sm font-medium text-gray-700 mb-1">{{ __('all.amount') }}</label>
                                                                 <input type="text" name="amount_2" id="dpo_amount"
-                                                                    value="{{ convert_money($price + $fees) }}" readonly
+                                                                    value="{{ convert_money($price + $fees + ($excess_luggage_fee ?? 0)) }}" readonly
                                                                     class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                                     required>
                                                                 <input type="hidden" name="amount" id="dpo_amount"
-                                                                    value="{{$price + $fees}}" readonly
+                                                                    value="{{$price + $fees + ($excess_luggage_fee ?? 0)}}" readonly
                                                                     class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                                     required>
                                                             </div>
@@ -337,18 +296,18 @@
                                                                     {{ __('all.session_expiry_warning') }}</p>
                                                                 <p class="text-lg font-bold text-green-600">
                                                                     {{ __('all.total') }} {{ $currency }}.
-                                                                    {{ convert_money($price + $fees) }}</p>
+                                                                    {{ convert_money($price + $fees + ($excess_luggage_fee ?? 0)) }}</p>
                                                             </div>
 
                                                             <div>
                                                                 <label for="clickpesa_amount"
                                                                     class="block text-sm font-medium text-gray-700 mb-1">{{ __('all.amount') }}</label>
                                                                 <input type="text" name="amount_2" id="clickpesa_amount"
-                                                                    value="{{ convert_money($price + $fees) }}" readonly
+                                                                    value="{{ convert_money($price + $fees + ($excess_luggage_fee ?? 0)) }}" readonly
                                                                     class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                                     required>
                                                                 <input type="hidden" name="amount" id="clickpesa_amount"
-                                                                    value="{{$price + $fees}}" readonly
+                                                                    value="{{$price + $fees + ($excess_luggage_fee ?? 0)}}" readonly
                                                                     class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                                     required>
                                                             </div>
@@ -409,6 +368,14 @@
                                         <span class="text-sm font-medium text-gray-500">{{ __('all.currency_prefix_tzs') }}
                                             {{ convert_money($fees) }}</span>
                                     </div>
+                                    @if(($excess_luggage_fee ?? 0) > 0)
+                                        <div class="flex justify-between">
+                                            <span class="text-sm text-gray-600">{{ __('all.excess_luggage') }}</span>
+                                            <span class="text-sm font-medium text-gray-500">
+                                                {{ __('all.currency_prefix_tzs') }} {{ convert_money($excess_luggage_fee) }}
+                                            </span>
+                                        </div>
+                                    @endif
 
                                     <div class="flex justify-between">
                                         <span class="text-sm text-gray-600">{{ __('all.bus_fare') }}</span>
@@ -419,7 +386,7 @@
                                     <div class="border-t border-gray-200 pt-2 mt-2 flex justify-between">
                                         <span class="text-base font-semibold">{{ __('all.total_payable') }}</span>
                                         <span class="text-base font-bold text-blue-600">
-                                            {{ __('all.currency_prefix_tzs') }} {{ convert_money($price + $fees) }}
+                                            {{ __('all.currency_prefix_tzs') }} {{ convert_money($price + $fees + ($excess_luggage_fee ?? 0)) }}
                                         </span>
                                     </div>
                                 </div>
@@ -468,8 +435,13 @@
 
                     // Get contact details
                     const code = document.getElementById('countrycode').value;
-                    const phone = document.getElementById('contactNumber').value;
-                    const email = document.getElementById('contactEmail').value;
+                    const phone = document.getElementById('contactNumber').value.trim();
+                    const email = document.getElementById('contactEmail').value.trim();
+
+                    if (!phone || !email) {
+                        alert('{{ __('all.please_enter_phone_and_email') }}');
+                        return;
+                    }
 
                     // Create hidden inputs
                     const codeInput = document.createElement('input');
@@ -502,8 +474,13 @@
 
                     // Get contact details
                     const code = document.getElementById('countrycode').value;
-                    const phone = document.getElementById('contactNumber').value;
-                    const email = document.getElementById('contactEmail').value;
+                    const phone = document.getElementById('contactNumber').value.trim();
+                    const email = document.getElementById('contactEmail').value.trim();
+
+                    if (!phone || !email) {
+                        alert('{{ __('all.please_enter_phone_and_email') }}');
+                        return;
+                    }
 
                     // Create hidden inputs
                     const codeInput = document.createElement('input');
@@ -536,8 +513,13 @@
 
                     // Get contact details
                     const code = document.getElementById('countrycode').value;
-                    const phone = document.getElementById('contactNumber').value;
-                    const email = document.getElementById('contactEmail').value;
+                    const phone = document.getElementById('contactNumber').value.trim();
+                    const email = document.getElementById('contactEmail').value.trim();
+
+                    if (!phone || !email) {
+                        alert('{{ __('all.please_enter_phone_and_email') }}');
+                        return;
+                    }
 
                     // Create hidden inputs
                     const codeInput = document.createElement('input');
