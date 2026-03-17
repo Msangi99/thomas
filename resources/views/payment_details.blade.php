@@ -108,7 +108,7 @@
                                                                     {{ __('all.session_expiry_warning') }}</p>
                                                                 <p class="text-lg font-bold text-green-600">
                                                                     {{ __('all.total') }} {{ $currency }}.
-                                                                    {{ convert_money($price + $fees + ($excess_luggage_fee ?? 0)) }}</p>
+                                                                    {{ convert_money($price + $fees) }}</p>
                                                             </div>
 
                                                             <p class="text-gray-700">{{ __('all.enter_yas_mobile_number') }}
@@ -124,7 +124,7 @@
                                                                     required>
                                                             </div>
 
-                                                            <input type="hidden" name="amount" value="{{ $price + $fees + ($excess_luggage_fee ?? 0) }}">
+                                                            <input type="hidden" name="amount" value="{{ $price + $fees }}">
 
                                                             <div class="flex items-start">
                                                                 <div class="flex items-center h-5">
@@ -192,7 +192,7 @@
                                                                                 class="text-base font-semibold">{{ __('all.total_payable') }}</span>
                                                                             <span class="text-base font-bold text-blue-600">
                                                                                 {{ __('all.currency_prefix_tzs') }}
-                                                                                {{ convert_money($price + $fees + ($excess_luggage_fee ?? 0)) }}
+                                                                                {{ convert_money($price + $fees) }}
                                                                             </span>
                                                                         </div>
                                                                     </div>
@@ -218,18 +218,18 @@
                                                                     {{ __('all.session_expiry_warning') }}</p>
                                                                 <p class="text-lg font-bold text-green-600">
                                                                     {{ __('all.total') }} {{ $currency }}.
-                                                                    {{ convert_money($price + $fees + ($excess_luggage_fee ?? 0)) }}</p>
+                                                                    {{ convert_money($price + $fees) }}</p>
                                                             </div>
 
                                                             <div>
                                                                 <label for="dpo_amount"
                                                                     class="block text-sm font-medium text-gray-700 mb-1">{{ __('all.amount') }}</label>
                                                                 <input type="text" name="amount_2" id="dpo_amount"
-                                                                    value="{{ convert_money($price + $fees + ($excess_luggage_fee ?? 0)) }}" readonly
+                                                                    value="{{ convert_money($price + $fees) }}" readonly
                                                                     class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                                     required>
                                                                 <input type="hidden" name="amount" id="dpo_amount"
-                                                                    value="{{$price + $fees + ($excess_luggage_fee ?? 0)}}" readonly
+                                                                    value="{{$price + $fees}}" readonly
                                                                     class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                                     required>
                                                             </div>
@@ -296,18 +296,18 @@
                                                                     {{ __('all.session_expiry_warning') }}</p>
                                                                 <p class="text-lg font-bold text-green-600">
                                                                     {{ __('all.total') }} {{ $currency }}.
-                                                                    {{ convert_money($price + $fees + ($excess_luggage_fee ?? 0)) }}</p>
+                                                                    {{ convert_money($price + $fees) }}</p>
                                                             </div>
 
                                                             <div>
                                                                 <label for="clickpesa_amount"
                                                                     class="block text-sm font-medium text-gray-700 mb-1">{{ __('all.amount') }}</label>
                                                                 <input type="text" name="amount_2" id="clickpesa_amount"
-                                                                    value="{{ convert_money($price + $fees + ($excess_luggage_fee ?? 0)) }}" readonly
+                                                                    value="{{ convert_money($price + $fees) }}" readonly
                                                                     class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                                     required>
                                                                 <input type="hidden" name="amount" id="clickpesa_amount"
-                                                                    value="{{$price + $fees + ($excess_luggage_fee ?? 0)}}" readonly
+                                                                    value="{{$price + $fees}}" readonly
                                                                     class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                                     required>
                                                             </div>
@@ -386,7 +386,7 @@
                                     <div class="border-t border-gray-200 pt-2 mt-2 flex justify-between">
                                         <span class="text-base font-semibold">{{ __('all.total_payable') }}</span>
                                         <span class="text-base font-bold text-blue-600">
-                                            {{ __('all.currency_prefix_tzs') }} {{ convert_money($price + $fees + ($excess_luggage_fee ?? 0)) }}
+                                            {{ __('all.currency_prefix_tzs') }} {{ convert_money($price + $fees) }}
                                         </span>
                                     </div>
                                 </div>

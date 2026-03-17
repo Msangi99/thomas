@@ -138,7 +138,7 @@
                                                         </p>
                                                         <p class="text-lg font-bold text-green-600">
                                                             {{ __('customer/busroot.total') }} {{ $currency }}.
-                                                            {{ convert_money($price + $fees + ($excess_luggage_fee ?? 0)) }}
+                                                            {{ convert_money($price + $fees) }}
                                                         </p>
                                                     </div>
 
@@ -156,7 +156,7 @@
                                                             required>
                                                     </div>
 
-                                                    <input type="hidden" name="amount" value="{{ $price + $fees + ($excess_luggage_fee ?? 0) }}">
+                                                    <input type="hidden" name="amount" value="{{ $price + $fees }}">
 
                                                     <div class="flex items-start">
                                                         <div class="flex items-center h-5">
@@ -218,7 +218,7 @@
                                                                     <span
                                                                         class="text-base font-semibold">{{ __('customer/busroot.total_payable') }}</span>
                                                                     <span class="text-base font-bold text-blue-600">
-                                                                        {{ $currency }} {{ convert_money($price + $fees + ($excess_luggage_fee ?? 0)) }}
+                                                                        {{ $currency }} {{ convert_money($price + $fees) }}
                                                                     </span>
                                                                 </div>
                                                             </div>
@@ -253,11 +253,11 @@
                                                         <label for="dpo_amount"
                                                             class="block text-sm font-medium text-gray-700 mb-1">{{ __('customer/busroot.amount') }}</label>
                                                         <input type="text" name="amount_2" id="dpo_amount"
-                                                            value="{{ convert_money($price + $fees + ($excess_luggage_fee ?? 0)) }}" readonly
+                                                            value="{{ convert_money($price + $fees) }}" readonly
                                                             class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                             required>
                                                         <input type="hidden" name="amount" id="dpo_amount"
-                                                            value="{{ $price + $fees + ($excess_luggage_fee ?? 0) }}" readonly
+                                                            value="{{ $price + $fees }}" readonly
                                                             class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                             required>
                                                     </div>
@@ -377,7 +377,7 @@
                                             <form id="cash" action="{{ route('customer.verify') }}" method="POST">
                                                 @csrf
                                                 <input type="hidden" name="payment_method" value="cash">
-                                                <input type="hidden" name="amount" value="{{ $price + $fees + ($excess_luggage_fee ?? 0) }}">
+                                                <input type="hidden" name="amount" value="{{ $price + $fees }}">
                                                 <div class="space-y-4">
                                                     <div class="p-4 bg-blue-50 rounded-lg">
                                                         <p class="text-sm text-gray-700 mb-1">
@@ -385,7 +385,7 @@
                                                         </p>
                                                         <p class="text-lg font-bold text-green-600">
                                                             {{ __('customer/busroot.total') }} {{ $currency }}.
-                                                            {{ convert_money($price + $fees + ($excess_luggage_fee ?? 0)) }}
+                                                            {{ convert_money($price + $fees) }}
                                                         </p>
                                                     </div>
 
@@ -448,16 +448,16 @@
                                                 @csrf
                                                 <input type="hidden" name="payment_method" value="resave">
                                                 <input type="hidden" name="resave_ticket" value="1">
-                                                <input type="hidden" name="amount" value="{{ $price + $fees + ($excess_luggage_fee ?? 0) }}">
+                                                <input type="hidden" name="amount" value="{{ $price + $fees }}">
                                                 <div class="space-y-4">
                                                     <div class="p-4 bg-yellow-50 rounded-lg">
                                                         <p class="text-sm text-yellow-700 mb-1">
                                                             {{ __('customer/busroot.resave_warning') }}
                                                         </p>
-                                                        <p class="text-lg font-bold text-yellow-800">
-                                                            {{ __('customer/busroot.total_to_resave') }}
-                                                            {{ $currency }}. {{ convert_money($price + $fees) }}
-                                                        </p>
+                                                    <p class="text-lg font-bold text-yellow-800">
+                                                        {{ __('customer/busroot.total_to_resave') }}
+                                                        {{ $currency }}. {{ convert_money($price + $fees) }}
+                                                    </p>
                                                     </div>
                                                     <p class="text-gray-700">
                                                         {{ __('customer/busroot.resave_description') }}
@@ -554,7 +554,7 @@
                                                             class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                             required>
                                                         <input type hidden" name="amount" id="clickpesa_amount"
-                                                            value="{{ $price + $fees + ($excess_luggage_fee ?? 0) }}" readonly
+                                                            value="{{ $price + $fees }}" readonly
                                                             class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                             required>
                                                     </div>
@@ -671,7 +671,7 @@
                             <div class="border-t border-gray-200 pt-2 mt-2 flex justify-between">
                                 <span class="text-base font-semibold">{{ __('customer/busroot.total_payable') }}</span>
                                 <span class="text-base font-bold text-blue-600">
-                                    {{ $currency }} {{ convert_money($price + $fees + ($excess_luggage_fee ?? 0)) }}
+                                    {{ $currency }} {{ convert_money($price + $fees) }}
                                 </span>
                             </div>
                         </div>
