@@ -413,8 +413,13 @@
 
             // Get contact details
             const code = document.getElementById('countrycode').value;
-            const phone = document.getElementById('contactNumber').value;
-            const email = document.getElementById('contactEmail').value;
+            const phone = document.getElementById('contactNumber').value.trim();
+            const email = document.getElementById('contactEmail').value.trim();
+
+            if (!phone || !email) {
+                alert('{{ __('customer/busroot.enter_phone_and_email') }}');
+                return;
+            }
 
             // Create hidden inputs
             const codeInput = document.createElement('input');
@@ -447,8 +452,13 @@
 
             // Get contact details
             const code = document.getElementById('countrycode').value;
-            const phone = document.getElementById('contactNumber').value;
-            const email = document.getElementById('contactEmail').value;
+            const phone = document.getElementById('contactNumber').value.trim();
+            const email = document.getElementById('contactEmail').value.trim();
+
+            if (!phone || !email) {
+                alert('{{ __('customer/busroot.enter_phone_and_email') }}');
+                return;
+            }
 
             // Create hidden inputs
             const codeInput = document.createElement('input');
@@ -481,8 +491,13 @@
 
             // Get contact details
             const code = document.getElementById('countrycode').value;
-            const phone = document.getElementById('contactNumber').value;
-            const email = document.getElementById('contactEmail').value;
+            const phone = document.getElementById('contactNumber').value.trim();
+            const email = document.getElementById('contactEmail').value.trim();
+
+            if (!phone || !email) {
+                alert('{{ __('customer/busroot.enter_phone_and_email') }}');
+                return;
+            }
 
             // Create hidden inputs
             const codeInput = document.createElement('input');
@@ -514,9 +529,14 @@
             event.preventDefault();
 
             const code = document.getElementById('countrycode').value;
-            const phone = document.getElementById('contactNumber').value;
-            const email = document.getElementById('contactEmail').value;
+            const phone = document.getElementById('contactNumber').value.trim();
+            const email = document.getElementById('contactEmail').value.trim();
             const customerName = document.getElementById('customer_name') ? document.getElementById('customer_name').value : 'Customer';
+
+            if (!phone || !email) {
+                alert('{{ __('customer/busroot.enter_phone_and_email') }}');
+                return;
+            }
 
             const codeInput = document.createElement('input');
             codeInput.type = 'hidden';

@@ -466,7 +466,10 @@ class CustomerController extends Controller
         $bus_info['discount_amount'] = $dis;
         session()->put('booking_form', $bus_info);
 
-        return view('customer.payment_details', compact('price', 'ins', 'fees', 'dis'));
+        // Make luggage fee available to the view
+        $excess_luggage_fee = $excessLuggageFee;
+
+        return view('customer.payment_details', compact('price', 'ins', 'fees', 'dis', 'excess_luggage_fee'));
     }
 
     private function generateRandomCode()

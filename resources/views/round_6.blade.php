@@ -403,8 +403,13 @@
 
             // Get contact details
             const code = document.getElementById('countrycode').value;
-            const phone = document.getElementById('contactNumber').value;
-            const email = document.getElementById('contactEmail').value;
+            const phone = document.getElementById('contactNumber').value.trim();
+            const email = document.getElementById('contactEmail').value.trim();
+
+            if (!phone || !email) {
+                alert('Please enter both mobile number and email before proceeding.');
+                return;
+            }
 
             // Create hidden inputs
             const codeInput = document.createElement('input');
@@ -437,8 +442,13 @@
 
             // Get contact details
             const code = document.getElementById('countrycode').value;
-            const phone = document.getElementById('contactNumber').value;
-            const email = document.getElementById('contactEmail').value;
+            const phone = document.getElementById('contactNumber').value.trim();
+            const email = document.getElementById('contactEmail').value.trim();
+
+            if (!phone || !email) {
+                alert('Please enter both mobile number and email before proceeding.');
+                return;
+            }
 
             // Create hidden inputs
             const codeInput = document.createElement('input');
@@ -471,8 +481,13 @@
 
             // Get contact details
             const code = document.getElementById('countrycode').value;
-            const phone = document.getElementById('contactNumber').value;
-            const email = document.getElementById('contactEmail').value;
+            const phone = document.getElementById('contactNumber').value.trim();
+            const email = document.getElementById('contactEmail').value.trim();
+
+            if (!phone || !email) {
+                alert('Please enter both mobile number and email before proceeding.');
+                return;
+            }
 
             // Create hidden inputs
             const codeInput = document.createElement('input');

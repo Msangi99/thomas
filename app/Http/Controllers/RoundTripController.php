@@ -664,6 +664,8 @@ class RoundTripController extends Controller
             'ins' => ($data1['bima_amount'] ?? 0) + ($data2['bima_amount'] ?? 0),
             'fees' => $data1['fees'] + $data2['fees'],
             'dis' => $data1['discount_amount'] + $data2['discount_amount'],
+            // Combine excess luggage fees from both legs so round_6 price summary can show it
+            'excess_luggage_fee' => ($data1['excess_luggage_fee'] ?? 0) + ($data2['excess_luggage_fee'] ?? 0),
         ];
 
         session()->forget('key');

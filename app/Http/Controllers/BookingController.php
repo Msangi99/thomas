@@ -441,15 +441,25 @@ class BookingController extends Controller
         }
 
         $total_amount = session()->get('booking_form')['total_amount'];
+
+        // Handle excess luggage fee for public flow (same logic as customer/vendor controllers)
+        $excessLuggageFee = 0;
+        if ((session()->get('booking_form')['excess_luggage'] ?? 0) == 1) {
+            $excessLuggageFee = 2500; // TSh. 2,500
+            $bus_info = session()->get('booking_form', []);
+            $bus_info['excess_luggage_fee'] = $excessLuggageFee;
+            session()->put('booking_form', $bus_info);
+        }
+
         if (!is_null(session()->get('booking_form')['discount'])) {
-            $price = discount($total_amount) + $ins - $bus_info['cancel_amount'];
+            $price = discount($total_amount) + $ins + $excessLuggageFee - $bus_info['cancel_amount'];
             $dis = $total_amount - discount($total_amount);
 
             $bus_info = session()->get('booking_form', []);
             $bus_info['dispo'] = discount($total_amount);
             session()->put('booking_form', $bus_info);
         } else {
-            $price = $total_amount + $ins - $bus_info['cancel_amount'];
+            $price = $total_amount + $ins + $excessLuggageFee - $bus_info['cancel_amount'];
         }
 
         Session::put('cancel', $bus_info['cancel_amount']);
@@ -459,7 +469,10 @@ class BookingController extends Controller
         $bus_info['discount_amount'] = $dis;
         session()->put('booking_form', $bus_info);
 
-        return view('payment_details', compact('price', 'ins', 'fees', 'dis'));
+        // Pass excess_luggage_fee explicitly to the view so it can be shown in Price Summary
+        $excess_luggage_fee = $excessLuggageFee;
+
+        return view('payment_details', compact('price', 'ins', 'fees', 'dis', 'excess_luggage_fee'));
     }
 
     public function get_payment(Request $request)

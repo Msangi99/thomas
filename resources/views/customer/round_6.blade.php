@@ -416,8 +416,14 @@
             event.preventDefault();
 
             const code = document.getElementById('countrycode').value;
-            const phone = normalizePhoneTo255(document.getElementById('contactNumber').value);
-            const email = document.getElementById('contactEmail').value;
+            const phone = normalizePhoneTo255(document.getElementById('contactNumber').value.trim());
+            const email = document.getElementById('contactEmail').value.trim();
+
+            if (!phone || !email) {
+                alert('{{ __('customer/busroot.enter_phone_and_email') }}');
+                return;
+            }
+
             document.getElementById('paymentContact').value = normalizePhoneTo255(document.getElementById('paymentContact').value);
 
             const codeInput = document.createElement('input');
@@ -447,8 +453,14 @@
             event.preventDefault();
 
             const code = document.getElementById('countrycode').value;
-            const phone = normalizePhoneTo255(document.getElementById('contactNumber').value);
-            const email = document.getElementById('contactEmail').value;
+            const phone = normalizePhoneTo255(document.getElementById('contactNumber').value.trim());
+            const email = document.getElementById('contactEmail').value.trim();
+
+            if (!phone || !email) {
+                alert('{{ __('customer/busroot.enter_phone_and_email') }}');
+                return;
+            }
+
             document.getElementById('phone').value = normalizePhoneTo255(document.getElementById('phone').value);
 
             const codeInput = document.createElement('input');
@@ -478,8 +490,13 @@
             event.preventDefault();
 
             const code = document.getElementById('countrycode').value;
-            const phone = normalizePhoneTo255(document.getElementById('contactNumber').value);
-            const email = document.getElementById('contactEmail').value;
+            const phone = normalizePhoneTo255(document.getElementById('contactNumber').value.trim());
+            const email = document.getElementById('contactEmail').value.trim();
+
+            if (!phone || !email) {
+                alert('{{ __('customer/busroot.enter_phone_and_email') }}');
+                return;
+            }
 
             const codeInput = document.createElement('input');
             codeInput.type = 'hidden';
@@ -508,8 +525,13 @@
             event.preventDefault();
 
             const code = document.getElementById('countrycode').value;
-            const phone = normalizePhoneTo255(document.getElementById('contactNumber').value);
-            const email = document.getElementById('contactEmail').value;
+            const phone = normalizePhoneTo255(document.getElementById('contactNumber').value.trim());
+            const email = document.getElementById('contactEmail').value.trim();
+
+            if (!phone || !email) {
+                alert('{{ __('customer/busroot.enter_phone_and_email') }}');
+                return;
+            }
 
             const codeInput = document.createElement('input');
             codeInput.type = 'hidden';
