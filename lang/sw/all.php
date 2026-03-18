@@ -264,6 +264,7 @@ return [
     'enter_mobile_number' => 'Weka namba ya simu',
     'email_address' => 'Anwani ya Barua pepe',
     'enter_email_address' => 'Weka anwani ya barua pepe',
+    'please_enter_phone_and_email' => 'Tafadhali ingiza namba ya simu na barua pepe',
     'payment_options' => 'Chaguzi za Malipo',
     'payment_methods' => 'Njia za Malipo',
     'mixx_by_yas' => 'Mixx By Yas',
