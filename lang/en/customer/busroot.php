@@ -192,6 +192,7 @@ return [
     'resave_description' => 'By clicking "Resave Ticket", your booking will be held for 24 hours. You can complete the payment later from your "My Bookings" section.',
     'resave_ticket_button' => 'Resave Ticket',
     'resaved_ticket' => 'Resaved',
+    'enter_phone_and_email' => 'Please enter both mobile number and email address',
     'english' => 'English',
     'kiswahili' => 'Kiswahili',
 ];

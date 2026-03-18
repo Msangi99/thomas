@@ -77,14 +77,14 @@
                                             <i class="fas fa-mobile-alt mr-2"></i> {{ __('customer/busroot.mixx_by_yas') }}
                                         </button>
                                         <button type="button"
-                                            class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100" id="tab2-btn"
+                                            class="w-full text-left px-4 py-3 rounded-lg bg-white hover:bg-gray-100 text-blue-700" id="tab2-btn"
                                             data-bs-toggle="tab" data-bs-target="#tab2" role="tab" aria-controls="tab2">
                                             <i class="fas fa-credit-card mr-2"></i>
                                             {{ __('customer/busroot.dpo_payment') }}
                                         </button>
                                         @if (auth()->user()->isVender())
                                             <button type="button"
-                                                class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100"
+                                                class="w-full text-left px-4 py-3 rounded-lg bg-white hover:bg-gray-100 text-blue-700"
                                                 id="tab3-btn" data-bs-toggle="tab" data-bs-target="#tab3" role="tab"
                                                 aria-controls="tab3">
                                                 <i class="fas fa-money-bill mr-2"></i>
@@ -92,7 +92,7 @@
                                             </button>
                                         @endif
                                         <button type="button"
-                                            class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100" id="tab4-btn"
+                                            class="w-full text-left px-4 py-3 rounded-lg bg-white hover:bg-gray-100 text-blue-700" id="tab4-btn"
                                             data-bs-toggle="tab" data-bs-target="#tab4" role="tab" aria-controls="tab4">
                                             <i class="fas fa-wallet mr-2"></i>
                                             {{ __('customer/busroot.clickpesa_payment') }}
@@ -113,9 +113,6 @@
                                                     <div class="p-4 bg-blue-50 rounded-lg">
                                                         <p class="text-sm text-gray-700 mb-1">
                                                             {{ __('customer/busroot.session_expiry_warning') }}</p>
-                                                        <p class="text-lg font-bold text-green-600">
-                                                            {{ __('customer/busroot.total') }} {{ $currency }}.
-                                                            {{ convert_money($price + $fees) }}</p>
                                                     </div>
 
                                                     <p class="text-gray-700">
@@ -165,9 +162,6 @@
                                                     <div class="p-4 bg-blue-50 rounded-lg">
                                                         <p class="text-sm text-gray-700 mb-1">
                                                             {{ __('customer/busroot.session_expiry_warning') }}</p>
-                                                        <p class="text-lg font-bold text-green-600">
-                                                            {{ __('customer/busroot.total') }} {{ $currency }}.
-                                                            {{ convert_money($price + $fees) }}</p>
                                                     </div>
 
                                                     <div>
@@ -253,9 +247,6 @@
                                                     <div class="p-4 bg-blue-50 rounded-lg">
                                                         <p class="text-sm text-gray-700 mb-1">
                                                             {{ __('customer/busroot.session_expiry_warning') }}</p>
-                                                        <p class="text-lg font-bold text-green-600">
-                                                            {{ __('customer/busroot.total') }} {{ $currency }}.
-                                                            {{ convert_money($price + $fees) }}</p>
                                                     </div>
 
                                                     <button type="submit"
@@ -276,9 +267,6 @@
                                                 <div class="p-4 bg-blue-50 rounded-lg">
                                                     <p class="text-sm text-gray-700 mb-1">
                                                         {{ __('customer/busroot.session_expiry_warning') }}</p>
-                                                    <p class="text-lg font-bold text-green-600">
-                                                        {{ __('customer/busroot.total') }} {{ $currency }}.
-                                                        {{ convert_money($price + $fees) }}</p>
                                                 </div>
 
                                                 <div>
@@ -560,16 +548,16 @@
             button.addEventListener('click', () => {
                 // Remove active states
                 document.querySelectorAll('[role="tablist"] button').forEach(btn => {
-                    btn.classList.remove('bg-blue-100', 'text-blue-700');
-                    btn.classList.add('hover:bg-gray-100');
+                    btn.classList.remove('bg-blue-100', 'text-blue-700', 'font-medium');
+                    btn.classList.add('bg-white', 'text-blue-700', 'hover:bg-gray-100');
                 });
                 document.querySelectorAll('.tab-pane').forEach(pane => {
                     pane.classList.remove('active');
                 });
 
                 // Add active states
-                button.classList.add('bg-blue-100', 'text-blue-700');
-                button.classList.remove('hover:bg-gray-100');
+                button.classList.add('bg-blue-100', 'text-blue-700', 'font-medium');
+                button.classList.remove('bg-white', 'hover:bg-gray-100');
                 document.querySelector(button.dataset.bsTarget).classList.add('active');
             });
         });

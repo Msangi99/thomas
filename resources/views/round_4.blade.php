@@ -105,7 +105,7 @@
                                 <i class="fas fa-bus text-blue-500 mt-1 mr-3"></i>
                                 <div>
                                     <p class="text-sm font-medium text-gray-500">{{ __('customer/busroot.bus') }}</p>
-                                    <p class="font-medium text-black">{{ $car->busname->name }} {{ $car->bus_number }}</p>
+                                    <p class="font-medium text-black">{{ $car->bus_model ?? $car->busname->name }} {{ $car->bus_number }}</p>
                                 </div>
                             </div>
                         </div>

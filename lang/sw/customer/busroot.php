@@ -191,6 +191,7 @@ return [
     'resave_description' => 'Kwa kubofya "Hifadhi Tiketi Upya", hifadhi yako itashikiliwa kwa masaa 24. Unaweza kukamilisha malipo baadaye kutoka sehemu ya "Hifadhi Zangu".',
     'resave_ticket_button' => 'Hifadhi Tiketi Upya',
     'resaved_ticket' => 'Imehifadhiwa Upya',
+    'enter_phone_and_email' => 'Tafadhali ingiza namba ya simu na barua pepe',
     'english' => 'Kiingereza',
     'kiswahili' => 'Kiswahili',
 ];

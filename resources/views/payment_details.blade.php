@@ -79,13 +79,13 @@
                                                     <i class="fas fa-mobile-alt mr-2"></i> {{ __('all.mixx_by_yas') }}
                                                 </button>
                                                 <button type="button"
-                                                    class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 text-blue-700"
+                                            class="w-full text-left px-4 py-3 rounded-lg bg-white hover:bg-gray-100 text-blue-700"
                                                     id="tab2-btn" data-bs-toggle="tab" data-bs-target="#tab2" role="tab"
                                                     aria-controls="tab2">
                                                     <i class="fas fa-credit-card mr-2"></i> {{ __('all.dpo_payment') }}
                                                 </button>
                                                 <button type="button"
-                                                    class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 text-blue-700"
+                                            class="w-full text-left px-4 py-3 rounded-lg bg-white hover:bg-gray-100 text-blue-700"
                                                     id="tab3-btn" data-bs-toggle="tab" data-bs-target="#tab3" role="tab"
                                                     aria-controls="tab3">
                                                     <i class="fas fa-wallet mr-2"></i> {{ __('all.clickpesa_payment') }}
@@ -106,9 +106,6 @@
                                                             <div class="p-4 bg-blue-50 rounded-lg">
                                                                 <p class="text-sm text-gray-700 mb-1">
                                                                     {{ __('all.session_expiry_warning') }}</p>
-                                                                <p class="text-lg font-bold text-green-600">
-                                                                    {{ __('all.total') }} {{ $currency }}.
-                                                                    {{ convert_money($price + $fees) }}</p>
                                                             </div>
 
                                                             <p class="text-gray-700">{{ __('all.enter_yas_mobile_number') }}
@@ -140,64 +137,6 @@
                                                                 </div>
                                                             </div>
 
-                                                            <div class="bg-white rounded-xl shadow-md overflow-hidden mt-4">
-                                                                <div class="p-4">
-                                                                    <h4 class="text-md font-semibold text-gray-800 mb-3">
-                                                                        <i class="fas fa-receipt mr-2 text-blue-500"></i>
-                                                                        {{ __('all.order_summary') }}
-                                                                    </h4>
-                                                                    <div class="space-y-2">
-                                                                        <div class="flex justify-between">
-                                                                            <span
-                                                                                class="text-sm text-gray-600">{{ __('all.discount') }}</span>
-                                                                            <span
-                                                                                class="text-sm font-medium text-gray-500">{{ __('all.currency_prefix_tzs') }}
-                                                                                {{ number_format($dis, 2) }}</span>
-                                                                        </div>
-                                                                        @if(isset($ins) && $ins > 0)
-                                                                            <div class="flex justify-between">
-                                                                                <span
-                                                                                    class="text-sm text-gray-600">{{ __('all.insurance') }}</span>
-                                                                                <span
-                                                                                    class="text-sm font-medium text-gray-500">{{ __('all.currency_prefix_tzs') }}
-                                                                                    {{ number_format($ins) }}</span>
-                                                                            </div>
-                                                                        @endif
-                                                                        <div class="flex justify-between">
-                                                                            <span
-                                                                                class="text-sm text-gray-600">{{ __('all.system_charge') }}</span>
-                                                                            <span
-                                                                                class="text-sm font-medium text-gray-500">{{ __('all.currency_prefix_tzs') }}
-                                                                                {{ convert_money($fees) }}</span>
-                                                                        </div>
-                                                                        @if(($excess_luggage_fee ?? 0) > 0)
-                                                                            <div class="flex justify-between">
-                                                                                <span class="text-sm text-gray-600">{{ __('all.excess_luggage') }}</span>
-                                                                                <span class="text-sm font-medium text-gray-500">
-                                                                                    {{ __('all.currency_prefix_tzs') }}
-                                                                                    {{ convert_money($excess_luggage_fee) }}
-                                                                                </span>
-                                                                            </div>
-                                                                        @endif
-                                                                        <div class="flex justify-between">
-                                                                            <span
-                                                                                class="text-sm text-gray-600">{{ __('all.bus_fare') }}</span>
-                                                                            <span
-                                                                                class="text-sm font-medium text-gray-500">{{ __('all.currency_prefix_tzs') }}
-                                                                                {{ convert_money($price - $ins) }}</span>
-                                                                        </div>
-                                                                        <div
-                                                                            class="border-t border-gray-200 pt-2 mt-2 flex justify-between">
-                                                                            <span
-                                                                                class="text-base font-semibold">{{ __('all.total_payable') }}</span>
-                                                                            <span class="text-base font-bold text-blue-600">
-                                                                                {{ __('all.currency_prefix_tzs') }}
-                                                                                {{ convert_money($price + $fees) }}
-                                                                            </span>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
                                                             <button type="submit"
                                                                 class="w-full mt-4 py-3 px-6 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white font-medium rounded-lg shadow-md transition-all duration-300 flex items-center justify-center">
                                                                 <i class="fas fa-lock mr-2"></i>
@@ -216,9 +155,6 @@
                                                             <div class="p-4 bg-blue-50 rounded-lg">
                                                                 <p class="text-sm text-gray-700 mb-1">
                                                                     {{ __('all.session_expiry_warning') }}</p>
-                                                                <p class="text-lg font-bold text-green-600">
-                                                                    {{ __('all.total') }} {{ $currency }}.
-                                                                    {{ convert_money($price + $fees) }}</p>
                                                             </div>
 
                                                             <div>
@@ -294,9 +230,6 @@
                                                             <div class="p-4 bg-blue-50 rounded-lg">
                                                                 <p class="text-sm text-gray-700 mb-1">
                                                                     {{ __('all.session_expiry_warning') }}</p>
-                                                                <p class="text-lg font-bold text-green-600">
-                                                                    {{ __('all.total') }} {{ $currency }}.
-                                                                    {{ convert_money($price + $fees) }}</p>
                                                             </div>
 
                                                             <div>
@@ -551,16 +484,16 @@
                     button.addEventListener('click', () => {
                         // Remove active states
                         document.querySelectorAll('[role="tablist"] button').forEach(btn => {
-                            btn.classList.remove('bg-blue-100', 'text-blue-700');
-                            btn.classList.add('hover:bg-gray-100');
+                            btn.classList.remove('bg-blue-100', 'text-blue-700', 'font-medium');
+                            btn.classList.add('bg-white', 'text-blue-700', 'hover:bg-gray-100');
                         });
                         document.querySelectorAll('.tab-pane').forEach(pane => {
                             pane.classList.remove('active');
                         });
 
                         // Add active states
-                        button.classList.add('bg-blue-100', 'text-blue-700');
-                        button.classList.remove('hover:bg-gray-100');
+                        button.classList.add('bg-blue-100', 'text-blue-700', 'font-medium');
+                        button.classList.remove('bg-white', 'hover:bg-gray-100');
                         document.querySelector(button.dataset.bsTarget).classList.add('active');
                     });
                 });
