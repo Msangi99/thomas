@@ -53,7 +53,7 @@
                                         class="block text-sm font-medium text-gray-700 mb-1">{{ __('customer/busroot.email_address') }}</label>
                                     <input type="email" id="contactEmail" maxlength="50" autocomplete="off"
                                         class="w-full text-black px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="{{ __('customer/busroot.enter_email_address') }}" required>
+                                        placeholder="{{ __('customer/busroot.enter_email_address') }}">
                                 </div>
                             </div>
                         </div>
@@ -407,8 +407,8 @@
             const phone = normalizePhoneTo255(document.getElementById('contactNumber').value.trim());
             const email = document.getElementById('contactEmail').value.trim();
 
-            if (!phone || !email) {
-                alert('{{ __('customer/busroot.enter_phone_and_email') }}');
+            if (!phone) {
+                alert('Please enter phone number');
                 return;
             }
 
@@ -444,8 +444,8 @@
             const phone = normalizePhoneTo255(document.getElementById('contactNumber').value.trim());
             const email = document.getElementById('contactEmail').value.trim();
 
-            if (!phone || !email) {
-                alert('{{ __('customer/busroot.enter_phone_and_email') }}');
+            if (!phone) {
+                alert('Please enter phone number');
                 return;
             }
 
@@ -481,8 +481,8 @@
             const phone = normalizePhoneTo255(document.getElementById('contactNumber').value.trim());
             const email = document.getElementById('contactEmail').value.trim();
 
-            if (!phone || !email) {
-                alert('{{ __('customer/busroot.enter_phone_and_email') }}');
+            if (!phone) {
+                alert('Please enter phone number');
                 return;
             }
 
@@ -516,8 +516,8 @@
             const phone = normalizePhoneTo255(document.getElementById('contactNumber').value.trim());
             const email = document.getElementById('contactEmail').value.trim();
 
-            if (!phone || !email) {
-                alert('{{ __('customer/busroot.enter_phone_and_email') }}');
+            if (!phone) {
+                alert('Please enter phone number');
                 return;
             }
 

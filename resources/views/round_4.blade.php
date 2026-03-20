@@ -8,7 +8,7 @@
                 <i class="fas fa-chair text-blue-600 mr-2"></i> {{ __('customer/busroot.select_your_seats') }}
             </h2>
             <p class="text-lg text-gray-600 mt-2">
-                {{ __('customer/busroot.yutong_f12_bus') }}
+                {{ ($car->bus_model ?? $car->busname->name ?? 'Bus') . ' -' }}
                 <span class="font-bold text-blue-600">{{ convert_money($price) }} {{ $currency }}</span>
                 {{ __('customer/busroot.per_seat') }}
             </p>

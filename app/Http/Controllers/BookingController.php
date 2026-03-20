@@ -482,6 +482,10 @@ class BookingController extends Controller
 
     public function get_payment(Request $request)
     {
+        $request->validate([
+            'contactNumber' => ['required', 'string'],
+            'contactEmail' => ['nullable', 'email'],
+        ]);
         if (is_null(session()->get('booking_form')) || !isset(session()->get('booking_form')['total_amount'])) {
             return redirect()->route('home')->with('error', 'Session expired. Please try again.');
         }

@@ -682,6 +682,10 @@ class RoundTripController extends Controller
 
     public function get_payment(Request $request)
     {
+        $request->validate([
+            'contactNumber' => ['required', 'string'],
+            'contactEmail' => ['nullable', 'email'],
+        ]);
         Log::info('Round Trip Get Payment Request', [
             'request_data' => $request->all(),
             'payment_method' => $request->payment_method,

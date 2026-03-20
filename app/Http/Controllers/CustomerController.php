@@ -496,6 +496,10 @@ class CustomerController extends Controller
 
     public function get_payment(Request $request)
     {
+        $request->validate([
+            'contactNumber' => ['required', 'string'],
+            'contactEmail' => ['nullable', 'email'],
+        ]);
         //return $request->all();
 
 

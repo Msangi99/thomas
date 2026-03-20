@@ -607,6 +607,10 @@ class VenderController extends Controller
 
     public function get_payment(Request $request)
     {
+        $request->validate([
+            'contactNumber' => ['required', 'string'],
+            'contactEmail' => ['nullable', 'email'],
+        ]);
         $bus_info = session()->get('booking_form', []);
         if (is_null(session()->get('booking_form')) || !isset(session()->get('booking_form')['total_amount'])) {
             return redirect()->route('home')->with('error', 'Session expired. Please try again.');
