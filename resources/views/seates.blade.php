@@ -54,8 +54,8 @@
                                 </div>
                             </div>
 
-                            <button type="submit"
-                                    class="w-full mt-6 bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-medium py-3 px-6 rounded-lg shadow-md transition-all duration-300 flex items-center justify-center">
+                            <button type="submit" id="confirmSeatsBtn" disabled
+                                    class="w-full mt-6 bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none text-white font-medium py-3 px-6 rounded-lg shadow-md transition-all duration-300 flex items-center justify-center">
                                 <i class="fas fa-check-circle mr-2"></i> {{ __('customer/busroot.confirm_seats') }}
                             </button>
                         </div>
@@ -402,6 +402,9 @@
 
         document.getElementById('hiddenSelectedSeats').value = selectedSeats.join(',');
         document.getElementById('hiddenTotalAmount').value = total;
+
+        const confirmBtn = document.getElementById('confirmSeatsBtn');
+        if (confirmBtn) confirmBtn.disabled = count === 0;
     }
 
     // Init

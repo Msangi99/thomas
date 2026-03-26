@@ -471,6 +471,10 @@ class VenderController extends Controller
         $selected = is_array($seats) ? $seats : (is_string($seats) ? array_map('trim', explode(',', $seats)) : []);
         $selected = array_filter($selected);
 
+        if (empty($selected)) {
+            return redirect()->route('seates.vender')->with('error', 'Please select at least one seat.');
+        }
+
         $booked = Booking::where('bus_id', $bus_info['bus_id'])
             ->where('travel_date', $bus_info['travel_date'])
             ->whereIn('payment_status', ['Paid', 'Reserved', 'resaved'])
