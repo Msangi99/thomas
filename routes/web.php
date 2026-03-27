@@ -29,6 +29,7 @@ use App\Http\Controllers\VenderController;
 use App\Http\Controllers\VenderWalletController;
 use App\Http\Controllers\SpecialHireController;
 use App\Http\Controllers\ParcelController;
+use App\Http\Controllers\TigosecureController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -205,6 +206,7 @@ Route::view('/terms', 'policy.terms')->name('terms');
 // Test Route (Assuming accessible to all roles for now)
 Route::get('/test', [TestController::class, 'test']);
 Route::get('/test2', [TestController::class, 'test2']);
+Route::get('/tigo/test-token', [TigosecureController::class, 'testToken'])->name('tigo.test-token');
 
 
 Route::post('print/recipt', [AdminController::class, 'print_recipt'])->name('print.recipt');

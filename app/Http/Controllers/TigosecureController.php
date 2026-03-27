@@ -137,6 +137,23 @@ class TigosecureController extends Controller
             throw new Exception("Error: " . $e->getMessage());
         }
     }
+
+    public function testToken()
+    {
+        try {
+            $token = $this->generateAccessToken();
+
+            return response()->json([
+                'status' => 'success',
+                'accessToken' => $token,
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
     
 }
 ?>
