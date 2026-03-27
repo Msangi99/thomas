@@ -34,20 +34,54 @@ class TigosecureController extends Controller
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
 
         $response = curl_exec($ch);
-
-        if ($response === false) {
-            throw new Exception("Curl error: " . curl_error($ch));
-        }
-
+        $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlErrno = curl_errno($ch);
+        $curlError = curl_error($ch);
         curl_close($ch);
 
-        $result = json_decode($response, true);
+        if ($response === false) {
+            throw new Exception(
+                "Tigo OAuth: curl request failed (errno {$curlErrno}): {$curlError}"
+            );
+        }
+
+        $raw = (string) $response;
+        $trimmed = trim($raw);
+
+        if ($trimmed === '') {
+            throw new Exception(
+                "Tigo OAuth: empty response from server (HTTP {$httpCode}). Check network, firewall, or SSL to secure.tigo.com."
+            );
+        }
+
+        $result = json_decode($trimmed, true);
+        $jsonErr = json_last_error();
+
+        if ($jsonErr !== JSON_ERROR_NONE) {
+            $preview = strlen($trimmed) > 2000 ? substr($trimmed, 0, 2000) . '…' : $trimmed;
+
+            throw new Exception(
+                "Tigo OAuth: response is not valid JSON (HTTP {$httpCode}). " . json_last_error_msg() . ". Raw body: {$preview}"
+            );
+        }
+
+        if ($result === null) {
+            $preview = strlen($trimmed) > 500 ? substr($trimmed, 0, 500) . '…' : $trimmed;
+
+            throw new Exception(
+                "Tigo OAuth: JSON decoded to null (HTTP {$httpCode}). Raw: {$preview}"
+            );
+        }
 
         if (isset($result["accessToken"])) {
             return $result["accessToken"];
         }
 
-        throw new Exception("Failed to generate access token: " . json_encode($result));
+        $encoded = json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        throw new Exception(
+            "Tigo OAuth: no accessToken in JSON (HTTP {$httpCode}). API body: {$encoded}"
+        );
     }
 
     private function generateRandomId()
