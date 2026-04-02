@@ -381,6 +381,7 @@ return [
     'clickpesa_request_sent_retry' => 'Ombi la malipo limetumwa tena kwenye simu yako. Tafadhali angalia kifaa chako na uingize PIN yako.',
     'waiting_for_payment_confirmation' => 'Inasubiri uthibitisho wa malipo',
     'payment_completed_successfully' => 'Malipo yamekamilika kwa mafanikio',
+    'payment_successful' => 'Malipo yamefanikiwa',
     'payment_failed_message' => 'Hakuna pesa iliyotolewa kutoka kwa akaunti yako. Tafadhali jaribu tena au tumia njia nyingine ya malipo.',
     'payment_could_not_complete' => 'Malipo yako hayakuweza kukamilika.',
     'transaction_cancelled_by_user' => 'Muamala ulighairiwa na mtumiaji',

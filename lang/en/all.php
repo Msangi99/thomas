@@ -381,6 +381,7 @@ return [
     'clickpesa_request_sent_retry' => 'Payment request sent again to your phone. Please check your mobile device and enter your PIN.',
     'waiting_for_payment_confirmation' => 'Waiting for payment confirmation',
     'payment_completed_successfully' => 'Payment completed successfully',
+    'payment_successful' => 'Payment successful',
     'payment_failed_message' => 'No money has been deducted from your account. Please try again or use a different payment method.',
     'payment_could_not_complete' => 'Your payment could not be completed.',
     'transaction_cancelled_by_user' => 'Transaction was cancelled by user',

@@ -933,7 +933,14 @@ class ClickPesaController extends Controller
             $errorMessage = "HTTP Error $httpCode";
             $jsonError = json_decode($response);
             if ($jsonError && isset($jsonError->message)) {
-                $errorMessage = (string) $jsonError->message;
+                // message can be string or array; normalize to readable string
+                if (is_array($jsonError->message)) {
+                    $errorMessage = implode(' ', array_map('strval', $jsonError->message));
+                } elseif (is_string($jsonError->message)) {
+                    $errorMessage = $jsonError->message;
+                } else {
+                    $errorMessage = json_encode($jsonError->message);
+                }
             } elseif (!empty($response)) {
                 $errorMessage = "API Error: " . substr($response, 0, 200);
             }
@@ -1568,7 +1575,7 @@ class ClickPesaController extends Controller
             $fees = $booking->amount - $booking->busFee - $bimaAmount;
             $busOwnerAmount = $booking->busFee + Session::get('cancel');
 
-            if (auth()->user()->role == 'customer') {
+            if (auth()->check() && auth()->user()->role === 'customer') {
                 if (auth()->user()->temp_wallets != null) {
                     $busOwnerAmount = $busOwnerAmount + auth()->user()->temp_wallets->amount;
                     auth()->user()->temp_wallets->amount = 0;
