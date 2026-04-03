@@ -818,6 +818,18 @@ class ClickPesaController extends Controller
         }
         $phoneNumber = (string) $phoneNumber; // Ensure string for API
 
+        // ClickPesa USSD minimum/maximum (API returns 400 outside this range, e.g. "Amount must be between 908 and 3000000")
+        $amountNum = (float) ($orderDetails['amount'] ?? 0);
+        $minTzs = (float) env('CLICKPESA_MIN_AMOUNT_TZS', 908);
+        $maxTzs = (float) env('CLICKPESA_MAX_AMOUNT_TZS', 3000000);
+        if ($amountNum < $minTzs) {
+            return "Amount must be at least {$minTzs} TZS for mobile money (ClickPesa minimum). "
+                . 'Increase the ticket total (e.g. minimum fare) or use another payment method.';
+        }
+        if ($amountNum > $maxTzs) {
+            return "Amount must not exceed {$maxTzs} TZS (ClickPesa maximum).";
+        }
+
         // ClickPesa requires alphanumeric-only order reference (no hyphens or special chars)
         $orderReference = preg_replace('/[^a-zA-Z0-9]/', '', $orderDetails['order_id']);
 
@@ -1396,6 +1408,20 @@ class ClickPesaController extends Controller
         ];
     }
 
+    /**
+     * When the booking is already Paid (e.g. duplicate callback), redirect like DPO/_redirect
+     * instead of leaving the user on a static ClickPesa success page.
+     */
+    private function redirectAfterClickPesaAlreadyPaid(Booking $booking): \Illuminate\Http\RedirectResponse
+    {
+        $message = __('all.payment_successful') ?: 'Payment successful';
+        if (auth()->check() && auth()->user()->role === 'customer') {
+            return redirect()->route('customer.mybooking')->with('success', $message);
+        }
+
+        return redirect()->route('booking.status', $booking->id)->with('success', $message);
+    }
+
     private function processSuccessfulPayment($transToken, $companyRef, $verifyResponse)
     {
         // Retrieve booking using CompanyRef (which should be booking_code)
@@ -1501,7 +1527,10 @@ class ClickPesaController extends Controller
         }
 
         if (!$booking) {
-            Log::error('Booking not found', ['transaction_ref_id' => $companyRef]);
+            Log::error('Booking not found', [
+                'order_reference' => $transToken,
+                'company_ref' => $companyRef,
+            ]);
             return [
                 'errorMessage' => 'Booking not found',
                 'reference' => $transToken
@@ -1510,14 +1539,13 @@ class ClickPesaController extends Controller
 
         // Check for duplicate processing (allow Unpaid and resaved to be paid)
         if (!in_array($booking->payment_status, ['Unpaid', 'resaved'], true)) {
-            Log::warning('Booking already processed', ['transaction_ref_id' => $companyRef]);
-            if (auth()->check() && auth()->user()->role === 'customer') {
-                return redirect()->route('customer.mybooking')->with('success', __('all.payment_successful') ?: 'Payment successful');
-            }
-            return view('clickpesa.success', [
-                'message' => 'Payment already processed',
-                'booking' => $booking
+            Log::warning('Booking already processed', [
+                'order_reference' => $transToken,
+                'company_ref' => $companyRef,
+                'booking_code' => $booking->booking_code,
             ]);
+
+            return $this->redirectAfterClickPesaAlreadyPaid($booking);
         }
 
         // Begin transaction

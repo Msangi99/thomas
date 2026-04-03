@@ -512,26 +512,11 @@ class CustomerController extends Controller
         }
         $bus_info = session()->get('booking_form', []);
 
-        // Process contact number: digits only; if starts with 0, convert to 255XXXXXXXXX
-        $contactNumber = preg_replace('/[^0-9]/', '', (string) ($request->contactNumber ?? ''));
-        if ($contactNumber !== '') {
-            if (strpos($contactNumber, '0') === 0) {
-                $contactNumber = '255' . substr($contactNumber, 1);
-            } elseif (substr($contactNumber, 0, 3) !== '255') {
-                $contactNumber = '255' . $contactNumber;
-            }
-        }
+        $contactNumber = normalize_tanzania_phone_for_booking((string) $request->contactNumber);
+        $paymentRaw = trim((string) ($request->payment_contact ?? ''));
+        $paymentContact = $paymentRaw !== '' ? normalize_tanzania_phone_for_booking($paymentRaw) : '';
         $bus_info['customer_number'] = $contactNumber;
-
-        $paymentContact = preg_replace('/[^0-9]/', '', (string) ($request->payment_contact ?? ''));
-        if ($paymentContact !== '') {
-            if (strpos($paymentContact, '0') === 0) {
-                $paymentContact = '255' . substr($paymentContact, 1);
-            } elseif (substr($paymentContact, 0, 3) !== '255') {
-                $paymentContact = '255' . $paymentContact;
-            }
-        }
-        $bus_info['customer_payment_number'] = $paymentContact ?: $contactNumber;
+        $bus_info['customer_payment_number'] = $paymentContact !== '' ? $paymentContact : $contactNumber;
 
         $bus_info['customer_email'] = $request->contactEmail;
         $bus_info['countrycode'] = $request->countrycode ?? '';

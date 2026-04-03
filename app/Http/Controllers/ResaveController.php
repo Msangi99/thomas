@@ -32,19 +32,11 @@ class ResaveController extends Controller
         if ($value === null || trim($value) === '') {
             return null;
         }
-        $digits = preg_replace('/[^0-9]/', '', $value);
-        if ($digits === '') {
-            return null;
+        $normalized = normalize_tanzania_phone_for_booking($value);
+        if ($normalized !== '' && strlen($normalized) === 12 && str_starts_with($normalized, '255')) {
+            return $normalized;
         }
-        if (strpos($digits, '0') === 0) {
-            $digits = '255' . substr($digits, 1);
-        } elseif (substr($digits, 0, 3) !== '255') {
-            $digits = '255' . $digits;
-        }
-        // Tanzania: 255 + 9 digits (e.g. 255712345678)
-        if (strlen($digits) === 12 && substr($digits, 0, 3) === '255') {
-            return $digits;
-        }
+
         return null;
     }
 

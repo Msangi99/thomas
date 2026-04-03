@@ -38,12 +38,7 @@ class BookingController extends Controller
 {
     public function booking_info(Request $request)
     {
-        $data = $request->data;
-
-        // Check if data is numeric and starts with 0
-        if (is_numeric($data) && str_starts_with($data, '0')) {
-            $data = '255' . ltrim($data, '0');
-        }
+        $data = trim((string) $request->data);
 
         // Check if this is an email address
         if (filter_var($data, FILTER_VALIDATE_EMAIL)) {
@@ -78,8 +73,13 @@ class BookingController extends Controller
             }
         } else {
             // For phone numbers, show bookings directly (no verification required)
+            $phoneCanonical = normalize_tanzania_phone_to_canonical($data);
+            $phoneVariants = $phoneCanonical !== null
+                ? tanzania_phone_booking_lookup_variants($phoneCanonical)
+                : [$data];
+
             $bookings = Booking::with(['campany', 'route_name', 'user', 'bus.route', 'vender', 'campany.busOwnerAccount'])
-                ->where('customer_phone', $data)
+                ->whereIn('customer_phone', $phoneVariants)
                 ->get();
 
             return view('booking_info', compact('bookings'));
@@ -495,15 +495,13 @@ class BookingController extends Controller
         }
         $bus_info = session()->get('booking_form', []);
 
-        // Process contact number
-        $contactNumber = $request->contactNumber;
-        if (substr($contactNumber, 0, 1) === '0') {
-            $contactNumber = '255' . substr($contactNumber, 1);
-        }
+        $contactNumber = normalize_tanzania_phone_for_booking((string) $request->contactNumber);
+        $paymentRaw = trim((string) ($request->payment_contact ?? ''));
+        $paymentContact = $paymentRaw !== '' ? normalize_tanzania_phone_for_booking($paymentRaw) : '';
 
         $bus_info['customer_number'] = $contactNumber;
         $bus_info['customer_email'] = $request->contactEmail;
-        $bus_info['customer_payment_number'] = $request->payment_contact;
+        $bus_info['customer_payment_number'] = $paymentContact !== '' ? $paymentContact : $contactNumber;
         $bus_info['countrycode'] = $request->countrycode;
 
         $user = $request->user_id ?? "";

@@ -24,7 +24,10 @@ class RoundpaymentController extends Controller
         $booking = Booking::where('booking_code', $code)->first();
 
         if (!$booking) {
-            Log::error('Booking not found', ['transaction_ref_id' => $companyRef]);
+            Log::error('Booking not found', [
+                'booking_code' => $code,
+                'company_ref' => $companyRef,
+            ]);
             return [
                 'errorMessage' => 'Booking not found',
                 'transactionToken' => $transToken
@@ -33,7 +36,10 @@ class RoundpaymentController extends Controller
 
         // Check for duplicate processing - return booking so callers get consistent type (Booking)
         if ($booking->payment_status !== 'Unpaid') {
-            Log::warning('Booking already processed', ['transaction_ref_id' => $companyRef]);
+            Log::warning('Booking already processed', [
+                'booking_code' => $code,
+                'company_ref' => $companyRef,
+            ]);
             return $booking;
         }
 

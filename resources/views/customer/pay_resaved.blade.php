@@ -99,7 +99,7 @@
                                                     <input type="hidden" name="payment_contact" id="mix_payment_contact_hidden">
                                                     <p class="text-xs text-gray-500 mt-1">{{ __('customer/busroot.leave_blank_use_booking_phone') }}</p>
                                                 </div>                      
-                                                <input type="hidden" name="amount" value="{{ $price + $fees }}">
+                                                <input type="hidden" name="amount" value="{{ round($price + $fees, 2) }}">
                                                 
                                                 <div class="flex items-start">
                                                     <div class="flex items-center h-5">
@@ -132,10 +132,10 @@
                                                 </div>
                                                 
                                                 <div>
-                                                    <label for="dpo_amount" class="block text-sm font-medium text-gray-700 mb-1">{{ __('customer/busroot.amount') }}</label>
-                                                    <input type="text" name="amount_2" id="dpo_amount" value="{{ convert_money($price + $fees) }}" readonly
+                                                    <label for="dpo_amount_display" class="block text-sm font-medium text-gray-700 mb-1">{{ __('customer/busroot.amount') }}</label>
+                                                    <input type="text" id="dpo_amount_display" value="{{ convert_money($price + $fees) }}" readonly
                                                         class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
-                                                    <input type="hidden" name="amount" value="{{ $price + $fees }}">
+                                                    <input type="hidden" name="amount" id="dpo_amount" value="{{ round($price + $fees, 2) }}">
                                                 </div>
                                                 
                                                 <!--
@@ -207,7 +207,7 @@
                                                     <label for="clickpesa_amount_display" class="block text-sm font-medium text-gray-700 mb-1">{{ __('customer/busroot.amount') }}</label>
                                                     <input type="text" id="clickpesa_amount_display" value="{{ convert_money($price + $fees) }}" readonly
                                                         class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50">
-                                                    <input type="hidden" name="amount" value="{{ $price + $fees }}">
+                                                    <input type="hidden" name="amount" value="{{ round($price + $fees, 2) }}">
                                                 </div>
                                                 <div>
                                                     <label for="clickpesa_payment_phone" class="block text-sm font-medium text-gray-700 mb-1">{{ __('customer/busroot.mobile_number') }}</label>
@@ -291,6 +291,8 @@
 </section>
 
 <script>
+    @include('partials.tz_phone_normalize_js')
+
     // Timer countdown functionality
     function startTimer(duration, displayMinutes, displaySeconds) {
         let timer = duration, minutes, seconds;
@@ -317,16 +319,6 @@
         startTimer(fiveMinutes, displayMinutes, displaySeconds);
     };
 
-    // Normalize phone in background on submit only (no change to visible field)
-    function normalizePhoneTo255(str) {
-        if (!str) return str;
-        var digits = String(str).replace(/\D/g, '');
-        if (digits.charAt(0) === '0')
-            digits = '255' + digits.substring(1);
-        else if (digits.length > 0 && digits.substring(0, 3) !== '255')
-            digits = '255' + digits;
-        return digits;
-    }
     document.querySelectorAll('#tab1 form, #tab2 form, #tab3 form').forEach(function(form) {
         form.addEventListener('submit', function() {
             var visible = form.querySelector('#mix_payment_phone, #dpo_payment_phone, #clickpesa_payment_phone');

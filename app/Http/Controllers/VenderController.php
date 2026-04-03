@@ -620,25 +620,13 @@ class VenderController extends Controller
             return redirect()->route('home')->with('error', 'Session expired. Please try again.');
         }
 
-        // Process contact number
-        $contactNumber = $request->contactNumber;
-        if (substr($contactNumber, 0, 1) === '0') {
-            $contactNumber = '255' . substr($contactNumber, 1);
-        }
+        $contactNumber = normalize_tanzania_phone_for_booking((string) $request->contactNumber);
+        $paymentRaw = trim((string) ($request->payment_contact ?? ''));
+        $paymentContact = $paymentRaw !== '' ? normalize_tanzania_phone_for_booking($paymentRaw) : '';
 
         $bus_info['customer_number'] = $contactNumber;
         $bus_info['customer_email'] = $request->contactEmail;
-        
-        // Format payment contact number to start with 255
-        $paymentContact = $request->payment_contact;
-        if (!empty($paymentContact)) {
-            if (substr($paymentContact, 0, 1) === '0') {
-                $paymentContact = '255' . substr($paymentContact, 1);
-            } elseif (substr($paymentContact, 0, 3) !== '255') {
-                $paymentContact = '255' . $paymentContact;
-            }
-        }
-        $bus_info['customer_payment_number'] = $paymentContact;
+        $bus_info['customer_payment_number'] = $paymentContact !== '' ? $paymentContact : $contactNumber;
         $bus_info['countrycode'] = $request->countrycode;
 
         $user = $request->user_id ?? "";

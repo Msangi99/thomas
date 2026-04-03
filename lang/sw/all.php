@@ -382,6 +382,7 @@ return [
     'waiting_for_payment_confirmation' => 'Inasubiri uthibitisho wa malipo',
     'payment_completed_successfully' => 'Malipo yamekamilika kwa mafanikio',
     'payment_successful' => 'Malipo yamefanikiwa',
+    'view_booking' => 'Tazama uwekaji nafasi',
     'payment_failed_message' => 'Hakuna pesa iliyotolewa kutoka kwa akaunti yako. Tafadhali jaribu tena au tumia njia nyingine ya malipo.',
     'payment_could_not_complete' => 'Malipo yako hayakuweza kukamilika.',
     'transaction_cancelled_by_user' => 'Muamala ulighairiwa na mtumiaji',

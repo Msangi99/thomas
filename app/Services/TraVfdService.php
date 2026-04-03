@@ -104,10 +104,9 @@ class TraVfdService
 
         Log::info("TRA Registration Request to $url");
 
-        $certSerialHex = $this->getCertSerialHex();
         $response = Http::withHeaders([
             'Content-Type' => 'application/xml',
-            'Cert-Serial' => base64_encode(hex2bin($certSerialHex)), // Same as receipt: base64 of serial bytes (TRA expects this format)
+            'Cert-Serial' => $this->buildCertSerialHeader(),
             'Client' => 'WEBAPI'
         ])->send('POST', $url, ['body' => $xml]);
 
@@ -191,14 +190,10 @@ class TraVfdService
     {
         $url = "{$this->baseUrl}/efdmsRctInfo";
 
-        $details = $this->getCertDetails();
-        // Extract Serial in Hex form correctly
-        $certSerialHex = $details['serialNumberHex'] ?? $this->getCertSerialHex();
-
         $response = Http::withHeaders([
             'Content-Type' => 'application/xml',
             'Routing-Key' => $state['routing_key'],
-            'Cert-Serial' => base64_encode(hex2bin($certSerialHex)), // The doc example uses base64 of the HEX BYTES
+            'Cert-Serial' => $this->buildCertSerialHeader(),
             'Client' => 'WEBAPI',
             'Authorization' => 'Bearer ' . $state['token']
         ])->send('POST', $url, ['body' => $signedXml]);
@@ -296,13 +291,60 @@ class TraVfdService
         return $certInfo;
     }
 
-    protected function getCertSerialHex()
+    /**
+     * HTTP Cert-Serial header: base64 of certificate serial octets (TRA VFD).
+     * Set TRA_CERT_SERIAL_HEADER_BASE64 if TRA gave a fixed value or auto-extract fails.
+     */
+    protected function buildCertSerialHeader(): string
     {
-        // This is tricky. The doc says "Serial of the Key certificate to be provided by TRA".
-        // Often we extract it from the Cert.
+        $override = config('tra.cert_serial_header_base64');
+        if ($override !== null && $override !== '') {
+            return trim((string) $override);
+        }
+
+        $hex = $this->normalizeCertSerialHex($this->extractSerialHexFromPfx());
+        $binary = hex2bin($hex);
+        if ($binary === false || $binary === '') {
+            throw new Exception(
+                'Could not encode TRA Cert-Serial from certificate. ' .
+                'Confirm TRA_CERT_PATH / TRA_PASSWORD, or set TRA_CERT_SERIAL_HEADER_BASE64 (see TRA integration guide). ' .
+                'You can set TRA_ENABLED=false until the certificate is registered with TRA.'
+            );
+        }
+
+        return base64_encode($binary);
+    }
+
+    protected function normalizeCertSerialHex(string $hex): string
+    {
+        $hex = preg_replace('/^0x/i', '', $hex);
+        $hex = str_replace([':', ' ', '-'], '', $hex);
+        $hex = strtolower($hex);
+        if ($hex === '' || !ctype_xdigit($hex)) {
+            throw new Exception('TRA certificate serial is not valid hexadecimal (check TRA_CERT_PATH / .pfx).');
+        }
+        if (strlen($hex) % 2 === 1) {
+            $hex = '0' . $hex;
+        }
+
+        return $hex;
+    }
+
+    protected function extractSerialHexFromPfx(): string
+    {
         $details = $this->getCertDetails();
         $cert = openssl_x509_parse($details['cert']);
-        return $cert['serialNumberHex'];
+        if ($cert === false) {
+            throw new Exception('Could not parse TRA .pfx certificate for serial number.');
+        }
+        $hex = $cert['serialNumberHex'] ?? null;
+        if (empty($hex)) {
+            throw new Exception(
+                'Certificate has no serialNumberHex. Set TRA_CERT_SERIAL_HEADER_BASE64 from TRA or use a TRA-issued .pfx.'
+            );
+        }
+
+        return (string) $hex;
     }
 
     protected function getState()

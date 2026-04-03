@@ -1,0 +1,26 @@
+---
+description: Use the todo list for code edits and multi-step work
+alwaysApply: true
+---
+
+# Use todos for edits
+
+When you **edit code**, **refactor**, **fix bugs**, or do any task that is **not a single trivial one-liner**, use the **todo list** (`todo_write` / merge) to track work.
+
+## When to create todos
+
+- **Always** for: multiple files, multiple steps, investigations followed by fixes, or anything the user frames as a small project.
+- **Optional** for: a single obvious change in one place (e.g. one rename) with no follow-up.
+
+## How to use them
+
+1. **At the start**: add items that reflect the real steps (2+ items when work spans more than one action).
+2. **While working**: mark the current item `in_progress`; mark items `completed` as soon as they are done.
+3. **At the end**: no items should remain `in_progress` if they are actually finished; cancel items that are out of scope.
+
+## Hygiene
+
+- Keep todo text **specific** (file, feature, or outcome), not vague.
+- Prefer **updating** the same list (`merge: true`) over spawning duplicate lists in one session.
+
+This keeps progress visible to the user and reduces dropped steps across long edits.

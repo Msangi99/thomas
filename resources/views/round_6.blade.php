@@ -156,16 +156,14 @@
                                                     </div>
 
                                                     <div>
-                                                        <label for="dpo_amount"
+                                                        <label for="dpo_amount_display"
                                                             class="block text-sm font-medium text-gray-700 mb-1">{{ __('customer/busroot.amount') }}</label>
-                                                        <input type="text" name="amount_2" id="dpo_amount"
+                                                        <input type="text" id="dpo_amount_display"
                                                             value="{{ convert_money($price + $fees) }}" readonly
                                                             class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                             required>
                                                         <input type="hidden" name="amount" id="dpo_amount"
-                                                            value="{{ $price + $fees }}" readonly
-                                                            class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                            required>
+                                                            value="{{ round($price + $fees, 2) }}">
                                                     </div>
 
                                                     <!--
@@ -267,16 +265,14 @@
                                                 </div>
 
                                                 <div>
-                                                    <label for="clickpesa_amount"
+                                                    <label for="clickpesa_amount_display"
                                                         class="block text-sm font-medium text-gray-700 mb-1">{{ __('customer/busroot.amount') }}</label>
-                                                    <input type="text" name="amount_2" id="clickpesa_amount"
+                                                    <input type="text" id="clickpesa_amount_display"
                                                         value="{{ convert_money($price) }}" readonly
                                                         class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                         required>
                                                     <input type="hidden" name="amount" id="clickpesa_amount"
-                                                        value="{{ $price }}" readonly
-                                                        class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                        required>
+                                                        value="{{ round($price, 2) }}">
                                                 </div>
 
                                                 <div class="flex items-start">
@@ -358,6 +354,8 @@
     </section>
 
     <script>
+        @include('partials.tz_phone_normalize_js')
+
         // Timer countdown functionality
         function startTimer(duration, displayMinutes, displaySeconds) {
             let timer = duration,
@@ -391,12 +389,17 @@
 
             // Get contact details
             const code = document.getElementById('countrycode').value;
-            const phone = document.getElementById('contactNumber').value.trim();
+            const phone = normalizePhoneTo255(document.getElementById('contactNumber').value);
             const email = document.getElementById('contactEmail').value.trim();
 
             if (!phone) {
                 alert('Please enter phone number');
                 return;
+            }
+
+            var paymentContactEl = document.getElementById('paymentContact');
+            if (paymentContactEl) {
+                paymentContactEl.value = normalizePhoneTo255(paymentContactEl.value);
             }
 
             // Create hidden inputs
@@ -430,7 +433,7 @@
 
             // Get contact details
             const code = document.getElementById('countrycode').value;
-            const phone = document.getElementById('contactNumber').value.trim();
+            const phone = normalizePhoneTo255(document.getElementById('contactNumber').value);
             const email = document.getElementById('contactEmail').value.trim();
 
             if (!phone) {
@@ -469,7 +472,7 @@
 
             // Get contact details
             const code = document.getElementById('countrycode').value;
-            const phone = document.getElementById('contactNumber').value.trim();
+            const phone = normalizePhoneTo255(document.getElementById('contactNumber').value);
             const email = document.getElementById('contactEmail').value.trim();
 
             if (!phone) {

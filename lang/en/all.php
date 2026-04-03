@@ -382,6 +382,7 @@ return [
     'waiting_for_payment_confirmation' => 'Waiting for payment confirmation',
     'payment_completed_successfully' => 'Payment completed successfully',
     'payment_successful' => 'Payment successful',
+    'view_booking' => 'View booking',
     'payment_failed_message' => 'No money has been deducted from your account. Please try again or use a different payment method.',
     'payment_could_not_complete' => 'Your payment could not be completed.',
     'transaction_cancelled_by_user' => 'Transaction was cancelled by user',
