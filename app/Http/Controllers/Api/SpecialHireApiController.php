@@ -1152,12 +1152,16 @@ class SpecialHireApiController extends Controller
      */
     public function publicShowCoaster($id)
     {
-        $coaster = Coaster::with('pricing:coaster_id,base_price,price_per_km,min_km')
+        $coaster = Coaster::with([
+            'pricing:coaster_id,base_price,price_per_km,min_km',
+            'driver:id,name,email,phone,contact',
+        ])
             ->where('status', 'available')
             ->whereHas('pricing')
             ->select([
-                'id', 'name', 'plate_number', 'capacity', 'model', 
-                'color', 'features', 'image', 'status'
+                'id', 'name', 'plate_number', 'capacity', 'model',
+                'color', 'features', 'image', 'status', 'driver_user_id',
+                'driver_name', 'driver_contact', 'latitude', 'longitude',
             ])
             ->find($id);
 
@@ -1168,9 +1172,38 @@ class SpecialHireApiController extends Controller
             ], 404);
         }
 
+        $data = [
+            'id' => $coaster->id,
+            'name' => $coaster->name,
+            'plate_number' => $coaster->plate_number,
+            'capacity' => $coaster->capacity,
+            'model' => $coaster->model,
+            'color' => $coaster->color,
+            'features' => $coaster->features,
+            'image' => $coaster->image,
+            'status' => $coaster->status,
+            'latitude' => $coaster->latitude,
+            'longitude' => $coaster->longitude,
+            'pricing' => $coaster->pricing,
+        ];
+
+        if ($coaster->driver) {
+            $data['driver'] = [
+                'id' => $coaster->driver->id,
+                'name' => $coaster->driver->name,
+                'phone' => $coaster->driver->phone ?? $coaster->driver_contact,
+                'email' => $coaster->driver->email,
+            ];
+        } elseif ($coaster->driver_name) {
+            $data['driver'] = [
+                'name' => $coaster->driver_name,
+                'phone' => $coaster->driver_contact,
+            ];
+        }
+
         return response()->json([
             'success' => true,
-            'data' => $coaster,
+            'data' => $data,
         ]);
     }
 

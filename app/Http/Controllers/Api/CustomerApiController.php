@@ -41,6 +41,7 @@ class CustomerApiController extends Controller
             'phone' => $request->phone,
             'password' => Hash::make($request->password),
             'role' => 'customer',
+            'status' => 'accept',
         ]);
 
         $token = $user->createToken('customer-token')->plainTextToken;
