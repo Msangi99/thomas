@@ -327,6 +327,8 @@ class CustomerApiController extends Controller
             'dropoff_latitude' => 'nullable|numeric',
             'dropoff_longitude' => 'nullable|numeric',
             'distance_km' => 'nullable|numeric|min:0',
+            'routed_distance_km' => 'nullable|numeric|min:0|max:8000',
+            'distance_mode' => 'nullable|in:straight,route',
             'hire_date' => 'required|date',
             'hire_time' => 'required',
         ]);
@@ -347,15 +349,30 @@ class CustomerApiController extends Controller
             ], 400);
         }
 
-        // Calculate distance
-        $distanceKm = $request->distance_km;
-        if ($request->pickup_latitude && $request->dropoff_latitude) {
-            $distanceKm = SpecialHirePricing::calculateDistance(
+        $haversineKm = null;
+        if ($request->pickup_latitude !== null && $request->dropoff_latitude !== null) {
+            $haversineKm = SpecialHirePricing::calculateDistance(
                 $request->pickup_latitude,
                 $request->pickup_longitude,
                 $request->dropoff_latitude,
                 $request->dropoff_longitude
             );
+        }
+
+        $distanceKm = $request->distance_km;
+        if ($request->input('distance_mode') === 'route'
+            && $request->filled('routed_distance_km')
+            && $haversineKm !== null) {
+            $routed = (float) $request->routed_distance_km;
+            $minOk = max($haversineKm * 0.72, 0.05);
+            $maxOk = max($haversineKm * 14, $haversineKm + 250);
+            if ($routed >= $minOk && $routed <= $maxOk) {
+                $distanceKm = $routed;
+            } else {
+                $distanceKm = $haversineKm;
+            }
+        } elseif ($haversineKm !== null) {
+            $distanceKm = $haversineKm;
         }
 
         if (!$distanceKm) {
