@@ -799,6 +799,7 @@ class SpecialHireApiController extends Controller
             'distance_km' => 'required_without_all:pickup_latitude,dropoff_latitude|numeric|min:0',
             'hire_date' => 'required|date',
             'hire_time' => 'required',
+            'return_date' => 'nullable|date|after_or_equal:hire_date',
         ]);
 
         if ($validator->fails()) {
@@ -824,6 +825,15 @@ class SpecialHireApiController extends Controller
                 'success' => false,
                 'message' => 'Pricing not set for this coaster',
             ], 400);
+        }
+
+        $winStart = Carbon::parse($request->hire_date)->startOfDay();
+        $winEnd = Carbon::parse($request->input('return_date', $request->hire_date))->startOfDay();
+        if ($coaster->hasHireScheduleConflict($winStart, $winEnd)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This vehicle is not available for the selected hire dates.',
+            ], 422);
         }
 
         // Calculate distance
@@ -972,6 +982,15 @@ class SpecialHireApiController extends Controller
                 'success' => false,
                 'message' => 'Pricing not set for this coaster',
             ], 400);
+        }
+
+        $winStart = Carbon::parse($request->hire_date)->startOfDay();
+        $winEnd = Carbon::parse($request->input('return_date', $request->hire_date))->startOfDay();
+        if ($coaster->hasHireScheduleConflict($winStart, $winEnd)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This vehicle is not available for the selected hire dates.',
+            ], 422);
         }
 
         // Calculate distance if coordinates provided
@@ -1130,7 +1149,8 @@ class SpecialHireApiController extends Controller
     {
         $query = Coaster::with('pricing:coaster_id,base_price,price_per_km,min_km')
             ->where('status', 'available')
-            ->whereHas('pricing');
+            ->whereHas('pricing')
+            ->withoutActiveHireSchedule();
 
         if ($request->filled('capacity_min')) {
             $query->where('capacity', '>=', $request->capacity_min);
@@ -1158,6 +1178,7 @@ class SpecialHireApiController extends Controller
         ])
             ->where('status', 'available')
             ->whereHas('pricing')
+            ->withoutActiveHireSchedule()
             ->select([
                 'id', 'name', 'plate_number', 'capacity', 'model',
                 'color', 'features', 'image', 'status', 'driver_user_id',
@@ -1223,6 +1244,7 @@ class SpecialHireApiController extends Controller
             'distance_mode' => 'nullable|in:straight,route',
             'hire_date' => 'required|date',
             'hire_time' => 'required',
+            'return_date' => 'nullable|date|after_or_equal:hire_date',
         ]);
 
         if ($validator->fails()) {
@@ -1248,6 +1270,15 @@ class SpecialHireApiController extends Controller
                 'success' => false,
                 'message' => 'Pricing not set for this coaster',
             ], 400);
+        }
+
+        $winStart = Carbon::parse($request->hire_date)->startOfDay();
+        $winEnd = Carbon::parse($request->input('return_date', $request->hire_date))->startOfDay();
+        if ($coaster->hasHireScheduleConflict($winStart, $winEnd)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This vehicle is not available for the selected hire dates.',
+            ], 422);
         }
 
         $haversineKm = null;

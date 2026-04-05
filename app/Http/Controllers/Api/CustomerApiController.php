@@ -331,6 +331,7 @@ class CustomerApiController extends Controller
             'distance_mode' => 'nullable|in:straight,route',
             'hire_date' => 'required|date',
             'hire_time' => 'required',
+            'return_date' => 'nullable|date|after_or_equal:hire_date',
         ]);
 
         if ($validator->fails()) {
@@ -347,6 +348,15 @@ class CustomerApiController extends Controller
                 'success' => false,
                 'message' => 'Pricing not set for this coaster',
             ], 400);
+        }
+
+        $winStart = Carbon::parse($request->hire_date)->startOfDay();
+        $winEnd = Carbon::parse($request->input('return_date', $request->hire_date))->startOfDay();
+        if ($coaster->hasHireScheduleConflict($winStart, $winEnd)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This vehicle is not available for the selected hire dates.',
+            ], 422);
         }
 
         $haversineKm = null;
@@ -457,6 +467,15 @@ class CustomerApiController extends Controller
                 'success' => false,
                 'message' => 'Pricing not set for this coaster',
             ], 400);
+        }
+
+        $winStart = Carbon::parse($request->hire_date)->startOfDay();
+        $winEnd = Carbon::parse($request->input('return_date', $request->hire_date))->startOfDay();
+        if ($coaster->hasHireScheduleConflict($winStart, $winEnd)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This vehicle is not available for the selected hire dates.',
+            ], 422);
         }
 
         // Use the amount and distance provided by the customer app

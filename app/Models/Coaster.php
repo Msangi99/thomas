@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
@@ -90,6 +91,42 @@ class Coaster extends Model
     public function scopeAvailable($query)
     {
         return $query->where('status', 'available');
+    }
+
+    /**
+     * Exclude coasters that already have an active hire (in progress, or pending/confirmed
+     * with hire window ending today or later). Used for public “available vehicles” list.
+     */
+    public function scopeWithoutActiveHireSchedule($query)
+    {
+        $today = Carbon::today()->toDateString();
+
+        return $query->whereDoesntHave('orders', function ($q) use ($today) {
+            $q->whereIn('order_status', ['pending', 'confirmed', 'in_progress'])
+                ->where(function ($w) use ($today) {
+                    $w->where('order_status', 'in_progress')
+                        ->orWhereRaw('COALESCE(return_date, hire_date) >= ?', [$today]);
+                });
+        });
+    }
+
+    /**
+     * True if another order overlaps the inclusive hire window [rangeStart, rangeEnd].
+     */
+    public function hasHireScheduleConflict(Carbon $rangeStart, Carbon $rangeEnd, ?int $ignoreOrderId = null): bool
+    {
+        $rs = $rangeStart->toDateString();
+        $re = $rangeEnd->toDateString();
+
+        $q = $this->orders()
+            ->whereIn('order_status', ['pending', 'confirmed', 'in_progress'])
+            ->whereRaw('hire_date <= ? AND COALESCE(return_date, hire_date) >= ?', [$re, $rs]);
+
+        if ($ignoreOrderId !== null) {
+            $q->where('id', '!=', $ignoreOrderId);
+        }
+
+        return $q->exists();
     }
 
     /**
