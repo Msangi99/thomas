@@ -34,13 +34,23 @@
         </div>
     </div>
 
-    <!-- Stats Cards -->
+    @php
+        $periodLabel = match ($period) {
+            'today' => 'Today',
+            'week' => 'This week',
+            'year' => 'This year',
+            default => 'This month',
+        };
+    @endphp
+
+    <!-- Stats Cards (filtered by Period above) -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl p-6 text-white">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-teal-100 text-sm">Total Earnings</p>
-                    <h3 class="text-3xl font-bold mt-1">Tsh {{ number_format($totalEarnings) }}</h3>
+                    <p class="text-teal-100 text-sm font-medium">Paid earnings — {{ $periodLabel }}</p>
+                    <p class="text-teal-100/80 text-xs mt-0.5">{{ $startDate->format('M d') }} – {{ $endDate->format('M d, Y') }}</p>
+                    <h3 class="text-3xl font-bold mt-2">Tsh {{ number_format($totalEarnings) }}</h3>
                 </div>
                 <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
                     <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -53,7 +63,7 @@
         <div class="bg-white rounded-2xl shadow-lg p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-500 text-sm">Completed Orders</p>
+                    <p class="text-gray-500 text-sm">Paid orders — {{ $periodLabel }}</p>
                     <h3 class="text-3xl font-bold text-gray-800 mt-1">{{ $totalOrders }}</h3>
                 </div>
                 <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
@@ -67,7 +77,7 @@
         <div class="bg-white rounded-2xl shadow-lg p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-500 text-sm">Total Distance</p>
+                    <p class="text-gray-500 text-sm">Distance — {{ $periodLabel }}</p>
                     <h3 class="text-3xl font-bold text-gray-800 mt-1">{{ number_format($totalDistance) }} km</h3>
                 </div>
                 <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
@@ -75,6 +85,138 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
                     </svg>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <p class="text-sm text-gray-600 bg-teal-50/80 border border-teal-100 rounded-xl px-4 py-3">
+        <strong class="text-gray-800">Why two different totals?</strong>
+        The teal card is only for the <strong>period you selected</strong> (e.g. this month). Withdrawals use your
+        <strong>lifetime</strong> paid hires (all dates), minus anything already paid out or held for a pending request.
+        Example: <span class="text-teal-800 font-medium">Tsh {{ number_format($totalEarnings, 0) }}</span> this period vs
+        <span class="text-teal-800 font-medium">Tsh {{ number_format($lifetimePaidEarnings, 0) }}</span> all-time paid.
+    </p>
+
+    <!-- Request withdrawal (payout to your account) -->
+    <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-amber-100">
+        <div class="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-amber-50 to-orange-50">
+            <h3 class="text-lg font-bold text-gray-800">Request withdrawal from admin</h3>
+            <p class="text-sm text-gray-600 mt-1">Payouts are based on <strong>all-time</strong> paid hire revenue (not the month filter above). Enter where you want to receive the money.</p>
+        </div>
+        <div class="p-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="space-y-4">
+                <div class="rounded-xl bg-gray-50 border border-gray-100 p-4 text-sm space-y-2">
+                    <div class="flex justify-between"><span class="text-gray-600">Lifetime paid hire total</span><span class="font-semibold text-gray-900">Tsh {{ number_format($lifetimePaidEarnings, 0) }}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-600">Already paid out to you</span><span class="font-semibold text-teal-700">Tsh {{ number_format($withdrawalPaidOut, 0) }}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-600">In review (pending / approved)</span><span class="font-semibold text-amber-700">Tsh {{ number_format($withdrawalReserved, 0) }}</span></div>
+                    <div class="flex justify-between pt-2 border-t border-gray-200"><span class="text-gray-800 font-medium">You can request now</span><span class="font-bold text-teal-600 text-lg">Tsh {{ number_format($withdrawableBalance, 0) }}</span></div>
+                </div>
+                @if($withdrawableBalance < 1)
+                    <p class="text-sm text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-4 py-3">Nothing available to withdraw right now. When customers pay for hires and amounts are marked paid, your balance will update.</p>
+                @else
+                    <form action="{{ route('special_hire.withdrawal.store') }}" method="POST" class="space-y-4">
+                        @csrf
+                        <input type="hidden" name="period" value="{{ $period }}">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Amount (Tsh) *</label>
+                            <input type="number" name="amount" value="{{ old('amount') }}" required min="1" step="0.01" max="{{ $withdrawableBalance }}"
+                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                                   placeholder="e.g. {{ number_format(min(50000, $withdrawableBalance), 0, '', '') }}">
+                            @error('amount')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Payment method *</label>
+                            <input type="text" name="payment_method" value="{{ old('payment_method') }}" required maxlength="100"
+                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                                   placeholder="e.g. M-Pesa, Tigo Pesa, Bank transfer">
+                            @error('payment_method')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Account / phone number *</label>
+                            <input type="text" name="payment_number" value="{{ old('payment_number') }}" required maxlength="255"
+                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                                   placeholder="Number or account the admin should pay to">
+                            @error('payment_number')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Note to admin</label>
+                            <textarea name="notes" rows="2" maxlength="2000"
+                                      class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                                      placeholder="Optional">{{ old('notes') }}</textarea>
+                            @error('notes')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                        </div>
+                        <button type="submit" class="btn-primary w-full sm:w-auto px-6 py-2.5 text-white rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+                            Submit withdrawal request
+                        </button>
+                    </form>
+                @endif
+            </div>
+            <div>
+                <h4 class="text-sm font-semibold text-gray-800 mb-2">Open requests</h4>
+                <p class="text-xs text-gray-500 mb-3">Pending or approved — admin has not marked paid yet.</p>
+                @if($withdrawalRequestsOpen->isEmpty())
+                    <p class="text-gray-500 text-sm mb-6">None right now.</p>
+                @else
+                    <div class="overflow-x-auto rounded-xl border border-amber-100 mb-6">
+                        <table class="w-full text-sm">
+                            <thead class="bg-amber-50 text-left text-xs font-semibold text-gray-500 uppercase">
+                                <tr>
+                                    <th class="px-3 py-2">Date</th>
+                                    <th class="px-3 py-2">Amount</th>
+                                    <th class="px-3 py-2">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @foreach($withdrawalRequestsOpen as $req)
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-3 py-2 text-gray-600 whitespace-nowrap">{{ $req->created_at->format('M d, Y') }}</td>
+                                        <td class="px-3 py-2 font-medium text-gray-900">Tsh {{ number_format($req->amount, 0) }}</td>
+                                        <td class="px-3 py-2">
+                                            <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold capitalize
+                                                {{ $req->status === 'pending' ? 'bg-amber-100 text-amber-800' : '' }}
+                                                {{ $req->status === 'approved' ? 'bg-blue-100 text-blue-800' : '' }}">
+                                                {{ $req->status }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+
+                <h4 class="text-sm font-semibold text-gray-800 mb-2">History — paid or rejected</h4>
+                @if($withdrawalRequestsExecuted->isEmpty())
+                    <p class="text-gray-500 text-sm">No completed requests yet.</p>
+                @else
+                    <div class="overflow-x-auto rounded-xl border border-gray-100">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-50 text-left text-xs font-semibold text-gray-500 uppercase">
+                                <tr>
+                                    <th class="px-3 py-2">Date</th>
+                                    <th class="px-3 py-2">Amount</th>
+                                    <th class="px-3 py-2">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @foreach($withdrawalRequestsExecuted as $req)
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-3 py-2 text-gray-600 whitespace-nowrap">{{ $req->created_at->format('M d, Y') }}</td>
+                                        <td class="px-3 py-2 font-medium text-gray-900">Tsh {{ number_format($req->amount, 0) }}</td>
+                                        <td class="px-3 py-2">
+                                            <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold capitalize
+                                                {{ $req->status === 'paid' ? 'bg-green-100 text-green-800' : '' }}
+                                                {{ $req->status === 'rejected' ? 'bg-red-100 text-red-800' : '' }}">
+                                                {{ $req->status }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">Admin may add a note when updating your request.</p>
+                @endif
             </div>
         </div>
     </div>

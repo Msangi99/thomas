@@ -81,6 +81,13 @@ class TraVfdService
     {
         $state = $this->getState();
 
+        // Stale state after switching TIN, TRA_ENV, or certificate causes bogus tokens / registration errors
+        if (!empty($state['username']) && $this->stateConfigMismatch($state)) {
+            Log::warning('TRA state.json does not match current TRA_TIN / TRA_ENV — deleting state and re-registering.');
+            Storage::delete($this->stateFile);
+            $state = $this->getState();
+        }
+
         // If not registered, register first
         if (empty($state['username'])) {
             $this->register();
@@ -95,6 +102,12 @@ class TraVfdService
 
     protected function register()
     {
+        if ($this->tin === null || $this->tin === '' || $this->certSerial === null || $this->certSerial === '') {
+            throw new Exception(
+                'TRA_TIN and TRA_CERT_SERIAL must be set in .env. They must match your TRA VFD registration.'
+            );
+        }
+
         $payload = "<REGDATA><TIN>{$this->tin}</TIN><CERTKEY>{$this->certSerial}</CERTKEY></REGDATA>";
         $signature = $this->signData($payload);
 
@@ -104,19 +117,27 @@ class TraVfdService
 
         Log::info("TRA Registration Request to $url");
 
+        $certSerialHeader = $this->buildCertSerialHeader();
+
         $response = Http::withHeaders([
             'Content-Type' => 'application/xml',
-            'Cert-Serial' => $this->buildCertSerialHeader(),
-            'Client' => 'WEBAPI'
+            'Cert-Serial' => $certSerialHeader,
+            'Client' => 'WEBAPI',
         ])->send('POST', $url, ['body' => $xml]);
 
         if ($response->failed()) {
-            throw new Exception("Registration HTTP Failed: " . $response->body());
+            $this->throwRegistrationFailure(
+                'Registration HTTP Failed: ' . $response->body(),
+                $certSerialHeader
+            );
         }
 
         $xmlResp = simplexml_load_string($response->body());
         if ((string) $xmlResp->EFDMSRESP->ACKCODE !== '0') {
-            throw new Exception("Registration API Failed: " . (string) $xmlResp->EFDMSRESP->ACKMSG);
+            $this->throwRegistrationFailure(
+                'Registration API Failed: ' . (string) $xmlResp->EFDMSRESP->ACKMSG,
+                $certSerialHeader
+            );
         }
 
         // Save Registration Data
@@ -128,7 +149,9 @@ class TraVfdService
             'routing_key' => (string) $data->ROUTINGKEY,
             'reg_id' => (string) $data->REGID,
             'gc' => (int) $data->GC,
-            'registered_at' => now()->toIso8601String()
+            'registered_at' => now()->toIso8601String(),
+            'tra_tin' => (string) $this->tin,
+            'tra_env' => (string) $this->env,
         ]);
 
         Log::info("TRA Registration Successful");
@@ -337,14 +360,52 @@ class TraVfdService
         if ($cert === false) {
             throw new Exception('Could not parse TRA .pfx certificate for serial number.');
         }
+
         $hex = $cert['serialNumberHex'] ?? null;
-        if (empty($hex)) {
-            throw new Exception(
-                'Certificate has no serialNumberHex. Set TRA_CERT_SERIAL_HEADER_BASE64 from TRA or use a TRA-issued .pfx.'
-            );
+        if (!empty($hex)) {
+            return (string) $hex;
         }
 
-        return (string) $hex;
+        // Large serials: PHP may omit serialNumberHex; derive hex from decimal serialNumber
+        $dec = $cert['serialNumber'] ?? null;
+        if ($dec !== null && $dec !== '' && function_exists('gmp_strval')) {
+            $hex = gmp_strval(gmp_init((string) $dec, 10), 16);
+            if (strlen($hex) % 2 === 1) {
+                $hex = '0' . $hex;
+            }
+
+            return $hex;
+        }
+
+        throw new Exception(
+            'Certificate serial could not be read. Install PHP gmp extension or set TRA_CERT_SERIAL_HEADER_BASE64 (see config/tra.php).'
+        );
+    }
+
+    protected function stateConfigMismatch(array $state): bool
+    {
+        $savedTin = $state['tra_tin'] ?? null;
+        $savedEnv = $state['tra_env'] ?? null;
+        if ($savedTin === null && $savedEnv === null) {
+            return false;
+        }
+
+        return (string) $savedTin !== (string) $this->tin || (string) $savedEnv !== (string) $this->env;
+    }
+
+    /**
+     * @throws Exception
+     */
+    protected function throwRegistrationFailure(string $message, string $certSerialHeader): void
+    {
+        $hint = '';
+        if (stripos($message, 'Cert-Serial') !== false || stripos($message, 'certificate not found') !== false) {
+            $hint = ' Check: (1) .pfx is the one TRA issued for this TIN on ' . ($this->env === 'production' ? 'production' : 'test') .
+                ' VFD; (2) TRA_CERT_SERIAL matches the EFD serial on that cert; (3) set TRA_CERT_SERIAL_HEADER_BASE64 if TRA supplied it; ' .
+                '(4) delete storage/app/tra/state.json after fixing env vars; (5) temporarily TRA_ENABLED=false if you must accept payments without TRA.';
+        }
+
+        throw new Exception($message . $hint . ' Cert-Serial header length (base64): ' . strlen($certSerialHeader) . '.');
     }
 
     protected function getState()

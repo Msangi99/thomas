@@ -477,6 +477,7 @@ class SpecialHireApiController extends Controller
         // Create order
         $order = SpecialHireOrder::create([
             'user_id' => Auth::id(),
+            'customer_user_id' => null,
             'coaster_id' => $coaster->id,
             'customer_name' => $request->customer_name,
             'customer_phone' => $request->customer_phone,
@@ -1017,6 +1018,7 @@ class SpecialHireApiController extends Controller
         // Create order with customer info from authenticated user
         $order = SpecialHireOrder::create([
             'user_id' => $coaster->user_id, // Owner of the coaster
+            'customer_user_id' => $user->id,
             'coaster_id' => $coaster->id,
             'customer_name' => $user->name,
             'customer_phone' => $user->contact,

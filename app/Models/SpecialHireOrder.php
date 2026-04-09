@@ -196,5 +196,65 @@ class SpecialHireOrder extends Model
             default => 'gray',
         };
     }
+
+    /**
+     * Ordered lifecycle steps for UI steppers (excludes terminal / side paths).
+     *
+     * @return list<string>
+     */
+    public static function orderStatusPipeline(): array
+    {
+        return ['pending', 'confirmed', 'in_progress', 'completed'];
+    }
+
+    /**
+     * Human label for order_status.
+     */
+    public static function orderStatusLabel(string $status): string
+    {
+        return match ($status) {
+            'pending' => 'Pending',
+            'confirmed' => 'Confirmed',
+            'in_progress' => 'In progress',
+            'completed' => 'Completed',
+            'cancelled' => 'Cancelled',
+            default => ucfirst(str_replace('_', ' ', $status)),
+        };
+    }
+
+    /**
+     * Next order_status values suggested for one-click advance (linear flow + cancel).
+     *
+     * @return list<string>
+     */
+    public function allowedNextOrderStatuses(): array
+    {
+        if (in_array($this->order_status, ['completed', 'cancelled'], true)) {
+            return [];
+        }
+
+        $pipeline = self::orderStatusPipeline();
+        $idx = array_search($this->order_status, $pipeline, true);
+        $next = [];
+        if ($idx !== false && $idx < count($pipeline) - 1) {
+            $next[] = $pipeline[$idx + 1];
+        }
+        if ($this->order_status !== 'cancelled') {
+            $next[] = 'cancelled';
+        }
+
+        return array_values(array_unique($next));
+    }
+
+    /**
+     * Index of current status in pipeline, or -1 if not in main line (e.g. cancelled).
+     */
+    public function orderStatusPipelineIndex(): int
+    {
+        $pipeline = self::orderStatusPipeline();
+        $idx = array_search($this->order_status, $pipeline, true);
+
+        return $idx === false ? -1 : (int) $idx;
+    }
 }
 

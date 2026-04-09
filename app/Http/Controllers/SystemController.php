@@ -30,6 +30,9 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\SmsController;
 use App\Models\Refund;
 use App\Models\CancelledBookings;
+use App\Models\Coaster;
+use App\Models\SpecialHireOrder;
+use App\Models\SpecialHireWithdrawalRequest;
 
 class SystemController extends Controller
 {
@@ -135,6 +138,164 @@ class SystemController extends Controller
     {
         $buses = bus::with('busname', 'route')->paginate(10);
         return view('system.buses', compact('buses'));
+    }
+
+    /**
+     * Pick a special hire business account before viewing coasters, orders, drivers, withdrawals.
+     */
+    public function specialHireIndex(Request $request)
+    {
+        $tab = $request->query('tab', 'accounts');
+        if (!in_array($tab, ['accounts', 'withdrawals'], true)) {
+            $tab = 'accounts';
+        }
+
+        $withdrawalActionNeededCount = SpecialHireWithdrawalRequest::query()
+            ->awaitingAction()
+            ->count();
+
+        $owners = User::query()
+            ->where('role', 'special_hire')
+            ->withCount(['coasters', 'specialHireOrders'])
+            ->orderBy('name')
+            ->get();
+
+        $withdrawalRequestsOpen = collect();
+        $withdrawalRequestsExecuted = collect();
+        if ($tab === 'withdrawals') {
+            $withdrawalRequestsOpen = SpecialHireWithdrawalRequest::query()
+                ->with('user')
+                ->awaitingAction()
+                ->orderByDesc('created_at')
+                ->limit(150)
+                ->get();
+            $withdrawalRequestsExecuted = SpecialHireWithdrawalRequest::query()
+                ->with('user')
+                ->executed()
+                ->orderByDesc('created_at')
+                ->limit(250)
+                ->get();
+        }
+
+        return view('system.special_hire_index', compact(
+            'owners',
+            'tab',
+            'withdrawalActionNeededCount',
+            'withdrawalRequestsOpen',
+            'withdrawalRequestsExecuted'
+        ));
+    }
+
+    /**
+     * Special hire detail for one business owner (user_id on coasters / orders).
+     */
+    public function specialHireShow(int $user)
+    {
+        $selectedOwner = User::query()
+            ->where('role', 'special_hire')
+            ->findOrFail($user);
+
+        $ownerId = $selectedOwner->id;
+
+        $coasters = Coaster::query()
+            ->where('user_id', $ownerId)
+            ->with(['user', 'driver', 'pricing'])
+            ->orderByDesc('created_at')
+            ->get();
+
+        $coastersByDriverId = Coaster::query()
+            ->where('user_id', $ownerId)
+            ->whereNotNull('driver_user_id')
+            ->with('user')
+            ->orderBy('name')
+            ->get()
+            ->groupBy('driver_user_id');
+
+        $driverIds = $coasters->pluck('driver_user_id')->filter()->unique()->values();
+        $drivers = User::query()
+            ->where('role', 'driver')
+            ->whereIn('id', $driverIds)
+            ->orderBy('name')
+            ->get();
+
+        $orders = SpecialHireOrder::query()
+            ->where('user_id', $ownerId)
+            ->with(['coaster', 'user', 'customer'])
+            ->orderByDesc('created_at')
+            ->limit(150)
+            ->get();
+
+        $stats = [
+            'coasters' => $coasters->count(),
+            'drivers' => $drivers->count(),
+            'orders' => SpecialHireOrder::where('user_id', $ownerId)->count(),
+            'revenue_paid' => (float) SpecialHireOrder::where('user_id', $ownerId)->where('payment_status', 'paid')->sum('total_amount'),
+            'revenue_pending' => (float) SpecialHireOrder::where('user_id', $ownerId)->where('payment_status', 'pending')->sum('total_amount'),
+        ];
+
+        $ordersByStatus = SpecialHireOrder::query()
+            ->where('user_id', $ownerId)
+            ->selectRaw('order_status, COUNT(*) as cnt')
+            ->groupBy('order_status')
+            ->pluck('cnt', 'order_status');
+
+        $paymentsByStatus = SpecialHireOrder::query()
+            ->where('user_id', $ownerId)
+            ->selectRaw('payment_status, COUNT(*) as cnt')
+            ->groupBy('payment_status')
+            ->pluck('cnt', 'payment_status');
+
+        $withdrawalRequestsOpen = SpecialHireWithdrawalRequest::query()
+            ->where('user_id', $ownerId)
+            ->with('user')
+            ->awaitingAction()
+            ->orderByDesc('created_at')
+            ->get();
+
+        $withdrawalRequestsExecuted = SpecialHireWithdrawalRequest::query()
+            ->where('user_id', $ownerId)
+            ->with('user')
+            ->executed()
+            ->orderByDesc('created_at')
+            ->limit(100)
+            ->get();
+
+        return view('system.special_hire_show', compact(
+            'selectedOwner',
+            'coasters',
+            'coastersByDriverId',
+            'drivers',
+            'orders',
+            'stats',
+            'ordersByStatus',
+            'paymentsByStatus',
+            'withdrawalRequestsOpen',
+            'withdrawalRequestsExecuted'
+        ));
+    }
+
+    public function updateSpecialHireWithdrawal(Request $request, int $id)
+    {
+        $request->validate([
+            'status' => 'required|in:approved,rejected,paid',
+            'admin_note' => 'nullable|string|max:2000',
+        ]);
+
+        $withdrawal = SpecialHireWithdrawalRequest::with('user')->findOrFail($id);
+
+        if (!$withdrawal->user || !$withdrawal->user->isSpecialHire()) {
+            abort(404);
+        }
+
+        $withdrawal->update([
+            'status' => $request->status,
+            'admin_note' => $request->admin_note,
+            'processed_at' => now(),
+        ]);
+
+        return redirect()
+            ->back()
+            ->with('success', 'Withdrawal request marked as ' . $request->status . '.');
     }
 
     public function pay_request(Request $request)

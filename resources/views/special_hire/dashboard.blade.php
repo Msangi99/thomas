@@ -179,6 +179,98 @@
         </div>
     </div>
 
+    <!-- Payout requests to admin -->
+    <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-amber-100">
+        <div class="px-6 py-4 border-b border-amber-100 bg-gradient-to-r from-amber-50 to-orange-50 flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <h3 class="text-lg font-bold text-gray-800">Payout requests to admin</h3>
+                <p class="text-sm text-gray-600 mt-0.5">Money you asked to withdraw from <strong>Earnings</strong></p>
+            </div>
+            <div class="flex items-center gap-3">
+                @if($withdrawalActionNeededCount > 0)
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-900">{{ $withdrawalActionNeededCount }} in queue</span>
+                @endif
+                <a href="{{ route('special_hire.earnings') }}" class="text-sm font-medium text-teal-700 hover:text-teal-800">Earnings &amp; request →</a>
+            </div>
+        </div>
+        <div class="p-6">
+            @if($withdrawalRequestsOpen->isEmpty() && $withdrawalRequestsExecuted->isEmpty())
+                <p class="text-gray-500 text-sm text-center py-6">No payout requests yet. Submit one from the Earnings page when you want admin to send funds.</p>
+            @else
+                @if($withdrawalRequestsOpen->isNotEmpty())
+                    <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">In progress (pending or approved)</h4>
+                    <div class="overflow-x-auto mb-6">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-left text-xs font-semibold text-gray-500 uppercase border-b border-gray-100">
+                                    <th class="pb-3 pr-4">Date</th>
+                                    <th class="pb-3 pr-4">Amount</th>
+                                    <th class="pb-3 pr-4">Method / account</th>
+                                    <th class="pb-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @foreach($withdrawalRequestsOpen as $wr)
+                                    <tr class="table-row-hover">
+                                        <td class="py-3 pr-4 text-gray-600 whitespace-nowrap">{{ $wr->created_at->format('M d, Y') }}</td>
+                                        <td class="py-3 pr-4 font-semibold text-gray-900">Tsh {{ number_format($wr->amount, 0) }}</td>
+                                        <td class="py-3 pr-4 text-gray-600">
+                                            <span class="text-gray-800">{{ $wr->payment_method }}</span>
+                                            <span class="block text-xs font-mono text-gray-500 mt-0.5">{{ $wr->payment_number }}</span>
+                                        </td>
+                                        <td class="py-3">
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full capitalize
+                                                {{ $wr->status === 'pending' ? 'bg-amber-100 text-amber-800' : '' }}
+                                                {{ $wr->status === 'approved' ? 'bg-blue-100 text-blue-800' : '' }}">{{ $wr->status }}</span>
+                                            @if($wr->admin_note)
+                                                <p class="text-xs text-gray-500 mt-1">{{ $wr->admin_note }}</p>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+                @if($withdrawalRequestsExecuted->isNotEmpty())
+                    <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Completed (paid or rejected)</h4>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-left text-xs font-semibold text-gray-500 uppercase border-b border-gray-100">
+                                    <th class="pb-3 pr-4">Date</th>
+                                    <th class="pb-3 pr-4">Amount</th>
+                                    <th class="pb-3 pr-4">Method / account</th>
+                                    <th class="pb-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @foreach($withdrawalRequestsExecuted as $wr)
+                                    <tr class="table-row-hover">
+                                        <td class="py-3 pr-4 text-gray-600 whitespace-nowrap">{{ $wr->created_at->format('M d, Y') }}</td>
+                                        <td class="py-3 pr-4 font-semibold text-gray-900">Tsh {{ number_format($wr->amount, 0) }}</td>
+                                        <td class="py-3 pr-4 text-gray-600">
+                                            <span class="text-gray-800">{{ $wr->payment_method }}</span>
+                                            <span class="block text-xs font-mono text-gray-500 mt-0.5">{{ $wr->payment_number }}</span>
+                                        </td>
+                                        <td class="py-3">
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full capitalize
+                                                {{ $wr->status === 'paid' ? 'bg-green-100 text-green-800' : '' }}
+                                                {{ $wr->status === 'rejected' ? 'bg-red-100 text-red-800' : '' }}">{{ $wr->status }}</span>
+                                            @if($wr->admin_note)
+                                                <p class="text-xs text-gray-500 mt-1">{{ $wr->admin_note }}</p>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            @endif
+        </div>
+    </div>
+
     <!-- Map Section -->
     @if($coastersWithLocation->count() > 0)
         <div class="bg-white rounded-2xl shadow-lg overflow-hidden">

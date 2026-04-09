@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Coaster;
 use App\Models\SpecialHireOrder;
 use App\Models\SpecialHirePricing;
+use App\Models\SpecialHireWithdrawalRequest;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -58,6 +59,25 @@ class SpecialHireController extends Controller
             ->whereNotNull('longitude')
             ->get();
 
+        $withdrawalRequestsOpen = SpecialHireWithdrawalRequest::query()
+            ->forUser($user->id)
+            ->awaitingAction()
+            ->orderByDesc('created_at')
+            ->limit(10)
+            ->get();
+
+        $withdrawalRequestsExecuted = SpecialHireWithdrawalRequest::query()
+            ->forUser($user->id)
+            ->executed()
+            ->orderByDesc('created_at')
+            ->limit(10)
+            ->get();
+
+        $withdrawalActionNeededCount = SpecialHireWithdrawalRequest::query()
+            ->forUser($user->id)
+            ->awaitingAction()
+            ->count();
+
         return view('special_hire.dashboard', compact(
             'totalCoasters',
             'availableCoasters',
@@ -69,7 +89,10 @@ class SpecialHireController extends Controller
             'monthRevenue',
             'recentOrders',
             'upcomingOrders',
-            'coastersWithLocation'
+            'coastersWithLocation',
+            'withdrawalRequestsOpen',
+            'withdrawalRequestsExecuted',
+            'withdrawalActionNeededCount'
         ));
     }
 
@@ -110,7 +133,7 @@ class SpecialHireController extends Controller
             'driver_email' => 'nullable|email|unique:users,email|required_with:driver_password',
             'driver_password' => 'nullable|string|min:6|required_with:driver_email',
             'features' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'base_price' => 'required|numeric|min:0',
             'price_per_km' => 'required|numeric|min:0',
             'min_km' => 'required|integer|min:1',
@@ -193,23 +216,13 @@ class SpecialHireController extends Controller
             'driver_name' => 'nullable|string|max:100',
             'driver_contact' => 'nullable|string|max:20',
             'features' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'base_price' => 'required|numeric|min:0',
             'price_per_km' => 'required|numeric|min:0',
             'min_km' => 'required|integer|min:1',
         ]);
 
-        // Handle image upload
-        if ($request->hasFile('image')) {
-            // Delete old image
-            if ($coaster->image) {
-                Storage::disk('public')->delete($coaster->image);
-            }
-            $coaster->image = $request->file('image')->store('coasters', 'public');
-        }
-
-        // Update coaster
-        $coaster->update([
+        $data = [
             'name' => $request->name,
             'plate_number' => $request->plate_number,
             'capacity' => $request->capacity,
@@ -219,7 +232,16 @@ class SpecialHireController extends Controller
             'driver_name' => $request->driver_name,
             'driver_contact' => $request->driver_contact,
             'features' => $request->features,
-        ]);
+        ];
+
+        if ($request->hasFile('image')) {
+            if ($coaster->image) {
+                Storage::disk('public')->delete($coaster->image);
+            }
+            $data['image'] = $request->file('image')->store('coasters', 'public');
+        }
+
+        $coaster->update($data);
 
         // Update or create pricing
         $coaster->pricing()->updateOrCreate(
@@ -350,6 +372,7 @@ class SpecialHireController extends Controller
         // Create order
         $order = SpecialHireOrder::create([
             'user_id' => Auth::id(),
+            'customer_user_id' => null,
             'coaster_id' => $coaster->id,
             'customer_name' => $request->customer_name,
             'customer_phone' => $request->customer_phone,
@@ -405,7 +428,15 @@ class SpecialHireController extends Controller
             'order_status' => 'nullable|in:pending,confirmed,in_progress,completed,cancelled',
             'payment_status' => 'nullable|in:pending,paid,refunded',
             'payment_method' => 'nullable|string|max:50',
+            'quick_advance' => 'nullable|boolean',
         ]);
+
+        if ($request->boolean('quick_advance') && $request->filled('order_status')) {
+            $target = $request->order_status;
+            if (!in_array($target, $order->allowedNextOrderStatuses(), true)) {
+                return back()->with('error', 'That step is not available for this booking right now.');
+            }
+        }
 
         $updateData = [];
 
@@ -413,10 +444,12 @@ class SpecialHireController extends Controller
             $updateData['order_status'] = $request->order_status;
 
             // Update coaster status based on order status
-            if ($request->order_status === 'in_progress') {
-                $order->coaster->update(['status' => 'on_hire']);
-            } elseif (in_array($request->order_status, ['completed', 'cancelled'])) {
-                $order->coaster->update(['status' => 'available']);
+            if ($order->coaster) {
+                if ($request->order_status === 'in_progress') {
+                    $order->coaster->update(['status' => 'on_hire']);
+                } elseif (in_array($request->order_status, ['completed', 'cancelled'], true)) {
+                    $order->coaster->update(['status' => 'available']);
+                }
             }
         }
 
@@ -537,6 +570,23 @@ class SpecialHireController extends Controller
             ->with('coaster')
             ->get();
 
+        $lifetimePaidEarnings = (float) SpecialHireOrder::byUser($user->id)->paid()->sum('total_amount');
+        $withdrawalReserved = SpecialHireWithdrawalRequest::reservedAmountForUser($user->id);
+        $withdrawalPaidOut = SpecialHireWithdrawalRequest::paidOutAmountForUser($user->id);
+        $withdrawableBalance = SpecialHireWithdrawalRequest::withdrawableForUser($user->id);
+        $withdrawalRequestsOpen = SpecialHireWithdrawalRequest::query()
+            ->forUser($user->id)
+            ->awaitingAction()
+            ->orderByDesc('created_at')
+            ->get();
+
+        $withdrawalRequestsExecuted = SpecialHireWithdrawalRequest::query()
+            ->forUser($user->id)
+            ->executed()
+            ->orderByDesc('created_at')
+            ->limit(40)
+            ->get();
+
         return view('special_hire.earnings', compact(
             'period',
             'startDate',
@@ -545,8 +595,49 @@ class SpecialHireController extends Controller
             'totalOrders',
             'totalDistance',
             'orders',
-            'earningsByCoaster'
+            'earningsByCoaster',
+            'lifetimePaidEarnings',
+            'withdrawalReserved',
+            'withdrawalPaidOut',
+            'withdrawableBalance',
+            'withdrawalRequestsOpen',
+            'withdrawalRequestsExecuted'
         ));
+    }
+
+    /**
+     * Submit a payout request to system admin (from earnings page).
+     */
+    public function storeWithdrawalRequest(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'amount' => 'required|numeric|min:1',
+            'payment_method' => 'required|string|max:100',
+            'payment_number' => 'required|string|max:255',
+            'notes' => 'nullable|string|max:2000',
+        ]);
+
+        $available = SpecialHireWithdrawalRequest::withdrawableForUser($user->id);
+        if ((float) $request->amount > $available) {
+            return redirect()
+                ->route('special_hire.earnings', ['period' => $request->get('period', 'month')])
+                ->with('error', 'That amount exceeds what you can request. Available: Tsh ' . number_format($available, 0) . '.');
+        }
+
+        SpecialHireWithdrawalRequest::create([
+            'user_id' => $user->id,
+            'amount' => $request->amount,
+            'payment_method' => $request->payment_method,
+            'payment_number' => $request->payment_number,
+            'notes' => $request->notes,
+            'status' => SpecialHireWithdrawalRequest::STATUS_PENDING,
+        ]);
+
+        return redirect()
+            ->route('special_hire.earnings', ['period' => $request->get('period', 'month')])
+            ->with('success', 'Withdrawal request sent. Admin will review it.');
     }
 
     /**

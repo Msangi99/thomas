@@ -6,22 +6,67 @@
 
 @section('content')
 <div class="max-w-4xl mx-auto space-y-6">
-    <!-- Order Header -->
-    <div class="bg-white rounded-2xl shadow-lg p-6">
+    @if(session('error'))
+        <div class="p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm">{{ session('error') }}</div>
+    @endif
+
+    <!-- Order Header + lifecycle stepper -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
                 <h2 class="text-2xl font-bold text-gray-800">{{ $order->order_code }}</h2>
                 <p class="text-gray-500">Created {{ $order->created_at->format('M d, Y h:i A') }}</p>
             </div>
-            <div class="flex items-center space-x-3">
+            <div class="flex flex-wrap items-center gap-2">
                 <span class="px-4 py-2 text-sm font-semibold rounded-full bg-{{ $order->getStatusColor() }}-100 text-{{ $order->getStatusColor() }}-700">
-                    {{ ucfirst(str_replace('_', ' ', $order->order_status)) }}
+                    {{ \App\Models\SpecialHireOrder::orderStatusLabel($order->order_status) }}
                 </span>
                 <span class="px-4 py-2 text-sm font-semibold rounded-full bg-{{ $order->getPaymentStatusColor() }}-100 text-{{ $order->getPaymentStatusColor() }}-700">
                     Payment: {{ ucfirst($order->payment_status) }}
                 </span>
             </div>
         </div>
+
+        @php
+            $pipeline = \App\Models\SpecialHireOrder::orderStatusPipeline();
+            $pipeIdx = $order->orderStatusPipelineIndex();
+            $nextStatuses = $order->allowedNextOrderStatuses();
+        @endphp
+
+        @if($order->order_status === 'cancelled')
+            <div class="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+                This booking was <strong>cancelled</strong>. Coaster should be available again if it was assigned.
+            </div>
+        @else
+            <div class="mt-6" role="group" aria-label="Booking progress">
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Booking progress</p>
+                <ol class="flex flex-wrap items-center gap-1 sm:gap-0 sm:justify-between">
+                    @foreach($pipeline as $i => $st)
+                        <li class="flex items-center flex-1 min-w-[4.5rem] sm:min-w-0">
+                            @if($i > 0)
+                                <span class="hidden sm:block flex-1 h-1 rounded-full mx-1 {{ $pipeIdx >= $i ? 'bg-teal-400' : 'bg-gray-200' }}" aria-hidden="true"></span>
+                            @endif
+                            @php
+                                $current = $order->order_status === $st;
+                                $done = $pipeIdx > $i;
+                            @endphp
+                            <div class="flex flex-col items-center text-center px-1">
+                                <span class="flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold border-2 shrink-0
+                                    {{ $current ? 'border-teal-600 bg-teal-600 text-white' : '' }}
+                                    {{ !$current && $done ? 'border-teal-400 bg-teal-50 text-teal-800' : '' }}
+                                    {{ !$current && !$done ? 'border-gray-200 bg-gray-100 text-gray-400' : '' }}">
+                                    {{ $i + 1 }}
+                                </span>
+                                <span class="mt-1.5 text-[10px] sm:text-xs font-medium max-w-[5.5rem] leading-tight {{ $current ? 'text-teal-800' : ($done ? 'text-teal-900/80' : 'text-gray-500') }}">
+                                    {{ \App\Models\SpecialHireOrder::orderStatusLabel($st) }}
+                                </span>
+                            </div>
+                        </li>
+                    @endforeach
+                </ol>
+                <p class="text-xs text-gray-500 mt-3">Use <strong>Next step</strong> to move the booking forward, or expand <strong>All status options</strong> for manual changes.</p>
+            </div>
+        @endif
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -136,7 +181,7 @@
                     <h3 class="text-lg font-bold text-gray-800 mb-4">Coaster</h3>
                     <div class="text-center">
                         @if($order->coaster->image)
-                            <img src="{{ Storage::url($order->coaster->image) }}" alt="{{ $order->coaster->name }}" 
+                            <img src="{{ $order->coaster->image_url }}" alt="{{ $order->coaster->name }}" 
                                  class="w-full h-32 object-cover rounded-xl mb-4">
                         @else
                             <div class="w-full h-32 bg-gray-100 rounded-xl mb-4 flex items-center justify-center">
@@ -183,47 +228,92 @@
                 </div>
             </div>
 
-            <!-- Update Status -->
-            <div class="bg-white rounded-2xl shadow-lg p-6">
-                <h3 class="text-lg font-bold text-gray-800 mb-4">Update Status</h3>
-                <form action="{{ route('special_hire.orders.update', $order->id) }}" method="POST" class="space-y-4">
-                    @csrf
-                    @method('PUT')
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Order Status</label>
-                        <select name="order_status" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500">
-                            <option value="pending" {{ $order->order_status === 'pending' ? 'selected' : '' }}>Pending</option>
-                            <option value="confirmed" {{ $order->order_status === 'confirmed' ? 'selected' : '' }}>Confirmed</option>
-                            <option value="in_progress" {{ $order->order_status === 'in_progress' ? 'selected' : '' }}>In Progress</option>
-                            <option value="completed" {{ $order->order_status === 'completed' ? 'selected' : '' }}>Completed</option>
-                            <option value="cancelled" {{ $order->order_status === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
-                        </select>
-                    </div>
+            <!-- Next step + status -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 border border-teal-100/60">
+                <h3 class="text-lg font-bold text-gray-800 mb-1">Change status</h3>
+                <p class="text-sm text-gray-500 mb-4">Advance one step at a time, or use the full form below.</p>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Payment Status</label>
-                        <select name="payment_status" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500">
-                            <option value="pending" {{ $order->payment_status === 'pending' ? 'selected' : '' }}>Pending</option>
-                            <option value="paid" {{ $order->payment_status === 'paid' ? 'selected' : '' }}>Paid</option>
-                            <option value="refunded" {{ $order->payment_status === 'refunded' ? 'selected' : '' }}>Refunded</option>
-                        </select>
+                @if(count($nextStatuses) > 0)
+                    <div class="space-y-2 mb-6">
+                        @foreach($nextStatuses as $ns)
+                            <form action="{{ route('special_hire.orders.update', $order->id) }}" method="POST" class="block">
+                                @csrf
+                                @method('PUT')
+                                <input type="hidden" name="quick_advance" value="1">
+                                <input type="hidden" name="order_status" value="{{ $ns }}">
+                                @if($ns === 'cancelled')
+                                    <button type="submit" class="w-full py-2.5 px-4 rounded-xl text-sm font-semibold border-2 border-red-200 text-red-800 bg-red-50 hover:bg-red-100 transition-colors">
+                                        Cancel booking
+                                    </button>
+                                @else
+                                    <button type="submit" class="w-full btn-primary py-2.5 text-white rounded-xl text-sm font-medium">
+                                        Next: {{ \App\Models\SpecialHireOrder::orderStatusLabel($ns) }}
+                                    </button>
+                                @endif
+                            </form>
+                        @endforeach
                     </div>
+                @elseif(!in_array($order->order_status, ['completed', 'cancelled'], true))
+                    <p class="text-sm text-gray-500 mb-4">No quick step available. Use all options below.</p>
+                @endif
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
-                        <select name="payment_method" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500">
-                            <option value="">-- Select --</option>
-                            <option value="cash" {{ $order->payment_method === 'cash' ? 'selected' : '' }}>Cash</option>
-                            <option value="mobile" {{ $order->payment_method === 'mobile' ? 'selected' : '' }}>Mobile Money</option>
-                            <option value="bank" {{ $order->payment_method === 'bank' ? 'selected' : '' }}>Bank Transfer</option>
-                        </select>
+                @if($order->payment_status === 'pending' && $order->order_status !== 'cancelled')
+                    <form action="{{ route('special_hire.orders.update', $order->id) }}" method="POST" class="mb-6">
+                        @csrf
+                        @method('PUT')
+                        <input type="hidden" name="payment_status" value="paid">
+                        <button type="submit" class="w-full py-2.5 px-4 rounded-xl text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
+                            Record payment received
+                        </button>
+                    </form>
+                @endif
+
+                <details class="group rounded-xl border border-gray-200 bg-gray-50/50">
+                    <summary class="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-gray-800 flex items-center justify-between">
+                        <span>All status options</span>
+                        <span class="text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+                    </summary>
+                    <div class="px-4 pb-4 pt-0 border-t border-gray-200">
+                        <form action="{{ route('special_hire.orders.update', $order->id) }}" method="POST" class="space-y-4 mt-4">
+                            @csrf
+                            @method('PUT')
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Order status</label>
+                                <select name="order_status" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 bg-white">
+                                    <option value="pending" {{ $order->order_status === 'pending' ? 'selected' : '' }}>Pending</option>
+                                    <option value="confirmed" {{ $order->order_status === 'confirmed' ? 'selected' : '' }}>Confirmed</option>
+                                    <option value="in_progress" {{ $order->order_status === 'in_progress' ? 'selected' : '' }}>In progress</option>
+                                    <option value="completed" {{ $order->order_status === 'completed' ? 'selected' : '' }}>Completed</option>
+                                    <option value="cancelled" {{ $order->order_status === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Payment status</label>
+                                <select name="payment_status" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 bg-white">
+                                    <option value="pending" {{ $order->payment_status === 'pending' ? 'selected' : '' }}>Pending</option>
+                                    <option value="paid" {{ $order->payment_status === 'paid' ? 'selected' : '' }}>Paid</option>
+                                    <option value="refunded" {{ $order->payment_status === 'refunded' ? 'selected' : '' }}>Refunded</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Payment method</label>
+                                <select name="payment_method" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 bg-white">
+                                    <option value="">-- Select --</option>
+                                    <option value="cash" {{ $order->payment_method === 'cash' ? 'selected' : '' }}>Cash</option>
+                                    <option value="mobile" {{ $order->payment_method === 'mobile' ? 'selected' : '' }}>Mobile money</option>
+                                    <option value="bank" {{ $order->payment_method === 'bank' ? 'selected' : '' }}>Bank transfer</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="w-full py-2.5 border-2 border-gray-300 text-gray-800 rounded-xl font-medium text-sm hover:bg-gray-100">
+                                Save with full options
+                            </button>
+                        </form>
                     </div>
-
-                    <button type="submit" class="w-full btn-primary py-2.5 text-white rounded-xl font-medium">
-                        Update Status
-                    </button>
-                </form>
+                </details>
             </div>
         </div>
     </div>

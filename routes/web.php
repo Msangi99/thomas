@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\ArtisanCommandsController;
 use App\Http\Controllers\AirtelPaymentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BimaController;
@@ -338,6 +339,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/companies/{campany}', [SystemController::class, 'campanyShow'])->name('system.campany.show');
         Route::post('/campany_status', [SystemController::class, 'campany_status'])->name('system.campany.status');
         Route::get('/buses', [SystemController::class, 'buses'])->name('system.buses');
+        Route::get('/special-hire', [SystemController::class, 'specialHireIndex'])->name('system.special_hire');
+        Route::get('/special-hire/{user}', [SystemController::class, 'specialHireShow'])->name('system.special_hire.show')
+            ->whereNumber('user');
+        Route::post('/special-hire/withdrawals/{id}', [SystemController::class, 'updateSpecialHireWithdrawal'])->name('system.special_hire.withdrawal');
         Route::get('/transaction', [SystemController::class, 'pay_request'])->name('pay.request');
         Route::post('/transactions/{transaction}/company/{campany}/complete', [SystemController::class, 'complete'])->name('transactions.complete');
         Route::post('/transactions/{transaction}/company/{campany}/cancel', [SystemController::class, 'cancel'])->name('transactions.cancel');
@@ -394,6 +399,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/refunds/{id}/reject', [SystemController::class, 'rejectRefund'])->name('system.refunds.reject');
 
         Route::get('/migrate/{migration?}', [SystemController::class, 'runMigrations'])->name('system.migrate');
+
+        Route::get('/commands', [ArtisanCommandsController::class, 'index'])->name('system.commands');
+        Route::post('/commands/run', [ArtisanCommandsController::class, 'run'])->name('system.commands.run');
     });
 
     Route::prefix('vender')->middleware(['role:vender', '2fa', 'vendor.enabled'])->group(function () {
@@ -498,6 +506,7 @@ Route::middleware('auth')->group(function () {
 
         // Earnings
         Route::get('/earnings', [SpecialHireController::class, 'earnings'])->name('special_hire.earnings');
+        Route::post('/earnings/withdrawal', [SpecialHireController::class, 'storeWithdrawalRequest'])->name('special_hire.withdrawal.store');
 
         // Profile
         Route::get('/profile', [SpecialHireController::class, 'profile'])->name('special_hire.profile');

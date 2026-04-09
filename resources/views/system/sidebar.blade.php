@@ -45,6 +45,18 @@
                 </li>
                 @endif
 
+                @if(auth()->user()->hasAccess(\App\Models\Access::LINKS['BUSES']) || auth()->user()->hasAccess(\App\Models\Access::LINKS['BOOKING_HISTORY']))
+                <li>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mt-4 mb-2">Special Hire</p>
+                </li>
+                <li>
+                    <a class="flex items-center px-3 py-2 text-white rounded-lg hover:bg-gray-700 transition-colors {{ request()->routeIs('system.special_hire*') ? 'bg-blue-500' : '' }}" href="{{ route('system.special_hire') }}">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                        Special Hire Overview
+                    </a>
+                </li>
+                @endif
+
                 @if(auth()->user()->hasAccess(\App\Models\Access::LINKS['CITIES']))
                 <li>
                     <a class="flex items-center px-3 py-2 text-white rounded-lg hover:bg-gray-700 transition-colors {{ request()->routeIs('system.cities') ? 'bg-blue-500' : '' }}" href="{{ route('system.cities') }}">
@@ -168,6 +180,14 @@
             <li>
                 <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mt-4 mb-2">Account</p>
             </li>
+            @if(auth()->user()->isActive())
+            <li>
+                <a class="flex items-center px-3 py-2 text-white rounded-lg hover:bg-gray-700 transition-colors {{ request()->routeIs('system.commands') ? 'bg-blue-500' : '' }}" href="{{ route('system.commands') }}">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    Command
+                </a>
+            </li>
+            @endif
             <li>
                 <a class="flex items-center px-3 py-2 text-white rounded-lg hover:bg-gray-700 transition-colors {{ request()->routeIs('system.setting') ? 'bg-blue-500' : '' }}" href="{{ route('system.setting') }}">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>

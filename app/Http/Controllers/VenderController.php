@@ -491,6 +491,7 @@ class VenderController extends Controller
         }
 
         $bus_info['total_amount'] = $price;
+        $bus_info['total_amount_before_coupon'] = $price;
         $bus_info['seats'] = $seats;
 
         session()->put('booking_form', $bus_info);
@@ -586,11 +587,13 @@ class VenderController extends Controller
         }
 
         if (!is_null(session()->get('booking_form')['discount'])) {
-            $price = $this->applyDiscount($total_amount) + $ins + $excessLuggageFee - $bus_info['cancel_amount'];
-            $dis = $total_amount - $this->applyDiscount($total_amount);
+            $base = session()->get('booking_form')['total_amount_before_coupon'] ?? $total_amount;
+            $discountedFare = $this->applyDiscount($base);
+            $price = $discountedFare + $ins + $excessLuggageFee - $bus_info['cancel_amount'];
+            $dis = $base - $discountedFare;
 
             $bus_info = session()->get('booking_form', []);
-            $bus_info['dispo'] = $this->applyDiscount($total_amount);
+            $bus_info['dispo'] = $discountedFare;
             session()->put('booking_form', $bus_info);
         } else {
             $price = $total_amount + $ins + $excessLuggageFee - $bus_info['cancel_amount'];
@@ -1217,7 +1220,13 @@ class VenderController extends Controller
             return session()->get('booking_form')['total_amount'];
         }
         $bus_info = session()->get('booking_form', []);
-        $new = $amount * (1 - $discount->percentage / 100);
+        $base = isset($bus_info['total_amount_before_coupon']) && (float) $bus_info['total_amount_before_coupon'] > 0
+            ? (float) $bus_info['total_amount_before_coupon']
+            : (float) $amount;
+        if (!isset($bus_info['total_amount_before_coupon']) || (float) $bus_info['total_amount_before_coupon'] <= 0) {
+            $bus_info['total_amount_before_coupon'] = $base;
+        }
+        $new = $base * (1 - $discount->percentage / 100);
         $bus_info['total_amount'] = $new;
         session()->put('booking_form', $bus_info);
         return $new;

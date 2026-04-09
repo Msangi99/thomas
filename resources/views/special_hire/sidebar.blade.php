@@ -26,11 +26,19 @@
         <p class="text-xs font-semibold text-white/50 uppercase tracking-wider px-3 mt-6 mb-2">Fleet</p>
         
         <a href="{{ route('special_hire.coasters') }}" 
-           class="sidebar-link flex items-center px-3 py-2.5 text-white rounded-lg {{ request()->routeIs('special_hire.coasters*') ? 'active' : '' }}">
+           class="sidebar-link flex items-center px-3 py-2.5 text-white rounded-lg {{ request()->routeIs('special_hire.coasters') || request()->routeIs('special_hire.coasters.edit') ? 'active' : '' }}">
             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
             </svg>
             Coasters
+        </a>
+
+        <a href="{{ route('special_hire.coasters.create') }}" 
+           class="sidebar-link flex items-center px-3 py-2.5 text-white rounded-lg {{ request()->routeIs('special_hire.coasters.create') ? 'active' : '' }}">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
+            Add Coaster
         </a>
         
         <a href="{{ route('special_hire.tracking') }}" 

@@ -55,11 +55,17 @@
                     @error('color')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Image</label>
-                    <input type="file" name="image" accept="image/*"
-                           class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
-                    @error('image')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
+                <div class="md:col-span-2">
+                    <div class="rounded-xl border-2 border-dashed border-teal-200 bg-teal-50/50 p-5">
+                        <label class="block text-sm font-medium text-gray-800 mb-1" for="coaster-image-input">Vehicle photo</label>
+                        <p class="text-xs text-gray-600 mb-3">Optional. JPEG, PNG, or WebP, up to 2&nbsp;MB.</p>
+                        <div id="coaster-image-preview" class="hidden mb-4">
+                            <img id="coaster-image-preview-img" src="" alt="" class="max-h-40 rounded-lg border border-gray-200 shadow-sm object-cover">
+                        </div>
+                        <input type="file" name="image" id="coaster-image-input" accept="image/jpeg,image/png,image/webp,image/jpg"
+                               class="block w-full text-sm text-gray-700 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-teal-600 file:text-white hover:file:bg-teal-700 file:cursor-pointer cursor-pointer">
+                        @error('image')<p class="text-red-600 text-sm mt-2">{{ $message }}</p>@enderror
+                    </div>
                 </div>
             </div>
 
@@ -164,5 +170,27 @@
         </form>
     </div>
 </div>
+@push('scripts')
+<script>
+(function () {
+    var input = document.getElementById('coaster-image-input');
+    if (!input) return;
+    input.addEventListener('change', function () {
+        var file = input.files && input.files[0];
+        var wrap = document.getElementById('coaster-image-preview');
+        var img = document.getElementById('coaster-image-preview-img');
+        if (!wrap || !img) return;
+        if (!file) {
+            wrap.classList.add('hidden');
+            img.removeAttribute('src');
+            return;
+        }
+        img.src = URL.createObjectURL(file);
+        img.alt = 'Preview';
+        wrap.classList.remove('hidden');
+    });
+})();
+</script>
+@endpush
 @endsection
 

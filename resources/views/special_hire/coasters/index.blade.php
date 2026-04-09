@@ -38,7 +38,7 @@
                     <!-- Image -->
                     <div class="h-48 bg-gradient-to-br from-gray-100 to-gray-200 relative">
                         @if($coaster->image)
-                            <img src="{{ Storage::url($coaster->image) }}" alt="{{ $coaster->name }}" class="w-full h-full object-cover">
+                            <img src="{{ $coaster->image_url }}" alt="{{ $coaster->name }}" class="w-full h-full object-cover">
                         @else
                             <div class="w-full h-full flex items-center justify-center">
                                 <svg class="w-20 h-20 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">

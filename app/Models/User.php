@@ -180,6 +180,11 @@ class User extends Authenticatable
         return $this->hasMany(SpecialHireOrder::class);
     }
 
+    public function specialHireWithdrawalRequests()
+    {
+        return $this->hasMany(SpecialHireWithdrawalRequest::class);
+    }
+
     /**
      * Generate a verification code for email verification
      */
