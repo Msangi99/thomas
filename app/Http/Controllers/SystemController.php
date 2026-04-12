@@ -298,6 +298,25 @@ class SystemController extends Controller
             ->with('success', 'Withdrawal request marked as ' . $request->status . '.');
     }
 
+    /**
+     * System admin: set platform commission % taken on each paid special hire trip for this owner.
+     */
+    public function updateSpecialHireOwnerPlatformPercent(Request $request, int $user)
+    {
+        $request->validate([
+            'special_hire_platform_percent' => 'required|numeric|min:0|max:100',
+        ]);
+
+        $owner = User::query()->where('role', 'special_hire')->findOrFail($user);
+        $owner->update([
+            'special_hire_platform_percent' => $request->special_hire_platform_percent,
+        ]);
+
+        return redirect()
+            ->back()
+            ->with('success', 'Platform percentage for this operator has been saved.');
+    }
+
     public function pay_request(Request $request)
     {
         // Fetch pending transactions

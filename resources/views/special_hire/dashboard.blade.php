@@ -81,6 +81,15 @@
         </div>
     </div>
 
+    <div class="flex flex-wrap gap-3">
+        <a href="{{ route('special_hire.coasters.create') }}" class="inline-flex items-center px-4 py-2.5 rounded-xl bg-teal-600 text-white text-sm font-semibold hover:bg-teal-700 shadow">
+            Create bus
+        </a>
+        <a href="{{ route('special_hire.drivers.create') }}" class="inline-flex items-center px-4 py-2.5 rounded-xl border-2 border-teal-600 text-teal-800 text-sm font-semibold hover:bg-teal-50">
+            Create driver
+        </a>
+    </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Recent Orders -->
         <div class="bg-white rounded-2xl shadow-lg overflow-hidden">

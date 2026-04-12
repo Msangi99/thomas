@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
@@ -200,10 +201,11 @@ class AuthController extends Controller
             }
 
             if ($request->role === 'vender') {
-                VenderBalance::create([
-                    'user_id' => $user->id,
-                    'amount' => 0,
-                ]);
+                $vb = ['user_id' => $user->id, 'amount' => 0];
+                if (Schema::hasColumn('vender_balances', 'sell_cash_amount')) {
+                    $vb['sell_cash_amount'] = 0;
+                }
+                VenderBalance::create($vb);
             }
 
 

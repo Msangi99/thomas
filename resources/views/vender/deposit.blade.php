@@ -6,6 +6,9 @@
         <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">
             {{ __('vender/busroot.deposit_to_vendor_wallet') }}
         </h2>
+        <p class="text-sm text-gray-600 mb-4 text-center">
+            Deposits are credited to your <strong>sell-cash wallet</strong> (used when you sell tickets for cash). Commission earnings stay in your <strong>commission wallet</strong>. You can move money between the two on the transactions page. Use <strong>ClickPesa</strong> or PDO as you prefer.
+        </p>
 
         {{-- Success & Error Messages --}}
         @if (session('success'))
@@ -43,16 +46,33 @@
                 <label for="payment_method" class="block text-sm font-semibold text-gray-700 mb-1">
                     {{ __('vender/busroot.payment_method') }}
                 </label>
-                <select id="payment_method" name="payment_method" onchange="toggleTigosecureFields()"
+                <select id="payment_method" name="payment_method" onchange="toggleDepositMethodFields()"
                     class="w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-200 h-10 px-2 focus:border-blue-500 @error('payment_method') border-red-500 @enderror"
                     required>
                     <option value="">{{ __('vender/busroot.select_method') }}</option>
                     {{-- <option value="tigosecure" {{ old('payment_method') == 'tigosecure' ? 'selected' : '' }}>Tigosecure</option> --}}
+                    <option value="clickpesa" {{ old('payment_method') == 'clickpesa' ? 'selected' : '' }}>ClickPesa (mobile money)</option>
                     <option value="pdo" {{ old('payment_method') == 'pdo' ? 'selected' : '' }}>{{ __('vender/busroot.pdo') }}</option>
                 </select>
                 @error('payment_method')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
+            </div>
+
+            <div id="clickpesa-fields" class="space-y-4"
+                style="display: {{ old('payment_method') == 'clickpesa' ? 'block' : 'none' }};">
+                <div>
+                    <label for="deposit_phone" class="block text-sm font-semibold text-gray-700 mb-1">
+                        Mobile number for USSD (ClickPesa)
+                    </label>
+                    <input id="deposit_phone" type="text" name="deposit_phone"
+                        value="{{ old('deposit_phone', auth()->user()->contact ?? auth()->user()->phone ?? '') }}"
+                        placeholder="255… or 07…"
+                        class="w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-200 h-10 px-2 focus:border-blue-500 @error('deposit_phone') border-red-500 @enderror">
+                    @error('deposit_phone')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
 
             {{-- Tigosecure Fields --}}
@@ -120,11 +140,13 @@
 </div>
 
 <script>
-    function toggleTigosecureFields() {
+    function toggleDepositMethodFields() {
         const paymentMethod = document.getElementById('payment_method').value;
         const tigosecureFields = document.getElementById('tigosecure-fields');
-        tigosecureFields.style.display = paymentMethod === 'tigosecure' ? 'block' : 'none';
+        const clickpesaFields = document.getElementById('clickpesa-fields');
+        if (tigosecureFields) tigosecureFields.style.display = paymentMethod === 'tigosecure' ? 'block' : 'none';
+        if (clickpesaFields) clickpesaFields.style.display = paymentMethod === 'clickpesa' ? 'block' : 'none';
     }
-    document.addEventListener('DOMContentLoaded', toggleTigosecureFields);
+    document.addEventListener('DOMContentLoaded', toggleDepositMethodFields);
 </script>
 @endsection

@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\ClickPesaController;
 use App\Models\Coaster;
 use App\Models\SpecialHireOrder;
 use App\Models\SpecialHirePricing;
 use App\Models\User;
+use App\Services\SpecialHireOrderPaymentService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -493,6 +495,22 @@ class CustomerApiController extends Controller
         // Create order
         $breakdown = $priceData['breakdown'] ?? $priceData;
 
+        $owner = User::query()->find($coaster->user_id);
+        $platformPct = $owner ? (float) ($owner->special_hire_platform_percent ?? 0) : 0.0;
+
+        $depositAmount = round($totalAmount * 0.10, 2);
+        $balanceAmount = round($totalAmount - $depositAmount, 2);
+        $minDeposit = (float) env('CLICKPESA_MIN_AMOUNT_TZS', 908);
+        if ($depositAmount > 0 && $depositAmount < $minDeposit) {
+            $minTotal = ceil($minDeposit / 0.10);
+
+            return response()->json([
+                'success' => false,
+                'message' => "For ClickPesa the 10% deposit must be at least {$minDeposit} TZS. "
+                    . "Increase the trip total (minimum about {$minTotal} TZS) or contact support.",
+            ], 422);
+        }
+
         $order = SpecialHireOrder::create([
             'user_id' => $coaster->user_id, // Admin/Owner
             'customer_user_id' => $user->id, // Customer
@@ -520,14 +538,20 @@ class CustomerApiController extends Controller
             'surcharge_percent' => $breakdown['surcharge_percent'],
             'surcharge_amount' => $breakdown['surcharge_amount'],
             'total_amount' => $totalAmount, // Use amount from customer app
+            'deposit_amount' => $depositAmount,
+            'balance_amount' => $balanceAmount,
+            'platform_commission_percent' => $platformPct,
             'order_status' => 'pending',
             'payment_status' => 'pending',
         ]);
 
+        $payload = $order->load('coaster')->toArray();
+        $payload['hire_next_step'] = $order->customerHireNextStep();
+
         return response()->json([
             'success' => true,
             'message' => 'Booking request created successfully',
-            'data' => $order->load('coaster'),
+            'data' => $payload,
         ], 201);
     }
 
@@ -574,10 +598,182 @@ class CustomerApiController extends Controller
             ], 404);
         }
 
+        $payload = $order->toArray();
+        $payload['hire_next_step'] = $order->customerHireNextStep();
+
         return response()->json([
             'success' => true,
-            'data' => $order,
+            'data' => $payload,
         ]);
+    }
+
+    /**
+     * Customer: start ClickPesa USSD for 10% deposit.
+     */
+    public function specialHirePayDeposit(Request $request, int $id)
+    {
+        $user = Auth::user();
+        $order = SpecialHireOrder::where('customer_user_id', $user->id)->find($id);
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Booking not found'], 404);
+        }
+        if ($order->customerHireNextStep() !== 'pay_deposit') {
+            return response()->json(['success' => false, 'message' => 'Deposit is not required at this step'], 400);
+        }
+
+        $request->validate(['phone' => 'required|string|max:20']);
+
+        $parts = explode(' ', trim($user->name), 2);
+
+        $svc = app(SpecialHireOrderPaymentService::class);
+        $out = $svc->initiateUssd(
+            $order,
+            'deposit',
+            $request->phone,
+            $parts[0] ?? 'Customer',
+            $parts[1] ?? '',
+            $user->email ?? ''
+        );
+
+        if (!$out['ok']) {
+            return response()->json(['success' => false, 'message' => $out['error'] ?? 'Payment start failed'], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Payment request sent to phone. Approve on your handset, then tap sync.',
+            'data' => [
+                'order_reference' => $out['order_reference'] ?? null,
+                'clickpesa' => $out['response'] ?? null,
+            ],
+        ]);
+    }
+
+    /**
+     * Customer: submit passenger seat names after owner accepted (must match passengers_count).
+     */
+    public function specialHirePassengers(Request $request, int $id)
+    {
+        $user = Auth::user();
+        $order = SpecialHireOrder::where('customer_user_id', $user->id)->find($id);
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Booking not found'], 404);
+        }
+        if ($order->customerHireNextStep() !== 'enter_passengers') {
+            return response()->json(['success' => false, 'message' => 'Passenger list is not editable now'], 400);
+        }
+
+        $request->validate([
+            'seat_names' => 'required|array|min:1',
+            'seat_names.*' => 'required|string|max:120',
+        ]);
+        if (count($request->seat_names) !== (int) $order->passengers_count) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Provide exactly ' . $order->passengers_count . ' passenger names.',
+            ], 422);
+        }
+
+        $order->update(['passenger_seats' => array_values($request->seat_names)]);
+
+        $payload = $order->fresh('coaster')->toArray();
+        $payload['hire_next_step'] = $order->customerHireNextStep();
+
+        return response()->json(['success' => true, 'data' => $payload]);
+    }
+
+    /**
+     * Customer: start ClickPesa for remaining 90% after passengers submitted.
+     */
+    public function specialHirePayBalance(Request $request, int $id)
+    {
+        $user = Auth::user();
+        $order = SpecialHireOrder::where('customer_user_id', $user->id)->find($id);
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Booking not found'], 404);
+        }
+        if ($order->customerHireNextStep() !== 'pay_balance') {
+            return response()->json(['success' => false, 'message' => 'Balance payment is not available yet'], 400);
+        }
+
+        $request->validate(['phone' => 'required|string|max:20']);
+
+        $parts = explode(' ', trim($user->name), 2);
+        $svc = app(SpecialHireOrderPaymentService::class);
+        $out = $svc->initiateUssd(
+            $order,
+            'balance',
+            $request->phone,
+            $parts[0] ?? 'Customer',
+            $parts[1] ?? '',
+            $user->email ?? ''
+        );
+
+        if (!$out['ok']) {
+            return response()->json(['success' => false, 'message' => $out['error'] ?? 'Payment start failed'], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Payment request sent to phone.',
+            'data' => [
+                'order_reference' => $out['order_reference'] ?? null,
+                'clickpesa' => $out['response'] ?? null,
+            ],
+        ]);
+    }
+
+    /**
+     * Poll ClickPesa and update order when payment succeeded (mobile-friendly).
+     */
+    public function specialHireSyncPayment(Request $request, int $id)
+    {
+        $user = Auth::user();
+        $order = SpecialHireOrder::where('customer_user_id', $user->id)->find($id);
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Booking not found'], 404);
+        }
+
+        $ref = $request->input('reference');
+        if (!$ref) {
+            $step = $order->customerHireNextStep();
+            if ($step === 'pay_deposit' || ($step === 'wait_owner' && !$order->deposit_paid_at)) {
+                $ref = $order->clickpesa_deposit_ref;
+            } elseif ($step === 'pay_balance' || ($order->deposit_paid_at && !$order->balance_paid_at)) {
+                $ref = $order->clickpesa_balance_ref;
+            }
+        }
+        if (!$ref) {
+            return response()->json(['success' => false, 'message' => 'No payment reference to check'], 422);
+        }
+
+        $cp = new ClickPesaController();
+        $verify = $cp->verifyTransaction($ref);
+        if (!is_object($verify) || !isset($verify->status) || strtolower((string) $verify->status) !== 'success') {
+            return response()->json([
+                'success' => false,
+                'message' => is_string($verify) ? $verify : 'Payment not completed yet',
+                'data' => ['hire_next_step' => $order->customerHireNextStep()],
+            ], 400);
+        }
+
+        $san = preg_replace('/[^a-zA-Z0-9]/', '', (string) $ref);
+        $type = SpecialHireOrderPaymentService::resolveTypeFromReference($order, $san);
+        if (!$type) {
+            return response()->json(['success' => false, 'message' => 'Reference does not match this booking'], 422);
+        }
+
+        try {
+            app(SpecialHireOrderPaymentService::class)->confirmFromVerifiedReference($order, $type, $verify, $ref);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
+
+        $fresh = $order->fresh('coaster');
+        $payload = $fresh->toArray();
+        $payload['hire_next_step'] = $fresh->customerHireNextStep();
+
+        return response()->json(['success' => true, 'data' => $payload]);
     }
 
     /**
@@ -610,12 +806,19 @@ class CustomerApiController extends Controller
             ], 400);
         }
 
+        if ($order->balance_paid_at) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot cancel after full payment',
+            ], 400);
+        }
+
         $order->update([
             'order_status' => 'cancelled',
         ]);
 
         // Update coaster status if it was in progress
-        if ($order->coaster->status === 'on_hire') {
+        if ($order->coaster && $order->coaster->status === 'on_hire') {
             $order->coaster->update(['status' => 'available']);
         }
 

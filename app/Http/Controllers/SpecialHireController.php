@@ -369,6 +369,11 @@ class SpecialHireController extends Controller
             $request->hire_time
         );
 
+        $totalAmt = (float) $priceData['total_amount'];
+        $dep = round($totalAmt * 0.10, 2);
+        $bal = round($totalAmt - $dep, 2);
+        $ownerUser = Auth::user();
+
         // Create order
         $order = SpecialHireOrder::create([
             'user_id' => Auth::id(),
@@ -397,6 +402,9 @@ class SpecialHireController extends Controller
             'surcharge_percent' => $priceData['surcharge_percent'],
             'surcharge_amount' => $priceData['surcharge_amount'],
             'total_amount' => $priceData['total_amount'],
+            'deposit_amount' => $dep,
+            'balance_amount' => $bal,
+            'platform_commission_percent' => (float) ($ownerUser->special_hire_platform_percent ?? 0),
             'order_status' => 'pending',
             'payment_status' => 'pending',
         ]);
@@ -706,6 +714,65 @@ class SpecialHireController extends Controller
             'success' => true,
             'data' => $priceData,
         ]);
+    }
+
+    /**
+     * Web: accept hire after customer 10% deposit (same rules as API).
+     */
+    public function acceptHireBooking(Request $request, $id)
+    {
+        $order = SpecialHireOrder::byUser(Auth::id())->findOrFail($id);
+
+        if (!$order->deposit_paid_at) {
+            return back()->with('error', 'Deposit has not been recorded yet.');
+        }
+        if ($order->owner_accepted_at) {
+            return back()->with('error', 'This booking was already accepted.');
+        }
+
+        $order->update(['owner_accepted_at' => now()]);
+
+        return back()->with('success', 'Booking accepted. The customer can now enter passenger names and pay the balance.');
+    }
+
+    public function createDriver()
+    {
+        $coasters = Coaster::byUser(Auth::id())->orderBy('name')->get();
+
+        return view('special_hire.drivers.create', compact('coasters'));
+    }
+
+    public function storeDriver(Request $request)
+    {
+        $request->validate([
+            'coaster_id' => 'required|exists:coasters,id',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'phone' => 'required|string|max:20',
+            'password' => 'required|string|min:6',
+        ]);
+
+        $coaster = Coaster::byUser(Auth::id())->findOrFail($request->coaster_id);
+        if ($coaster->driver_user_id) {
+            return back()->withInput()->with('error', 'This coaster already has a driver assigned. Unassign the current driver first.');
+        }
+
+        $driver = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'password' => Hash::make($request->password),
+            'role' => 'driver',
+            'status' => 'accept',
+        ]);
+
+        $coaster->update([
+            'driver_user_id' => $driver->id,
+            'driver_name' => $driver->name,
+            'driver_contact' => $driver->phone,
+        ]);
+
+        return redirect()->route('special_hire.coasters')->with('success', 'Driver account created and linked to the selected coaster.');
     }
 }
 

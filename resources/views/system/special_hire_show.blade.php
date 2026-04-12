@@ -24,6 +24,21 @@
         </div>
     </div>
 
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-8 max-w-xl">
+        <h2 class="text-sm font-semibold text-gray-800 mb-3">Platform commission (each paid trip)</h2>
+        <p class="text-xs text-gray-500 mb-3">Percentage of the hire total retained by the system when the customer completes the final ClickPesa payment.</p>
+        <form action="{{ route('system.special_hire.platform_percent', $selectedOwner->id) }}" method="post" class="flex flex-wrap items-end gap-3">
+            @csrf
+            <div>
+                <label for="special_hire_platform_percent" class="block text-xs font-medium text-gray-600 mb-1">Percent (0–100)</label>
+                <input type="number" step="0.01" min="0" max="100" name="special_hire_platform_percent" id="special_hire_platform_percent"
+                    value="{{ old('special_hire_platform_percent', $selectedOwner->special_hire_platform_percent ?? 0) }}"
+                    class="w-32 rounded-lg border-gray-300 text-sm shadow-sm focus:border-teal-500 focus:ring-teal-500" required>
+            </div>
+            <button type="submit" class="px-4 py-2 rounded-lg bg-teal-600 text-white text-sm font-medium hover:bg-teal-700">Save</button>
+        </form>
+    </div>
+
     <nav class="flex flex-wrap gap-2 mb-6 text-sm" aria-label="Page sections">
         <a href="#stats" class="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300">Summary</a>
         <a href="#coasters" class="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300">Coasters</a>

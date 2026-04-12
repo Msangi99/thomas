@@ -343,6 +343,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/special-hire/{user}', [SystemController::class, 'specialHireShow'])->name('system.special_hire.show')
             ->whereNumber('user');
         Route::post('/special-hire/withdrawals/{id}', [SystemController::class, 'updateSpecialHireWithdrawal'])->name('system.special_hire.withdrawal');
+        Route::post('/special-hire/{user}/platform-percent', [SystemController::class, 'updateSpecialHireOwnerPlatformPercent'])->name('system.special_hire.platform_percent')
+            ->whereNumber('user');
         Route::get('/transaction', [SystemController::class, 'pay_request'])->name('pay.request');
         Route::post('/transactions/{transaction}/company/{campany}/complete', [SystemController::class, 'complete'])->name('transactions.complete');
         Route::post('/transactions/{transaction}/company/{campany}/cancel', [SystemController::class, 'cancel'])->name('transactions.cancel');
@@ -438,6 +440,7 @@ Route::middleware('auth')->group(function () {
         Route::prefix('/wallet')->name('vender.wallet.')->group(function () {
             Route::get('/deposit', [VenderWalletController::class, 'showDepositForm'])->name('deposit');
             Route::post('/deposit', [VenderWalletController::class, 'deposit'])->name('processDeposit');
+            Route::post('/transfer', [VenderWalletController::class, 'transferInternal'])->name('transfer');
             Route::get('/deposit/success', [VenderWalletController::class, 'depositSuccess'])->name('success');
             Route::get('/deposit/fail', [VenderWalletController::class, 'depositFail'])->name('fail');
         });
@@ -499,6 +502,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/orders', [SpecialHireController::class, 'storeOrder'])->name('special_hire.orders.store');
         Route::get('/orders/{id}', [SpecialHireController::class, 'showOrder'])->name('special_hire.orders.show');
         Route::put('/orders/{id}', [SpecialHireController::class, 'updateOrder'])->name('special_hire.orders.update');
+        Route::post('/orders/{id}/accept-hire', [SpecialHireController::class, 'acceptHireBooking'])->name('special_hire.orders.accept_hire');
+
+        Route::get('/drivers/create', [SpecialHireController::class, 'createDriver'])->name('special_hire.drivers.create');
+        Route::post('/drivers', [SpecialHireController::class, 'storeDriver'])->name('special_hire.drivers.store');
 
         // Pricing
         Route::get('/pricing', [SpecialHireController::class, 'pricing'])->name('special_hire.pricing');

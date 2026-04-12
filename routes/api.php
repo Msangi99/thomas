@@ -84,6 +84,10 @@ Route::prefix('special-hire/admin')
         Route::put('/drivers/{driverId}', [SpecialHireApiController::class, 'updateDriver']);
         Route::post('/coasters/{coasterId}/assign-driver', [SpecialHireApiController::class, 'assignDriver']);
         Route::post('/coasters/{coasterId}/unassign-driver', [SpecialHireApiController::class, 'unassignDriver']);
+        Route::post('/orders/{id}/accept-hire', [SpecialHireApiController::class, 'acceptHireBooking']);
+        Route::delete('/drivers/{driverId}', [SpecialHireApiController::class, 'deleteDriver']);
+        Route::post('/drivers/{driverId}/disable', [SpecialHireApiController::class, 'disableDriver']);
+        Route::post('/drivers/{driverId}/enable', [SpecialHireApiController::class, 'enableDriver']);
     });
 
 /*
@@ -202,6 +206,10 @@ Route::prefix('special-hire/customer')->group(function () {
         Route::get('/bookings/{id}', [CustomerApiController::class, 'getBooking']);
         Route::post('/bookings/{id}/cancel', [CustomerApiController::class, 'cancelBooking']);
         Route::get('/bookings/{id}/track', [CustomerApiController::class, 'trackBooking']);
+        Route::post('/bookings/{id}/pay-deposit', [CustomerApiController::class, 'specialHirePayDeposit']);
+        Route::post('/bookings/{id}/pay-balance', [CustomerApiController::class, 'specialHirePayBalance']);
+        Route::post('/bookings/{id}/passengers', [CustomerApiController::class, 'specialHirePassengers']);
+        Route::post('/bookings/{id}/sync-payment', [CustomerApiController::class, 'specialHireSyncPayment']);
 
         // Logout
         Route::post('/logout', [CustomerApiController::class, 'logout']);

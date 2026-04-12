@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 
 class SpecialHireWithdrawalRequest extends Model
 {
@@ -91,7 +92,9 @@ class SpecialHireWithdrawalRequest extends Model
      */
     public static function withdrawableForUser(int $userId): float
     {
-        $paid = (float) SpecialHireOrder::byUser($userId)->paid()->sum('total_amount');
+        $paid = (float) SpecialHireOrder::byUser($userId)
+            ->paid()
+            ->sum(DB::raw('total_amount - COALESCE(platform_commission_amount, 0)'));
         $allocated = (float) self::query()
             ->where('user_id', $userId)
             ->whereIn('status', [self::STATUS_PENDING, self::STATUS_APPROVED, self::STATUS_PAID])

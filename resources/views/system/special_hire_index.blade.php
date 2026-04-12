@@ -49,6 +49,7 @@
                                 <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">Contact</th>
                                 <th class="px-4 py-3 text-right font-medium text-gray-500 uppercase text-xs">Coasters</th>
                                 <th class="px-4 py-3 text-right font-medium text-gray-500 uppercase text-xs">Orders</th>
+                                <th class="px-4 py-3 text-right font-medium text-gray-500 uppercase text-xs">Platform %</th>
                                 <th class="px-4 py-3 text-right font-medium text-gray-500 uppercase text-xs"></th>
                             </tr>
                         </thead>
@@ -60,6 +61,7 @@
                                     <td class="px-4 py-3 text-gray-600">{{ $owner->contact ?? $owner->phone ?? '—' }}</td>
                                     <td class="px-4 py-3 text-right text-gray-900">{{ number_format($owner->coasters_count) }}</td>
                                     <td class="px-4 py-3 text-right text-gray-900">{{ number_format($owner->special_hire_orders_count) }}</td>
+                                    <td class="px-4 py-3 text-right text-gray-900">{{ number_format((float) ($owner->special_hire_platform_percent ?? 0), 2) }}</td>
                                     <td class="px-4 py-3 text-right">
                                         <a href="{{ route('system.special_hire.show', $owner->id) }}"
                                            class="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700">
@@ -68,7 +70,7 @@
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="6" class="px-4 py-10 text-center text-gray-500">No special hire accounts yet.</td></tr>
+                                <tr><td colspan="7" class="px-4 py-10 text-center text-gray-500">No special hire accounts yet.</td></tr>
                             @endforelse
                         </tbody>
                     </table>

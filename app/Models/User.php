@@ -26,6 +26,7 @@ class User extends Authenticatable
         'email_verified_at',
         'verification_code',
         'verification_expires_at',
+        'special_hire_platform_percent',
     ];
 
     protected $hidden = [

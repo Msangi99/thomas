@@ -14,17 +14,31 @@
         <h1 class="text-3xl font-bold text-gray-800 text-center mb-8">{{ __('assistance/transaction.transactions') }}</h1>
 
         <!-- Cards Section -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        @php($vb = auth()->user()->VenderBalances)
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <div class="bg-white rounded-xl shadow-lg p-6 transition-all hover:shadow-xl">
+                <h3 class="text-lg font-semibold text-gray-700 text-center">Commission wallet</h3>
+                <p class="text-2xl font-bold text-gray-900 text-center mt-2">{{ $currency }} {{ convert_money(auth()->user()->VenderBalances->amount ?? 0) }}</p>
+                <p class="text-xs text-gray-500 text-center mt-2">Commissions &amp; payout requests.</p>
+            </div>
+            @if($vb && \Illuminate\Support\Facades\Schema::hasColumn('vender_balances', 'sell_cash_amount'))
+            <div class="bg-white rounded-xl shadow-lg p-6 transition-all hover:shadow-xl">
+                <h3 class="text-lg font-semibold text-gray-700 text-center">Sell-cash wallet</h3>
+                <p class="text-2xl font-bold text-gray-900 text-center mt-2">{{ $currency }} {{ convert_money($vb->sell_cash_amount ?? 0) }}</p>
+                <p class="text-xs text-gray-500 text-center mt-2">Deposits &amp; cash-ticket float.</p>
+                <div class="mt-4 text-center">
+                    <a href="{{ route('vender.wallet.deposit') }}" class="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Deposit</a>
+                </div>
+            </div>
+            @else
             <div class="bg-white rounded-xl shadow-lg p-6 transition-all hover:shadow-xl">
                 <h3 class="text-lg font-semibold text-gray-700 text-center">{{ __('assistance/transaction.balance') }}</h3>
                 <p class="text-2xl font-bold text-gray-900 text-center mt-2">{{ $currency }} {{ convert_money(auth()->user()->VenderBalances->amount ?? 0) }}</p>
                 <div class="mt-4 text-center">
-                    <a href="{{ route('vender.wallet.deposit') }}" class="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                        deposit
-                    </a>
+                    <a href="{{ route('vender.wallet.deposit') }}" class="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">deposit</a>
                 </div>
             </div>
-            
+            @endif
             <div class="bg-white rounded-xl shadow-lg p-6 transition-all hover:shadow-xl">
                 <h3 class="text-lg font-semibold text-gray-700 text-center">{{ __('assistance/transaction.pending') }}</h3>
                 <p class="text-2xl font-bold text-gray-900 text-center mt-2">{{ $currency }} {{ convert_money($pending) }}</p>
@@ -34,6 +48,27 @@
                 <p class="text-2xl font-bold text-gray-900 text-center mt-2">{{ $currency }} {{ convert_money($accept) }}</p>
             </div>
         </div>
+
+        @if($vb && \Illuminate\Support\Facades\Schema::hasColumn('vender_balances', 'sell_cash_amount'))
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h3 class="text-lg font-semibold text-gray-800 mb-3">Move between wallets</h3>
+            <form method="POST" action="{{ route('vender.wallet.transfer') }}" class="flex flex-wrap items-end gap-3">
+                @csrf
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Direction</label>
+                    <select name="direction" class="border-gray-300 rounded-lg shadow-sm text-sm">
+                        <option value="to_sell_cash">Commission → Sell cash</option>
+                        <option value="to_commission">Sell cash → Commission</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Amount</label>
+                    <input type="number" name="amount" step="0.01" min="0.01" required class="border-gray-300 rounded-lg shadow-sm text-sm w-36">
+                </div>
+                <button type="submit" class="bg-gray-800 hover:bg-black text-white font-semibold py-2 px-4 rounded-lg text-sm">Transfer</button>
+            </form>
+        </div>
+        @endif
 
         <!-- Bookings Table -->
         <div class="bg-white rounded-xl shadow-lg p-6">

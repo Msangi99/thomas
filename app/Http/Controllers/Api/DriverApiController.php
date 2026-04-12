@@ -48,6 +48,14 @@ class DriverApiController extends Controller
             ], 403);
         }
 
+        if ($user->status === 'disabled') {
+            Auth::logout();
+            return response()->json([
+                'success' => false,
+                'message' => 'This driver account has been disabled. Contact your operator.',
+            ], 403);
+        }
+
         $token = $user->createToken('driver-token')->plainTextToken;
 
         return response()->json([

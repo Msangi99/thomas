@@ -228,6 +228,28 @@
                 </div>
             </div>
 
+            @if($order->deposit_amount !== null)
+            <div class="bg-amber-50 border border-amber-200 rounded-2xl p-6">
+                <h3 class="text-lg font-bold text-amber-950 mb-2">ClickPesa hire flow</h3>
+                <ul class="text-sm text-amber-900 space-y-1 list-disc list-inside mb-4">
+                    <li>10% deposit: {{ $order->deposit_paid_at ? 'Paid' : 'Pending' }} @if($order->deposit_amount)(Tsh {{ number_format($order->deposit_amount, 0) }})@endif</li>
+                    <li>Your acceptance: {{ $order->owner_accepted_at ? 'Yes' : 'Waiting' }}</li>
+                    <li>Passenger names: {{ $order->passenger_seats ? 'Submitted' : 'Waiting' }}</li>
+                    <li>90% balance: {{ $order->balance_paid_at ? 'Paid' : 'Pending' }} @if($order->balance_amount)(Tsh {{ number_format($order->balance_amount, 0) }})@endif</li>
+                </ul>
+                @if($order->deposit_paid_at && !$order->owner_accepted_at)
+                    <form action="{{ route('special_hire.orders.accept_hire', $order->id) }}" method="POST">
+                        @csrf
+                        <button type="submit" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-teal-600 text-white font-semibold text-sm hover:bg-teal-700">
+                            Accept booking (unlock passenger names for customer)
+                        </button>
+                    </form>
+                @elseif(!$order->deposit_paid_at)
+                    <p class="text-sm text-amber-800">Waiting for the customer to pay the 10% deposit via ClickPesa.</p>
+                @endif
+            </div>
+            @endif
+
             <!-- Next step + status -->
             <div class="bg-white rounded-2xl shadow-lg p-6 border border-teal-100/60">
                 <h3 class="text-lg font-bold text-gray-800 mb-1">Change status</h3>

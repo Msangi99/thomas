@@ -45,18 +45,6 @@
                 </li>
                 @endif
 
-                @if(auth()->user()->hasAccess(\App\Models\Access::LINKS['BUSES']) || auth()->user()->hasAccess(\App\Models\Access::LINKS['BOOKING_HISTORY']))
-                <li>
-                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mt-4 mb-2">Special Hire</p>
-                </li>
-                <li>
-                    <a class="flex items-center px-3 py-2 text-white rounded-lg hover:bg-gray-700 transition-colors {{ request()->routeIs('system.special_hire*') ? 'bg-blue-500' : '' }}" href="{{ route('system.special_hire') }}">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
-                        Special Hire Overview
-                    </a>
-                </li>
-                @endif
-
                 @if(auth()->user()->hasAccess(\App\Models\Access::LINKS['CITIES']))
                 <li>
                     <a class="flex items-center px-3 py-2 text-white rounded-lg hover:bg-gray-700 transition-colors {{ request()->routeIs('system.cities') ? 'bg-blue-500' : '' }}" href="{{ route('system.cities') }}">
@@ -135,6 +123,18 @@
                             <li role="menuitem"><a class="block px-4 py-2 hover:bg-gray-600 rounded-b-lg" href="{{ route('system.history') }}?period=year">Year</a></li>
                         </ul>
                     </div>
+                </li>
+                @endif
+
+                @if(auth()->user()->hasAccess(\App\Models\Access::LINKS['BUSES']) || auth()->user()->hasAccess(\App\Models\Access::LINKS['BOOKING_HISTORY']))
+                <li>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mt-4 mb-2">Special Hire</p>
+                </li>
+                <li>
+                    <a class="flex items-center px-3 py-2 text-white rounded-lg hover:bg-gray-700 transition-colors {{ request()->routeIs('system.special_hire*') ? 'bg-blue-500' : '' }}" href="{{ route('system.special_hire') }}">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                        Special Hire Overview
+                    </a>
                 </li>
                 @endif
 

@@ -12,6 +12,7 @@ use App\Models\SystemBalance;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
 use App\Http\Controllers\PercentController;
 
@@ -123,7 +124,13 @@ class CashController extends Controller
 
             $user = auth()->user();
             //return $booking->amount;
-            $user->VenderBalances()->decrement('amount', round($booking->amount));
+            $deduct = round($booking->amount);
+            $vb = $user->VenderBalances;
+            if ($vb && Schema::hasColumn('vender_balances', 'sell_cash_amount')) {
+                $vb->decrement('sell_cash_amount', $deduct);
+            } else {
+                $user->VenderBalances()->decrement('amount', $deduct);
+            }
 
             $fees = $booking->amount - $booking->busFee - $bimaAmount;
 

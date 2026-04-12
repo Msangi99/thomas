@@ -474,6 +474,11 @@ class SpecialHireApiController extends Controller
             $request->hire_time
         );
 
+        $totalAmt = (float) $priceData['total_amount'];
+        $dep = round($totalAmt * 0.10, 2);
+        $bal = round($totalAmt - $dep, 2);
+        $ownerUser = Auth::user();
+
         // Create order
         $order = SpecialHireOrder::create([
             'user_id' => Auth::id(),
@@ -502,6 +507,9 @@ class SpecialHireApiController extends Controller
             'surcharge_percent' => $priceData['surcharge_percent'],
             'surcharge_amount' => $priceData['surcharge_amount'],
             'total_amount' => $priceData['total_amount'],
+            'deposit_amount' => $dep,
+            'balance_amount' => $bal,
+            'platform_commission_percent' => (float) ($ownerUser->special_hire_platform_percent ?? 0),
             'order_status' => 'pending',
             'payment_status' => 'pending',
         ]);
@@ -573,7 +581,13 @@ class SpecialHireApiController extends Controller
             ], 404);
         }
 
-        // Only allow deletion of pending orders
+        if ($order->balance_paid_at) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot delete an order after the customer paid the balance',
+            ], 400);
+        }
+
         if ($order->order_status !== 'pending') {
             return response()->json([
                 'success' => false,
@@ -1015,6 +1029,12 @@ class SpecialHireApiController extends Controller
             $request->hire_time
         );
 
+        $totalAmt = (float) $priceData['total_amount'];
+        $dep = round($totalAmt * 0.10, 2);
+        $bal = round($totalAmt - $dep, 2);
+        $owner = User::query()->find($coaster->user_id);
+        $platformPct = $owner ? (float) ($owner->special_hire_platform_percent ?? 0) : 0.0;
+
         // Create order with customer info from authenticated user
         $order = SpecialHireOrder::create([
             'user_id' => $coaster->user_id, // Owner of the coaster
@@ -1043,6 +1063,9 @@ class SpecialHireApiController extends Controller
             'surcharge_percent' => $priceData['surcharge_percent'],
             'surcharge_amount' => $priceData['surcharge_amount'],
             'total_amount' => $priceData['total_amount'],
+            'deposit_amount' => $dep,
+            'balance_amount' => $bal,
+            'platform_commission_percent' => $platformPct,
             'order_status' => 'pending',
             'payment_status' => 'pending',
         ]);
@@ -1074,11 +1097,18 @@ class SpecialHireApiController extends Controller
             ], 404);
         }
 
-        // Only allow cancellation of pending orders
-        if ($order->order_status !== 'pending') {
+        if ($order->balance_paid_at) {
             return response()->json([
                 'success' => false,
-                'message' => 'Only pending orders can be cancelled',
+                'message' => 'Cannot cancel after the balance has been paid',
+            ], 400);
+        }
+
+        // Legacy: only pending; new flow: pending until fully confirmed
+        if (!in_array($order->order_status, ['pending', 'confirmed'], true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This order can no longer be cancelled from the app',
             ], 400);
         }
 
@@ -1589,16 +1619,16 @@ class SpecialHireApiController extends Controller
             ], 404);
         }
 
-        // Check if driver is already assigned to another coaster
-        $existingAssignment = Coaster::where('driver_user_id', $driver->id)
+        // Allow switching bus: unassign from another vehicle on this owner's fleet only
+        $existingAssignment = Coaster::byUser(Auth::id())
+            ->where('driver_user_id', $driver->id)
             ->where('id', '!=', $coasterId)
             ->first();
 
         if ($existingAssignment) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This driver is already assigned to another coaster',
-            ], 400);
+            $existingAssignment->update([
+                'driver_user_id' => null,
+            ]);
         }
 
         // Assign driver
@@ -1625,6 +1655,113 @@ class SpecialHireApiController extends Controller
                 ],
             ],
         ]);
+    }
+
+    /**
+     * Owner accepts hire after customer paid 10% deposit (ClickPesa).
+     */
+    public function acceptHireBooking($id)
+    {
+        $order = SpecialHireOrder::byUser(Auth::id())->find($id);
+
+        if (!$order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order not found',
+            ], 404);
+        }
+
+        if (!$order->deposit_paid_at) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Deposit has not been received yet',
+            ], 400);
+        }
+
+        if ($order->owner_accepted_at) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order already accepted',
+            ], 400);
+        }
+
+        $order->update(['owner_accepted_at' => now()]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Booking accepted. Customer can enter passenger names.',
+            'data' => $order->fresh()->load('coaster'),
+        ]);
+    }
+
+    /**
+     * Remove driver account from this fleet (must be assigned to one of owner's coasters).
+     */
+    public function deleteDriver($driverId)
+    {
+        $driver = User::where('role', 'driver')->find($driverId);
+
+        if (!$driver) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Driver not found',
+            ], 404);
+        }
+
+        $fleetCoasters = Coaster::byUser(Auth::id())->where('driver_user_id', $driverId)->get();
+        if ($fleetCoasters->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This driver is not on your fleet',
+            ], 403);
+        }
+
+        foreach ($fleetCoasters as $c) {
+            $c->update(['driver_user_id' => null]);
+        }
+
+        $driver->tokens()->delete();
+        $driver->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Driver removed',
+        ]);
+    }
+
+    public function disableDriver($driverId)
+    {
+        $driver = User::where('role', 'driver')->find($driverId);
+        if (!$driver) {
+            return response()->json(['success' => false, 'message' => 'Driver not found'], 404);
+        }
+
+        $onFleet = Coaster::byUser(Auth::id())->where('driver_user_id', $driverId)->exists();
+        if (!$onFleet) {
+            return response()->json(['success' => false, 'message' => 'This driver is not on your fleet'], 403);
+        }
+
+        $driver->update(['status' => 'disabled']);
+        $driver->tokens()->delete();
+
+        return response()->json(['success' => true, 'message' => 'Driver disabled']);
+    }
+
+    public function enableDriver($driverId)
+    {
+        $driver = User::where('role', 'driver')->find($driverId);
+        if (!$driver) {
+            return response()->json(['success' => false, 'message' => 'Driver not found'], 404);
+        }
+
+        $onFleet = Coaster::byUser(Auth::id())->where('driver_user_id', $driverId)->exists();
+        if (!$onFleet) {
+            return response()->json(['success' => false, 'message' => 'This driver is not on your fleet'], 403);
+        }
+
+        $driver->update(['status' => 'accept']);
+
+        return response()->json(['success' => true, 'message' => 'Driver enabled']);
     }
 }
 

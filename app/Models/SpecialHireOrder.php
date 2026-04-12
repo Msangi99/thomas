@@ -39,6 +39,16 @@ class SpecialHireOrder extends Model
         'surcharge_percent',
         'surcharge_amount',
         'total_amount',
+        'deposit_amount',
+        'balance_amount',
+        'deposit_paid_at',
+        'balance_paid_at',
+        'owner_accepted_at',
+        'passenger_seats',
+        'clickpesa_deposit_ref',
+        'clickpesa_balance_ref',
+        'platform_commission_percent',
+        'platform_commission_amount',
         'payment_method',
         'payment_status',
         'order_status',
@@ -55,6 +65,14 @@ class SpecialHireOrder extends Model
         'surcharge_percent' => 'decimal:2',
         'surcharge_amount' => 'decimal:2',
         'total_amount' => 'decimal:2',
+        'deposit_amount' => 'decimal:2',
+        'balance_amount' => 'decimal:2',
+        'deposit_paid_at' => 'datetime',
+        'balance_paid_at' => 'datetime',
+        'owner_accepted_at' => 'datetime',
+        'passenger_seats' => 'array',
+        'platform_commission_percent' => 'decimal:2',
+        'platform_commission_amount' => 'decimal:2',
     ];
 
     /**
@@ -255,6 +273,46 @@ class SpecialHireOrder extends Model
         $idx = array_search($this->order_status, $pipeline, true);
 
         return $idx === false ? -1 : (int) $idx;
+    }
+
+    /**
+     * Customer-app hire flow: deposit → owner accept → passenger names → balance (ClickPesa).
+     * Legacy rows (no split amounts) use payment_status only.
+     *
+     * @return string pay_deposit|wait_owner|enter_passengers|pay_balance|done|legacy_pending
+     */
+    public function customerHireNextStep(): string
+    {
+        if ($this->deposit_amount === null && $this->balance_amount === null) {
+            return $this->payment_status === 'paid' ? 'done' : 'legacy_pending';
+        }
+
+        if (!$this->deposit_paid_at) {
+            return 'pay_deposit';
+        }
+        if (!$this->owner_accepted_at) {
+            return 'wait_owner';
+        }
+        $names = is_array($this->passenger_seats) ? $this->passenger_seats : [];
+        if (count($names) < (int) $this->passengers_count) {
+            return 'enter_passengers';
+        }
+        if (!$this->balance_paid_at) {
+            return 'pay_balance';
+        }
+
+        return 'done';
+    }
+
+    /**
+     * Net hire amount credited to operator (after platform commission on paid orders).
+     */
+    public function operatorNetAmount(): float
+    {
+        $total = (float) $this->total_amount;
+        $fee = (float) ($this->platform_commission_amount ?? 0);
+
+        return max(0, $total - $fee);
     }
 }
 

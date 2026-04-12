@@ -9,6 +9,8 @@ use App\Models\bus;
 use App\Models\Campany;
 use App\Models\PaymentFees;
 use App\Models\Roundtrip;
+use App\Models\SpecialHireOrder;
+use App\Services\SpecialHireOrderPaymentService;
 use App\Models\SystemBalance;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -406,6 +408,36 @@ class ClickPesaController extends Controller
                     'response' => $verifyResponse
                 ]);
 
+                $sanitizedShRef = preg_replace('/[^a-zA-Z0-9]/', '', (string) $reference);
+                $specialHireOrder = SpecialHireOrder::query()
+                    ->where('clickpesa_deposit_ref', $sanitizedShRef)
+                    ->orWhere('clickpesa_balance_ref', $sanitizedShRef)
+                    ->first();
+                if ($specialHireOrder) {
+                    $paySvc = app(SpecialHireOrderPaymentService::class);
+                    $type = SpecialHireOrderPaymentService::resolveTypeFromReference($specialHireOrder, $sanitizedShRef);
+                    if ($type) {
+                        try {
+                            $paySvc->confirmFromVerifiedReference($specialHireOrder, $type, $verifyResponse, $reference);
+                        } catch (\Throwable $e) {
+                            Log::error('Special hire ClickPesa confirm failed', [
+                                'order_id' => $specialHireOrder->id,
+                                'type' => $type,
+                                'error' => $e->getMessage(),
+                            ]);
+                            return view('clickpesa.error', [
+                                'message' => $e->getMessage(),
+                                'reference' => $reference,
+                            ]);
+                        }
+
+                        return view('clickpesa.success', [
+                            'message' => __('all.payment_successful') ?: 'Payment successful',
+                            'reference' => $reference,
+                        ]);
+                    }
+                }
+
                 $vender = Session::get('vender') ?? '';
 
                 $booking1 = session()->get('booking1');
@@ -797,7 +829,7 @@ class ClickPesaController extends Controller
     /**
      * Create ClickPesa USSD-PUSH request
      */
-    private function createCheckoutSession($orderDetails)
+    public function createCheckoutSession($orderDetails)
     {
         // Get access token first
         $accessToken = $this->getAccessToken();
@@ -1264,7 +1296,7 @@ class ClickPesaController extends Controller
      * Verify ClickPesa transaction
      * Returns object with 'status' property on success, or error object on failure
      */
-    private function verifyTransaction($reference)
+    public function verifyTransaction($reference)
     {
         // First check if we have cached payment data from AJAX polling
         $cachedPaymentData = Session::get('clickpesa_payment_data');

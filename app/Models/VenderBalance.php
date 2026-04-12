@@ -14,8 +14,15 @@ class VenderBalance extends Model
     protected $fillable = [
         'user_id',
         'amount',
+        'sell_cash_amount',
         'fees',
         'payment_number',
+    ];
+
+    protected $casts = [
+        'amount' => 'decimal:2',
+        'sell_cash_amount' => 'decimal:2',
+        'fees' => 'decimal:2',
     ];
 
     

@@ -1164,12 +1164,16 @@ class VenderController extends Controller
                     'payment_number' => $validated['payment_number'],
                 ]);
             } else {
-                $user->VenderBalances()->create([
+                $row = [
                     'payment_number' => $validated['payment_number'],
                     'user_id' => $user->id,
-                    'amount' => 0, // Default value
-                    'fees' => 0,   // Default value
-                ]);
+                    'amount' => 0,
+                    'fees' => 0,
+                ];
+                if (\Illuminate\Support\Facades\Schema::hasColumn('vender_balances', 'sell_cash_amount')) {
+                    $row['sell_cash_amount'] = 0;
+                }
+                $user->VenderBalances()->create($row);
             }
 
             return back()->with('success', 'Profile updated successfully');
