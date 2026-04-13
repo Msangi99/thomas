@@ -441,6 +441,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/deposit', [VenderWalletController::class, 'showDepositForm'])->name('deposit');
             Route::post('/deposit', [VenderWalletController::class, 'deposit'])->name('processDeposit');
             Route::post('/transfer', [VenderWalletController::class, 'transferInternal'])->name('transfer');
+            Route::post('/migrate-legacy-cash', [VenderWalletController::class, 'migrateLegacyBalanceToCash'])->name('migrateLegacyCash');
             Route::get('/deposit/success', [VenderWalletController::class, 'depositSuccess'])->name('success');
             Route::get('/deposit/fail', [VenderWalletController::class, 'depositFail'])->name('fail');
         });

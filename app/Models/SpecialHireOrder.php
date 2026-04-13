@@ -314,5 +314,22 @@ class SpecialHireOrder extends Model
 
         return max(0, $total - $fee);
     }
+
+    /**
+     * Preview platform commission on a hire total (same percentage rule as balance settlement).
+     *
+     * @return array{platform_commission_percent: float, platform_commission_amount: float, operator_net_after_platform: float}
+     */
+    public static function previewPlatformCommission(float $hireTotal, ?float $ownerPlatformPercent): array
+    {
+        $pct = max(0.0, min(100.0, (float) ($ownerPlatformPercent ?? 0)));
+        $amount = round($hireTotal * ($pct / 100.0), 2);
+
+        return [
+            'platform_commission_percent' => $pct,
+            'platform_commission_amount' => $amount,
+            'operator_net_after_platform' => round(max(0, $hireTotal - $amount), 2),
+        ];
+    }
 }
 

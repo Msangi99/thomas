@@ -25,7 +25,7 @@ class VenderWalletController extends Controller
         $request->validate([
             'amount' => 'required|numeric|min:1',
             'payment_method' => 'required|in:tigosecure,pdo,clickpesa',
-            'deposit_phone' => 'required_if:payment_method,clickpesa|string|max:30',
+            'deposit_phone' => 'nullable|string|max:30',
         ]);
 
         $user = auth()->user();
@@ -53,6 +53,12 @@ class VenderWalletController extends Controller
             if (!$phone) {
                 return back()->withInput()->with('error', 'Enter a mobile number for ClickPesa (or set phone on your profile).');
             }
+
+            $msisdn = ClickPesaController::normalizeTanzaniaMsisdnForClickPesa((string) $phone);
+            if (!$msisdn['ok']) {
+                return back()->withInput()->with('error', $msisdn['error'] ?? 'Invalid phone number for ClickPesa.');
+            }
+            $phone = $msisdn['phone'];
 
             Session::forget(['booking', 'booking1', 'booking2', 'booking_form', 'is_round']);
             Session::put('amount', $amount);
@@ -95,7 +101,7 @@ class VenderWalletController extends Controller
     }
 
     /**
-     * PDO success redirect target (route exists; credits sell-cash wallet).
+     * PDO success redirect target (route exists; credits cash wallet).
      */
     public function depositSuccess()
     {
@@ -113,7 +119,7 @@ class VenderWalletController extends Controller
     }
 
     /**
-     * Move funds between commission wallet (`amount`) and sell-cash wallet (`sell_cash_amount`).
+     * Move funds between commission wallet (`amount`) and cash wallet (`sell_cash_amount`).
      */
     public function transferInternal(Request $request)
     {
@@ -140,7 +146,7 @@ class VenderWalletController extends Controller
                     $locked->increment('sell_cash_amount', $amt);
                 } else {
                     if ((float) $locked->sell_cash_amount < $amt) {
-                        throw new \RuntimeException('Insufficient sell-cash wallet balance');
+                        throw new \RuntimeException('Insufficient cash wallet balance');
                     }
                     $locked->decrement('sell_cash_amount', $amt);
                     $locked->increment('amount', $amt);
@@ -151,5 +157,37 @@ class VenderWalletController extends Controller
         }
 
         return back()->with('success', 'Transfer completed');
+    }
+
+    /**
+     * One-time style migration: move the entire commission wallet balance to the cash wallet
+     * when the cash wallet is still zero (typical right after the wallet split migration).
+     */
+    public function migrateLegacyBalanceToCash()
+    {
+        $user = auth()->user();
+        $vb = $user->VenderBalances;
+        if (!$vb || !Schema::hasColumn('vender_balances', 'sell_cash_amount')) {
+            return back()->with('error', 'Wallet split is not available');
+        }
+
+        try {
+            DB::transaction(function () use ($vb) {
+                $locked = VenderBalance::query()->whereKey($vb->id)->lockForUpdate()->firstOrFail();
+                if ((float) ($locked->sell_cash_amount ?? 0) > 0) {
+                    throw new \RuntimeException('Cash wallet is already in use. Use Transfer to move a specific amount.');
+                }
+                $amt = round((float) $locked->amount, 2);
+                if ($amt <= 0) {
+                    throw new \RuntimeException('No balance in the commission wallet to move.');
+                }
+                $locked->decrement('amount', $amt);
+                $locked->increment('sell_cash_amount', $amt);
+            });
+        } catch (\Throwable $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'Your previous balance was moved to the cash wallet. New commissions will appear in the commission wallet.');
     }
 }

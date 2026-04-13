@@ -39,6 +39,47 @@ class ClickPesaController extends Controller
     }
 
     /**
+     * Normalize a MSISDN for ClickPesa (Tanzania mobile money: 255 + 9 digits, typically 06/07 national).
+     *
+     * @return array{ok: bool, phone: string, error: string|null}
+     */
+    public static function normalizeTanzaniaMsisdnForClickPesa(string $raw): array
+    {
+        $phoneNumber = preg_replace('/\D+/', '', $raw) ?? '';
+        if ($phoneNumber === '') {
+            return [
+                'ok' => false,
+                'phone' => '',
+                'error' => 'Enter a mobile money number (e.g. 07xxxxxxxx or 2557xxxxxxxx). Country code 255 is required for ClickPesa.',
+            ];
+        }
+        if (str_starts_with($phoneNumber, '00')) {
+            $phoneNumber = substr($phoneNumber, 2);
+        }
+        if (str_starts_with($phoneNumber, '255')) {
+            while (strlen($phoneNumber) > 12 && isset($phoneNumber[3]) && $phoneNumber[3] === '0') {
+                $phoneNumber = substr($phoneNumber, 0, 3) . substr($phoneNumber, 4);
+            }
+        } elseif (str_starts_with($phoneNumber, '0')) {
+            $phoneNumber = '255' . substr($phoneNumber, 1);
+        } else {
+            $phoneNumber = '255' . $phoneNumber;
+        }
+        while (strlen($phoneNumber) > 12 && isset($phoneNumber[3]) && $phoneNumber[3] === '0') {
+            $phoneNumber = substr($phoneNumber, 0, 3) . substr($phoneNumber, 4);
+        }
+        if (!preg_match('/^255[67]\d{8}$/', $phoneNumber)) {
+            return [
+                'ok' => false,
+                'phone' => $phoneNumber,
+                'error' => 'Use a valid Tanzania mobile money number with country code 255 (e.g. 2557xxxxxxxx or 07xxxxxxxx). ClickPesa rejects numbers that are not 255 followed by nine digits.',
+            ];
+        }
+
+        return ['ok' => true, 'phone' => $phoneNumber, 'error' => null];
+    }
+
+    /**
      * Initiate ClickPesa payment
      */
     public function initiatePayment($amount, $first_name, $last_name, $phone, $email, $order_id = null)
@@ -837,18 +878,12 @@ class ClickPesaController extends Controller
             return "Failed to obtain access token from ClickPesa";
         }
 
-        // Format phone number: digits only, country code without plus (e.g. 255xxxxxxxxx for Tanzania)
-        $phoneNumber = isset($orderDetails['phone']) ? (string) $orderDetails['phone'] : '';
-        $phoneNumber = preg_replace('/[^0-9]/', '', $phoneNumber); // Remove + and any non-digits
-        if ($phoneNumber === '') {
-            return 'Valid phoneNumber is required, must start with country code and without the plus sign (e.g. 255681234567).';
+        $rawPhone = isset($orderDetails['phone']) ? (string) $orderDetails['phone'] : '';
+        $normalized = self::normalizeTanzaniaMsisdnForClickPesa($rawPhone);
+        if (!$normalized['ok']) {
+            return $normalized['error'] ?? 'Invalid phone number for ClickPesa.';
         }
-        if (strpos($phoneNumber, '0') === 0) {
-            $phoneNumber = '255' . substr($phoneNumber, 1); // Convert 0... to 255...
-        } elseif (substr($phoneNumber, 0, 3) !== '255') {
-            $phoneNumber = '255' . $phoneNumber; // Add country code if missing
-        }
-        $phoneNumber = (string) $phoneNumber; // Ensure string for API
+        $phoneNumber = $normalized['phone'];
 
         // ClickPesa USSD minimum/maximum (API returns 400 outside this range, e.g. "Amount must be between 908 and 3000000")
         $amountNum = (float) ($orderDetails['amount'] ?? 0);

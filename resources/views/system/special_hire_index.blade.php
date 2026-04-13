@@ -7,6 +7,18 @@
     @if(session('success'))
         <div class="mb-4 p-4 rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm">{{ session('success') }}</div>
     @endif
+    @if(session('error'))
+        <div class="mb-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm">{{ session('error') }}</div>
+    @endif
+    @if($errors->any())
+        <div class="mb-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm">
+            <ul class="list-disc list-inside space-y-1">
+                @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
     <div class="mb-6">
         <h1 class="text-2xl font-semibold text-gray-800">Special hire</h1>
@@ -49,7 +61,7 @@
                                 <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">Contact</th>
                                 <th class="px-4 py-3 text-right font-medium text-gray-500 uppercase text-xs">Coasters</th>
                                 <th class="px-4 py-3 text-right font-medium text-gray-500 uppercase text-xs">Orders</th>
-                                <th class="px-4 py-3 text-right font-medium text-gray-500 uppercase text-xs">Platform %</th>
+                                <th class="px-4 py-3 text-right font-medium text-gray-500 uppercase text-xs">Platform commission %</th>
                                 <th class="px-4 py-3 text-right font-medium text-gray-500 uppercase text-xs"></th>
                             </tr>
                         </thead>
@@ -61,7 +73,18 @@
                                     <td class="px-4 py-3 text-gray-600">{{ $owner->contact ?? $owner->phone ?? '—' }}</td>
                                     <td class="px-4 py-3 text-right text-gray-900">{{ number_format($owner->coasters_count) }}</td>
                                     <td class="px-4 py-3 text-right text-gray-900">{{ number_format($owner->special_hire_orders_count) }}</td>
-                                    <td class="px-4 py-3 text-right text-gray-900">{{ number_format((float) ($owner->special_hire_platform_percent ?? 0), 2) }}</td>
+                                    <td class="px-4 py-3 text-right">
+                                        <form action="{{ route('system.special_hire.platform_percent', $owner->id) }}" method="post" class="inline-flex flex-wrap items-center justify-end gap-2">
+                                            @csrf
+                                            <input type="number" step="0.01" min="0" max="100" name="special_hire_platform_percent" required
+                                                aria-label="Platform commission percent for {{ $owner->name }}"
+                                                value="{{ old('special_hire_platform_percent', $owner->special_hire_platform_percent ?? 0) }}"
+                                                class="w-24 rounded-md border-gray-300 text-sm shadow-sm focus:border-teal-500 focus:ring-teal-500 text-right">
+                                            <button type="submit" class="inline-flex items-center px-3 py-1.5 rounded-lg bg-teal-600 text-white text-xs font-semibold hover:bg-teal-700 whitespace-nowrap">
+                                                Save %
+                                            </button>
+                                        </form>
+                                    </td>
                                     <td class="px-4 py-3 text-right">
                                         <a href="{{ route('system.special_hire.show', $owner->id) }}"
                                            class="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700">

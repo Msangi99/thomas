@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class SpecialHireController extends Controller
@@ -133,11 +134,28 @@ class SpecialHireController extends Controller
             'driver_email' => 'nullable|email|unique:users,email|required_with:driver_password',
             'driver_password' => 'nullable|string|min:6|required_with:driver_email',
             'features' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'image' => 'nullable|file|mimes:jpeg,jpg,png,webp|max:2048',
             'base_price' => 'required|numeric|min:0',
             'price_per_km' => 'required|numeric|min:0',
             'min_km' => 'required|integer|min:1',
         ]);
+
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            try {
+                $imagePath = Coaster::storeCoasterImageFile($request->file('image'));
+            } catch (\Throwable $e) {
+                Log::error('Special hire coaster image upload failed', [
+                    'user_id' => Auth::id(),
+                    'error' => $e->getMessage(),
+                ]);
+
+                return back()
+                    ->withInput()
+                    ->with('error', 'Could not save the vehicle photo. Ensure the server can write to storage/app/public and that the public/storage link exists (php artisan storage:link). '
+                        . (config('app.debug') ? $e->getMessage() : 'Contact support if this continues.'));
+            }
+        }
 
         $driver = null;
         if ($request->filled('driver_email')) {
@@ -149,12 +167,6 @@ class SpecialHireController extends Controller
                 'password' => Hash::make($request->driver_password),
                 'role' => 'driver',
             ]);
-        }
-
-        // Handle image upload
-        $imagePath = null;
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('coasters', 'public');
         }
 
         // Create coaster
@@ -216,7 +228,7 @@ class SpecialHireController extends Controller
             'driver_name' => 'nullable|string|max:100',
             'driver_contact' => 'nullable|string|max:20',
             'features' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'image' => 'nullable|file|mimes:jpeg,jpg,png,webp|max:2048',
             'base_price' => 'required|numeric|min:0',
             'price_per_km' => 'required|numeric|min:0',
             'min_km' => 'required|integer|min:1',
@@ -235,10 +247,24 @@ class SpecialHireController extends Controller
         ];
 
         if ($request->hasFile('image')) {
-            if ($coaster->image) {
-                Storage::disk('public')->delete($coaster->image);
+            try {
+                $newPath = Coaster::storeCoasterImageFile($request->file('image'));
+                if ($coaster->image) {
+                    Storage::disk(Coaster::IMAGE_DISK)->delete($coaster->image);
+                }
+                $data['image'] = $newPath;
+            } catch (\Throwable $e) {
+                Log::error('Special hire coaster image upload failed (update)', [
+                    'user_id' => Auth::id(),
+                    'coaster_id' => $coaster->id,
+                    'error' => $e->getMessage(),
+                ]);
+
+                return back()
+                    ->withInput()
+                    ->with('error', 'Could not save the new vehicle photo. Check server storage permissions and the public/storage symlink (php artisan storage:link). '
+                        . (config('app.debug') ? $e->getMessage() : 'Contact support if this continues.'));
             }
-            $data['image'] = $request->file('image')->store('coasters', 'public');
         }
 
         $coaster->update($data);
@@ -710,9 +736,14 @@ class SpecialHireController extends Controller
             $request->hire_time
         );
 
+        $commission = SpecialHireOrder::previewPlatformCommission(
+            (float) $priceData['total_amount'],
+            (float) (Auth::user()->special_hire_platform_percent ?? 0)
+        );
+
         return response()->json([
             'success' => true,
-            'data' => $priceData,
+            'data' => array_merge($priceData, $commission),
         ]);
     }
 

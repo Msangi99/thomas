@@ -5,11 +5,16 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 class Coaster extends Model
 {
     use HasFactory;
+
+    public const IMAGE_DISK = 'public';
+
+    public const IMAGE_DIRECTORY = 'coasters';
 
     protected $table = 'coasters';
 
@@ -45,12 +50,35 @@ class Coaster extends Model
     /**
      * Get the full URL for the coaster image.
      */
-    public function getImageUrlAttribute()
+    public function getImageUrlAttribute(): ?string
     {
-        if ($this->image) {
-            return asset('storage/' . $this->image);
+        if (!$this->image) {
+            return null;
         }
-        return null;
+        if (! Storage::disk(self::IMAGE_DISK)->exists($this->image)) {
+            return null;
+        }
+
+        return Storage::disk(self::IMAGE_DISK)->url($this->image);
+    }
+
+    /**
+     * Persist an uploaded coaster image to the public disk (storage/app/public/coasters).
+     *
+     * @throws \RuntimeException
+     */
+    public static function storeCoasterImageFile(UploadedFile $file): string
+    {
+        $disk = Storage::disk(self::IMAGE_DISK);
+        if (! $disk->exists(self::IMAGE_DIRECTORY)) {
+            $disk->makeDirectory(self::IMAGE_DIRECTORY);
+        }
+        $path = $file->store(self::IMAGE_DIRECTORY, self::IMAGE_DISK);
+        if (! is_string($path) || $path === '') {
+            throw new \RuntimeException('The server could not save the image file.');
+        }
+
+        return $path;
     }
 
     /**

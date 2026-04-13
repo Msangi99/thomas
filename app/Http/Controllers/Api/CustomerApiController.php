@@ -401,9 +401,15 @@ class CustomerApiController extends Controller
             $request->hire_time
         );
 
+        $owner = User::query()->find($coaster->user_id);
+        $commission = SpecialHireOrder::previewPlatformCommission(
+            (float) $priceData['total_amount'],
+            $owner ? (float) ($owner->special_hire_platform_percent ?? 0) : null
+        );
+
         return response()->json([
             'success' => true,
-            'data' => $priceData,
+            'data' => array_merge($priceData, $commission),
         ]);
     }
 

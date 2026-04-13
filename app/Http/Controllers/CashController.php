@@ -9,7 +9,9 @@ use App\Models\bus;
 use App\Models\Campany;
 use App\Models\PaymentFees;
 use App\Models\SystemBalance;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -18,6 +20,58 @@ use App\Http\Controllers\PercentController;
 
 class CashController extends Controller
 {
+    /**
+     * Vendor roles that sell tickets and fund cash sales from the vendor cash wallet.
+     */
+    private static function isVendorTicketSeller(?User $user): bool
+    {
+        return $user && ($user->isVender() || $user->isBusCampany() || $user->isLocalBusOwner());
+    }
+
+    /**
+     * @return string|null Error message if the sale must be blocked, null if OK or not applicable.
+     */
+    public static function vendorCashWalletBlockReason(?User $user, float $deduct): ?string
+    {
+        if (!self::isVendorTicketSeller($user) || $deduct <= 0) {
+            return null;
+        }
+        $vb = $user->VenderBalances;
+        if (!$vb) {
+            return 'No vendor wallet is set up for your account. You cannot complete a cash sale until a wallet exists.';
+        }
+        if (Schema::hasColumn('vender_balances', 'sell_cash_amount')) {
+            $avail = (float) ($vb->sell_cash_amount ?? 0);
+            if ($avail + 0.0001 < $deduct) {
+                return 'Insufficient cash wallet balance for this sale. Required: '
+                    . number_format($deduct, 2) . ' TZS; available: ' . number_format($avail, 2)
+                    . ' TZS. Add a deposit or move funds from your commission wallet on the Transactions page.';
+            }
+        } else {
+            $avail = (float) ($vb->amount ?? 0);
+            if ($avail + 0.0001 < $deduct) {
+                return 'Insufficient wallet balance for this cash sale. Required: '
+                    . number_format($deduct, 2) . ' TZS; available: ' . number_format($avail, 2) . ' TZS.';
+            }
+        }
+
+        return null;
+    }
+
+    private static function redirectVendorCashBlocked(string $message): \Illuminate\Http\RedirectResponse
+    {
+        if (session()->get('is_round')) {
+            return redirect()->route('round.trip.payment')->withErrors(['payment_error' => $message]);
+        }
+
+        $u = Auth::user();
+        if ($u instanceof User && $u->isVender()) {
+            return redirect()->route('vender.pay')->with('error', $message);
+        }
+
+        return redirect()->back()->with('error', $message);
+    }
+
     public function cash($booking, $xcode)
     {
         //return ['booking' => $booking, 'code' => $xcode];
@@ -67,6 +121,21 @@ class CashController extends Controller
                 'message' => 'Payment already processed',
                 'booking' => $booking
             ]);
+        }
+
+        $user = Auth::user();
+        if ($user instanceof User) {
+            $deductRequired = (float) round((float) $booking->amount);
+            $block = self::vendorCashWalletBlockReason($user, $deductRequired);
+            if ($block !== null) {
+                Log::warning('Vendor cash sale blocked — insufficient cash wallet', [
+                    'user_id' => $user->id,
+                    'booking_code' => $booking->booking_code,
+                    'required' => $deductRequired,
+                ]);
+
+                return self::redirectVendorCashBlocked($block);
+            }
         }
 
         // Begin transaction

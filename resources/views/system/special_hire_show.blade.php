@@ -10,6 +10,15 @@
     @if(session('error'))
         <div class="mb-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm">{{ session('error') }}</div>
     @endif
+    @if($errors->any())
+        <div class="mb-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm">
+            <ul class="list-disc list-inside space-y-1">
+                @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
     <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
@@ -26,16 +35,21 @@
 
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-8 max-w-xl">
         <h2 class="text-sm font-semibold text-gray-800 mb-3">Platform commission (each paid trip)</h2>
-        <p class="text-xs text-gray-500 mb-3">Percentage of the hire total retained by the system when the customer completes the final ClickPesa payment.</p>
-        <form action="{{ route('system.special_hire.platform_percent', $selectedOwner->id) }}" method="post" class="flex flex-wrap items-end gap-3">
+        <p class="text-xs text-gray-500 mb-4">Percentage of the hire total retained by the system when the customer completes the final ClickPesa payment. This rate is stored on the operator account and applied to every new quote and order for this operator.</p>
+        <form action="{{ route('system.special_hire.platform_percent', $selectedOwner->id) }}" method="post" class="space-y-4">
             @csrf
             <div>
                 <label for="special_hire_platform_percent" class="block text-xs font-medium text-gray-600 mb-1">Percent (0–100)</label>
                 <input type="number" step="0.01" min="0" max="100" name="special_hire_platform_percent" id="special_hire_platform_percent"
                     value="{{ old('special_hire_platform_percent', $selectedOwner->special_hire_platform_percent ?? 0) }}"
-                    class="w-32 rounded-lg border-gray-300 text-sm shadow-sm focus:border-teal-500 focus:ring-teal-500" required>
+                    class="w-full max-w-xs rounded-lg border-gray-300 text-sm shadow-sm focus:border-teal-500 focus:ring-teal-500 @error('special_hire_platform_percent') border-red-500 @enderror" required>
+                @error('special_hire_platform_percent')
+                    <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
-            <button type="submit" class="px-4 py-2 rounded-lg bg-teal-600 text-white text-sm font-medium hover:bg-teal-700">Save</button>
+            <button type="submit" class="w-full max-w-xs px-4 py-2.5 rounded-lg bg-teal-600 text-white text-sm font-semibold hover:bg-teal-700 shadow-sm">
+                Save platform commission
+            </button>
         </form>
     </div>
 

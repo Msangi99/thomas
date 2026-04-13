@@ -10,6 +10,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -150,6 +151,7 @@ class SpecialHireApiController extends Controller
             'driver_name' => 'nullable|string|max:100',
             'driver_contact' => 'nullable|string|max:20',
             'features' => 'nullable|string',
+            'image' => 'nullable|file|mimes:jpeg,jpg,png,webp|max:2048',
             'base_price' => 'required|numeric|min:0',
             'price_per_km' => 'required|numeric|min:0',
             'min_km' => 'required|integer|min:1',
@@ -162,6 +164,23 @@ class SpecialHireApiController extends Controller
             ], 422);
         }
 
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            try {
+                $imagePath = Coaster::storeCoasterImageFile($request->file('image'));
+            } catch (\Throwable $e) {
+                Log::error('API special hire coaster image upload failed', [
+                    'user_id' => Auth::id(),
+                    'error' => $e->getMessage(),
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Could not save the vehicle photo. Ensure storage/app/public is writable and public/storage is linked (php artisan storage:link).',
+                ], 422);
+            }
+        }
+
         $coaster = Coaster::create([
             'user_id' => Auth::id(),
             'name' => $request->name,
@@ -172,6 +191,7 @@ class SpecialHireApiController extends Controller
             'driver_name' => $request->driver_name,
             'driver_contact' => $request->driver_contact,
             'features' => $request->features,
+            'image' => $imagePath,
             'status' => 'available',
         ]);
 
@@ -215,6 +235,7 @@ class SpecialHireApiController extends Controller
             'driver_name' => 'nullable|string|max:100',
             'driver_contact' => 'nullable|string|max:20',
             'features' => 'nullable|string',
+            'image' => 'nullable|file|mimes:jpeg,jpg,png,webp|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -224,10 +245,33 @@ class SpecialHireApiController extends Controller
             ], 422);
         }
 
-        $coaster->update($request->only([
+        $payload = $request->only([
             'name', 'plate_number', 'capacity', 'model', 'color',
-            'status', 'driver_name', 'driver_contact', 'features'
-        ]));
+            'status', 'driver_name', 'driver_contact', 'features',
+        ]);
+
+        if ($request->hasFile('image')) {
+            try {
+                $newPath = Coaster::storeCoasterImageFile($request->file('image'));
+                if ($coaster->image) {
+                    Storage::disk(Coaster::IMAGE_DISK)->delete($coaster->image);
+                }
+                $payload['image'] = $newPath;
+            } catch (\Throwable $e) {
+                Log::error('API special hire coaster image upload failed (update)', [
+                    'user_id' => Auth::id(),
+                    'coaster_id' => $coaster->id,
+                    'error' => $e->getMessage(),
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Could not save the new vehicle photo. Check storage permissions and php artisan storage:link.',
+                ], 422);
+            }
+        }
+
+        $coaster->update($payload);
 
         // Update pricing if provided
         if ($request->has('base_price') || $request->has('price_per_km')) {
@@ -662,9 +706,15 @@ class SpecialHireApiController extends Controller
             $request->hire_time
         );
 
+        $operator = Auth::user();
+        $commission = SpecialHireOrder::previewPlatformCommission(
+            (float) $priceData['total_amount'],
+            (float) ($operator->special_hire_platform_percent ?? 0)
+        );
+
         return response()->json([
             'success' => true,
-            'data' => [
+            'data' => array_merge([
                 'coaster' => [
                     'id' => $coaster->id,
                     'name' => $coaster->name,
@@ -682,7 +732,7 @@ class SpecialHireApiController extends Controller
                 ],
                 'total_amount' => $priceData['total_amount'],
                 'currency' => 'TZS',
-            ],
+            ], $commission),
         ]);
     }
 
@@ -869,9 +919,15 @@ class SpecialHireApiController extends Controller
             $request->hire_time
         );
 
+        $owner = User::query()->find($coaster->user_id);
+        $commission = SpecialHireOrder::previewPlatformCommission(
+            (float) $priceData['total_amount'],
+            $owner ? (float) ($owner->special_hire_platform_percent ?? 0) : null
+        );
+
         return response()->json([
             'success' => true,
-            'data' => [
+            'data' => array_merge([
                 'coaster' => [
                     'id' => $coaster->id,
                     'name' => $coaster->name,
@@ -889,7 +945,7 @@ class SpecialHireApiController extends Controller
                 ],
                 'total_amount' => $priceData['total_amount'],
                 'currency' => 'TZS',
-            ],
+            ], $commission),
         ]);
     }
 
@@ -1349,9 +1405,15 @@ class SpecialHireApiController extends Controller
             $request->hire_time
         );
 
+        $owner = User::query()->find($coaster->user_id);
+        $commission = SpecialHireOrder::previewPlatformCommission(
+            (float) $priceData['total_amount'],
+            $owner ? (float) ($owner->special_hire_platform_percent ?? 0) : null
+        );
+
         return response()->json([
             'success' => true,
-            'data' => [
+            'data' => array_merge([
                 'coaster' => [
                     'id' => $coaster->id,
                     'name' => $coaster->name,
@@ -1371,7 +1433,7 @@ class SpecialHireApiController extends Controller
                 ],
                 'total_amount' => $priceData['total_amount'],
                 'currency' => 'TZS',
-            ],
+            ], $commission),
         ]);
     }
 

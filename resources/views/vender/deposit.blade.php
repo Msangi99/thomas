@@ -7,7 +7,7 @@
             {{ __('vender/busroot.deposit_to_vendor_wallet') }}
         </h2>
         <p class="text-sm text-gray-600 mb-4 text-center">
-            Deposits are credited to your <strong>sell-cash wallet</strong> (used when you sell tickets for cash). Commission earnings stay in your <strong>commission wallet</strong>. You can move money between the two on the transactions page. Use <strong>ClickPesa</strong> or PDO as you prefer.
+            Deposits are credited to your <strong>cash wallet</strong> (used when you sell tickets for cash). Commission from sold bookings stays in your <strong>commission wallet</strong>. You can move amounts between the two on the transactions page. Use <strong>ClickPesa</strong> or PDO as you prefer.
         </p>
 
         {{-- Success & Error Messages --}}
@@ -67,8 +67,9 @@
                     </label>
                     <input id="deposit_phone" type="text" name="deposit_phone"
                         value="{{ old('deposit_phone', auth()->user()->contact ?? auth()->user()->phone ?? '') }}"
-                        placeholder="255… or 07…"
+                        placeholder="2557xxxxxxxx or 07xxxxxxxx"
                         class="w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-200 h-10 px-2 focus:border-blue-500 @error('deposit_phone') border-red-500 @enderror">
+                    <p class="text-xs text-gray-500 mt-1">Use a Tanzania mobile money number. You can enter <strong>07…</strong> or <strong>06…</strong>, or international form <strong>255…</strong> (no + needed). The system sends <strong>255</strong> plus nine digits to ClickPesa.</p>
                     @error('deposit_phone')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror

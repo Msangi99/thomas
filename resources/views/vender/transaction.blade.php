@@ -19,13 +19,13 @@
             <div class="bg-white rounded-xl shadow-lg p-6 transition-all hover:shadow-xl">
                 <h3 class="text-lg font-semibold text-gray-700 text-center">Commission wallet</h3>
                 <p class="text-2xl font-bold text-gray-900 text-center mt-2">{{ $currency }} {{ convert_money(auth()->user()->VenderBalances->amount ?? 0) }}</p>
-                <p class="text-xs text-gray-500 text-center mt-2">Commissions &amp; payout requests.</p>
+                <p class="text-xs text-gray-500 text-center mt-2">Commissions from sold bookings; use this balance for payout requests.</p>
             </div>
             @if($vb && \Illuminate\Support\Facades\Schema::hasColumn('vender_balances', 'sell_cash_amount'))
             <div class="bg-white rounded-xl shadow-lg p-6 transition-all hover:shadow-xl">
-                <h3 class="text-lg font-semibold text-gray-700 text-center">Sell-cash wallet</h3>
+                <h3 class="text-lg font-semibold text-gray-700 text-center">Cash wallet</h3>
                 <p class="text-2xl font-bold text-gray-900 text-center mt-2">{{ $currency }} {{ convert_money($vb->sell_cash_amount ?? 0) }}</p>
-                <p class="text-xs text-gray-500 text-center mt-2">Deposits &amp; cash-ticket float.</p>
+                <p class="text-xs text-gray-500 text-center mt-2">Sell-in-cash bookings, deposits, and ticket float.</p>
                 <div class="mt-4 text-center">
                     <a href="{{ route('vender.wallet.deposit') }}" class="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Deposit</a>
                 </div>
@@ -51,22 +51,32 @@
 
         @if($vb && \Illuminate\Support\Facades\Schema::hasColumn('vender_balances', 'sell_cash_amount'))
         <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h3 class="text-lg font-semibold text-gray-800 mb-3">Move between wallets</h3>
+            <h3 class="text-lg font-semibold text-gray-800 mb-3">Move amount between wallets</h3>
+            <p class="text-sm text-gray-600 mb-4">Transfer any amount between your commission wallet and your cash wallet (for example after an upgrade, or to rebalance float).</p>
             <form method="POST" action="{{ route('vender.wallet.transfer') }}" class="flex flex-wrap items-end gap-3">
                 @csrf
                 <div>
                     <label class="block text-xs font-medium text-gray-600 mb-1">Direction</label>
                     <select name="direction" class="border-gray-300 rounded-lg shadow-sm text-sm">
-                        <option value="to_sell_cash">Commission → Sell cash</option>
-                        <option value="to_commission">Sell cash → Commission</option>
+                        <option value="to_sell_cash">Commission wallet → Cash wallet</option>
+                        <option value="to_commission">Cash wallet → Commission wallet</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Amount</label>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Amount (TZS)</label>
                     <input type="number" name="amount" step="0.01" min="0.01" required class="border-gray-300 rounded-lg shadow-sm text-sm w-36">
                 </div>
                 <button type="submit" class="bg-gray-800 hover:bg-black text-white font-semibold py-2 px-4 rounded-lg text-sm">Transfer</button>
             </form>
+            @if((float)($vb->sell_cash_amount ?? 0) == 0 && (float)($vb->amount ?? 0) > 0)
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <p class="text-sm text-gray-600 mb-2">If your balance lived in the old single wallet before cash/commission split, you can move the full commission balance into the cash wallet once.</p>
+                <form method="POST" action="{{ route('vender.wallet.migrateLegacyCash') }}" onsubmit="return confirm('Move your entire commission wallet balance to the cash wallet?');">
+                    @csrf
+                    <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 px-4 rounded-lg text-sm">Move all to cash wallet (one-time)</button>
+                </form>
+            </div>
+            @endif
         </div>
         @endif
 
