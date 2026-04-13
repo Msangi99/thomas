@@ -805,5 +805,42 @@ class SpecialHireController extends Controller
 
         return redirect()->route('special_hire.coasters')->with('success', 'Driver account created and linked to the selected coaster.');
     }
+
+    /**
+     * Show form to set a new password for a driver on this operator's fleet.
+     */
+    public function resetDriverPasswordForm(int $driver)
+    {
+        $driverUser = User::where('role', 'driver')->findOrFail($driver);
+        if (! Coaster::byUser(Auth::id())->where('driver_user_id', $driverUser->id)->exists()) {
+            abort(403);
+        }
+
+        return view('special_hire.drivers.reset_password', ['driver' => $driverUser]);
+    }
+
+    /**
+     * Save a new password for a fleet driver (operator-initiated reset).
+     */
+    public function resetDriverPassword(Request $request, int $driver)
+    {
+        $driverUser = User::where('role', 'driver')->findOrFail($driver);
+        if (! Coaster::byUser(Auth::id())->where('driver_user_id', $driverUser->id)->exists()) {
+            abort(403);
+        }
+
+        $request->validate([
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        $driverUser->update([
+            'password' => Hash::make($request->password),
+        ]);
+        $driverUser->tokens()->delete();
+
+        return redirect()
+            ->route('special_hire.coasters')
+            ->with('success', 'New password saved for ' . $driverUser->name . '. They must sign in with this password from now on.');
+    }
 }
 

@@ -507,6 +507,12 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/drivers/create', [SpecialHireController::class, 'createDriver'])->name('special_hire.drivers.create');
         Route::post('/drivers', [SpecialHireController::class, 'storeDriver'])->name('special_hire.drivers.store');
+        Route::get('/drivers/{driver}/reset-password', [SpecialHireController::class, 'resetDriverPasswordForm'])
+            ->name('special_hire.drivers.reset_password')
+            ->whereNumber('driver');
+        Route::post('/drivers/{driver}/reset-password', [SpecialHireController::class, 'resetDriverPassword'])
+            ->name('special_hire.drivers.reset_password.store')
+            ->whereNumber('driver');
 
         // Pricing
         Route::get('/pricing', [SpecialHireController::class, 'pricing'])->name('special_hire.pricing');

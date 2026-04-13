@@ -10,6 +10,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -1568,12 +1569,10 @@ class SpecialHireApiController extends Controller
             ], 404);
         }
 
-        // Verify driver is assigned to one of admin's coasters
-        $coaster = Coaster::byUser(Auth::id())
-            ->where('driver_user_id', $driverId)
-            ->first();
+        // Verify driver is assigned to one of this operator's coasters
+        $fleetCoasters = Coaster::byUser(Auth::id())->where('driver_user_id', $driverId)->get();
 
-        if (!$coaster) {
+        if ($fleetCoasters->isEmpty()) {
             return response()->json([
                 'success' => false,
                 'message' => 'This driver is not assigned to any of your coasters',
@@ -1588,16 +1587,21 @@ class SpecialHireApiController extends Controller
         if ($request->has('phone')) {
             $data['phone'] = $request->phone;
         }
-        if ($request->has('password')) {
-            $data['password'] = bcrypt($request->password);
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
         }
 
         $driver->update($data);
+        $driver->refresh();
 
-        // Update coaster driver info
-        $coaster->update([
+        if ($request->filled('password')) {
+            $driver->tokens()->delete();
+        }
+
+        // Keep coaster labels in sync for every vehicle this driver is on
+        Coaster::byUser(Auth::id())->where('driver_user_id', $driverId)->update([
             'driver_name' => $driver->name,
-            'driver_contact' => $driver->phone,
+            'driver_contact' => $driver->phone ?? $driver->contact,
         ]);
 
         return response()->json([

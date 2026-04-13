@@ -86,6 +86,14 @@
                                     <span class="ml-2 text-gray-400">{{ $coaster->driver_contact }}</span>
                                 @endif
                             </div>
+                            @if($coaster->driver_user_id)
+                                <div class="mb-4">
+                                    <a href="{{ route('special_hire.drivers.reset_password', $coaster->driver_user_id) }}"
+                                       class="text-xs font-medium text-teal-700 hover:text-teal-900 underline">
+                                        Reset driver password
+                                    </a>
+                                </div>
+                            @endif
                         @endif
 
                         @if($coaster->pricing)

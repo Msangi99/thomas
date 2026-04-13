@@ -86,7 +86,13 @@
 
             <!-- Driver Info -->
             <div class="border-t border-gray-100 pt-6">
-                <h4 class="text-md font-semibold text-gray-800 mb-4">Driver Information</h4>
+                <h4 class="text-md font-semibold text-gray-800 mb-2">Driver Information</h4>
+                @if($coaster->driver_user_id)
+                    <p class="text-sm text-teal-800 mb-4">
+                        <a href="{{ route('special_hire.drivers.reset_password', $coaster->driver_user_id) }}" class="font-medium underline hover:text-teal-950">Reset driver app password</a>
+                        <span class="text-gray-500 font-normal"> — set a new login password for the linked driver account.</span>
+                    </p>
+                @endif
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Driver Name</label>
