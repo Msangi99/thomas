@@ -13,32 +13,35 @@
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <h1 class="text-3xl font-bold text-gray-800 text-center mb-8">{{ __('assistance/transaction.transactions') }}</h1>
 
-        <!-- Cards Section -->
-        @php($vb = auth()->user()->VenderBalances)
+        <!-- Cards Section: commission + cash wallets always shown; cash amount only when DB column exists -->
+        @php
+            $vb = auth()->user()->VenderBalances;
+            $vendorDualWallet = \Illuminate\Support\Facades\Schema::hasColumn('vender_balances', 'sell_cash_amount');
+        @endphp
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             <div class="bg-white rounded-xl shadow-lg p-6 transition-all hover:shadow-xl">
                 <h3 class="text-lg font-semibold text-gray-700 text-center">Commission wallet</h3>
-                <p class="text-2xl font-bold text-gray-900 text-center mt-2">{{ $currency }} {{ convert_money(auth()->user()->VenderBalances->amount ?? 0) }}</p>
+                <p class="text-2xl font-bold text-gray-900 text-center mt-2">{{ $currency }} {{ convert_money(optional($vb)->amount ?? 0) }}</p>
                 <p class="text-xs text-gray-500 text-center mt-2">Commissions from sold bookings; use this balance for payout requests.</p>
             </div>
-            @if($vb && \Illuminate\Support\Facades\Schema::hasColumn('vender_balances', 'sell_cash_amount'))
             <div class="bg-white rounded-xl shadow-lg p-6 transition-all hover:shadow-xl">
                 <h3 class="text-lg font-semibold text-gray-700 text-center">Cash wallet</h3>
-                <p class="text-2xl font-bold text-gray-900 text-center mt-2">{{ $currency }} {{ convert_money($vb->sell_cash_amount ?? 0) }}</p>
-                <p class="text-xs text-gray-500 text-center mt-2">Sell-in-cash bookings, deposits, and ticket float.</p>
-                <div class="mt-4 text-center">
-                    <a href="{{ route('vender.wallet.deposit') }}" class="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Deposit</a>
-                </div>
+                @if($vendorDualWallet && $vb)
+                    <p class="text-2xl font-bold text-gray-900 text-center mt-2">{{ $currency }} {{ convert_money($vb->sell_cash_amount ?? 0) }}</p>
+                    <p class="text-xs text-gray-500 text-center mt-2">Sell-in-cash bookings, deposits, and ticket float.</p>
+                    <div class="mt-4 text-center">
+                        <a href="{{ route('vender.wallet.deposit') }}" class="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Deposit</a>
+                    </div>
+                @else
+                    <p class="text-2xl font-bold text-gray-400 text-center mt-2">—</p>
+                    <p class="text-xs text-gray-500 text-center mt-2">Cash wallet is not active on this server yet (database update required). Your full balance is shown in the commission wallet until then.</p>
+                    @if($vb)
+                        <div class="mt-4 text-center">
+                            <a href="{{ route('vender.wallet.deposit') }}" class="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Deposit</a>
+                        </div>
+                    @endif
+                @endif
             </div>
-            @else
-            <div class="bg-white rounded-xl shadow-lg p-6 transition-all hover:shadow-xl">
-                <h3 class="text-lg font-semibold text-gray-700 text-center">{{ __('assistance/transaction.balance') }}</h3>
-                <p class="text-2xl font-bold text-gray-900 text-center mt-2">{{ $currency }} {{ convert_money(auth()->user()->VenderBalances->amount ?? 0) }}</p>
-                <div class="mt-4 text-center">
-                    <a href="{{ route('vender.wallet.deposit') }}" class="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">deposit</a>
-                </div>
-            </div>
-            @endif
             <div class="bg-white rounded-xl shadow-lg p-6 transition-all hover:shadow-xl">
                 <h3 class="text-lg font-semibold text-gray-700 text-center">{{ __('assistance/transaction.pending') }}</h3>
                 <p class="text-2xl font-bold text-gray-900 text-center mt-2">{{ $currency }} {{ convert_money($pending) }}</p>
@@ -49,7 +52,7 @@
             </div>
         </div>
 
-        @if($vb && \Illuminate\Support\Facades\Schema::hasColumn('vender_balances', 'sell_cash_amount'))
+        @if($vb && $vendorDualWallet)
         <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
             <h3 class="text-lg font-semibold text-gray-800 mb-3">Move amount between wallets</h3>
             <p class="text-sm text-gray-600 mb-4">Transfer any amount between your commission wallet and your cash wallet (for example after an upgrade, or to rebalance float).</p>
