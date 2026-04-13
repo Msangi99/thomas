@@ -40,6 +40,7 @@
                                 <option value="local-admins">Local Admins</option>
                                 <option value="refunds">Refunds</option>
                                 <option value="cards">Payments Cards</option>
+                                <option value="special-hire">Special Hire</option>
                             </select>
                         </div>
                         

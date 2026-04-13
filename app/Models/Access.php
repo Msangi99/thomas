@@ -31,6 +31,7 @@ class Access extends Model
         'LOCAL_ADMINS' => 'local-admins',
         'REFUNDS' => 'refunds',
         'CARDS' => 'cards',
+        'SPECIAL_HIRE' => 'special-hire',
     ];
 
     public const BUS = [

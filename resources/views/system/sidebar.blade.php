@@ -126,7 +126,7 @@
                 </li>
                 @endif
 
-                @if(auth()->user()->hasAccess(\App\Models\Access::LINKS['BUSES']) || auth()->user()->hasAccess(\App\Models\Access::LINKS['BOOKING_HISTORY']))
+                @if(auth()->user()->hasAccess(\App\Models\Access::LINKS['SPECIAL_HIRE']))
                 <li>
                     <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mt-4 mb-2">Special Hire</p>
                 </li>

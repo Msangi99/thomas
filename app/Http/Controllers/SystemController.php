@@ -29,6 +29,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\SmsController;
 use App\Models\Refund;
+use App\Models\Access;
 use App\Models\CancelledBookings;
 use App\Models\Coaster;
 use App\Models\SpecialHireOrder;
@@ -145,6 +146,8 @@ class SystemController extends Controller
      */
     public function specialHireIndex(Request $request)
     {
+        abort_unless(Auth::user()->hasAccess(Access::LINKS['SPECIAL_HIRE']), 403);
+
         $tab = $request->query('tab', 'accounts');
         if (!in_array($tab, ['accounts', 'withdrawals'], true)) {
             $tab = 'accounts';
@@ -191,6 +194,8 @@ class SystemController extends Controller
      */
     public function specialHireShow(int $user)
     {
+        abort_unless(Auth::user()->hasAccess(Access::LINKS['SPECIAL_HIRE']), 403);
+
         $selectedOwner = User::query()
             ->where('role', 'special_hire')
             ->findOrFail($user);
@@ -276,6 +281,8 @@ class SystemController extends Controller
 
     public function updateSpecialHireWithdrawal(Request $request, int $id)
     {
+        abort_unless(Auth::user()->hasAccess(Access::LINKS['SPECIAL_HIRE']), 403);
+
         $request->validate([
             'status' => 'required|in:approved,rejected,paid',
             'admin_note' => 'nullable|string|max:2000',
@@ -303,6 +310,8 @@ class SystemController extends Controller
      */
     public function updateSpecialHireOwnerPlatformPercent(Request $request, int $user)
     {
+        abort_unless(Auth::user()->hasAccess(Access::LINKS['SPECIAL_HIRE']), 403);
+
         $request->validate([
             'special_hire_platform_percent' => 'required|numeric|min:0|max:100',
         ]);

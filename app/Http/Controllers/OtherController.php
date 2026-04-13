@@ -116,6 +116,12 @@ class OtherController extends Controller
 
     public function update_role(Request $request)
     {
+        $request->validate([
+            'id' => ['required', 'integer', 'exists:users,id'],
+            'link' => ['required', 'string', Rule::in(array_values(Access::LINKS))],
+            'status' => ['required', Rule::in(['active', 'inactive'])],
+        ]);
+
         $user = User::findOrFail($request->id);
 
 
