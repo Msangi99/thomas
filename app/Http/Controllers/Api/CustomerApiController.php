@@ -504,18 +504,9 @@ class CustomerApiController extends Controller
         $owner = User::query()->find($coaster->user_id);
         $platformPct = $owner ? (float) ($owner->special_hire_platform_percent ?? 0) : 0.0;
 
-        $depositAmount = round($totalAmount * 0.10, 2);
-        $balanceAmount = round($totalAmount - $depositAmount, 2);
-        $minDeposit = (float) env('CLICKPESA_MIN_AMOUNT_TZS', 908);
-        if ($depositAmount > 0 && $depositAmount < $minDeposit) {
-            $minTotal = ceil($minDeposit / 0.10);
-
-            return response()->json([
-                'success' => false,
-                'message' => "For ClickPesa the 10% deposit must be at least {$minDeposit} TZS. "
-                    . "Increase the trip total (minimum about {$minTotal} TZS) or contact support.",
-            ], 422);
-        }
+        // Full hire amount is collected once (after owner acceptance + passenger names) — no upfront deposit.
+        $depositAmount = null;
+        $balanceAmount = round($totalAmount, 2);
 
         $order = SpecialHireOrder::create([
             'user_id' => $coaster->user_id, // Admin/Owner
@@ -743,9 +734,15 @@ class CustomerApiController extends Controller
         $ref = $request->input('reference');
         if (!$ref) {
             $step = $order->customerHireNextStep();
-            if ($step === 'pay_deposit' || ($step === 'wait_owner' && !$order->deposit_paid_at)) {
-                $ref = $order->clickpesa_deposit_ref;
-            } elseif ($step === 'pay_balance' || ($order->deposit_paid_at && !$order->balance_paid_at)) {
+            $depositRequired = (float) ($order->deposit_amount ?? 0) > 0;
+
+            if ($depositRequired) {
+                if ($step === 'pay_deposit' || ($step === 'wait_owner' && ! $order->deposit_paid_at)) {
+                    $ref = $order->clickpesa_deposit_ref;
+                } elseif ($step === 'pay_balance' || ($order->deposit_paid_at && ! $order->balance_paid_at)) {
+                    $ref = $order->clickpesa_balance_ref;
+                }
+            } elseif ($step === 'pay_balance' || ! $order->balance_paid_at) {
                 $ref = $order->clickpesa_balance_ref;
             }
         }

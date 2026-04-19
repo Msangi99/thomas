@@ -51,12 +51,8 @@ class SpecialHireOrderPaymentService
                 if ($order->balance_paid_at) {
                     return;
                 }
-                if (!$order->owner_accepted_at) {
+                if (! $order->owner_accepted_at) {
                     throw new \RuntimeException('Cannot confirm balance before owner acceptance.');
-                }
-                $names = is_array($order->passenger_seats) ? $order->passenger_seats : [];
-                if (count($names) < (int) $order->passengers_count) {
-                    throw new \RuntimeException('Cannot confirm balance before passenger names are complete.');
                 }
                 $expected = (float) ($order->balance_amount ?? 0);
                 $collected = (float) ($verifyResponse->amount ?? 0);
