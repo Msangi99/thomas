@@ -170,7 +170,8 @@ class CashController extends Controller
             // Define vendor function
             $vender = function ($amount, $state) use ($booking) {
                 if ($booking->vender_id > 0 && $booking->vender && $booking->vender->VenderAccount) {
-                    $vendorPercentage = min((float) ($booking->vender->VenderAccount->percentage ?? 0), 100);
+                    $rawPct = (float) ($booking->vender->VenderAccount->percentage ?? 0);
+                    $vendorPercentage = $rawPct > 0 ? min($rawPct, 100) : PercentController::VENDOR_PERCENTAGE;
                     $vendorShare = $amount * ($vendorPercentage / 100);
                     $vendorShare = min($vendorShare, max($amount, 0));
 
@@ -192,7 +193,6 @@ class CashController extends Controller
             $bimaAmount = $booking->bima_amount ?? 0;
 
             $user = auth()->user();
-            //return $booking->amount;
             $deduct = round($booking->amount);
             $vb = $user->VenderBalances;
             if ($vb && Schema::hasColumn('vender_balances', 'sell_cash_amount')) {
@@ -213,33 +213,24 @@ class CashController extends Controller
                     auth()->user()->temp_wallets->save();
                 }
             }
-            /////////for cancel procelss./////////
-
-            //auth()->user()->temp_wallets->amount = 0;
-            //auth()->user()->temp_wallets->save();
-
             /////////////////////////
 
-            // Calculate VAT on bus owner amount
-
-            // $vatAmount = $busOwnerAmount * (0.5 / 100);
-
-            // $booking->vat = $vatAmount;
-
-            // $busOwnerAmount -= $vatAmount;
+            // Government levy = 5% of bus fare (levy-inclusive → levy-exclusive base)
+            $governmentLevy = $busOwnerAmount * PercentController::GOVERNMENT_LEVY_PERCENTAGE;
+            $levyExclusiveAmount = $busOwnerAmount - $governmentLevy;
+            $booking->government_levy = $governmentLevy;
 
             // Calculate system shares
             $bus = bus::with(['busname', 'route', 'campany.balance'])->find($booking->bus_id);
             $campanyModel = $bus->campany;
-            
-            // Commission Logic: Priority Percentage > Amount > Default
+
+            // Commission Logic: Priority Percentage > Amount > Default (applied on levy-exclusive base)
             if ($campanyModel->percentage > 0) {
-                $systemShares = $busOwnerAmount * ($campanyModel->percentage / 100);
+                $systemShares = $levyExclusiveAmount * ($campanyModel->percentage / 100);
             } elseif ($campanyModel->commission_amount > 0) {
                 $systemShares = $campanyModel->commission_amount;
             } else {
-                // Fallback to default system percentage (0.05 = 5%)
-                $systemShares = $busOwnerAmount * PercentController::PERCENTAGE;
+                $systemShares = $levyExclusiveAmount * PercentController::PERCENTAGE;
             }
             $busOwnerAmount -= $systemShares;
 
@@ -278,7 +269,8 @@ class CashController extends Controller
                 'service_vat' => $booking->service_vat ?? 0,
                 'vender_fee' => $booking->vender_fee ?? 0,
                 'vender_service' => $booking->vender_service ?? 0,
-                'amount' => $busOwnerAmount, // Store bus owner share separately
+                'government_levy' => $booking->government_levy ?? 0,
+                'amount' => $busOwnerAmount,
                 'payment_method' => 'cash',
             ]);
 

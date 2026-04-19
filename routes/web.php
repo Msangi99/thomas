@@ -197,7 +197,8 @@ Route::post('/by_route_search', [BookingController::class, 'by_route_search'])->
 
 Route::post('/airtel/auth', [AirtelPaymentController::class, 'getAuthToken']);
 Route::post('/airtel/payment', [AirtelPaymentController::class, 'initiatePayment'])->name('airtel.payment');
-Route::post('/airtel/webhook', [AirtelPaymentController::class, 'handleWebhook']);
+Route::post('/airtel/booking-payment', [AirtelPaymentController::class, 'initiateBookingPayment'])->name('airtel.booking.payment');
+Route::post('/airtel/webhook', [AirtelPaymentController::class, 'paymentCallback'])->name('airtel.webhook');
 Route::view('airtel', 'airtel');
 
 Route::view('/booking/policy', 'policy.booking')->name('policy.booking');

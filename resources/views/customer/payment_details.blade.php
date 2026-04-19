@@ -116,6 +116,11 @@
                                             {{ __('customer/busroot.clickpesa_payment') }}
                                         </button>
                                         <button type="button"
+                                            class="w-full text-left px-4 py-3 rounded-lg bg-white hover:bg-gray-100 text-blue-700" id="tab6-btn"
+                                            data-bs-toggle="tab" data-bs-target="#tab6" role="tab" aria-controls="tab6">
+                                            <i class="fas fa-sim-card mr-2"></i> Airtel Money
+                                        </button>
+                                        <button type="button"
                                             class="w-full text-left px-4 py-3 rounded-lg bg-white hover:bg-gray-100 text-blue-700" id="tab4-btn"
                                             data-bs-toggle="tab" data-bs-target="#tab4" role="tab" aria-controls="tab4">
                                             <i class="fas fa-bookmark mr-2"></i> {{ __('customer/busroot.resave_ticket') }}
@@ -152,7 +157,16 @@
                                                             required>
                                                     </div>
 
-                                                    <input type="hidden" name="amount" value="{{ $price + $fees }}">
+                                                    <input type="hidden" name="amount" id="cust_mixx_amount" value="{{ round($price + $fees, 2) }}">
+
+                                                    <!-- Mixx by Yas Tariff -->
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700 mb-1">Mixx by Yas Tariff (TZS)</label>
+                                                        <input type="number" id="cust_mixx_tariff" name="tariff_amount" value="0" min="0"
+                                                            class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                            placeholder="Enter Mixx by Yas tariff (optional)"
+                                                            oninput="updateTariff(this,'cust_mixx_amount')">
+                                                    </div>
 
                                                     <div class="flex items-start">
                                                         <div class="flex items-center h-5">
@@ -429,6 +443,34 @@
                                         </div>
 
                                         <!-- Resave Ticket -->
+                                        <!-- Airtel Money Tab -->
+                                        <div id="tab6" class="tab-pane" role="tabpanel" aria-labelledby="tab6-btn">
+                                            <div class="space-y-4">
+                                                <div class="p-4 bg-red-50 rounded-lg border border-red-100">
+                                                    <p class="text-sm text-gray-700">Enter your Airtel Money number. A payment prompt will be sent to your phone.</p>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1">Airtel Money Number</label>
+                                                    <input type="text" id="cust_airtel_phone" maxlength="12"
+                                                        class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 onlydigits"
+                                                        placeholder="e.g. 0780000000">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1">Airtel Money Tariff (TZS)</label>
+                                                    <input type="number" id="cust_airtel_tariff" value="0" min="0"
+                                                        class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
+                                                        placeholder="Enter Airtel Money tariff (optional)"
+                                                        oninput="updateAirtelTotal(this)">
+                                                </div>
+                                                <p class="text-sm text-gray-600">Total to pay: <strong id="cust_airtel_total_display">TZS {{ convert_money($price + $fees) }}</strong></p>
+                                                <button type="button" id="cust_airtel_pay_btn"
+                                                    class="w-full mt-2 py-3 px-6 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white font-medium rounded-lg shadow-md transition-all duration-300 flex items-center justify-center">
+                                                    <i class="fas fa-lock mr-2"></i> Pay with Airtel Money
+                                                </button>
+                                                <p id="cust_airtel_status_msg" class="text-sm text-center hidden"></p>
+                                            </div>
+                                        </div>
+
                                         <div id="tab4" class="tab-pane" role="tabpanel" aria-labelledby="tab4-btn">
                                             <form id="resave-form" action="{{ route('customer.verify') }}" method="POST">
                                                 @csrf
@@ -526,6 +568,15 @@
                                                         <p class="text-sm text-gray-700 mb-1">
                                                             {{ __('customer/busroot.session_expiry_warning') }}
                                                         </p>
+                                                    </div>
+
+                                                    <!-- M-Pesa Tariff -->
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700 mb-1">M-Pesa Tariff (TZS)</label>
+                                                        <input type="number" id="cust_mpesa_tariff" name="tariff_amount" value="0" min="0"
+                                                            class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                            placeholder="Enter M-Pesa tariff (optional)"
+                                                            oninput="updateTariff(this,'clickpesa_amount')">
                                                     </div>
 
                                                     <div>
@@ -648,9 +699,14 @@
                                     {{ convert_money($price - $ins) }}</span>
                             </div>
 
+                            <div class="flex justify-between" id="tariff-summary-row" style="display:none!important">
+                                <span class="text-sm text-gray-600">Payment Tariff</span>
+                                <span class="text-sm font-medium text-orange-500" id="tariff-summary-value">TZS 0</span>
+                            </div>
+
                             <div class="border-t border-gray-200 pt-2 mt-2 flex justify-between">
                                 <span class="text-base font-semibold">{{ __('customer/busroot.total_payable') }}</span>
-                                <span class="text-base font-bold text-blue-600">
+                                <span class="text-base font-bold text-blue-600" id="total-payable-display">
                                     {{ $currency }} {{ convert_money($price + $fees) }}
                                 </span>
                             </div>
@@ -900,7 +956,6 @@
         // Tab functionality
         document.querySelectorAll('[role="tablist"] button').forEach(button => {
             button.addEventListener('click', () => {
-                // Remove active states
                 document.querySelectorAll('[role="tablist"] button').forEach(btn => {
                     btn.classList.remove('bg-blue-100', 'text-blue-700', 'font-medium');
                     btn.classList.add('bg-white', 'text-blue-700', 'hover:bg-gray-100');
@@ -908,13 +963,104 @@
                 document.querySelectorAll('.tab-pane').forEach(pane => {
                     pane.classList.remove('active');
                 });
-
-                // Add active states
                 button.classList.add('bg-blue-100', 'text-blue-700', 'font-medium');
                 button.classList.remove('bg-white', 'hover:bg-gray-100');
                 document.querySelector(button.dataset.bsTarget).classList.add('active');
+
+                // Refresh tariff summary for newly active tab
+                const activePane = document.querySelector(button.dataset.bsTarget);
+                const tariffInput = activePane ? activePane.querySelector('[name="tariff_amount"]') : null;
+                if (tariffInput) {
+                    const amtInput = activePane.querySelector('[name="amount"]');
+                    if (amtInput) updateTariff(tariffInput, amtInput.id);
+                } else {
+                    document.getElementById('tariff-summary-row').style.cssText = 'display:none!important';
+                    document.getElementById('total-payable-display').textContent =
+                        'TZS ' + baseTotal.toLocaleString(undefined, {minimumFractionDigits:2,maximumFractionDigits:2});
+                }
             });
         });
+
+        // ---- Airtel Money handler ----
+        document.getElementById('cust_airtel_pay_btn').addEventListener('click', function () {
+            const phone  = document.getElementById('cust_airtel_phone').value.trim();
+            const tariff = parseFloat(document.getElementById('cust_airtel_tariff').value) || 0;
+            const total  = baseTotal + tariff;
+            if (!phone) { alert('Please enter your Airtel Money number'); return; }
+            this.disabled = true;
+            this.textContent = 'Processing…';
+            const statusEl = document.getElementById('cust_airtel_status_msg');
+            statusEl.classList.remove('hidden');
+            statusEl.textContent = 'Sending payment request…';
+            statusEl.className = 'text-sm text-center text-blue-600';
+            fetch('{{ route("airtel.booking.payment") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                body: JSON.stringify({
+                    amount: Math.round(total),
+                    phone_number: phone,
+                    booking_code: '',
+                    tariff_amount: tariff,
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    statusEl.textContent = data.message || 'Prompt sent! Approve on your phone.';
+                    statusEl.className = 'text-sm text-center text-green-600';
+                } else {
+                    statusEl.textContent = data.message || 'Failed. Please try again.';
+                    statusEl.className = 'text-sm text-center text-red-600';
+                    document.getElementById('cust_airtel_pay_btn').disabled = false;
+                    document.getElementById('cust_airtel_pay_btn').innerHTML = '<i class="fas fa-lock mr-2"></i> Pay with Airtel Money';
+                }
+            })
+            .catch(() => {
+                statusEl.textContent = 'Network error. Try again.';
+                statusEl.className = 'text-sm text-center text-red-600';
+                document.getElementById('cust_airtel_pay_btn').disabled = false;
+                document.getElementById('cust_airtel_pay_btn').innerHTML = '<i class="fas fa-lock mr-2"></i> Pay with Airtel Money';
+            });
+        });
+
+        function updateAirtelTotal(input) {
+            const tariff = parseFloat(input.value) || 0;
+            const total  = baseTotal + tariff;
+            const dispEl = document.getElementById('cust_airtel_total_display');
+            if (dispEl) dispEl.textContent = 'TZS ' + total.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+            const row = document.getElementById('tariff-summary-row');
+            const valEl = document.getElementById('tariff-summary-value');
+            if (tariff > 0) {
+                row.style.cssText = 'display:flex!important';
+                valEl.textContent = 'TZS ' + tariff.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+            } else { row.style.cssText = 'display:none!important'; }
+            document.getElementById('total-payable-display').textContent =
+                'TZS ' + total.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+        }
+
+        // ---- Tariff helpers ----
+        const baseTotal = {{ round($price + $fees, 2) }};
+
+        function updateTariff(input, amountInputId) {
+            const tariff = parseFloat(input.value) || 0;
+            const total  = baseTotal + tariff;
+            const row    = document.getElementById('tariff-summary-row');
+            const valEl  = document.getElementById('tariff-summary-value');
+            if (tariff > 0) {
+                row.style.cssText = 'display:flex!important';
+                valEl.textContent = 'TZS ' + tariff.toLocaleString(undefined, {minimumFractionDigits:2,maximumFractionDigits:2});
+            } else {
+                row.style.cssText = 'display:none!important';
+            }
+            document.getElementById('total-payable-display').textContent =
+                'TZS ' + total.toLocaleString(undefined, {minimumFractionDigits:2,maximumFractionDigits:2});
+            const amtEl = document.getElementById(amountInputId);
+            if (amtEl) amtEl.value = Math.round(total);
+            if (amountInputId === 'clickpesa_amount') {
+                const disp = document.getElementById('clickpesa_amount_display');
+                if (disp) disp.value = total.toLocaleString(undefined, {minimumFractionDigits:2,maximumFractionDigits:2});
+            }
+        }
     </script>
 
     <style>

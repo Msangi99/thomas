@@ -51,6 +51,7 @@ class Booking extends Model
         'vender_service',
         'schedule_id',
         'vat',
+        'government_levy',
         'discount',
         'discount_amount',
         'distance',
