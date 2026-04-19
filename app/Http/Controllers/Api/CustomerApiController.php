@@ -755,10 +755,23 @@ class CustomerApiController extends Controller
 
         $cp = new ClickPesaController();
         $verify = $cp->verifyTransaction($ref);
-        if (!is_object($verify) || !isset($verify->status) || strtolower((string) $verify->status) !== 'success') {
+        $statusStr = is_object($verify) && isset($verify->status) ? (string) $verify->status : '';
+        $lower = strtolower(trim($statusStr));
+        $isPaid = $lower === 'success' || ClickPesaController::clickPesaPaidStatus($statusStr);
+        if (!$isPaid) {
+            $message = is_string($verify) ? $verify : 'Payment not completed yet';
+            if (is_object($verify) && isset($verify->status)) {
+                if ($lower === 'api_error' && isset($verify->message)) {
+                    $message = 'Could not verify with ClickPesa yet. Try again shortly. '
+                        . (is_string($verify->message) ? $verify->message : '');
+                } elseif (in_array($lower, ['pending', 'initiated', 'processing'], true)) {
+                    $message = 'Payment is still processing. Approve on your phone if prompted, then tap Sync again.';
+                }
+            }
+
             return response()->json([
                 'success' => false,
-                'message' => is_string($verify) ? $verify : 'Payment not completed yet',
+                'message' => trim($message) !== '' ? trim($message) : 'Payment not completed yet',
                 'data' => ['hire_next_step' => $order->customerHireNextStep()],
             ], 400);
         }

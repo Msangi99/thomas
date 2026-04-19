@@ -80,6 +80,17 @@ class ClickPesaController extends Controller
     }
 
     /**
+     * Whether a ClickPesa payment row status means funds were successfully collected.
+     * Kept in sync with {@see ClickPesaController::checkPaymentStatus()} so web, callback, and API verify agree.
+     */
+    public static function clickPesaPaidStatus(?string $status): bool
+    {
+        $s = strtoupper(trim((string) ($status ?? '')));
+
+        return in_array($s, ['SUCCESS', 'SUCCESSFUL', 'COMPLETED', 'PAID'], true);
+    }
+
+    /**
      * Initiate ClickPesa payment
      */
     public function initiatePayment($amount, $first_name, $last_name, $phone, $email, $order_id = null)
@@ -1343,10 +1354,13 @@ class ClickPesaController extends Controller
                 'reference' => $reference,
                 'status' => $cachedPaymentData->status ?? 'unknown'
             ]);
-            
+
+            $cachedRaw = (string) ($cachedPaymentData->status ?? 'pending');
+            $cachedNorm = self::clickPesaPaidStatus($cachedRaw) ? 'success' : strtolower(trim($cachedRaw));
+
             // Transform to expected format for compatibility
             return (object) [
-                'status' => strtolower($cachedPaymentData->status ?? 'pending'),
+                'status' => $cachedNorm,
                 'reference' => $cachedPaymentData->orderReference ?? $reference,
                 'amount' => $cachedPaymentData->collectedAmount ?? 0,
                 'message' => $cachedPaymentData->message ?? 'Payment verified',
@@ -1442,10 +1456,21 @@ class ClickPesaController extends Controller
             ];
         }
 
-        // API returns an array, get first item
-        $paymentData = is_array($jsonResponse) ? ($jsonResponse[0] ?? null) : $jsonResponse;
+        // API may return array, object, or { data: [...] } — align with checkPaymentStatus()
+        $paymentData = null;
+        if (is_array($jsonResponse)) {
+            $paymentData = $jsonResponse[0] ?? null;
+        } elseif (isset($jsonResponse->data) && is_array($jsonResponse->data)) {
+            $paymentData = $jsonResponse->data[0] ?? null;
+        } elseif (isset($jsonResponse->data) && is_object($jsonResponse->data)) {
+            $paymentData = $jsonResponse->data;
+        } elseif (is_object($jsonResponse) && isset($jsonResponse->status)) {
+            $paymentData = $jsonResponse;
+        } elseif (is_object($jsonResponse)) {
+            $paymentData = $jsonResponse;
+        }
 
-        if (!$paymentData) {
+        if (!$paymentData || !is_object($paymentData)) {
             Log::error('ClickPesa Verify Transaction - No payment data', [
                 'reference' => $reference,
                 'response' => $jsonResponse
@@ -1465,9 +1490,12 @@ class ClickPesaController extends Controller
             'collected_amount' => $paymentData->collectedAmount ?? 0
         ]);
 
-        // Transform to expected format for compatibility
+        $rawStatus = (string) ($paymentData->status ?? 'pending');
+        $normalizedStatus = self::clickPesaPaidStatus($rawStatus) ? 'success' : strtolower(trim($rawStatus));
+
+        // Transform to expected format for compatibility (callers expect status === 'success' when paid)
         return (object) [
-            'status' => strtolower($paymentData->status ?? 'pending'),
+            'status' => $normalizedStatus,
             'reference' => $paymentData->orderReference ?? $reference,
             'amount' => $paymentData->collectedAmount ?? 0,
             'message' => $paymentData->message ?? 'Payment verified',
