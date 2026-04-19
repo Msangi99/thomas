@@ -63,7 +63,7 @@
                         </li>
                     @endforeach
                 </ol>
-                <p class="text-xs text-gray-500 mt-3">Status updates when the customer pays and finishes steps in the app. Use <strong>Booking actions</strong> on the right to accept, cancel, or refund.</p>
+                <p class="text-xs text-gray-500 mt-3">Status updates when the customer pays and finishes steps in the app. The <strong>assigned driver</strong> accepts or declines new hires in the driver app. Use <strong>Booking actions</strong> for cancel or refund when needed.</p>
             </div>
         @endif
     </div>
@@ -237,7 +237,7 @@
                     @if($depositRequired)
                         <li>Deposit: {{ $order->deposit_paid_at ? 'Paid' : 'Pending' }} @if($order->deposit_amount)(Tsh {{ number_format($order->deposit_amount, 0) }})@endif</li>
                     @endif
-                    <li>Your acceptance: {{ $order->owner_accepted_at ? 'Yes' : 'Waiting' }}</li>
+                    <li>Driver acceptance: {{ $order->owner_accepted_at ? 'Yes' : 'Waiting (driver app)' }}</li>
                     <li>Balance (ClickPesa): {{ $order->balance_paid_at ? 'Paid' : 'Pending' }} @if($order->balance_amount)(Tsh {{ number_format($order->balance_amount, 0) }})@endif</li>
                     <li>Passenger names: {{ is_array($order->passenger_seats) && count($order->passenger_seats) >= (int) $order->passengers_count ? 'Submitted' : 'Waiting' }}</li>
                 </ul>
@@ -248,30 +248,17 @@
             </div>
             @endif
 
-            <!-- Operator actions (accept / cancel / refund only) -->
+            <!-- Operator actions (cancel / refund; driver accepts hire in app) -->
             <div class="bg-white rounded-2xl shadow-lg p-6 border border-teal-100/60">
                 <h3 class="text-lg font-bold text-gray-800 mb-1">Booking actions</h3>
-                <p class="text-sm text-gray-500 mb-4">Accept lets the customer pay in the app. Cancel stops the booking. Refund is for when you have already received payment and need to record a reversal.</p>
+                <p class="text-sm text-gray-500 mb-4">The assigned driver accepts or declines new hires in the <strong>driver app</strong> (customer gets SMS when possible). Cancel stops the booking. Refund records a reversal after you have already received payment.</p>
 
                 @php
-                    $depositRequired = (float) ($order->deposit_amount ?? 0) > 0;
-                    $canAccept = ! $order->owner_accepted_at
-                        && ! in_array($order->order_status, ['cancelled', 'completed'], true)
-                        && (! $depositRequired || $order->deposit_paid_at);
                     $canCancel = ! in_array($order->order_status, ['cancelled', 'completed'], true);
                     $canRefund = $order->payment_status === 'paid';
                 @endphp
 
                 <div class="space-y-3">
-                    @if($canAccept)
-                        <form action="{{ route('special_hire.orders.accept_hire', $order->id) }}" method="POST">
-                            @csrf
-                            <button type="submit" class="w-full btn-primary py-3 text-white rounded-xl text-sm font-semibold">
-                                Accept booking
-                            </button>
-                        </form>
-                    @endif
-
                     @if($canCancel)
                         <form action="{{ route('special_hire.orders.cancel_hire', $order->id) }}" method="POST" onsubmit="return confirm('Cancel this booking?');">
                             @csrf
@@ -290,7 +277,7 @@
                         </form>
                     @endif
 
-                    @if(! $canAccept && ! $canCancel && ! $canRefund)
+                    @if(! $canCancel && ! $canRefund)
                         <p class="text-sm text-gray-500">No actions available for this booking in its current state.</p>
                     @endif
                 </div>

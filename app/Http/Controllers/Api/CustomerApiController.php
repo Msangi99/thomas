@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ClickPesaController;
+use App\Http\Controllers\SmsController;
 use App\Models\Coaster;
 use App\Models\SpecialHireOrder;
 use App\Models\SpecialHirePricing;
@@ -541,6 +542,16 @@ class CustomerApiController extends Controller
             'order_status' => 'pending',
             'payment_status' => 'pending',
         ]);
+
+        $coaster->load('driver');
+        $driver = $coaster->driver;
+        if ($driver) {
+            $phone = $driver->contact ?: $driver->phone;
+            if ($phone) {
+                $msg = 'HISGC: New special hire '.$order->order_code.' on '.($coaster->name ?? 'your vehicle').'. Open the Driver app to Accept or Decline.';
+                app(SmsController::class)->sms_send($phone, $msg);
+            }
+        }
 
         $payload = $order->load('coaster')->toArray();
         $payload['hire_next_step'] = $order->customerHireNextStep();

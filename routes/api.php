@@ -162,6 +162,11 @@ Route::prefix('special-hire/driver')->group(function () {
         Route::get('/orders/{id}', [DriverApiController::class, 'getOrder']);
         Route::put('/orders/{id}/status', [DriverApiController::class, 'updateOrderStatus']);
 
+        // Special hire: driver accepts/declines (replaces operator web "Accept")
+        Route::get('/hire-requests', [DriverApiController::class, 'hirePendingBookings']);
+        Route::post('/hire-requests/{id}/accept', [DriverApiController::class, 'acceptHireRequest']);
+        Route::post('/hire-requests/{id}/decline', [DriverApiController::class, 'declineHireRequest']);
+
         // History & Schedule
         Route::get('/history', [DriverApiController::class, 'getHistory']);
         Route::get('/schedule', [DriverApiController::class, 'getSchedule']);

@@ -52,7 +52,7 @@ class SpecialHireOrderPaymentService
                     return;
                 }
                 if (! $order->owner_accepted_at) {
-                    throw new \RuntimeException('Cannot confirm balance before owner acceptance.');
+                    throw new \RuntimeException('Cannot confirm balance before the driver accepts the hire.');
                 }
                 $expected = (float) ($order->balance_amount ?? 0);
                 $collected = (float) ($verifyResponse->amount ?? 0);

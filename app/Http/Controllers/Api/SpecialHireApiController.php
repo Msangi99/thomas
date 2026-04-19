@@ -1728,40 +1728,14 @@ class SpecialHireApiController extends Controller
     }
 
     /**
-     * Owner accepts hire after customer paid 10% deposit (ClickPesa).
+     * Former owner accept — hire acceptance is done by the assigned driver in the driver app.
      */
     public function acceptHireBooking($id)
     {
-        $order = SpecialHireOrder::byUser(Auth::id())->find($id);
-
-        if (!$order) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Order not found',
-            ], 404);
-        }
-
-        if (!$order->deposit_paid_at) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Deposit has not been received yet',
-            ], 400);
-        }
-
-        if ($order->owner_accepted_at) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Order already accepted',
-            ], 400);
-        }
-
-        $order->update(['owner_accepted_at' => now()]);
-
         return response()->json([
-            'success' => true,
-            'message' => 'Booking accepted. Customer can enter passenger names.',
-            'data' => $order->fresh()->load('coaster'),
-        ]);
+            'success' => false,
+            'message' => 'Hire bookings are accepted or declined by the assigned driver in the driver app.',
+        ], 403);
     }
 
     /**

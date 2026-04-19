@@ -276,7 +276,7 @@ class SpecialHireOrder extends Model
     }
 
     /**
-     * Customer-app hire flow: optional deposit → owner accept → balance (ClickPesa) → passenger names → done.
+     * Customer-app hire flow: optional deposit → driver accept (owner_accepted_at) → balance (ClickPesa) → passenger names → done.
      * When deposit_amount is null or zero, the deposit step is skipped (full amount on balance).
      * Legacy rows (no split amounts) use payment_status only.
      *
@@ -304,6 +304,37 @@ class SpecialHireOrder extends Model
         }
 
         return 'done';
+    }
+
+    /**
+     * Assigned driver may accept (records owner_accepted_at for hire pipeline).
+     */
+    public function canDriverAcceptHire(): bool
+    {
+        if ($this->owner_accepted_at) {
+            return false;
+        }
+        if (in_array($this->order_status, ['cancelled', 'completed'], true)) {
+            return false;
+        }
+        $depositRequired = (float) ($this->deposit_amount ?? 0) > 0;
+
+        return ! $depositRequired || $this->deposit_paid_at;
+    }
+
+    /**
+     * Assigned driver may decline before acceptance (or while waiting deposit if operator policy allows).
+     */
+    public function canDriverDeclineHire(): bool
+    {
+        if ($this->owner_accepted_at) {
+            return false;
+        }
+        if (in_array($this->order_status, ['cancelled', 'completed'], true)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

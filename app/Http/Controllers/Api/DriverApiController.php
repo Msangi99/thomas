@@ -14,6 +14,18 @@ use Illuminate\Support\Facades\Validator;
 class DriverApiController extends Controller
 {
     /**
+     * @return array<string, mixed>
+     */
+    protected function specialHireOrderToDriverArray(SpecialHireOrder $order): array
+    {
+        $order->loadMissing(['coaster', 'customer']);
+        $payload = $order->toArray();
+        $payload['hire_next_step'] = $order->customerHireNextStep();
+
+        return $payload;
+    }
+
+    /**
      * Driver login.
      */
     public function login(Request $request)
@@ -86,6 +98,14 @@ class DriverApiController extends Controller
             ->with('pricing', 'user')
             ->first();
 
+        $pendingHireRequests = 0;
+        if ($coaster) {
+            $pendingHireRequests = SpecialHireOrder::where('coaster_id', $coaster->id)
+                ->whereNull('owner_accepted_at')
+                ->where('order_status', 'pending')
+                ->count();
+        }
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -97,6 +117,7 @@ class DriverApiController extends Controller
                     'role' => $user->role,
                 ],
                 'coaster' => $coaster,
+                'pending_hire_requests' => $pendingHireRequests,
             ],
         ]);
     }
@@ -203,9 +224,132 @@ class DriverApiController extends Controller
             ->orderBy('hire_time', 'desc')
             ->paginate($request->get('per_page', 15));
 
+        $orders->setCollection(
+            $orders->getCollection()->map(fn (SpecialHireOrder $o): array => $this->specialHireOrderToDriverArray($o))
+        );
+
         return response()->json([
             'success' => true,
             'data' => $orders,
+        ]);
+    }
+
+    /**
+     * Hire bookings on this driver's coaster waiting for driver accept/decline.
+     */
+    public function hirePendingBookings(Request $request)
+    {
+        $user = Auth::user();
+
+        $coaster = Coaster::where('driver_user_id', $user->id)->first();
+
+        if (! $coaster) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No coaster assigned to you',
+            ], 404);
+        }
+
+        $orders = SpecialHireOrder::where('coaster_id', $coaster->id)
+            ->whereNull('owner_accepted_at')
+            ->where('order_status', 'pending')
+            ->with(['coaster', 'customer'])
+            ->orderByDesc('created_at')
+            ->paginate($request->get('per_page', 20));
+
+        $orders->setCollection(
+            $orders->getCollection()->map(fn (SpecialHireOrder $o): array => $this->specialHireOrderToDriverArray($o))
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $orders,
+        ]);
+    }
+
+    /**
+     * Driver accepts hire (same effect as former operator "accept" — sets owner_accepted_at).
+     */
+    public function acceptHireRequest($id)
+    {
+        $user = Auth::user();
+
+        $coaster = Coaster::where('driver_user_id', $user->id)->first();
+
+        if (! $coaster) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No coaster assigned to you',
+            ], 404);
+        }
+
+        $order = SpecialHireOrder::where('coaster_id', $coaster->id)->find($id);
+
+        if (! $order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order not found',
+            ], 404);
+        }
+
+        if (! $order->canDriverAcceptHire()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This hire cannot be accepted in its current state.',
+            ], 400);
+        }
+
+        $order->update(['owner_accepted_at' => now()]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Booking accepted. The customer can continue payment in the app.',
+            'data' => $this->specialHireOrderToDriverArray($order->fresh()),
+        ]);
+    }
+
+    /**
+     * Driver declines hire before accepting (cancels booking).
+     */
+    public function declineHireRequest($id)
+    {
+        $user = Auth::user();
+
+        $coaster = Coaster::where('driver_user_id', $user->id)->first();
+
+        if (! $coaster) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No coaster assigned to you',
+            ], 404);
+        }
+
+        $order = SpecialHireOrder::where('coaster_id', $coaster->id)->find($id);
+
+        if (! $order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order not found',
+            ], 404);
+        }
+
+        if (! $order->canDriverDeclineHire()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This hire cannot be declined now.',
+            ], 400);
+        }
+
+        $order->update(['order_status' => 'cancelled']);
+        $order->load('coaster');
+        if ($order->coaster && $order->coaster->status === 'on_hire') {
+            $order->coaster->update(['status' => 'available']);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Booking declined and cancelled.',
+            'data' => $this->specialHireOrderToDriverArray($order->fresh()),
         ]);
     }
 
@@ -238,7 +382,7 @@ class DriverApiController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $order,
+            'data' => $this->specialHireOrderToDriverArray($order),
         ]);
     }
 
@@ -264,6 +408,10 @@ class DriverApiController extends Controller
             ->orderBy('hire_date', 'desc')
             ->orderBy('hire_time', 'desc')
             ->paginate($request->get('per_page', 15));
+
+        $orders->setCollection(
+            $orders->getCollection()->map(fn (SpecialHireOrder $o): array => $this->specialHireOrderToDriverArray($o))
+        );
 
         return response()->json([
             'success' => true,
@@ -294,6 +442,10 @@ class DriverApiController extends Controller
             ->orderBy('hire_date', 'asc')
             ->orderBy('hire_time', 'asc')
             ->paginate($request->get('per_page', 15));
+
+        $orders->setCollection(
+            $orders->getCollection()->map(fn (SpecialHireOrder $o): array => $this->specialHireOrderToDriverArray($o))
+        );
 
         return response()->json([
             'success' => true,
@@ -351,7 +503,7 @@ class DriverApiController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Order status updated successfully',
-            'data' => $order->fresh(['coaster', 'customer']),
+            'data' => $this->specialHireOrderToDriverArray($order->fresh(['coaster', 'customer'])),
         ]);
     }
 

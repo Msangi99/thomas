@@ -752,23 +752,10 @@ class SpecialHireController extends Controller
      */
     public function acceptHireBooking(Request $request, $id)
     {
-        $order = SpecialHireOrder::byUser(Auth::id())->findOrFail($id);
-
-        if ($order->owner_accepted_at) {
-            return back()->with('error', 'This booking was already accepted.');
-        }
-        if (in_array($order->order_status, ['cancelled', 'completed'], true)) {
-            return back()->with('error', 'This booking cannot be accepted in its current state.');
-        }
-
-        $depositRequired = (float) ($order->deposit_amount ?? 0) > 0;
-        if ($depositRequired && ! $order->deposit_paid_at) {
-            return back()->with('error', 'Deposit has not been recorded yet.');
-        }
-
-        $order->update(['owner_accepted_at' => now()]);
-
-        return back()->with('success', 'Booking accepted. The customer can continue in the app to pay (ClickPesa), then enter passenger names.');
+        return back()->with(
+            'error',
+            'Hire bookings are accepted or declined by the assigned driver in the driver app. You can still cancel or mark a refund when appropriate.'
+        );
     }
 
     /**

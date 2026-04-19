@@ -207,7 +207,7 @@
     <div id="transactions" class="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
         <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
             <h2 class="text-lg font-semibold text-gray-800">Hire orders</h2>
-            <p class="text-sm text-gray-500">Latest {{ $orders->count() }} (max 150)</p>
+            <p class="text-sm text-gray-500">Latest {{ $orders->count() }} (max 150). New hires are accepted or declined by the assigned driver in the driver app; this list is read-only for monitoring.</p>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200 text-sm">

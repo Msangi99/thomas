@@ -8,6 +8,7 @@ use App\Models\Booking;
 use App\Models\bus;
 use App\Models\Campany;
 use App\Models\PaymentFees;
+use App\Models\Setting;
 use App\Models\SystemBalance;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -109,17 +110,23 @@ class FreeController extends Controller
             $levyExclusiveAmount = $busOwnerAmount - $governmentLevy;
             $booking->government_levy = $governmentLevy;
 
+            // System Calculator: service fee on levy-exclusive base
+            $setting = Setting::first();
+            $systemCalculatorFee = (($setting->service_percentage ?? 2) / 100 * $levyExclusiveAmount) + ($setting->service ?? 100);
+            $booking->system_service_fee = $systemCalculatorFee;
+
             // Calculate system shares
             $bus = bus::with(['busname', 'route', 'campany.balance'])->find($booking->bus_id);
             $campanyModel = $bus->campany;
 
             // Commission Logic: Priority Percentage > Amount > Default (applied on levy-exclusive base)
+            // Bus owner commission fees = (percentage × levy_exclusive) + BUS_OWNER_ADDING_FIGURE
             if ($campanyModel->percentage > 0) {
-                $systemShares = $levyExclusiveAmount * ($campanyModel->percentage / 100);
+                $systemShares = ($levyExclusiveAmount * ($campanyModel->percentage / 100)) + PercentController::BUS_OWNER_ADDING_FIGURE;
             } elseif ($campanyModel->commission_amount > 0) {
                 $systemShares = $campanyModel->commission_amount;
             } else {
-                $systemShares = $levyExclusiveAmount * PercentController::PERCENTAGE;
+                $systemShares = ($levyExclusiveAmount * PercentController::PERCENTAGE) + PercentController::BUS_OWNER_ADDING_FIGURE;
             }
             $busOwnerAmount -= $systemShares;
 
@@ -158,9 +165,10 @@ class FreeController extends Controller
                 'service_vat' => $booking->service_vat ?? 0,
                 'vender_fee' => $booking->vender_fee ?? 0,
                 'vender_service' => $booking->vender_service ?? 0,
-                'government_levy' => $booking->government_levy ?? 0,
-                'amount' => $busOwnerAmount,
-                'payment_method' => 'cash',
+                'government_levy'    => $booking->government_levy ?? 0,
+                'system_service_fee' => $booking->system_service_fee ?? 0,
+                'amount'             => $busOwnerAmount,
+                'payment_method'     => 'cash',
             ]);
 
             // Update SystemBalance (system income - commission)
