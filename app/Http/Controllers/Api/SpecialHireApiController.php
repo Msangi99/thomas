@@ -966,12 +966,16 @@ class SpecialHireApiController extends Controller
         }
 
         $orders = $query->orderBy('created_at', 'desc')
-            ->select([
-                'id', 'coaster_id', 'customer_name', 'pickup_location', 
-                'dropoff_location', 'hire_date', 'hire_time', 'total_amount',
-                'order_status', 'payment_status', 'created_at'
-            ])
             ->paginate($request->get('per_page', 15));
+
+        $orders->setCollection(
+            $orders->getCollection()->map(static function (SpecialHireOrder $order): array {
+                $payload = $order->toArray();
+                $payload['hire_next_step'] = $order->customerHireNextStep();
+
+                return $payload;
+            })
+        );
 
         return response()->json([
             'success' => true,
