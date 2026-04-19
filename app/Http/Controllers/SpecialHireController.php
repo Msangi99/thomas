@@ -754,16 +754,65 @@ class SpecialHireController extends Controller
     {
         $order = SpecialHireOrder::byUser(Auth::id())->findOrFail($id);
 
-        if (!$order->deposit_paid_at) {
-            return back()->with('error', 'Deposit has not been recorded yet.');
-        }
         if ($order->owner_accepted_at) {
             return back()->with('error', 'This booking was already accepted.');
+        }
+        if (in_array($order->order_status, ['cancelled', 'completed'], true)) {
+            return back()->with('error', 'This booking cannot be accepted in its current state.');
+        }
+
+        $depositRequired = (float) ($order->deposit_amount ?? 0) > 0;
+        if ($depositRequired && ! $order->deposit_paid_at) {
+            return back()->with('error', 'Deposit has not been recorded yet.');
         }
 
         $order->update(['owner_accepted_at' => now()]);
 
-        return back()->with('success', 'Booking accepted. The customer can now enter passenger names and pay the balance.');
+        return back()->with('success', 'Booking accepted. The customer can continue in the app to pay (ClickPesa), then enter passenger names.');
+    }
+
+    /**
+     * Operator: cancel an open hire booking.
+     */
+    public function cancelHireOrder(Request $request, $id)
+    {
+        $order = SpecialHireOrder::byUser(Auth::id())->findOrFail($id);
+
+        if ($order->order_status === 'cancelled') {
+            return back()->with('error', 'Already cancelled.');
+        }
+        if ($order->order_status === 'completed') {
+            return back()->with('error', 'Cannot cancel a completed booking.');
+        }
+
+        $order->update(['order_status' => 'cancelled']);
+        if ($order->coaster && $order->coaster->status === 'on_hire') {
+            $order->coaster->update(['status' => 'available']);
+        }
+
+        return back()->with('success', 'Booking cancelled.');
+    }
+
+    /**
+     * Operator: mark payment as refunded (e.g. after manual reversal).
+     */
+    public function refundHirePayment(Request $request, $id)
+    {
+        $order = SpecialHireOrder::byUser(Auth::id())->findOrFail($id);
+
+        if ($order->payment_status !== 'paid') {
+            return back()->with('error', 'Refund is only available when payment status is Paid.');
+        }
+
+        $order->update([
+            'payment_status' => 'refunded',
+            'order_status' => 'cancelled',
+        ]);
+        if ($order->coaster && $order->coaster->status === 'on_hire') {
+            $order->coaster->update(['status' => 'available']);
+        }
+
+        return back()->with('success', 'Payment marked as refunded and booking cancelled.');
     }
 
     public function createDriver()

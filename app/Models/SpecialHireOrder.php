@@ -307,6 +307,25 @@ class SpecialHireOrder extends Model
     }
 
     /**
+     * When the customer hire flow is finished (paid + passenger names when required), set order completed.
+     * Called after balance confirmation or passenger save — no manual "Complete" in admin.
+     */
+    public function markCompletedIfHireFlowDone(): void
+    {
+        if (in_array($this->order_status, ['completed', 'cancelled'], true)) {
+            return;
+        }
+        if ($this->customerHireNextStep() !== 'done') {
+            return;
+        }
+        $this->update(['order_status' => 'completed']);
+        $this->load('coaster');
+        if ($this->coaster && $this->coaster->status === 'on_hire') {
+            $this->coaster->update(['status' => 'available']);
+        }
+    }
+
+    /**
      * Net hire amount credited to operator (after platform commission on paid orders).
      */
     public function operatorNetAmount(): float

@@ -88,6 +88,9 @@ class SpecialHireOrderPaymentService
                         $wallet->increment('balance', $platformFee);
                     }
                 }
+
+                $order->refresh();
+                $order->markCompletedIfHireFlowDone();
             }
         });
     }

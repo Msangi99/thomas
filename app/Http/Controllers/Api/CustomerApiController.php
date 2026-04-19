@@ -681,15 +681,18 @@ class CustomerApiController extends Controller
         }
 
         $order->update(['passenger_seats' => array_values($request->seat_names)]);
+        $order = $order->fresh('coaster');
+        $order->markCompletedIfHireFlowDone();
+        $order = $order->fresh('coaster');
 
-        $payload = $order->fresh('coaster')->toArray();
+        $payload = $order->toArray();
         $payload['hire_next_step'] = $order->customerHireNextStep();
 
         return response()->json(['success' => true, 'data' => $payload]);
     }
 
     /**
-     * Customer: start ClickPesa for remaining 90% after passengers submitted.
+     * Customer: start ClickPesa for the hire balance (after operator acceptance).
      */
     public function specialHirePayBalance(Request $request, int $id)
     {

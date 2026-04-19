@@ -504,6 +504,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/orders/{id}', [SpecialHireController::class, 'showOrder'])->name('special_hire.orders.show');
         Route::put('/orders/{id}', [SpecialHireController::class, 'updateOrder'])->name('special_hire.orders.update');
         Route::post('/orders/{id}/accept-hire', [SpecialHireController::class, 'acceptHireBooking'])->name('special_hire.orders.accept_hire');
+        Route::post('/orders/{id}/cancel-hire', [SpecialHireController::class, 'cancelHireOrder'])->name('special_hire.orders.cancel_hire');
+        Route::post('/orders/{id}/refund-hire', [SpecialHireController::class, 'refundHirePayment'])->name('special_hire.orders.refund_hire');
 
         Route::get('/drivers/create', [SpecialHireController::class, 'createDriver'])->name('special_hire.drivers.create');
         Route::post('/drivers', [SpecialHireController::class, 'storeDriver'])->name('special_hire.drivers.store');
