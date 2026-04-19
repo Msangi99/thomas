@@ -51,9 +51,6 @@ class SpecialHireOrderPaymentService
                 if ($order->balance_paid_at) {
                     return;
                 }
-                if (! $order->owner_accepted_at) {
-                    throw new \RuntimeException('Cannot confirm balance before owner acceptance.');
-                }
                 $expected = (float) ($order->balance_amount ?? 0);
                 $collected = (float) ($verifyResponse->amount ?? 0);
                 if ($expected > 0 && $collected + 1 < $expected * 0.95) {

@@ -504,13 +504,14 @@ class CustomerApiController extends Controller
         $owner = User::query()->find($coaster->user_id);
         $platformPct = $owner ? (float) ($owner->special_hire_platform_percent ?? 0) : 0.0;
 
-        // Full hire amount is collected once (after owner acceptance + passenger names) — no upfront deposit.
+        // Full hire amount on balance — no upfront deposit; customer flow does not wait on operator acceptance.
         $depositAmount = null;
         $balanceAmount = round($totalAmount, 2);
 
         $order = SpecialHireOrder::create([
             'user_id' => $coaster->user_id, // Admin/Owner
             'customer_user_id' => $user->id, // Customer
+            'owner_accepted_at' => now(),
             'coaster_id' => $coaster->id,
             'customer_name' => $user->name,
             'customer_phone' => $customerPhone,
@@ -733,16 +734,15 @@ class CustomerApiController extends Controller
 
         $ref = $request->input('reference');
         if (!$ref) {
-            $step = $order->customerHireNextStep();
             $depositRequired = (float) ($order->deposit_amount ?? 0) > 0;
 
             if ($depositRequired) {
-                if ($step === 'pay_deposit' || ($step === 'wait_owner' && ! $order->deposit_paid_at)) {
+                if (! $order->deposit_paid_at) {
                     $ref = $order->clickpesa_deposit_ref;
-                } elseif ($step === 'pay_balance' || ($order->deposit_paid_at && ! $order->balance_paid_at)) {
+                } elseif (! $order->balance_paid_at) {
                     $ref = $order->clickpesa_balance_ref;
                 }
-            } elseif ($step === 'pay_balance' || ! $order->balance_paid_at) {
+            } elseif (! $order->balance_paid_at) {
                 $ref = $order->clickpesa_balance_ref;
             }
         }

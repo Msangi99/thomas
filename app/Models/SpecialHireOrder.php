@@ -276,11 +276,12 @@ class SpecialHireOrder extends Model
     }
 
     /**
-     * Customer-app hire flow: optional deposit → owner accept → balance (ClickPesa) → passenger names → done.
+     * Customer-app hire flow: optional deposit → balance (ClickPesa) → passenger names → done.
+     * Does not block on operator acceptance (owner_accepted_at is informational for the fleet UI).
      * When deposit_amount is null or zero, the deposit step is skipped (full amount on balance).
      * Legacy rows (no split amounts) use payment_status only.
      *
-     * @return string pay_deposit|wait_owner|pay_balance|enter_passengers|done|legacy_pending
+     * @return string pay_deposit|pay_balance|enter_passengers|done|legacy_pending
      */
     public function customerHireNextStep(): string
     {
@@ -291,9 +292,6 @@ class SpecialHireOrder extends Model
         $depositRequired = (float) ($this->deposit_amount ?? 0) > 0;
         if ($depositRequired && ! $this->deposit_paid_at) {
             return 'pay_deposit';
-        }
-        if (! $this->owner_accepted_at) {
-            return 'wait_owner';
         }
         if (! $this->balance_paid_at) {
             return 'pay_balance';
