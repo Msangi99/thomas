@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
+use App\Services\FareFormulaService;
 use Illuminate\Support\Str;
 
 class RoundTripController extends Controller
@@ -524,7 +525,10 @@ class RoundTripController extends Controller
         $info = session()->get('booking_form');
         $time = session()->get('time');
         $date = session()->get('booking_form')['travel_date'];
-        $fees = $setting->service + ($setting->service_percentage / 100 * (session()->get('booking_form')['total_amount'] * 100 / 118));
+        $fees = app(FareFormulaService::class)->calculateTravellerServiceFee(
+            (float) session()->get('booking_form')['total_amount'],
+            $setting
+        );
         $distance = session()->get('booking_form')['route_distance'] ?? 0;
         //return $info;
         $data = [
@@ -623,11 +627,15 @@ class RoundTripController extends Controller
 
         Session::put('cancel', $bus_info['cancel_amount']);
 
-        $fees = $setting->service + ($setting->service_percentage / 100 * (session()->get('booking_form')['total_amount'] * 100 / 118));
+        $fees = app(FareFormulaService::class)->calculateTravellerServiceFee(
+            (float) session()->get('booking_form')['total_amount'],
+            $setting
+        );
         $bus_info = session()->get('booking_form', []);
         $bus_info['discount_amount'] = $dis;
         $bus_info['fees'] = $fees;
         $bus_info['price'] = $price;
+        $bus_info['payable_amount'] = round($price + $fees);
         session()->put('booking_form', $bus_info);
 
 
@@ -720,7 +728,8 @@ class RoundTripController extends Controller
             'payment_method' => $payment_method
         ]);
 
-        return $this->pay($request->amount, $user, $payment_method);
+        $canonicalAmount = session()->get('booking_form')['payable_amount'] ?? $request->amount;
+        return $this->pay($canonicalAmount, $user, $payment_method);
     }
 
     private function generateRandomId()

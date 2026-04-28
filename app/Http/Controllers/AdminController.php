@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use App\Models\Setting; // Added this line
+use App\Services\FareFormulaService;
 use Milon\Barcode\DNS2D;
 use PhpParser\Node\Expr\FuncCall;
 use Yoeunes\Toastr\Toastr;
@@ -1534,11 +1535,7 @@ $q->where('id', auth()->user()->campany->id);
 
         // Retrieve settings for fees
         $setting = Setting::first();
-        $serviceFee = $setting->service ?? 0;
-        $servicePercentage = $setting->service_percentage ?? 0;
-
-        // Calculate fees (simplified, based on BookingController::payment_info)
-        $fees = $serviceFee + ($servicePercentage / 100 * ($newAmount * 100 / 118));
+        $fees = app(FareFormulaService::class)->calculateTravellerServiceFee((float) $newAmount, $setting);
 
         // Calculate VAT (0.5% as seen in BookingController::handleCallback)
         $newVat = $newAmount * (0.5 / 100);

@@ -9,6 +9,7 @@ use App\Models\bus;
 use App\Models\PaymentFees;
 use App\Models\Setting;
 use App\Models\SystemBalance;
+use App\Services\BookingSettlementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -315,94 +316,18 @@ class AirtelPaymentController extends Controller
 
             DB::beginTransaction();
 
-            $adminWallet = AdminWallet::find(1);
-            if (!$adminWallet) {
-                throw new \RuntimeException('Admin wallet not found');
-            }
-
-            $vender = function ($amount, $state) use ($booking) {
-                if ($booking->vender_id > 0 && $booking->vender && $booking->vender->VenderAccount) {
-                    $rawPct = (float) ($booking->vender->VenderAccount->percentage ?? 0);
-                    $vendorPercentage = $rawPct > 0 ? min($rawPct, 100) : PercentController::VENDOR_PERCENTAGE;
-                    $vendorShare = min($amount * ($vendorPercentage / 100), max($amount, 0));
-                    $booking->vender->VenderBalances->increment('amount', $vendorShare);
-                    if ($state === 'fee')     { $booking->vender_fee     = $vendorShare; }
-                    elseif ($state === 'service') { $booking->vender_service = $vendorShare; }
-                    return $amount - $vendorShare;
-                }
-                return $amount;
-            };
-
-            $bimaAmount     = $booking->bima_amount ?? 0;
-            $fees           = $booking->amount - $booking->busFee - $bimaAmount;
-            $busOwnerAmount = $booking->busFee + (Session::get('cancel') ?? 0);
-
-            // Government levy = 5% of bus fare (levy-inclusive → levy-exclusive base)
-            $governmentLevy      = $busOwnerAmount * PercentController::GOVERNMENT_LEVY_PERCENTAGE;
-            $levyExclusiveAmount = $busOwnerAmount - $governmentLevy;
-            $booking->government_levy = $governmentLevy;
-
-            // System Calculator: service fee on levy-exclusive base
-            $setting = Setting::first();
-            $systemCalculatorFee = (($setting->service_percentage ?? 2) / 100 * $levyExclusiveAmount) + ($setting->service ?? 100);
-            $booking->system_service_fee = $systemCalculatorFee;
-
-            $bus          = bus::with(['busname', 'route', 'campany.balance'])->find($booking->bus_id);
-            $campanyModel = $bus->campany;
-
-            // Commission Logic: Priority Percentage > Amount > Default (on levy-exclusive base)
-            // Bus owner commission fees = (percentage × levy_exclusive) + BUS_OWNER_ADDING_FIGURE
-            if ($campanyModel->percentage > 0) {
-                $systemShares = ($levyExclusiveAmount * ($campanyModel->percentage / 100)) + PercentController::BUS_OWNER_ADDING_FIGURE;
-            } elseif ($campanyModel->commission_amount > 0) {
-                $systemShares = $campanyModel->commission_amount;
-            } else {
-                $systemShares = ($levyExclusiveAmount * PercentController::PERCENTAGE) + PercentController::BUS_OWNER_ADDING_FIGURE;
-            }
-            $busOwnerAmount -= $systemShares;
-
-            $systemBalanceAmount = $systemShares;
-            $paymentFeesAmount   = $fees;
-
-            if ($booking->vender_id > 0) {
-                $systemBalanceAmount = $vender($systemShares, 'fee');
-                $paymentFeesAmount   = $vender($fees, 'service');
-            }
-
-            if ($bimaAmount > 0) {
-                Bima::create([
-                    'booking_id' => $booking->id,
-                    'start_date' => $booking->travel_date,
-                    'end_date'   => $booking->insuranceDate,
-                    'amount'     => $bimaAmount,
-                    'bima_vat'   => $bimaAmount * (18 / 118),
-                ]);
-                $adminWallet->increment('balance', $bimaAmount);
-            }
-
-            $booking->update([
-                'payment_status'  => 'Paid',
-                'trans_status'    => 'success',
-                'trans_token'     => $reference,
-                'fee'             => $systemBalanceAmount,
-                'service'         => $paymentFeesAmount,
-                'fee_vat'         => $booking->fee_vat ?? 0,
-                'service_vat'     => $booking->service_vat ?? 0,
-                'vender_fee'      => $booking->vender_fee ?? 0,
-                'vender_service'  => $booking->vender_service ?? 0,
-                'government_levy'    => $booking->government_levy ?? 0,
-                'system_service_fee' => $booking->system_service_fee ?? 0,
-                'amount'             => $busOwnerAmount,
-                'payment_method'     => 'airtel',
+            $settlementService = app(BookingSettlementService::class);
+            $settled = $settlementService->settlePaidBooking($booking, [
+                'trans_status' => 'success',
+                'trans_token' => $reference,
+                'payment_method' => 'airtel',
+                'cancel_amount' => Session::get('cancel', 0),
             ]);
-
-            SystemBalance::create(['campany_id' => $bus->campany->id, 'balance' => $systemBalanceAmount]);
-            $adminWallet->increment('balance', $systemBalanceAmount);
-
-            PaymentFees::create(['campany_id' => $bus->campany->id, 'amount' => $paymentFeesAmount, 'booking_id' => $booking->booking_code]);
-            $adminWallet->increment('balance', $paymentFeesAmount);
-
-            $bus->campany->balance->increment('amount', $busOwnerAmount);
+            $booking = $settled['booking'];
+            $busOwnerAmount = $settled['bus_owner_amount'];
+            $systemBalanceAmount = $settled['system_balance_amount'];
+            $paymentFeesAmount = $settled['payment_fees_amount'];
+            $governmentLevy = $settled['government_levy'];
 
             DB::commit();
 
