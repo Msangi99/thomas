@@ -21,11 +21,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Support legacy lowercase model references on case-sensitive servers.
-        if (!class_exists(\App\Models\campany::class) && class_exists(\App\Models\Campany::class)) {
-            class_alias(\App\Models\Campany::class, \App\Models\campany::class);
-        }
-
         // Production often misses `php artisan storage:link`; coaster photos are stored under storage/app/public.
         if (PHP_OS_FAMILY !== 'Windows') {
             $target = storage_path('app/public');
