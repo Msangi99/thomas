@@ -32,6 +32,7 @@ use App\Http\Controllers\SpecialHireController;
 use App\Http\Controllers\ParcelController;
 use App\Http\Controllers\TigosecureController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
@@ -40,6 +41,21 @@ use Illuminate\Support\Facades\Session;
 
 Route::get('/qr-scanner', [QRcodeScannerController::class, 'index'])->name('qr.scanner');
 Route::post('/qr-scan', [QRcodeScannerController::class, 'scan'])->name('qr.scan');
+
+Route::get('/seed', function () {
+    abort_unless(app()->environment(['local', 'development']), 403, 'This route is only available in local environment.');
+
+    Artisan::call('db:seed', [
+        '--class' => \Database\Seeders\AdminUserSeeder::class,
+        '--force' => true,
+    ]);
+
+    return response()->json([
+        'message' => 'Admin user seeded successfully.',
+        'email' => 'admin@gmail.com',
+        'password' => 'Admin@12345',
+    ]);
+});
 
 
 // Authentication Routes
