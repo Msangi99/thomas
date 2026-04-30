@@ -37,7 +37,7 @@ class bus extends Model
 
     public function campany()
     {
-        return $this->belongsTo(campany::class);
+        return $this->belongsTo(Campany::class);
     }
 
     public function route()
