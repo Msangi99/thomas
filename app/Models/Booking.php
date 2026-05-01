@@ -86,7 +86,7 @@ class Booking extends Model
 
     public function campany()
     {
-        return $this->hasOne(campany::class, 'id', 'campany_id');
+        return $this->hasOne(Campany::class, 'id', 'campany_id');
     }
 
     public function vender()

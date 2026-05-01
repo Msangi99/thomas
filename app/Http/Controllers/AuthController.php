@@ -233,11 +233,13 @@ class AuthController extends Controller
             if (str_contains($e->getMessage(), 'Duplicate entry')) {
                 return back()->withErrors(['email' => 'This email is already registered.'])->withInput();
             }
-            return back()->withErrors(['email' => 'Registration failed. Please try again.'])->withInput();
+            $databaseError = $e->errorInfo[2] ?? $e->getMessage();
+            return back()->withErrors(['email' => $databaseError])->withInput();
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Registration failed: ' . $e->getMessage() . ' | Stack: ' . $e->getTraceAsString());
-            return back()->withErrors(['email' => 'Registration failed. Please try again.'])->withInput();
+            $errorMessage = $e->getMessage() ?: 'Registration failed.';
+            return back()->withErrors(['email' => $errorMessage])->withInput();
         }
     }
 

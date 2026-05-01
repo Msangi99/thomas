@@ -188,7 +188,7 @@ class BookingController extends Controller
     public function search(Request $request)
     {
 
-        $bus = campany::with('bus.schedules')
+        $bus = Campany::with('bus.schedules')
             ->where('id', $request->campany_id)
             ->get();
         return view('booking', compact('bus'));

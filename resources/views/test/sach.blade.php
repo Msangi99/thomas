@@ -103,7 +103,7 @@
                     <select name="bus_id" id="bus_departure_date"
                         class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white [color-scheme:dark]">
                         <option value="">Select Bus Name</option>
-                        @forelse (App\Models\campany::all() as $bus)
+                        @forelse (App\Models\Campany::all() as $bus)
                         <option value="{{ $bus->id }}" {{ request('bus_name') == $bus->id ? 'selected' : '' }}>{{ $bus->name ?? 'N/A' }}</option>
                         @empty
                             <option value="">No Bus Companies Available</option>
