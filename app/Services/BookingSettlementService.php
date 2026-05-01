@@ -9,6 +9,8 @@ use App\Models\Bus;
 use App\Models\PaymentFees;
 use App\Models\Setting;
 use App\Models\SystemBalance;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class BookingSettlementService
 {
@@ -86,7 +88,7 @@ class BookingSettlementService
             $adminWallet->increment('balance', $bimaAmount);
         }
 
-        $booking->update(array_merge([
+        $bookingUpdatePayload = array_merge([
             'payment_status' => 'Paid',
             'trans_status' => $meta['trans_status'] ?? 'success',
             'fee' => $systemBalanceAmount,
@@ -97,7 +99,8 @@ class BookingSettlementService
             'system_service_fee' => $result['service_fees'],
             'amount' => $result['bus_owner_share'],
             'payment_method' => $meta['payment_method'] ?? null,
-        ], $this->transactionMeta($meta)));
+        ], $this->transactionMeta($meta));
+        $booking->update($this->filterExistingBookingColumns($bookingUpdatePayload, $booking->id));
 
         SystemBalance::create([
             'campany_id' => $bus->campany->id,
@@ -134,6 +137,39 @@ class BookingSettlementService
             }
         }
         return $output;
+    }
+
+    /**
+     * Keep payment settlement resilient when some environments are behind on migrations.
+     * Unknown columns are skipped and logged instead of breaking successful payments.
+     */
+    private function filterExistingBookingColumns(array $payload, int $bookingId): array
+    {
+        static $bookingColumns = null;
+
+        if ($bookingColumns === null) {
+            try {
+                $bookingColumns = array_flip(Schema::getColumnListing('bookings'));
+            } catch (\Throwable $e) {
+                Log::warning('Could not read bookings schema; applying unfiltered payload', [
+                    'booking_id' => $bookingId,
+                    'error' => $e->getMessage(),
+                ]);
+                return $payload;
+            }
+        }
+
+        $filtered = array_intersect_key($payload, $bookingColumns);
+        $missingColumns = array_diff(array_keys($payload), array_keys($filtered));
+
+        if (!empty($missingColumns)) {
+            Log::warning('Skipping missing booking columns during settlement', [
+                'booking_id' => $bookingId,
+                'missing_columns' => array_values($missingColumns),
+            ]);
+        }
+
+        return $filtered;
     }
 }
 
