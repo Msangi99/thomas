@@ -89,7 +89,7 @@ class ClickPesaController extends Controller
     {
         $s = strtoupper(trim((string) ($status ?? '')));
 
-        return in_array($s, ['SUCCESS', 'SUCCESSFUL', 'COMPLETED', 'PAID'], true);
+        return in_array($s, ['SUCCESS', 'SUCCESSFUL', 'COMPLETED', 'PAID', 'SETTLED'], true);
     }
 
     /**
@@ -1320,7 +1320,7 @@ class ClickPesaController extends Controller
             'collected_amount' => $paymentData->collectedAmount ?? 0
         ]);
         
-        if (in_array($status, ['SUCCESS', 'SUCCESSFUL', 'COMPLETED', 'PAID'], true)) {
+        if (self::clickPesaPaidStatus($status)) {
             // Payment successful - store payment data in session for callback processing
             Session::put('clickpesa_payment_data', $paymentData);
             

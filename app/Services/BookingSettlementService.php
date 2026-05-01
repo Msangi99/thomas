@@ -20,7 +20,15 @@ class BookingSettlementService
     {
         $adminWallet = AdminWallet::find(1);
         if (!$adminWallet) {
-            throw new \RuntimeException('Admin wallet not found');
+            $adminWallet = AdminWallet::query()->first();
+        }
+        if (!$adminWallet) {
+            $adminWallet = AdminWallet::create([
+                'service_balance' => 0,
+                'commision_balance' => 0,
+                'balance' => 0,
+                'vat' => 0,
+            ]);
         }
 
         $bus = Bus::with(['busname', 'route', 'campany.balance'])->find($booking->bus_id);
