@@ -410,8 +410,38 @@ class ClickPesaController extends Controller
      */
     public function handleCallback(Request $request)
     {
-        $reference = $request->get('reference');
+        $reference = $request->get('reference') ?: $request->get('order_reference');
         $status = $request->get('status');
+
+        // Some ClickPesa redirects hit callback without query params.
+        // Recover the most likely reference from session/booking context so we can verify.
+        if (!$reference) {
+            $cachedPaymentData = Session::get('clickpesa_payment_data');
+            if ($cachedPaymentData && isset($cachedPaymentData->orderReference)) {
+                $reference = (string) $cachedPaymentData->orderReference;
+                if (!$status && isset($cachedPaymentData->status)) {
+                    $status = strtolower((string) $cachedPaymentData->status);
+                }
+                Log::info('ClickPesa Callback recovered reference from cached payment data', [
+                    'reference' => $reference,
+                    'status' => $status ?: 'unknown',
+                ]);
+            }
+        }
+
+        if (!$reference) {
+            $sessionBooking = session('booking');
+            if ($sessionBooking && isset($sessionBooking->booking_code)) {
+                $booking = Booking::where('booking_code', $sessionBooking->booking_code)->first();
+                if ($booking) {
+                    $reference = (string) ($booking->transaction_ref_id ?: $booking->external_ref_id);
+                    Log::info('ClickPesa Callback recovered reference from booking record', [
+                        'booking_code' => $booking->booking_code,
+                        'reference' => $reference ?: 'N/A',
+                    ]);
+                }
+            }
+        }
 
         // Handle explicit cancellation from user
         if ($status === 'cancelled') {
