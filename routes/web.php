@@ -145,7 +145,8 @@ Route::get('/clickpesa/retry', [ClickPesaController::class, 'retryPayment'])->na
 
 // Test Payment Routes (for test mode - bypasses real payment gateways)
 use App\Http\Controllers\TestPaymentController;
-Route::post('/test-payment/process', [TestPaymentController::class, 'processPayment'])->name('test.payment.process');
+// GET + POST: controllers redirect here after creating the booking in session (redirect = GET).
+Route::match(['get', 'post'], '/test-payment/process', [TestPaymentController::class, 'processPayment'])->name('test.payment.process');
 Route::get('/test-payment/status', [TestPaymentController::class, 'status'])->name('test.payment.status');
 
 // New Tigosecure Callback Route (outside auth middleware if it's a public callback)
