@@ -76,6 +76,7 @@ class TestPaymentController extends Controller
                 'trans_token' => $transToken,
                 'payment_method' => 'test_mode',
                 'cancel_amount' => Session::get('cancel', 0),
+                'test_payment' => true,
             ]);
 
             $booking = $settled['booking'];
@@ -151,8 +152,12 @@ class TestPaymentController extends Controller
                 'message' => 'Test payment successful',
             ];
 
-            $data1 = $roundController->roundtrip($transToken1, $transToken1, $verifyResponse1, $code1);
-            $data2 = $roundController->roundtrip($transToken2, $transToken2, $verifyResponse2, $code2);
+            $testMeta = [
+                'test_payment' => true,
+                'payment_method' => 'test_mode',
+            ];
+            $data1 = $roundController->roundtrip($transToken1, $transToken1, $verifyResponse1, $code1, $testMeta);
+            $data2 = $roundController->roundtrip($transToken2, $transToken2, $verifyResponse2, $code2, $testMeta);
 
             if (is_array($data1) && isset($data1['errorMessage'])) {
                 session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);

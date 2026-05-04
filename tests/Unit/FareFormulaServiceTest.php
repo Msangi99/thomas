@@ -77,15 +77,15 @@ class FareFormulaServiceTest extends TestCase
         $this->assertEquals(100.0, $result['system_commission_total']);
     }
 
-    public function test_traveller_service_fee_uses_levy_exclusive_base(): void
+    public function test_traveller_service_fee_matches_direct_end_user_sheet(): void
     {
         $service = new FareFormulaService();
         $setting = new Setting();
         $setting->service_percentage = 2;
         $setting->service = 100;
 
-        // Type fare 1000: levy-exclusive 950; 2% + 100 = 119
+        // Type fare 1000: ADMIN service fees (2% of 1000 + 100) = 120; gov levy on service fee 5% = 6 → 126
         $fee = $service->calculateTravellerServiceFee(1000.0, $setting);
-        $this->assertEquals(119.0, $fee);
+        $this->assertEquals(126.0, $fee);
     }
 }

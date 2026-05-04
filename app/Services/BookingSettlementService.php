@@ -78,12 +78,13 @@ class BookingSettlementService
         }
 
         if ($bimaAmount > 0) {
+            $bimaVat = ($meta['test_payment'] ?? false) ? 0.0 : ($bimaAmount * (18 / 118));
             Bima::create([
                 'booking_id' => $booking->id,
                 'start_date' => $booking->travel_date,
                 'end_date' => $booking->insuranceDate,
                 'amount' => $bimaAmount,
-                'bima_vat' => $bimaAmount * (18 / 118),
+                'bima_vat' => $bimaVat,
             ]);
             $adminWallet->increment('balance', $bimaAmount);
         }
