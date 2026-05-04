@@ -13,10 +13,9 @@ use Illuminate\Support\Facades\Session;
 /**
  * Test Payment Controller
  *
- * This controller simulates payment processing without calling real payment gateways.
- * When test mode is enabled in admin settings, users can complete payments
- * with a simple "Pay" button - no actual money is transferred.
- * Uses the same calculation and settlement logic as real payment gateways.
+ * Simulates payment without real gateways when admin enables test mode.
+ * Uses the same settlement pipeline as production ({@see BookingSettlementService}),
+ * which applies {@see \App\Services\FareFormulaService} (Thomas sheet logic).
  */
 class TestPaymentController extends Controller
 {
@@ -107,7 +106,7 @@ class TestPaymentController extends Controller
 
             Log::error('TestPayment: Failed to process payment', [
                 'error' => $e->getMessage(),
-                'booking_id' => $booking->id,
+                'booking_id' => $booking->id ?? null,
                 'trace' => $e->getTraceAsString(),
             ]);
 
