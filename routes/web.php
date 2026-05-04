@@ -143,6 +143,11 @@ Route::get('/clickpesa/cancel', [ClickPesaController::class, 'handleCallback'])-
 Route::get('/clickpesa/check-status', [ClickPesaController::class, 'checkPaymentStatus'])->name('clickpesa.check-status');
 Route::get('/clickpesa/retry', [ClickPesaController::class, 'retryPayment'])->name('clickpesa.retry');
 
+// Test Payment Routes (for test mode - bypasses real payment gateways)
+use App\Http\Controllers\TestPaymentController;
+Route::post('/test-payment/process', [TestPaymentController::class, 'processPayment'])->name('test.payment.process');
+Route::get('/test-payment/status', [TestPaymentController::class, 'status'])->name('test.payment.status');
+
 // New Tigosecure Callback Route (outside auth middleware if it's a public callback)
 //Route::get('/tigosecure/callback', [VenderWalletController::class, 'handleTigosecureCallback'])->name('tigo.callback');
 
@@ -366,6 +371,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/transactions/{transaction}/company/{campany}/complete', [SystemController::class, 'complete'])->name('transactions.complete');
         Route::post('/transactions/{transaction}/company/{campany}/cancel', [SystemController::class, 'cancel'])->name('transactions.cancel');
         Route::get('/system_payments', [SystemController::class, 'system_payments'])->name('system.payments');
+        Route::get('/government-levy', [SystemController::class, 'governmentLevyReport'])->name('system.government_levy');
         Route::get('/history', [SystemController::class, 'history'])->name('system.history');
         Route::get('/cancelled-bookings', [SystemController::class, 'cancelled_bookings'])->name('system.cancelled_bookings');
         Route::post('/print', [SystemController::class, 'print'])->name('system.print');

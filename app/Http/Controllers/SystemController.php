@@ -34,6 +34,7 @@ use App\Models\CancelledBookings;
 use App\Models\Coaster;
 use App\Models\SpecialHireOrder;
 use App\Models\SpecialHireWithdrawalRequest;
+use Illuminate\Support\Facades\Schema;
 
 class SystemController extends Controller
 {
@@ -535,6 +536,59 @@ class SystemController extends Controller
         return view('system.payments', compact('balances', 'pays'));
     }
 
+    public function governmentLevyReport(Request $request)
+    {
+        abort_unless(Auth::user()->hasAccess(Access::LINKS['SYSTEM_INCOME']), 403);
+
+        $period = $request->query('period', 'month');
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+
+        $query = Booking::query()
+            ->where('payment_status', 'Paid')
+            ->with(['campany', 'route']);
+
+        if ($period === 'today') {
+            $query->whereDate('created_at', today());
+        } elseif ($period === 'week') {
+            $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+        } elseif ($period === 'month') {
+            $query->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year);
+        } elseif ($period === 'year') {
+            $query->whereYear('created_at', now()->year);
+        } elseif ($period === 'custom' && $startDate && $endDate) {
+            $query->whereBetween('created_at', [
+                Carbon::parse($startDate)->startOfDay(),
+                Carbon::parse($endDate)->endOfDay(),
+            ]);
+        }
+
+        $summaryQuery = clone $query;
+        $tableQuery = clone $query;
+
+        $hasGovernmentLevyColumn = Schema::hasColumn('bookings', 'government_levy');
+        $hasSystemServiceFeeColumn = Schema::hasColumn('bookings', 'system_service_fee');
+
+        $bookings = $tableQuery->latest()->paginate(50)->withQueryString();
+        $totalPaidAmount = (float) $summaryQuery->sum('amount');
+        $totalVat = (float) $summaryQuery->sum('vat');
+        $totalGovernmentLevy = $hasGovernmentLevyColumn ? (float) $summaryQuery->sum('government_levy') : 0.0;
+        $totalSystemServiceFee = $hasSystemServiceFeeColumn ? (float) $summaryQuery->sum('system_service_fee') : 0.0;
+
+        return view('system.government_levy', compact(
+            'bookings',
+            'period',
+            'startDate',
+            'endDate',
+            'totalPaidAmount',
+            'totalVat',
+            'totalGovernmentLevy',
+            'totalSystemServiceFee',
+            'hasGovernmentLevyColumn',
+            'hasSystemServiceFeeColumn'
+        ));
+    }
+
     public function history(Request $request)
     {
         $query = Booking::with(['campany', 'schedule', 'user', 'route', 'vender', 'bus.route', 'campany.busOwnerAccount']);
@@ -934,6 +988,7 @@ class SystemController extends Controller
                 'enable_customer_email_notifications' => true,
                 'enable_conductor_sms_notifications' => true,
                 'enable_conductor_email_notifications' => true,
+                'test_mode' => false,
             ]);
         }
 
@@ -950,6 +1005,7 @@ class SystemController extends Controller
                 'local' => 0,
                 'service' => 0,
                 'service_percentage' => 0,
+                'test_mode' => false,
             ]);
         }
 
@@ -962,8 +1018,9 @@ class SystemController extends Controller
             'enable_customer_email_notifications' => $request->boolean('enable_customer_email_notifications'),
             'enable_conductor_sms_notifications' => $request->boolean('enable_conductor_sms_notifications'),
             'enable_conductor_email_notifications' => $request->boolean('enable_conductor_email_notifications'),
+            'test_mode' => $request->boolean('test_mode'),
         ]);
-        
+
         return back()->with('success', 'settings updated');
     }
 

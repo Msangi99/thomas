@@ -9,7 +9,7 @@ class Setting extends Model
 {
     protected $table = 'settings';
     
-    protected $fillable = 
+    protected $fillable =
         [
             'international',
             'local',
@@ -19,5 +19,6 @@ class Setting extends Model
             'enable_customer_email_notifications',
             'enable_conductor_sms_notifications',
             'enable_conductor_email_notifications',
+            'test_mode',
         ];
 }

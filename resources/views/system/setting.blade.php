@@ -122,6 +122,41 @@
                 </div>
             </div>
 
+            <!-- Payment Gateway Settings -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden space-y-6">
+                <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-800 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
+                        Payment Gateway Settings
+                    </h2>
+                    <p class="text-sm text-gray-500 mt-1">Configure payment processing options.</p>
+                </div>
+
+                <div class="px-6 pb-6 space-y-4">
+                    <div class="flex items-start justify-between border rounded-lg p-4 bg-amber-50 border-amber-200">
+                        <div>
+                            <p class="text-base font-medium text-gray-800 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                Test Mode (Skip Real Payment)
+                            </p>
+                            <p class="text-sm text-gray-500 mt-1">When enabled, users can pay without using live payment gateways. A simple "Pay" button will be shown instead of payment gateway options. Uses the same calculation logic but bypasses actual payment processing.</p>
+                            <p class="text-xs text-amber-600 mt-2 font-medium">⚠️ Only enable for testing purposes!</p>
+                        </div>
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="test_mode" value="1"
+                                   class="sr-only toggle-input"
+                                   data-toggle-target="toggle-test-mode"
+                                   {{ ($settings->test_mode ?? false) ? 'checked' : '' }}>
+                            <div id="toggle-test-mode" class="toggle-visual {{ ($settings->test_mode ?? false) ? 'on' : '' }}"></div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
             <!-- Notification Preferences -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden space-y-6">
                 <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">

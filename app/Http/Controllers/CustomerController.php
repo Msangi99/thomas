@@ -548,6 +548,13 @@ class CustomerController extends Controller
 
     public function pay($amount, $user, $method, $isResave = false)
     {
+        // Check if test mode is enabled
+        $settings = \App\Models\Setting::first();
+        if ($settings && ($settings->test_mode ?? false)) {
+            // Test mode is enabled - use test payment processing
+            return $this->processTestPayment($amount, $user, $method, $isResave);
+        }
+
         $tigo = new TigosecureController();
         if (is_null(session()->get('booking_form')) || !isset(session()->get('booking_form')['total_amount'])) {
             return redirect()->route('home')->with('error', 'Session expired. Please try again.');
@@ -708,6 +715,86 @@ class CustomerController extends Controller
         }
 
         return redirect()->back()->with('error', __('customer/busroot.payment_error') ?? 'Payment method not supported.');
+    }
+
+    /**
+     * Process payment in test mode - bypasses real payment gateways
+     *
+     * @param float $amount
+     * @param string $user
+     * @param string $method
+     * @param bool $isResave
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    private function processTestPayment($amount, $user, $method, $isResave = false)
+    {
+        $bookingForm = session()->get('booking_form');
+        $bima = $bookingForm['bima'] ?? 0;
+        $xcode = 'TEST-' . strtoupper(uniqid() . rand(1000, 9999));
+
+        // Generate unique booking code
+        $bookingCode = $this->generateRandomCode();
+        $bus = Bus::with(['busname', 'campany.balance'])->find($bookingForm['bus_id']);
+
+        // Prepare booking data
+        $bookingData = [
+            'booking_code' => $bookingCode,
+            'campany_id' => $bus->campany->id,
+            'bus_id' => $bookingForm['bus_id'],
+            'route_id' => $bookingForm['route_id'],
+            'pickup_point' => $bookingForm['pickup_point'],
+            'dropping_point' => $bookingForm['dropping_point'],
+            'travel_date' => $bookingForm['travel_date'],
+            'seat' => $bookingForm['seats'],
+            'amount' => round($amount),
+            'gender' => $bookingForm['gender'],
+            'age' => $bookingForm['age'],
+            'infant_child' => $bookingForm['infant_child'],
+            'age_group' => $bookingForm['age_group'],
+            'payment_status' => 'Unpaid',
+            'customer_phone' => $bookingForm['customer_number'],
+            'customer_name' => $bookingForm['customer_name'],
+            'customer_email' => $bookingForm['customer_email'],
+            'bima' => $bookingForm['bima'],
+            'insuranceDate' => $bookingForm['insuranceDate'],
+            'vender_id' => '',
+            'discount' => $bookingForm['discount'],
+            'discount_amount' => $bookingForm['discount_amount'],
+            'distance' => $bookingForm['route_distance'],
+            'busFee' => $bookingForm['dispo'] ?? $bookingForm['total_amount'],
+            'schedule_id' => $bookingForm['schedule_id'],
+            'cancel_key' => $bookingForm['cancel_key'],
+            'excess_luggage' => $bookingForm['excess_luggage'],
+            'excess_luggage_description' => $bookingForm['excess_luggage_description'],
+            'transaction_ref_id' => $xcode,
+            'payment_method' => 'test_mode',
+        ];
+
+        if ($bima == 1) {
+            $bookingData['bima_amount'] = $bookingForm['bima_amount'];
+        } else {
+            $bookingData['bima_amount'] = 0;
+        }
+
+        // Create booking
+        try {
+            $booking = Booking::create($bookingData);
+        } catch (\Exception $e) {
+            Log::error('Test mode: Failed to create booking', [
+                'error' => $e->getMessage(),
+                'data' => $bookingData,
+            ]);
+            return redirect()->route('home')->with('error', 'Failed to create booking in test mode');
+        }
+
+        // Store booking in session for test payment controller
+        Session::put('booking', $booking);
+
+        // Clear booking form session
+        session()->forget('booking_form');
+
+        // Redirect to test payment processing
+        return redirect()->route('test.payment.process');
     }
 
     public function update_profile(Request $request)

@@ -778,6 +778,13 @@ class RoundTripController extends Controller
             'booking_form_session' => session()->get('booking_form') ? 'exists' : 'missing'
         ]);
 
+        // Check if test mode is enabled
+        $settings = \App\Models\Setting::first();
+        if ($settings && ($settings->test_mode ?? false)) {
+            // Test mode is enabled - use test payment processing
+            return $this->processTestPayment($amount, $user, $method);
+        }
+
         // This method needs to handle two bookings for a round trip
         $firstBookingData = json_decode(session()->get('firstbooking')->data, true);
         $secondBookingData = json_decode(session()->get('secondbooking')->data, true);
@@ -1074,8 +1081,116 @@ class RoundTripController extends Controller
                 return redirect()->route('round.trip.payment')->withErrors(['payment_error' => 'ClickPesa Payment initiation failed: ' . $e->getMessage()]);
             }
         }
+    }
 
+    /**
+     * Process round-trip payment in test mode - bypasses real payment gateways
+     *
+     * @param float $amount
+     * @param string $user
+     * @param string $method
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    private function processTestPayment($amount, $user, $method)
+    {
+        $firstBookingData = json_decode(session()->get('firstbooking')->data, true);
+        $secondBookingData = json_decode(session()->get('secondbooking')->data, true);
+        $commonPaymentInfo = session()->get('booking_form');
 
+        // Generate test transaction references
+        $xcode1 = 'TEST-RT1-' . strtoupper(uniqid() . rand(1000, 9999));
+        $xcode2 = 'TEST-RT2-' . strtoupper(uniqid() . rand(1000, 9999));
+
+        // Create first booking
+        $bookingData1 = [
+            'booking_code' => $this->generateRandomCode(),
+            'campany_id' => $firstBookingData['campany_id'],
+            'bus_id' => $firstBookingData['bus_id'],
+            'route_id' => $firstBookingData['route_id'],
+            'pickup_point' => $firstBookingData['pickup_point'],
+            'dropping_point' => $firstBookingData['dropping_point'],
+            'travel_date' => $firstBookingData['travel_date'],
+            'seat' => $firstBookingData['seats'],
+            'amount' => round($firstBookingData['total_amount']),
+            'gender' => $commonPaymentInfo['gender'],
+            'age' => $commonPaymentInfo['age'],
+            'infant_child' => $commonPaymentInfo['infant_child'],
+            'age_group' => $commonPaymentInfo['age_group'],
+            'payment_status' => 'Unpaid',
+            'customer_phone' => $commonPaymentInfo['customer_number'],
+            'customer_name' => $commonPaymentInfo['customer_name'],
+            'customer_email' => $commonPaymentInfo['customer_email'],
+            'bima' => $firstBookingData['bima'],
+            'insuranceDate' => $firstBookingData['insuranceDate'],
+            'vender_id' => '',
+            'discount' => $firstBookingData['discount'],
+            'discount_amount' => $firstBookingData['discount_amount'],
+            'distance' => $firstBookingData['route_distance'],
+            'busFee' => $firstBookingData['dispo'] ?? $firstBookingData['total_amount'],
+            'schedule_id' => $firstBookingData['schedule_id'],
+            'transaction_ref_id' => $xcode1,
+            'payment_method' => 'test_mode',
+        ];
+
+        if ($firstBookingData['bima'] == 1) {
+            $bookingData1['bima_amount'] = $firstBookingData['bima_amount'];
+        }
+
+        // Create second booking
+        $bookingData2 = [
+            'booking_code' => $this->generateRandomCode(),
+            'campany_id' => $secondBookingData['campany_id'],
+            'bus_id' => $secondBookingData['bus_id'],
+            'route_id' => $secondBookingData['route_id'],
+            'pickup_point' => $secondBookingData['pickup_point'],
+            'dropping_point' => $secondBookingData['dropping_point'],
+            'travel_date' => $secondBookingData['travel_date'],
+            'seat' => $secondBookingData['seats'],
+            'amount' => round($secondBookingData['total_amount']),
+            'gender' => $commonPaymentInfo['gender'],
+            'age' => $commonPaymentInfo['age'],
+            'infant_child' => $commonPaymentInfo['infant_child'],
+            'age_group' => $commonPaymentInfo['age_group'],
+            'payment_status' => 'Unpaid',
+            'customer_phone' => $commonPaymentInfo['customer_number'],
+            'customer_name' => $commonPaymentInfo['customer_name'],
+            'customer_email' => $commonPaymentInfo['customer_email'],
+            'bima' => $secondBookingData['bima'],
+            'insuranceDate' => $secondBookingData['insuranceDate'],
+            'vender_id' => '',
+            'discount' => $secondBookingData['discount'],
+            'discount_amount' => $secondBookingData['discount_amount'],
+            'distance' => $secondBookingData['route_distance'],
+            'busFee' => $secondBookingData['dispo'] ?? $secondBookingData['total_amount'],
+            'schedule_id' => $secondBookingData['schedule_id'],
+            'transaction_ref_id' => $xcode2,
+            'payment_method' => 'test_mode',
+        ];
+
+        if ($secondBookingData['bima'] == 1) {
+            $bookingData2['bima_amount'] = $secondBookingData['bima_amount'];
+        }
+
+        try {
+            $booking1 = Booking::create($bookingData1);
+            $booking2 = Booking::create($bookingData2);
+        } catch (\Exception $e) {
+            Log::error('Test mode round-trip: Failed to create bookings', [
+                'error' => $e->getMessage(),
+            ]);
+            return redirect()->route('home')->with('error', 'Failed to create bookings in test mode');
+        }
+
+        // Store bookings in session
+        Session::put('booking1', $booking1);
+        Session::put('booking2', $booking2);
+        Session::put('is_round', true);
+
+        // Clear roundtrip session data
+        session()->forget(['firstbooking', 'secondbooking', 'booking_form']);
+
+        // Redirect to test payment processing
+        return redirect()->route('test.payment.process');
     }
 
     public function paymentSuccess()
