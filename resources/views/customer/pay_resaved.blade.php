@@ -46,6 +46,7 @@
                     </div>
                 </div>
 
+                @if (!($test_mode ?? false))
                 <!-- Payment Options Card -->
                 <div class="bg-white rounded-xl shadow-md overflow-hidden">
                     <div class="p-6">
@@ -239,6 +240,9 @@
                         </div>
                     </div>
                 </div>
+                @else
+                @include('partials.pay_resaved_test_mode', ['booking' => $booking])
+                @endif
             </div>
             
             <!-- Right Column - Price Summary -->
@@ -319,6 +323,7 @@
         startTimer(fiveMinutes, displayMinutes, displaySeconds);
     };
 
+    @unless($test_mode ?? false)
     document.querySelectorAll('#tab1 form, #tab2 form, #tab3 form').forEach(function(form) {
         form.addEventListener('submit', function() {
             var visible = form.querySelector('#mix_payment_phone, #dpo_payment_phone, #clickpesa_payment_phone');
@@ -352,6 +357,7 @@
             if (targetEl) targetEl.classList.add('active');
         });
     });
+    @endunless
 </script>
 
 <style>

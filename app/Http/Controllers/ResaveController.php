@@ -14,6 +14,40 @@ use App\Http\Controllers\ClickPesaController;
 class ResaveController extends Controller
 {
     /**
+     * Complete a resaved-ticket payment when admin test mode is enabled (no real gateway).
+     */
+    public function testPayResaved(Request $request)
+    {
+        $request->validate([
+            'booking_id' => 'required|integer|exists:bookings,id',
+        ]);
+
+        $settings = Setting::first();
+        if (!($settings->test_mode ?? false)) {
+            return redirect()->back()->with('error', 'Test mode is not enabled.');
+        }
+
+        $booking = Booking::where('id', $request->booking_id)
+            ->where('payment_status', 'resaved')
+            ->first();
+
+        if (!$booking) {
+            return redirect()->route('customer.mybooking')
+                ->withErrors(['payment_error' => 'Booking not found or not eligible for payment.']);
+        }
+
+        if (auth()->check() && auth()->user()->role === 'customer') {
+            if ($booking->user_id !== null && (int) $booking->user_id !== (int) auth()->id()) {
+                abort(403);
+            }
+        }
+
+        Session::put('booking', $booking);
+
+        return app(TestPaymentController::class)->processPayment($request);
+    }
+
+    /**
      * Redirect back to pay-resaved page with error message.
      */
     private function backWithError($bookingId, $message, $key = 'payment_error')

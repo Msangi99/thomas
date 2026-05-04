@@ -501,7 +501,9 @@ class BookingController extends Controller
         $bus_info['payable_amount'] = round($price + $fees);
         session()->put('booking_form', $bus_info);
 
-        return view('payment_details', compact('price', 'ins', 'fees', 'dis', 'excess_luggage_fee'));
+        $test_mode = (bool) ($setting->test_mode ?? false);
+
+        return view('payment_details', compact('price', 'ins', 'fees', 'dis', 'excess_luggage_fee', 'test_mode'));
     }
 
     public function get_payment(Request $request)

@@ -483,8 +483,9 @@ class CustomerController extends Controller
 
         // Make luggage fee available to the view
         $excess_luggage_fee = $excessLuggageFee;
+        $test_mode = (bool) ($setting->test_mode ?? false);
 
-        return view('customer.payment_details', compact('price', 'ins', 'fees', 'dis', 'excess_luggage_fee'));
+        return view('customer.payment_details', compact('price', 'ins', 'fees', 'dis', 'excess_luggage_fee', 'test_mode'));
     }
 
     private function generateRandomCode()
@@ -881,7 +882,9 @@ class CustomerController extends Controller
         // For now, we'll pass direct values to the view.
         // If the payment gateway requires a full booking_form session, we might need to reconstruct it.
 
-        return view('customer.pay_resaved', compact('booking', 'price', 'fees', 'dis', 'ins'));
+        $test_mode = (bool) ($setting->test_mode ?? false);
+
+        return view('customer.pay_resaved', compact('booking', 'price', 'fees', 'dis', 'ins', 'test_mode'));
     }
 
     private function applyDiscount($amount)

@@ -61,6 +61,7 @@
                                 </div>
                             </div>
 
+                            @if (!($test_mode ?? false))
                             <!-- Payment Options Card -->
                             <div class="bg-white rounded-xl shadow-md overflow-hidden">
                                 <div class="p-6">
@@ -298,6 +299,14 @@
                                     </div>
                                 </div>
                             </div>
+                            @else
+                            @include('partials.payment_checkout_test_mode', [
+                                'verifyAction' => route('verify'),
+                                'amount' => round($price + $fees, 2),
+                                'langNs' => 'all',
+                                'formIdSuffix' => '_guest',
+                            ])
+                            @endif
                         </div>
 
                         <!-- Right Column - Price Summary -->
@@ -390,6 +399,7 @@
                     startTimer(fiveMinutes, displayMinutes, displaySeconds);
                 };
 
+                @unless($test_mode ?? false)
                 // Form submission handler for Tigo form
                 document.getElementById('tigo').addEventListener('submit', function (event) {
                     event.preventDefault();
@@ -580,6 +590,7 @@
                 });
 
                 const baseTotal = {{ round($price + $fees, 2) }};
+                @endunless
             </script>
 
             <style>

@@ -681,6 +681,7 @@ class RoundTripController extends Controller
             'dis' => $data1['discount_amount'] + $data2['discount_amount'],
             // Combine excess luggage fees from both legs so round_6 price summary can show it
             'excess_luggage_fee' => ($data1['excess_luggage_fee'] ?? 0) + ($data2['excess_luggage_fee'] ?? 0),
+            'test_mode' => (bool) ($setting->test_mode ?? false),
         ];
 
         session()->forget('key');

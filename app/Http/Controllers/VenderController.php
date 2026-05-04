@@ -616,8 +616,9 @@ class VenderController extends Controller
 
         // Make luggage fee available to the view
         $excess_luggage_fee = $excessLuggageFee;
+        $test_mode = (bool) ($setting->test_mode ?? false);
 
-        return view('vender.payment_details', compact('price', 'ins', 'fees', 'dis', 'excess_luggage_fee'));
+        return view('vender.payment_details', compact('price', 'ins', 'fees', 'dis', 'excess_luggage_fee', 'test_mode'));
     }
 
     public function get_payment(Request $request)
