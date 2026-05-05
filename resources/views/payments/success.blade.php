@@ -92,15 +92,33 @@
                                 </svg>
                                 <h4 class="text-lg font-semibold text-gray-800">Payment Details</h4>
                             </div>
+                            @php
+                                $ticketFee = (float) ($data->busFee ?? 0);
+                                $insuranceAmount = (float) ($data->bima_amount ?? 0);
+
+                                // Preferred: traveler-facing fee from canonical settlement fields.
+                                // system_service_fee stores ADMIN service fee; traveler pays +5% levy on that fee.
+                                $systemServiceFee = (float) ($data->system_service_fee ?? 0);
+                                $travelerServiceFee = $systemServiceFee > 0
+                                    ? ($systemServiceFee + ($systemServiceFee * 0.05))
+                                    : 0;
+
+                                // Backward-compatible fallback for old rows where canonical fields were not populated.
+                                $legacyServiceFee = (float) ($data->service ?? 0)
+                                    + (float) ($data->vender_service ?? 0)
+                                    + (float) ($data->service_vat ?? 0);
+
+                                $displayServiceFee = $travelerServiceFee > 0 ? $travelerServiceFee : $legacyServiceFee;
+                                $amountPaid = $ticketFee + $displayServiceFee + $insuranceAmount;
+                            @endphp
                             <div class="space-y-3">
                                 <div class="flex justify-between">
                                     <span class="text-gray-600">Ticket Fee:</span>
-                                    <span class="font-medium text-gray-600">{{ number_format($data->busFee, 2) }}</span>
+                                    <span class="font-medium text-gray-600">{{ number_format($ticketFee, 2) }}</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-gray-600">Service Fee:</span>
-                                    <span
-                                        class="font-medium text-gray-600">{{ number_format($data->service + $data->vender_service + $data->service_vat, 2) }}</span>
+                                    <span class="font-medium text-gray-600">{{ number_format($displayServiceFee, 2) }}</span>
                                 </div>
                                 @if ($data->vender_id > 0)
                                     <div class="flex justify-between">
@@ -133,7 +151,7 @@
                                 <div class="flex justify-between border-t border-gray-200 pt-2 mt-2">
                                     <span class="font-semibold">Amount Paid:</span>
                                     <span class="font-bold text-green-600">
-                                        {{ number_format($data->busFee + $data->service + $data->vender_service + $data->service_vat + $data->bima_amount, 2) }}
+                                        {{ number_format($amountPaid, 2) }}
                                     </span>
                                 </div>
                                 <div class="flex justify-between">
