@@ -43,8 +43,14 @@ class FareFormulaService
         // System commission adding figure: admin "Amount" on company row (not a full override of commission).
         $commissionAdding = $company ? (float) ($company->commission_amount ?? 0) : 0.0;
 
-        $vendorPercent = $this->fallbackPositive($vendorPercentage, self::DEFAULT_VENDOR_PERCENT);
-        $vendorPercent = min(100.0, $this->normalizePercentValue($vendorPercent));
+        // Vendor percentage: null means no vendor involved (direct booking), so 0%.
+        // Only apply default if vendor exists but has no percentage set.
+        if ($vendorPercentage === null) {
+            $vendorPercent = 0.0;
+        } else {
+            $vendorPercent = $this->fallbackPositive($vendorPercentage, self::DEFAULT_VENDOR_PERCENT);
+            $vendorPercent = min(100.0, $this->normalizePercentValue($vendorPercent));
+        }
 
         return [
             'commission_percent' => $commissionPercent,
