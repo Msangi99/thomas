@@ -10,9 +10,9 @@
 
     <div class="container mx-auto px-4 py-6 max-w-7xl">
         <h1 class="text-2xl font-semibold text-gray-800 mb-2">System Income</h1>
-        <p class="text-gray-600 mb-6">Commission and service fees from all bookings (any seat, any payment method).</p>
+        <p class="text-gray-600 mb-6">Commission, service fees, and government levies from all bookings (any seat, any payment method).</p>
         <h3 class="text-center text-blue-600 text-lg font-semibold mb-4">HIGHLINK ISGC</h3>
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
             <!-- System Income: Commission (from ticket) -->
             <div class="bg-white rounded-lg shadow-md overflow-hidden">
                 <div class="p-4 bg-gradient-to-r from-blue-500 to-blue-400 text-white text-center">
@@ -42,17 +42,19 @@
                         </div>
                     </div>
                     <div class="overflow-x-auto">
-                        <table id="serviceTable" class="w-full table-auto border-collapse" style="min-width: 400px;">
+                        <table id="serviceTable" class="w-full table-auto border-collapse" style="min-width: 480px;">
                             <thead>
                                 <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
                                     <th class="py-2 px-4 text-left font-medium w-16"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search No"></th>
                                     <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Company"></th>
+                                    <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Booking Code"></th>
                                     <th class="py-2 px-4 text-right font-medium whitespace-nowrap"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Amount"></th>
                                     <th class="py-2 px-4 text-left font-medium whitespace-nowrap"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Date"></th>
                                 </tr>
                                 <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
                                     <th class="py-2 px-4 text-left font-medium w-16">No</th>
                                     <th class="py-2 px-4 text-left font-medium">Company Name</th>
+                                    <th class="py-2 px-4 text-left font-medium">Booking Code</th>
                                     <th class="py-2 px-4 text-right font-medium whitespace-nowrap">Amount</th>
                                     <th class="py-2 px-4 text-left font-medium whitespace-nowrap">Date</th>
                                 </tr>
@@ -64,12 +66,13 @@
                                         <tr class="border-b border-gray-200 hover:bg-gray-50 transition">
                                             <td class="py-2 px-4">{{ $i++ }}</td>
                                             <td class="py-2 px-4">{{ $payment->campany->name }}</td>
+                                            <td class="py-2 px-4">{{ $payment->booking_id ?? 'N/A' }}</td>
                                             <td class="py-2 px-4 text-right amount" data-amount="{{ $payment->balance }}">{{ $currency }} {{ convert_money($payment->balance) }}</td>
                                             <td class="py-2 px-4 whitespace-nowrap" data-date="{{ $payment->created_at->format('Y-m-d') }}">{{ $payment->created_at->format('d M Y') }}</td>
                                         </tr>
                                     @endforeach
                                 @else
-                                    <tr><td colspan="4" class="py-2 px-4 text-center text-gray-500">No data found</td></tr>
+                                    <tr><td colspan="5" class="py-2 px-4 text-center text-gray-500">No data found</td></tr>
                                 @endif
                             </tbody>
                         </table>
@@ -143,6 +146,73 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Government Levy on Service Fees -->
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="p-4 bg-gradient-to-r from-amber-500 to-amber-400 text-white text-center">
+                    <h2 class="text-lg font-semibold">Government Levy (Service Fees)</h2>
+                    <span class="text-sm font-medium">Total: {{ $currency }} <span id="levyTotal">{{ convert_money($levies->sum('amount')) }}</span></span>
+                </div>
+                <div class="p-4">
+                    <div class="flex flex-col sm:flex-row gap-4 mb-4">
+                        <div class="w-full sm:w-1/2">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Filter by:</label>
+                            <select id="levyTimeFilter" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                <option value="all">All Time</option>
+                                <option value="day">Today</option>
+                                <option value="week">This Week</option>
+                                <option value="month">This Month</option>
+                                <option value="year">This Year</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                        </div>
+                        <div class="w-full sm:w-1/2 hidden" id="levyDateRangeGroup">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Date Range:</label>
+                            <div class="flex flex-col sm:flex-row items-center gap-2">
+                                <input type="text" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm" id="levyMinDate" placeholder="Start Date">
+                                <span class="text-gray-500 text-sm hidden sm:inline">to</span>
+                                <input type="text" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm" id="levyMaxDate" placeholder="End Date">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table id="levyTable" class="w-full table-auto border-collapse" style="min-width: 480px;">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
+                                    <th class="py-2 px-4 text-left font-medium w-16"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search No"></th>
+                                    <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Company"></th>
+                                    <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Booking Code"></th>
+                                    <th class="py-2 px-4 text-right font-medium whitespace-nowrap"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Amount"></th>
+                                    <th class="py-2 px-4 text-left font-medium whitespace-nowrap"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Date"></th>
+                                </tr>
+                                <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
+                                    <th class="py-2 px-4 text-left font-medium w-16">No</th>
+                                    <th class="py-2 px-4 text-left font-medium">Company Name</th>
+                                    <th class="py-2 px-4 text-left font-medium">Booking Code</th>
+                                    <th class="py-2 px-4 text-right font-medium whitespace-nowrap">Amount</th>
+                                    <th class="py-2 px-4 text-left font-medium whitespace-nowrap">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-gray-600 text-xs">
+                                @php $l = 1; @endphp
+                                @if($levies->count() > 0)
+                                    @foreach ($levies as $levy)
+                                        <tr class="border-b border-gray-200 hover:bg-gray-50 transition">
+                                            <td class="py-2 px-4">{{ $l++ }}</td>
+                                            <td class="py-2 px-4">{{ $levy->campany->name }}</td>
+                                            <td class="py-2 px-4">{{ $levy->booking_id }}</td>
+                                            <td class="py-2 px-4 text-right amount" data-amount="{{ $levy->amount }}">{{ $currency }} {{ convert_money($levy->amount) }}</td>
+                                            <td class="py-2 px-4 whitespace-nowrap" data-date="{{ $levy->created_at->format('Y-m-d') }}">{{ $levy->created_at->format('d M Y') }}</td>
+                                        </tr>
+                                    @endforeach
+                                @else
+                                    <tr><td colspan="5" class="py-2 px-4 text-center text-gray-500">No data found</td></tr>
+                                @endif
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -175,21 +245,36 @@
                 format: 'DD MMM YYYY'
             });
 
-            // Custom date filtering function for both tables
+            // Create date inputs for Government Levy Table
+            var levyMinDate = new DateTime($('#levyMinDate'), {
+                format: 'DD MMM YYYY'
+            });
+            var levyMaxDate = new DateTime($('#levyMaxDate'), {
+                format: 'DD MMM YYYY'
+            });
+
+            // Custom date filtering function for all tables
             $.fn.dataTableExt.afnFiltering.push(function (settings, data, dataIndex) {
                 let tableId = settings.sTableId;
-                let filterValue, minDate, maxDate;
+                let filterValue, minDate, maxDate, dateStr;
 
                 if (tableId === 'serviceTable') {
                     filterValue = $('#serviceTimeFilter').val();
                     minDate = serviceMinDate.val();
                     maxDate = serviceMaxDate.val();
-                    dateStr = data[3]; // Date column for serviceTable
-                } else {
+                    dateStr = data[4]; // Date column for serviceTable (now has booking code)
+                } else if (tableId === 'commissionTable') {
                     filterValue = $('#commissionTimeFilter').val();
                     minDate = commissionMinDate.val();
                     maxDate = commissionMaxDate.val();
                     dateStr = data[4]; // Date column for commissionTable
+                } else if (tableId === 'levyTable') {
+                    filterValue = $('#levyTimeFilter').val();
+                    minDate = levyMinDate.val();
+                    maxDate = levyMaxDate.val();
+                    dateStr = data[4]; // Date column for levyTable
+                } else {
+                    return true;
                 }
 
                 let date = moment(dateStr, 'DD MMM YYYY');
@@ -270,6 +355,30 @@
                 }
             });
 
+            // Initialize Government Levy Table
+            const levyTable = $('#levyTable').DataTable({
+                responsive: true,
+                paging: true,
+                searching: true,
+                ordering: true,
+                language: {
+                    emptyTable: "No data found"
+                },
+                footerCallback: function(row, data, start, end, display) {
+                    let api = this.api();
+                    let total = api
+                        .rows({ page: 'current' })
+                        .nodes()
+                        .toArray()
+                        .reduce((sum, row) => {
+                            let amount = $(row).find('.amount').data('amount') || 0;
+                            return sum + parseFloat(amount);
+                        }, 0);
+                    let displayTotal = window.paymentsCurrency === 'Usd' ? (total / (window.paymentsUsdToTzs || 2500)).toLocaleString('en-US', { minimumFractionDigits: 2 }) : total.toLocaleString('en-US', { minimumFractionDigits: 2 });
+                    $('#levyTotal').text(displayTotal);
+                }
+            });
+
             // Apply search to each column in Service Fees Table
             $('#serviceTable thead tr:first-child th').each(function(index) {
                 $(this).find('input').on('keyup change', function() {
@@ -281,6 +390,13 @@
             $('#commissionTable thead tr:first-child th').each(function(index) {
                 $(this).find('input').on('keyup change', function() {
                     commissionTable.column(index).search(this.value).draw();
+                });
+            });
+
+            // Apply search to each column in Government Levy Table
+            $('#levyTable thead tr:first-child th').each(function(index) {
+                $(this).find('input').on('keyup change', function() {
+                    levyTable.column(index).search(this.value).draw();
                 });
             });
 
@@ -315,6 +431,23 @@
             $('#commissionMinDate, #commissionMaxDate').on('change', function() {
                 if ($('#commissionTimeFilter').val() === 'custom') {
                     commissionTable.draw();
+                }
+            });
+
+            // Apply time filter for Government Levy Table
+            $('#levyTimeFilter').on('change', function() {
+                if ($(this).val() === 'custom') {
+                    $('#levyDateRangeGroup').removeClass('hidden');
+                } else {
+                    $('#levyDateRangeGroup').addClass('hidden');
+                    levyTable.draw();
+                }
+            });
+
+            // Redraw the Government Levy Table when the custom date inputs change
+            $('#levyMinDate, #levyMaxDate').on('change', function() {
+                if ($('#levyTimeFilter').val() === 'custom') {
+                    levyTable.draw();
                 }
             });
         });

@@ -532,8 +532,9 @@ class SystemController extends Controller
     {
         $balances = SystemBalance::with('campany')->orderByDesc('created_at')->get();
         $pays = PaymentFees::with('campany')->orderByDesc('created_at')->get();
+        $levies = \App\Models\GovernmentLevy::with('campany')->orderByDesc('created_at')->get();
 
-        return view('system.payments', compact('balances', 'pays'));
+        return view('system.payments', compact('balances', 'pays', 'levies'));
     }
 
     public function governmentLevyReport(Request $request)

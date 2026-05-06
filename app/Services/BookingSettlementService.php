@@ -6,6 +6,7 @@ use App\Models\AdminWallet;
 use App\Models\Bima;
 use App\Models\Booking;
 use App\Models\Bus;
+use App\Models\GovernmentLevy;
 use App\Models\PaymentFees;
 use App\Models\Setting;
 use App\Models\SystemBalance;
@@ -104,15 +105,27 @@ class BookingSettlementService
 
         SystemBalance::create([
             'campany_id' => $bus->campany->id,
+            'booking_id' => $booking->booking_code,
             'balance' => $systemBalanceAmount,
         ]);
+        
+        // Calculate government levy on service fees (5%)
+        $governmentLevyOnServiceFee = $paymentFeesAmount * 0.05;
+        $serviceFeeAfterLevy = $paymentFeesAmount - $governmentLevyOnServiceFee;
+        
         PaymentFees::create([
             'campany_id' => $bus->campany->id,
-            'amount' => $paymentFeesAmount,
+            'amount' => $serviceFeeAfterLevy,
             'booking_id' => $booking->booking_code,
         ]);
+        
+        GovernmentLevy::create([
+            'campany_id' => $bus->campany->id,
+            'booking_id' => $booking->booking_code,
+            'amount' => $governmentLevyOnServiceFee,
+        ]);
 
-        $adminWallet->increment('balance', $systemBalanceAmount + $paymentFeesAmount);
+        $adminWallet->increment('balance', $systemBalanceAmount + $serviceFeeAfterLevy);
         $bus->campany->balance->increment('amount', (float) $result['bus_owner_share']);
 
         return [

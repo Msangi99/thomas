@@ -5,19 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class SystemBalance extends Model
+class GovernmentLevy extends Model
 {
-    //use HasFactory;
+    use HasFactory;
 
-    protected $table = 'system_balance';
+    protected $table = 'government_levies';
+
     protected $fillable = [
         'campany_id',
         'booking_id',
-        'balance',
+        'amount',
     ];
 
     public function campany()
     {
-        return $this->belongsTo(Campany::class);
+        return $this->belongsTo(Campany::class, 'campany_id');
     }
 }
