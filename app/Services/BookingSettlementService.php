@@ -6,7 +6,6 @@ use App\Models\AdminWallet;
 use App\Models\Bima;
 use App\Models\Booking;
 use App\Models\Bus;
-use App\Models\balance;
 use App\Models\PaymentFees;
 use App\Models\Setting;
 use App\Models\SystemBalance;
@@ -35,21 +34,8 @@ class BookingSettlementService
         }
 
         $bus = Bus::with(['busname', 'route', 'campany.balance'])->find($booking->bus_id);
-        if (!$bus || !$bus->campany) {
+        if (!$bus || !$bus->campany || !$bus->campany->balance) {
             throw new \RuntimeException('Bus/company data not found for settlement');
-        }
-
-        // Company wallet (`balances` table). Some companies were created without a row; ensure it exists before crediting.
-        $companyWallet = $bus->campany->balance;
-        if (!$companyWallet) {
-            $companyWallet = balance::firstOrCreate(
-                ['campany_id' => $bus->campany->id],
-                ['amount' => 0]
-            );
-            Log::info('Created missing company balance row for settlement', [
-                'campany_id' => $bus->campany->id,
-                'booking_id' => $booking->id,
-            ]);
         }
 
         $setting = Setting::first();
@@ -92,13 +78,12 @@ class BookingSettlementService
         }
 
         if ($bimaAmount > 0) {
-            $bimaVat = ($meta['test_payment'] ?? false) ? 0.0 : ($bimaAmount * (18 / 118));
             Bima::create([
                 'booking_id' => $booking->id,
                 'start_date' => $booking->travel_date,
                 'end_date' => $booking->insuranceDate,
                 'amount' => $bimaAmount,
-                'bima_vat' => $bimaVat,
+                'bima_vat' => $bimaAmount * (18 / 118),
             ]);
             $adminWallet->increment('balance', $bimaAmount);
         }
@@ -128,25 +113,7 @@ class BookingSettlementService
         ]);
 
         $adminWallet->increment('balance', $systemBalanceAmount + $paymentFeesAmount);
-        $busOwnerCredit = max(0.0, (float) $result['bus_owner_share']);
-        if ($busOwnerCredit > 0) {
-            $before = (float) ($companyWallet->amount ?? 0);
-            $companyWallet->increment('amount', $busOwnerCredit);
-            $companyWallet->refresh();
-
-            // Helps verify test payments credited the expected company wallet.
-            if (($meta['test_payment'] ?? false) || (($meta['payment_method'] ?? null) === 'test_mode')) {
-                Log::info('Test payment credited company wallet', [
-                    'booking_id' => $booking->id,
-                    'booking_code' => $booking->booking_code,
-                    'campany_id' => (int) ($bus->campany->id ?? 0),
-                    'bus_owner_share' => $busOwnerCredit,
-                    'balance_before' => $before,
-                    'balance_after' => (float) ($companyWallet->amount ?? 0),
-                    'payment_method' => $meta['payment_method'] ?? null,
-                ]);
-            }
-        }
+        $bus->campany->balance->increment('amount', (float) $result['bus_owner_share']);
 
         return [
             'booking' => $booking->fresh(),

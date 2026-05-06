@@ -19,7 +19,7 @@ use App\Services\BookingSettlementService;
 
 class RoundpaymentController extends Controller
 {
-    public function roundtrip($transToken = null, $companyRef = null, $verifyResponse = null, $code = null, array $settlementMeta = [])
+    public function roundtrip($transToken = null, $companyRef = null, $verifyResponse = null, $code = null)
     {
         // Retrieve booking using CompanyRef (which should be booking_code)
         //$code = session('booking')->booking_code;
@@ -50,12 +50,12 @@ class RoundpaymentController extends Controller
 
         try {
             $settlementService = app(BookingSettlementService::class);
-            $settled = $settlementService->settlePaidBooking($booking, array_merge([
+            $settled = $settlementService->settlePaidBooking($booking, [
                 'trans_status' => 'success',
                 'trans_token' => $transToken,
                 'payment_method' => 'dpo',
                 'cancel_amount' => Session::get('cancel', 0),
-            ], $settlementMeta));
+            ]);
             $booking = $settled['booking'];
             $bus = $settled['bus'];
             $busOwnerAmount = $settled['bus_owner_amount'];

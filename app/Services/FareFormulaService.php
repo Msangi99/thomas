@@ -9,8 +9,8 @@ use App\Models\Setting;
  *
  * - System commission: (bus fare levy-inclusive × system commission %) + system commission adding figure.
  *   The adding figure is {@see \App\Models\Campany::$commission_amount} (admin: company row "Amount" next to "%").
- * - Service fees (settlement / ADMIN): (bus fare levy-inclusive × service fee %) + service adding (settings).
- * - Traveller surcharge (end-user total): those service fees + government levy on that service fee (sheet "TICKET PURCHASED DIRECTLY BY END USER").
+ * - Service fees (settlement): (bus fare levy-inclusive × service fee %) + service adding (settings).
+ * - Traveller service fee (calculator): percent on levy-exclusive bus fare (after 5% government levy on fare) + service adding.
  * - Rates may be stored as decimals (0.05 = 5%) or whole percents (5 = 5%).
  */
 class FareFormulaService
@@ -57,20 +57,15 @@ class FareFormulaService
     }
 
     /**
-     * Total traveller-paid surcharge on top of levy-inclusive type fare (matches Sheet1 direct end-user column).
-     *
-     * ADMIN service fees on levy-inclusive fare, plus government levy on that service fee amount.
-     * Example (defaults): fare 1,000 → service fees 120 + levy on service fee 6 → returns 126 (total pay 1,126).
+     * Traveller-facing service fee (sheet "System calculator"): % applied to levy-exclusive fare + fixed adding.
      */
     public function calculateTravellerServiceFee(float $typeFare, ?Setting $setting): float
     {
         $rates = $this->resolveRates($setting);
         $govPct = $rates['government_levy_percent'];
+        $levyExclusiveFare = $typeFare * (1 - $govPct / 100);
 
-        $serviceFees = ($typeFare * ($rates['service_percent'] / 100)) + $rates['service_adding'];
-        $governmentLevyOnServiceFee = $serviceFees * ($govPct / 100);
-
-        return $serviceFees + $governmentLevyOnServiceFee;
+        return ($levyExclusiveFare * ($rates['service_percent'] / 100)) + $rates['service_adding'];
     }
 
     public function calculateTravellerTotal(array $input, ?Setting $setting): array
