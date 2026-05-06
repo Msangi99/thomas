@@ -147,10 +147,10 @@
                 </div>
             </div>
 
-            <!-- Government Levy on Service Fees -->
+            <!-- Government Levy from Service -->
             <div class="bg-white rounded-lg shadow-md overflow-hidden">
                 <div class="p-4 bg-gradient-to-r from-amber-500 to-amber-400 text-white text-center">
-                    <h2 class="text-lg font-semibold">Government Levy (Service Fees)</h2>
+                    <h2 class="text-lg font-semibold">Government Levy from Service</h2>
                     <span class="text-sm font-medium">Total: {{ $currency }} <span id="levyTotal">{{ convert_money($levies->sum('amount')) }}</span></span>
                 </div>
                 <div class="p-4">
