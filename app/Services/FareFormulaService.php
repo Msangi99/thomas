@@ -57,15 +57,13 @@ class FareFormulaService
     }
 
     /**
-     * Traveller-facing service fee (sheet "System calculator"): % applied to levy-exclusive fare + fixed adding.
+     * Traveller-facing service fee: % applied directly to full fare + fixed adding.
      */
     public function calculateTravellerServiceFee(float $typeFare, ?Setting $setting): float
     {
         $rates = $this->resolveRates($setting);
-        $govPct = $rates['government_levy_percent'];
-        $levyExclusiveFare = $typeFare * (1 - $govPct / 100);
 
-        return ($levyExclusiveFare * ($rates['service_percent'] / 100)) + $rates['service_adding'];
+        return ($typeFare * ($rates['service_percent'] / 100)) + $rates['service_adding'];
     }
 
     public function calculateTravellerTotal(array $input, ?Setting $setting): array
