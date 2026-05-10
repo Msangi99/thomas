@@ -200,9 +200,10 @@
                     <td>{{ $data->seat ?? 'N/A' }}</td>
                 </tr>
                 @php
-                    // Match payments/success.blade.php: ticket fee + traveler service fee + insurance
+                    // Match payments/success: prefer gateway/checkout total when stored after settlement.
                     $ticketFeeForPrint = (float) ($data->busFee ?? 0);
                     $insuranceForPrint = (float) ($data->bima_amount ?? 0);
+                    $storedCustomerTotalForPrint = (float) ($data->customer_paid_total ?? 0);
                     $systemServiceFeeForPrint = (float) ($data->system_service_fee ?? 0);
                     $travelerServiceFeeForPrint = $systemServiceFeeForPrint > 0
                         ? ($systemServiceFeeForPrint + ($systemServiceFeeForPrint * 0.05))
@@ -211,7 +212,10 @@
                         + (float) ($data->vender_service ?? 0)
                         + (float) ($data->service_vat ?? 0);
                     $displayServiceFeeForPrint = $travelerServiceFeeForPrint > 0 ? $travelerServiceFeeForPrint : $legacyServiceFeeForPrint;
-                    $totalAmountPaidForPrint = $ticketFeeForPrint + $displayServiceFeeForPrint + $insuranceForPrint;
+                    $computedPrintTotal = $ticketFeeForPrint + $displayServiceFeeForPrint + $insuranceForPrint;
+                    $totalAmountPaidForPrint = $storedCustomerTotalForPrint > 0
+                        ? $storedCustomerTotalForPrint
+                        : $computedPrintTotal;
                 @endphp
                 <tr>
                     <td>Total amount paid:</td>

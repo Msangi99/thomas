@@ -21,6 +21,7 @@ class Booking extends Model
         'travel_date',
         'seat',
         'amount',
+        'customer_paid_total',
         'payment_method',
         'payment_status',
         'resaved_until',

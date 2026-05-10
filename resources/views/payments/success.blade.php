@@ -95,6 +95,7 @@
                             @php
                                 $ticketFee = (float) ($data->busFee ?? 0);
                                 $insuranceAmount = (float) ($data->bima_amount ?? 0);
+                                $storedCustomerTotal = (float) ($data->customer_paid_total ?? 0);
 
                                 // Preferred: traveler-facing fee from canonical settlement fields.
                                 // system_service_fee stores ADMIN service fee; traveler pays +5% levy on that fee.
@@ -109,7 +110,17 @@
                                     + (float) ($data->service_vat ?? 0);
 
                                 $displayServiceFee = $travelerServiceFee > 0 ? $travelerServiceFee : $legacyServiceFee;
-                                $amountPaid = $ticketFee + $displayServiceFee + $insuranceAmount;
+                                $computedTotal = $ticketFee + $displayServiceFee + $insuranceAmount;
+
+                                // Use amount actually charged at checkout/gateway (matches wallet / receipt).
+                                if ($storedCustomerTotal > 0) {
+                                    $amountPaid = $storedCustomerTotal;
+                                    $displayServiceFee = max(0, $storedCustomerTotal - $ticketFee - $insuranceAmount);
+                                    $useStoredCustomerTotal = true;
+                                } else {
+                                    $amountPaid = $computedTotal;
+                                    $useStoredCustomerTotal = false;
+                                }
                             @endphp
                             <div class="space-y-3">
                                 <div class="flex justify-between">
@@ -117,7 +128,7 @@
                                     <span class="font-medium text-gray-600">{{ number_format($ticketFee, 2) }}</span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span class="text-gray-600">Service Fee:</span>
+                                    <span class="text-gray-600">{{ ($useStoredCustomerTotal ?? false) ? 'Service & other charges:' : 'Service Fee:' }}</span>
                                     <span class="font-medium text-gray-600">{{ number_format($displayServiceFee, 2) }}</span>
                                 </div>
                                 @if ($data->vender_id > 0)
@@ -149,7 +160,7 @@
                                     </div>
                                 @endif
                                 <div class="flex justify-between border-t border-gray-200 pt-2 mt-2">
-                                    <span class="font-semibold">Amount Paid:</span>
+                                    <span class="font-semibold text-gray-900">Amount Paid:</span>
                                     <span class="font-bold text-green-600">
                                         {{ number_format($amountPaid, 2) }}
                                     </span>

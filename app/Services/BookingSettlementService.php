@@ -98,6 +98,8 @@ class BookingSettlementService
             'vender_service' => $vendorService,
             'government_levy' => $result['government_levy_on_fare'],
             'system_service_fee' => $result['service_fees'],
+            // Preserve gateway/checkout total; `amount` becomes bus-owner share after settlement.
+            'customer_paid_total' => $totalFare,
             'amount' => $result['bus_owner_share'],
             'payment_method' => $meta['payment_method'] ?? null,
         ], $this->transactionMeta($meta));
