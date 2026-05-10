@@ -199,9 +199,23 @@
                     <td>Seat number:</td>
                     <td>{{ $data->seat ?? 'N/A' }}</td>
                 </tr>
+                @php
+                    // Match payments/success.blade.php: ticket fee + traveler service fee + insurance
+                    $ticketFeeForPrint = (float) ($data->busFee ?? 0);
+                    $insuranceForPrint = (float) ($data->bima_amount ?? 0);
+                    $systemServiceFeeForPrint = (float) ($data->system_service_fee ?? 0);
+                    $travelerServiceFeeForPrint = $systemServiceFeeForPrint > 0
+                        ? ($systemServiceFeeForPrint + ($systemServiceFeeForPrint * 0.05))
+                        : 0;
+                    $legacyServiceFeeForPrint = (float) ($data->service ?? 0)
+                        + (float) ($data->vender_service ?? 0)
+                        + (float) ($data->service_vat ?? 0);
+                    $displayServiceFeeForPrint = $travelerServiceFeeForPrint > 0 ? $travelerServiceFeeForPrint : $legacyServiceFeeForPrint;
+                    $totalAmountPaidForPrint = $ticketFeeForPrint + $displayServiceFeeForPrint + $insuranceForPrint;
+                @endphp
                 <tr>
-                    <td>Bus Fare:</td>
-                    <td>{{ ceil($data->amount + $data->vender_fee + $data->fee + $data->vat) ?? 'N/A' }}</td>
+                    <td>Total amount paid:</td>
+                    <td>{{ number_format($totalAmountPaidForPrint, 2) }}</td>
                 </tr>
             </table>
         </div>
