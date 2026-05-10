@@ -5,25 +5,68 @@
     <link href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" rel="stylesheet">
     <!-- DataTables DateTime CSS -->
     <link href="https://cdn.datatables.net/datetime/1.5.1/css/dataTables.dateTime.min.css" rel="stylesheet">
-    <!-- Tailwind CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
-    <div class="container mx-auto px-4 py-6 max-w-7xl">
-        <h1 class="text-2xl font-semibold text-gray-800 mb-2">System Income</h1>
-        <p class="text-gray-600 mb-6">Commission, service fees, and government levies from all bookings (any seat, any payment method).</p>
-        <h3 class="text-center text-blue-600 text-lg font-semibold mb-4">HIGHLINK ISGC</h3>
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <!-- System Income: Commission (from ticket) -->
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <div class="p-4 bg-gradient-to-r from-blue-500 to-blue-400 text-white text-center">
-                    <h2 class="text-lg font-semibold">Commission (System Income)</h2>
-                    <span class="text-sm font-medium">Total: {{ $currency }} <span id="serviceTotal">{{ convert_money($balances->sum('balance')) }}</span></span>
+    @php
+        $totalCommissionBalance = (float) $balances->sum('balance');
+        $totalServiceFees = (float) $pays->sum('amount');
+        $totalLevies = (float) $levies->sum('amount');
+        $combinedIncome = $totalCommissionBalance + $totalServiceFees + $totalLevies;
+    @endphp
+
+    <div class="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6">
+        <!-- Page header -->
+        <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-8">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-wider text-blue-600 mb-1">Admin · Finance</p>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">System Income</h1>
+                <p class="text-gray-600 mt-2 max-w-2xl text-sm sm:text-base leading-relaxed">
+                    Commission (system balances), service fees, and government levies from paid bookings across all companies and payment methods.
+                </p>
+            </div>
+            <div class="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm lg:text-right shrink-0">
+                <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Combined total</p>
+                <p class="text-2xl font-bold text-gray-900 tabular-nums">{{ $currency }} {{ convert_money($combinedIncome) }}</p>
+                <p class="text-xs text-gray-400 mt-1">HIGHLINK ISGC</p>
+            </div>
+        </div>
+
+        <!-- KPI summary -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            <a href="#income-commission" class="group rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 shadow-sm hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                <p class="text-xs font-semibold text-blue-700 uppercase tracking-wide">Commission</p>
+                <p class="text-xl sm:text-2xl font-bold text-blue-900 tabular-nums mt-1">{{ $currency }} {{ convert_money($totalCommissionBalance) }}</p>
+                <p class="text-xs text-blue-600 opacity-90 mt-2 group-hover:underline">System balance entries · {{ $balances->count() }} rows</p>
+            </a>
+            <a href="#income-service-fees" class="group rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-5 shadow-sm hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">
+                <p class="text-xs font-semibold text-emerald-700 uppercase tracking-wide">Service fees</p>
+                <p class="text-xl sm:text-2xl font-bold text-emerald-900 tabular-nums mt-1">{{ $currency }} {{ convert_money($totalServiceFees) }}</p>
+                <p class="text-xs text-emerald-600 opacity-90 mt-2 group-hover:underline">Payment fees · {{ $pays->count() }} rows</p>
+            </a>
+            <a href="#income-levy" class="group rounded-xl border border-amber-100 bg-gradient-to-br from-amber-50 to-white p-5 shadow-sm hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2">
+                <p class="text-xs font-semibold text-amber-800 uppercase tracking-wide">Gov. levy (service)</p>
+                <p class="text-xl sm:text-2xl font-bold text-amber-950 tabular-nums mt-1">{{ $currency }} {{ convert_money($totalLevies) }}</p>
+                <p class="text-xs text-amber-700 opacity-90 mt-2 group-hover:underline">Government levy · {{ $levies->count() }} rows</p>
+            </a>
+        </div>
+
+        <div class="space-y-10">
+            <!-- Commission (system balances) — table id serviceTable preserved for JS -->
+            <section id="income-commission" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden scroll-mt-24">
+                <div class="px-5 sm:px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div>
+                        <h2 class="text-lg font-semibold">Commission (system income)</h2>
+                        <p class="text-blue-100 text-xs sm:text-sm mt-0.5">Per-booking commission credited to system balance</p>
+                    </div>
+                    <div class="text-left sm:text-right">
+                        <span class="text-xs text-blue-100 uppercase tracking-wide font-medium">Section total</span>
+                        <div class="text-xl font-bold tabular-nums">{{ $currency }} <span id="serviceTotal">{{ convert_money($totalCommissionBalance) }}</span></div>
+                    </div>
                 </div>
-                <div class="p-4">
-                    <div class="flex flex-col sm:flex-row gap-4 mb-4">
-                        <div class="w-full sm:w-1/2">
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Filter by:</label>
-                            <select id="serviceTimeFilter" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                <div class="p-4 sm:p-6">
+                    <div class="flex flex-col lg:flex-row gap-4 mb-4 bg-gray-50 rounded-lg border border-gray-100 p-4">
+                        <div class="w-full lg:w-64">
+                            <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Period</label>
+                            <select id="serviceTimeFilter" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-800">
                                 <option value="all">All Time</option>
                                 <option value="day">Today</option>
                                 <option value="week">This Week</option>
@@ -32,65 +75,72 @@
                                 <option value="custom">Custom Range</option>
                             </select>
                         </div>
-                        <div class="w-full sm:w-1/2 hidden" id="serviceDateRangeGroup">
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Date Range:</label>
-                            <div class="flex flex-col sm:flex-row items-center gap-2">
-                                <input type="text" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm" id="serviceMinDate" placeholder="Start Date">
-                                <span class="text-gray-500 text-sm hidden sm:inline">to</span>
-                                <input type="text" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm" id="serviceMaxDate" placeholder="End Date">
+                        <div class="w-full lg:flex-1 hidden" id="serviceDateRangeGroup">
+                            <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Custom range</label>
+                            <div class="flex flex-col sm:flex-row sm:items-end gap-2">
+                                <input type="text" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" id="serviceMinDate" placeholder="Start Date">
+                                <span class="text-gray-400 text-sm hidden sm:block pb-2.5">→</span>
+                                <input type="text" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" id="serviceMaxDate" placeholder="End Date">
                             </div>
                         </div>
                     </div>
+                    <div class="rounded-lg border border-gray-200 overflow-hidden bg-gray-50">
                     <div class="overflow-x-auto">
-                        <table id="serviceTable" class="w-full table-auto border-collapse" style="min-width: 480px;">
+                        <table id="serviceTable" class="display stripe w-full table-auto border-collapse text-sm" style="min-width: 560px;">
                             <thead>
-                                <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
-                                    <th class="py-2 px-4 text-left font-medium w-16"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search No"></th>
-                                    <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Company"></th>
-                                    <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Booking Code"></th>
-                                    <th class="py-2 px-4 text-right font-medium whitespace-nowrap"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Amount"></th>
-                                    <th class="py-2 px-4 text-left font-medium whitespace-nowrap"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Date"></th>
+                                <tr class="bg-gray-100 text-gray-700 uppercase text-xs tracking-wide">
+                                    <th class="py-3 px-4 text-left font-semibold w-16"><input type="text" class="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs search-input" placeholder="No."></th>
+                                    <th class="py-3 px-4 text-left font-semibold"><input type="text" class="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs search-input" placeholder="Company"></th>
+                                    <th class="py-3 px-4 text-left font-semibold"><input type="text" class="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs search-input" placeholder="Booking"></th>
+                                    <th class="py-3 px-4 text-right font-semibold whitespace-nowrap"><input type="text" class="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs search-input" placeholder="Amount"></th>
+                                    <th class="py-3 px-4 text-left font-semibold whitespace-nowrap"><input type="text" class="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs search-input" placeholder="Date"></th>
                                 </tr>
-                                <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
-                                    <th class="py-2 px-4 text-left font-medium w-16">No</th>
-                                    <th class="py-2 px-4 text-left font-medium">Company Name</th>
-                                    <th class="py-2 px-4 text-left font-medium">Booking Code</th>
-                                    <th class="py-2 px-4 text-right font-medium whitespace-nowrap">Amount</th>
-                                    <th class="py-2 px-4 text-left font-medium whitespace-nowrap">Date</th>
+                                <tr class="bg-gray-50 text-gray-600 uppercase text-xs tracking-wide border-b border-gray-200">
+                                    <th class="py-2.5 px-4 text-left font-semibold w-16">No</th>
+                                    <th class="py-2.5 px-4 text-left font-semibold">Company</th>
+                                    <th class="py-2.5 px-4 text-left font-semibold">Booking code</th>
+                                    <th class="py-2.5 px-4 text-right font-semibold whitespace-nowrap">Amount</th>
+                                    <th class="py-2.5 px-4 text-left font-semibold whitespace-nowrap">Date</th>
                                 </tr>
                             </thead>
-                            <tbody class="text-gray-600 text-xs">
+                            <tbody class="text-gray-700 text-sm divide-y divide-gray-100 bg-white">
                                 @php $i = 1; @endphp
                                 @if ($balances->count() > 0)
                                     @foreach ($balances as $payment)
-                                        <tr class="border-b border-gray-200 hover:bg-gray-50 transition">
-                                            <td class="py-2 px-4">{{ $i++ }}</td>
-                                            <td class="py-2 px-4">{{ $payment->campany->name }}</td>
-                                            <td class="py-2 px-4">{{ $payment->booking_id ?? 'N/A' }}</td>
-                                            <td class="py-2 px-4 text-right amount" data-amount="{{ $payment->balance }}">{{ $currency }} {{ convert_money($payment->balance) }}</td>
-                                            <td class="py-2 px-4 whitespace-nowrap" data-date="{{ $payment->created_at->format('Y-m-d') }}">{{ $payment->created_at->format('d M Y') }}</td>
+                                        <tr class="hover:bg-blue-50 transition-colors">
+                                            <td class="py-2.5 px-4 text-gray-500 tabular-nums">{{ $i++ }}</td>
+                                            <td class="py-2.5 px-4 font-medium text-gray-900">{{ $payment->campany->name }}</td>
+                                            <td class="py-2.5 px-4 font-mono text-xs text-gray-800">{{ $payment->booking_id ?? 'N/A' }}</td>
+                                            <td class="py-2.5 px-4 text-right font-semibold tabular-nums amount" data-amount="{{ $payment->balance }}">{{ $currency }} {{ convert_money($payment->balance) }}</td>
+                                            <td class="py-2.5 px-4 whitespace-nowrap text-gray-600" data-date="{{ $payment->created_at->format('Y-m-d') }}">{{ $payment->created_at->format('d M Y') }}</td>
                                         </tr>
                                     @endforeach
                                 @else
-                                    <tr><td colspan="5" class="py-2 px-4 text-center text-gray-500">No data found</td></tr>
+                                    <tr><td colspan="5" class="py-8 px-4 text-center text-gray-500 text-sm">No data found</td></tr>
                                 @endif
                             </tbody>
                         </table>
                     </div>
+                    </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- System Income: Service Fees -->
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <div class="p-4 bg-gradient-to-r from-green-500 to-green-400 text-white text-center">
-                    <h2 class="text-lg font-semibold">Service Fees (System Income)</h2>
-                    <span class="text-sm font-medium">Total: {{ $currency }} <span id="commissionTotal">{{ convert_money($pays->sum('amount')) }}</span></span>
+            <section id="income-service-fees" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden scroll-mt-24">
+                <div class="px-5 sm:px-6 py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div>
+                        <h2 class="text-lg font-semibold">Service fees (system income)</h2>
+                        <p class="text-emerald-100 text-xs sm:text-sm mt-0.5">Platform service fee pool recorded per booking</p>
+                    </div>
+                    <div class="text-left sm:text-right">
+                        <span class="text-xs text-emerald-100 uppercase tracking-wide font-medium">Section total</span>
+                        <div class="text-xl font-bold tabular-nums">{{ $currency }} <span id="commissionTotal">{{ convert_money($totalServiceFees) }}</span></div>
+                    </div>
                 </div>
-                <div class="p-4">
-                    <div class="flex flex-col sm:flex-row gap-4 mb-4">
-                        <div class="w-full sm:w-1/2">
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Filter by:</label>
-                            <select id="commissionTimeFilter" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                <div class="p-4 sm:p-6">
+                    <div class="flex flex-col lg:flex-row gap-4 mb-4 bg-gray-50 rounded-lg border border-gray-100 p-4">
+                        <div class="w-full lg:w-64">
+                            <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Period</label>
+                            <select id="commissionTimeFilter" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm text-gray-800">
                                 <option value="all">All Time</option>
                                 <option value="day">Today</option>
                                 <option value="week">This Week</option>
@@ -99,65 +149,72 @@
                                 <option value="custom">Custom Range</option>
                             </select>
                         </div>
-                        <div class="w-full sm:w-1/2 hidden" id="commissionDateRangeGroup">
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Date Range:</label>
-                            <div class="flex flex-col sm:flex-row items-center gap-2">
-                                <input type="text" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm" id="commissionMinDate" placeholder="Start Date">
-                                <span class="text-gray-500 text-sm hidden sm:inline">to</span>
-                                <input type="text" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm" id="commissionMaxDate" placeholder="End Date">
+                        <div class="w-full lg:flex-1 hidden" id="commissionDateRangeGroup">
+                            <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Custom range</label>
+                            <div class="flex flex-col sm:flex-row sm:items-end gap-2">
+                                <input type="text" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm" id="commissionMinDate" placeholder="Start Date">
+                                <span class="text-gray-400 text-sm hidden sm:block pb-2.5">→</span>
+                                <input type="text" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm" id="commissionMaxDate" placeholder="End Date">
                             </div>
                         </div>
                     </div>
+                    <div class="rounded-lg border border-gray-200 overflow-hidden bg-gray-50">
                     <div class="overflow-x-auto">
-                        <table id="commissionTable" class="w-full table-auto border-collapse" style="min-width: 480px;">
+                        <table id="commissionTable" class="display stripe w-full table-auto border-collapse text-sm" style="min-width: 560px;">
                             <thead>
-                                <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
-                                    <th class="py-2 px-4 text-left font-medium w-16"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search No"></th>
-                                    <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Company"></th>
-                                    <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Booking Code"></th>
-                                    <th class="py-2 px-4 text-right font-medium whitespace-nowrap"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Amount"></th>
-                                    <th class="py-2 px-4 text-left font-medium whitespace-nowrap"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Date"></th>
+                                <tr class="bg-gray-100 text-gray-700 uppercase text-xs tracking-wide">
+                                    <th class="py-3 px-4 text-left font-semibold w-16"><input type="text" class="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs search-input" placeholder="No."></th>
+                                    <th class="py-3 px-4 text-left font-semibold"><input type="text" class="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs search-input" placeholder="Company"></th>
+                                    <th class="py-3 px-4 text-left font-semibold"><input type="text" class="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs search-input" placeholder="Booking"></th>
+                                    <th class="py-3 px-4 text-right font-semibold whitespace-nowrap"><input type="text" class="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs search-input" placeholder="Amount"></th>
+                                    <th class="py-3 px-4 text-left font-semibold whitespace-nowrap"><input type="text" class="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs search-input" placeholder="Date"></th>
                                 </tr>
-                                <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
-                                    <th class="py-2 px-4 text-left font-medium w-16">No</th>
-                                    <th class="py-2 px-4 text-left font-medium">Company Name</th>
-                                    <th class="py-2 px-4 text-left font-medium">Booking Code</th>
-                                    <th class="py-2 px-4 text-right font-medium whitespace-nowrap">Amount</th>
-                                    <th class="py-2 px-4 text-left font-medium whitespace-nowrap">Date</th>
+                                <tr class="bg-gray-50 text-gray-600 uppercase text-xs tracking-wide border-b border-gray-200">
+                                    <th class="py-2.5 px-4 text-left font-semibold w-16">No</th>
+                                    <th class="py-2.5 px-4 text-left font-semibold">Company</th>
+                                    <th class="py-2.5 px-4 text-left font-semibold">Booking code</th>
+                                    <th class="py-2.5 px-4 text-right font-semibold whitespace-nowrap">Amount</th>
+                                    <th class="py-2.5 px-4 text-left font-semibold whitespace-nowrap">Date</th>
                                 </tr>
                             </thead>
-                            <tbody class="text-gray-600 text-xs">
+                            <tbody class="text-gray-700 text-sm divide-y divide-gray-100 bg-white">
                                 @php $p = 1; @endphp
                                 @if($pays->count() > 0)
                                     @foreach ($pays as $payment)
-                                        <tr class="border-b border-gray-200 hover:bg-gray-50 transition">
-                                            <td class="py-2 px-4">{{ $p++ }}</td>
-                                            <td class="py-2 px-4">{{ $payment->campany->name }}</td>
-                                            <td class="py-2 px-4">{{ $payment->booking_id }}</td>
-                                            <td class="py-2 px-4 text-right amount" data-amount="{{ $payment->amount }}">{{ $currency }} {{ convert_money($payment->amount) }}</td>
-                                            <td class="py-2 px-4 whitespace-nowrap" data-date="{{ $payment->created_at->format('Y-m-d') }}">{{ $payment->created_at->format('d M Y') }}</td>
+                                        <tr class="hover:bg-emerald-50 transition-colors">
+                                            <td class="py-2.5 px-4 text-gray-500 tabular-nums">{{ $p++ }}</td>
+                                            <td class="py-2.5 px-4 font-medium text-gray-900">{{ $payment->campany->name }}</td>
+                                            <td class="py-2.5 px-4 font-mono text-xs text-gray-800">{{ $payment->booking_id }}</td>
+                                            <td class="py-2.5 px-4 text-right font-semibold tabular-nums amount" data-amount="{{ $payment->amount }}">{{ $currency }} {{ convert_money($payment->amount) }}</td>
+                                            <td class="py-2.5 px-4 whitespace-nowrap text-gray-600" data-date="{{ $payment->created_at->format('Y-m-d') }}">{{ $payment->created_at->format('d M Y') }}</td>
                                         </tr>
                                     @endforeach
                                 @else
-                                    <tr><td colspan="5" class="py-2 px-4 text-center text-gray-500">No data found</td></tr>
+                                    <tr><td colspan="5" class="py-8 px-4 text-center text-gray-500 text-sm">No data found</td></tr>
                                 @endif
                             </tbody>
                         </table>
                     </div>
+                    </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- Government Levy from Service -->
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <div class="p-4 bg-gradient-to-r from-amber-500 to-amber-400 text-white text-center">
-                    <h2 class="text-lg font-semibold">Government Levy from Service</h2>
-                    <span class="text-sm font-medium">Total: {{ $currency }} <span id="levyTotal">{{ convert_money($levies->sum('amount')) }}</span></span>
+            <section id="income-levy" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden scroll-mt-24">
+                <div class="px-5 sm:px-6 py-4 bg-gradient-to-r from-amber-600 to-amber-500 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div>
+                        <h2 class="text-lg font-semibold">Government levy (from service)</h2>
+                        <p class="text-amber-100 text-xs sm:text-sm mt-0.5">Levy portion attributed to service fees</p>
+                    </div>
+                    <div class="text-left sm:text-right">
+                        <span class="text-xs text-amber-100 uppercase tracking-wide font-medium">Section total</span>
+                        <div class="text-xl font-bold tabular-nums">{{ $currency }} <span id="levyTotal">{{ convert_money($totalLevies) }}</span></div>
+                    </div>
                 </div>
-                <div class="p-4">
-                    <div class="flex flex-col sm:flex-row gap-4 mb-4">
-                        <div class="w-full sm:w-1/2">
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Filter by:</label>
-                            <select id="levyTimeFilter" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                <div class="p-4 sm:p-6">
+                    <div class="flex flex-col lg:flex-row gap-4 mb-4 bg-gray-50 rounded-lg border border-gray-100 p-4">
+                        <div class="w-full lg:w-64">
+                            <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Period</label>
+                            <select id="levyTimeFilter" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm text-gray-800">
                                 <option value="all">All Time</option>
                                 <option value="day">Today</option>
                                 <option value="week">This Week</option>
@@ -166,53 +223,55 @@
                                 <option value="custom">Custom Range</option>
                             </select>
                         </div>
-                        <div class="w-full sm:w-1/2 hidden" id="levyDateRangeGroup">
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Date Range:</label>
-                            <div class="flex flex-col sm:flex-row items-center gap-2">
-                                <input type="text" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm" id="levyMinDate" placeholder="Start Date">
-                                <span class="text-gray-500 text-sm hidden sm:inline">to</span>
-                                <input type="text" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm" id="levyMaxDate" placeholder="End Date">
+                        <div class="w-full lg:flex-1 hidden" id="levyDateRangeGroup">
+                            <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Custom range</label>
+                            <div class="flex flex-col sm:flex-row sm:items-end gap-2">
+                                <input type="text" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm" id="levyMinDate" placeholder="Start Date">
+                                <span class="text-gray-400 text-sm hidden sm:block pb-2.5">→</span>
+                                <input type="text" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm" id="levyMaxDate" placeholder="End Date">
                             </div>
                         </div>
                     </div>
+                    <div class="rounded-lg border border-gray-200 overflow-hidden bg-gray-50">
                     <div class="overflow-x-auto">
-                        <table id="levyTable" class="w-full table-auto border-collapse" style="min-width: 480px;">
+                        <table id="levyTable" class="display stripe w-full table-auto border-collapse text-sm" style="min-width: 560px;">
                             <thead>
-                                <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
-                                    <th class="py-2 px-4 text-left font-medium w-16"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search No"></th>
-                                    <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Company"></th>
-                                    <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Booking Code"></th>
-                                    <th class="py-2 px-4 text-right font-medium whitespace-nowrap"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Amount"></th>
-                                    <th class="py-2 px-4 text-left font-medium whitespace-nowrap"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Date"></th>
+                                <tr class="bg-gray-100 text-gray-700 uppercase text-xs tracking-wide">
+                                    <th class="py-3 px-4 text-left font-semibold w-16"><input type="text" class="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs search-input" placeholder="No."></th>
+                                    <th class="py-3 px-4 text-left font-semibold"><input type="text" class="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs search-input" placeholder="Company"></th>
+                                    <th class="py-3 px-4 text-left font-semibold"><input type="text" class="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs search-input" placeholder="Booking"></th>
+                                    <th class="py-3 px-4 text-right font-semibold whitespace-nowrap"><input type="text" class="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs search-input" placeholder="Amount"></th>
+                                    <th class="py-3 px-4 text-left font-semibold whitespace-nowrap"><input type="text" class="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs search-input" placeholder="Date"></th>
                                 </tr>
-                                <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
-                                    <th class="py-2 px-4 text-left font-medium w-16">No</th>
-                                    <th class="py-2 px-4 text-left font-medium">Company Name</th>
-                                    <th class="py-2 px-4 text-left font-medium">Booking Code</th>
-                                    <th class="py-2 px-4 text-right font-medium whitespace-nowrap">Amount</th>
-                                    <th class="py-2 px-4 text-left font-medium whitespace-nowrap">Date</th>
+                                <tr class="bg-gray-50 text-gray-600 uppercase text-xs tracking-wide border-b border-gray-200">
+                                    <th class="py-2.5 px-4 text-left font-semibold w-16">No</th>
+                                    <th class="py-2.5 px-4 text-left font-semibold">Company</th>
+                                    <th class="py-2.5 px-4 text-left font-semibold">Booking code</th>
+                                    <th class="py-2.5 px-4 text-right font-semibold whitespace-nowrap">Amount</th>
+                                    <th class="py-2.5 px-4 text-left font-semibold whitespace-nowrap">Date</th>
                                 </tr>
                             </thead>
-                            <tbody class="text-gray-600 text-xs">
+                            <tbody class="text-gray-700 text-sm divide-y divide-gray-100 bg-white">
                                 @php $l = 1; @endphp
                                 @if($levies->count() > 0)
                                     @foreach ($levies as $levy)
-                                        <tr class="border-b border-gray-200 hover:bg-gray-50 transition">
-                                            <td class="py-2 px-4">{{ $l++ }}</td>
-                                            <td class="py-2 px-4">{{ $levy->campany->name }}</td>
-                                            <td class="py-2 px-4">{{ $levy->booking_id }}</td>
-                                            <td class="py-2 px-4 text-right amount" data-amount="{{ $levy->amount }}">{{ $currency }} {{ convert_money($levy->amount) }}</td>
-                                            <td class="py-2 px-4 whitespace-nowrap" data-date="{{ $levy->created_at->format('Y-m-d') }}">{{ $levy->created_at->format('d M Y') }}</td>
+                                        <tr class="hover:bg-amber-50 transition-colors">
+                                            <td class="py-2.5 px-4 text-gray-500 tabular-nums">{{ $l++ }}</td>
+                                            <td class="py-2.5 px-4 font-medium text-gray-900">{{ $levy->campany->name }}</td>
+                                            <td class="py-2.5 px-4 font-mono text-xs text-gray-800">{{ $levy->booking_id }}</td>
+                                            <td class="py-2.5 px-4 text-right font-semibold tabular-nums amount" data-amount="{{ $levy->amount }}">{{ $currency }} {{ convert_money($levy->amount) }}</td>
+                                            <td class="py-2.5 px-4 whitespace-nowrap text-gray-600" data-date="{{ $levy->created_at->format('Y-m-d') }}">{{ $levy->created_at->format('d M Y') }}</td>
                                         </tr>
                                     @endforeach
                                 @else
-                                    <tr><td colspan="5" class="py-2 px-4 text-center text-gray-500">No data found</td></tr>
+                                    <tr><td colspan="5" class="py-8 px-4 text-center text-gray-500 text-sm">No data found</td></tr>
                                 @endif
                             </tbody>
                         </table>
                     </div>
+                    </div>
                 </div>
-            </div>
+            </section>
         </div>
     </div>
 
@@ -310,6 +369,10 @@
             // Initialize Service Fees Table
             const serviceTable = $('#serviceTable').DataTable({
                 responsive: true,
+                scrollX: true,
+                pageLength: 25,
+                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
+                dom: "<'flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3'<'text-sm text-gray-600'l><'text-sm'f>>rtip",
                 paging: true,
                 searching: true,
                 ordering: true,
@@ -334,6 +397,10 @@
             // Initialize Commission Fees Table
             const commissionTable = $('#commissionTable').DataTable({
                 responsive: true,
+                scrollX: true,
+                pageLength: 25,
+                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
+                dom: "<'flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3'<'text-sm text-gray-600'l><'text-sm'f>>rtip",
                 paging: true,
                 searching: true,
                 ordering: true,
@@ -358,6 +425,10 @@
             // Initialize Government Levy Table
             const levyTable = $('#levyTable').DataTable({
                 responsive: true,
+                scrollX: true,
+                pageLength: 25,
+                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
+                dom: "<'flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3'<'text-sm text-gray-600'l><'text-sm'f>>rtip",
                 paging: true,
                 searching: true,
                 ordering: true,
@@ -459,6 +530,17 @@
             padding: 4px;
             font-size: 12px;
             border-radius: 4px;
+        }
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter {
+            margin-bottom: 0.5rem;
+        }
+        .dataTables_wrapper .dataTables_length select,
+        .dataTables_wrapper .dataTables_filter input {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.375rem 0.625rem;
+            font-size: 0.875rem;
         }
     </style>
 @endsection

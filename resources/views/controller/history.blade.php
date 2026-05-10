@@ -120,6 +120,9 @@
                                             </div>
                                         </td>
                                         <td class="py-2 px-4">
+                                            @php
+                                                $govLevyOnServiceBo = (float) $booking->governmentLeviesOnService->sum('amount');
+                                            @endphp
                                             <div class="flex flex-col">
                                                 <p class="text-gray-500 font-medium mb-0">
                                                     {{ __('vender/history.system') }}
@@ -130,6 +133,8 @@
                                                 <p class="text-gray-500 font-medium mb-0">
                                                     {{ __('vender/history.discount') }}
                                                     {{ $currency ?? 'TSH' }} {{ convert_money($booking->discount_amount ?? 0) }}</p>
+                                                <p class="text-gray-500 font-medium mb-0">{{ __('vender/history.government_levy_service') }}
+                                                    {{ $currency ?? 'TSH' }} {{ convert_money($govLevyOnServiceBo) }}</p>
                                                 <p class="text-gray-500 font-medium mb-0">{{ __('vender/history.vat') }}
                                                     {{ $currency ?? 'TSH' }} {{ convert_money($booking->vat ?? 0) }}</p>
                                             </div>

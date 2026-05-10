@@ -598,7 +598,7 @@ class AdminController extends Controller
     /////////////history///////////////
     public function history(Request $request)
     {
-        $query = Booking::with(['campany', 'schedule', 'user', 'bus.route', 'vender', 'campany.busOwnerAccount'])
+        $query = Booking::with(['campany', 'schedule', 'user', 'bus.route', 'vender', 'campany.busOwnerAccount', 'governmentLeviesOnService'])
             ->whereHas('campany', function ($q) {
 $q->where('id', auth()->user()->campany->id);
             });
@@ -923,7 +923,7 @@ $q->where('id', auth()->user()->campany->id);
         $data = null;
 
         if ($request->filled('start_date') && $request->filled('end_date')) {
-            $bookings = Booking::with(['campany', 'schedule', 'bus.route'])
+            $bookings = Booking::with(['campany', 'schedule', 'bus.route', 'governmentLeviesOnService'])
                 ->where('campany_id', $companyId)
                 ->where('payment_status', 'Paid')
                 ->whereBetween('created_at', [
@@ -937,7 +937,7 @@ $q->where('id', auth()->user()->campany->id);
             $ids = is_array($request->booking_ids) ? $request->booking_ids : (array) json_decode($request->booking_ids, true);
             $ids = array_filter(array_map('intval', $ids));
             if (!empty($ids)) {
-                $bookings = Booking::with(['campany', 'schedule', 'bus.route'])
+                $bookings = Booking::with(['campany', 'schedule', 'bus.route', 'governmentLeviesOnService'])
                     ->where('campany_id', $companyId)
                     ->whereIn('id', $ids)
                     ->where('payment_status', 'Paid')
@@ -954,7 +954,7 @@ $q->where('id', auth()->user()->campany->id);
         }
 
         if ($data === null) {
-            $bookings = Booking::with(['campany', 'schedule', 'bus.route'])
+            $bookings = Booking::with(['campany', 'schedule', 'bus.route', 'governmentLeviesOnService'])
                 ->where('campany_id', $companyId)
                 ->where('payment_status', 'Paid')
                 ->latest()
@@ -993,6 +993,7 @@ $q->where('id', auth()->user()->campany->id);
                 'service' => $b->vender_fee ?? 'N/A',
                 'vendor_service' => $b->vender_service ?? 'N/A',
                 'discount' => $b->discount_amount ?? 'N/A',
+                'gov_levy_service' => (string) (float) $b->governmentLeviesOnService->sum('amount'),
                 'vat' => $b->vat ?? 'N/A',
                 'total' => (string) $rowTotal,
                 'gender' => $b->gender ?? 'N/A',
@@ -1036,7 +1037,7 @@ $q->where('id', auth()->user()->campany->id);
         $data = null;
 
         if ($request->filled('start_date') && $request->filled('end_date') && $companyId) {
-            $bookings = Booking::with(['campany', 'schedule', 'bus.route'])
+            $bookings = Booking::with(['campany', 'schedule', 'bus.route', 'governmentLeviesOnService'])
                 ->where('campany_id', $companyId)
                 ->where('payment_status', 'Paid')
                 ->whereBetween('created_at', [
@@ -1051,7 +1052,7 @@ $q->where('id', auth()->user()->campany->id);
             $ids = is_array($request->booking_ids) ? $request->booking_ids : (array) json_decode($request->booking_ids, true);
             $ids = array_filter(array_map('intval', $ids));
             if (!empty($ids)) {
-                $query = Booking::with(['campany', 'schedule', 'bus.route'])
+                $query = Booking::with(['campany', 'schedule', 'bus.route', 'governmentLeviesOnService'])
                     ->whereIn('id', $ids)
                     ->where('payment_status', 'Paid')
                     ->orderBy('seat');
@@ -1068,7 +1069,7 @@ $q->where('id', auth()->user()->campany->id);
         }
 
         if ($data === null && $companyId) {
-            $bookings = Booking::with(['campany', 'schedule', 'bus.route'])
+            $bookings = Booking::with(['campany', 'schedule', 'bus.route', 'governmentLeviesOnService'])
                 ->where('campany_id', $companyId)
                 ->where('payment_status', 'Paid')
                 ->orderBy('seat')

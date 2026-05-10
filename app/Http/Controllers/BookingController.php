@@ -1121,7 +1121,7 @@ class BookingController extends Controller
 
     public function history(Request $request)
     {
-        $query = Booking::with(['campany', 'route_name', 'user'])
+        $query = Booking::with(['campany', 'route_name', 'user', 'governmentLeviesOnService'])
             ->whereHas('campany', function ($q) {
                 $q->where('id', auth()->user()->campany->id);
             });

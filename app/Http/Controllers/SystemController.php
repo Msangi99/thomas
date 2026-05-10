@@ -592,7 +592,7 @@ class SystemController extends Controller
 
     public function history(Request $request)
     {
-        $query = Booking::with(['campany', 'schedule', 'user', 'route', 'vender', 'bus.route', 'campany.busOwnerAccount']);
+        $query = Booking::with(['campany', 'schedule', 'user', 'route', 'vender', 'bus.route', 'campany.busOwnerAccount', 'governmentLeviesOnService']);
         // Apply period filter from sidebar dropdown
         if ($request->has('period')) {
             switch ($request->period) {

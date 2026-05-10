@@ -1032,7 +1032,7 @@ class VenderController extends Controller
 
     public function history(Request $request)
     {
-        $query = Booking::with(['campany', 'schedule', 'user', 'bus.route', 'vender'])->where('vender_id', auth()->user()->id);
+        $query = Booking::with(['campany', 'schedule', 'user', 'bus.route', 'vender', 'governmentLeviesOnService'])->where('vender_id', auth()->user()->id);
 
         if ($request->has('period')) {
             switch ($request->period) {
@@ -1067,7 +1067,7 @@ class VenderController extends Controller
             if (empty($ids)) {
                 return redirect()->back()->with('error', __('No booking data found for income report generation.'));
             }
-            $bookings = Booking::with(['campany', 'schedule', 'bus.route'])
+            $bookings = Booking::with(['campany', 'schedule', 'bus.route', 'governmentLeviesOnService'])
                 ->where('vender_id', $venderId)
                 ->whereIn('id', $ids)
                 ->where('payment_status', 'Paid')
@@ -1115,6 +1115,7 @@ class VenderController extends Controller
                 'service' => $b->vender_fee ?? 'N/A',
                 'vendor_service' => $b->vender_service ?? 'N/A',
                 'discount' => $b->discount_amount ?? 'N/A',
+                'gov_levy_service' => (string) (float) $b->governmentLeviesOnService->sum('amount'),
                 'vat' => $b->vat ?? 'N/A',
                 'total' => (string) $rowTotal,
                 'gender' => $b->gender ?? 'N/A',
@@ -1148,7 +1149,7 @@ class VenderController extends Controller
             if (empty($ids)) {
                 return redirect()->back()->with('error', __('No booking data found for manifest generation.'));
             }
-            $bookings = Booking::with(['campany', 'schedule', 'bus.route'])
+            $bookings = Booking::with(['campany', 'schedule', 'bus.route', 'governmentLeviesOnService'])
                 ->where('vender_id', $venderId)
                 ->whereIn('id', $ids)
                 ->where('payment_status', 'Paid')

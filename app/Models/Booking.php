@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Booking extends Model
 {
@@ -98,5 +99,14 @@ class Booking extends Model
     public function discounta()
     {
         return $this->hasOne(Discount::class, 'code', 'discount');
+    }
+
+    /**
+     * Government levy on service fees (same rows as Admin → System Income → Government Levy from Service).
+     * {@see \App\Models\GovernmentLevy} stores booking_id as the booking_code string.
+     */
+    public function governmentLeviesOnService(): HasMany
+    {
+        return $this->hasMany(GovernmentLevy::class, 'booking_id', 'booking_code');
     }
 }
