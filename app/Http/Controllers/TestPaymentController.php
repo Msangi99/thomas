@@ -151,8 +151,8 @@ class TestPaymentController extends Controller
                 'message' => 'Test payment successful',
             ];
 
-            $data1 = $roundController->roundtrip($transToken1, $transToken1, $verifyResponse1, $code1);
-            $data2 = $roundController->roundtrip($transToken2, $transToken2, $verifyResponse2, $code2);
+            $data1 = $roundController->roundtrip($transToken1, $transToken1, $verifyResponse1, $code1, 'test_mode');
+            $data2 = $roundController->roundtrip($transToken2, $transToken2, $verifyResponse2, $code2, 'test_mode');
 
             if (is_array($data1) && isset($data1['errorMessage'])) {
                 session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);

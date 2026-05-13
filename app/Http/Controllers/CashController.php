@@ -83,28 +83,47 @@ class CashController extends Controller
 
     private function processSuccessfulPayment($booking, $transToken)
     {
-        // Retrieve booking using CompanyRef (which should be booking_code)
         $booking1 = session()->get('booking1');
         $booking2 = session()->get('booking2');
+
         if (!is_null($booking1) && !is_null($booking2)) {
             $round = new RoundpaymentController();
             $code1 = $booking1->booking_code ?? 'N/A';
             $code2 = $booking2->booking_code ?? 'N/A';
-            $data1 = $round->roundtrip($transToken, $transToken, null, $code1);
-            $data2 = $round->roundtrip($transToken, $transToken, null, $code2);
 
-            if (is_array($data1) && isset($data1['errorMessage'])) {
-                $go = new \App\Http\Controllers\RoundTripController();
-                return $go->paymentFailed($data1['errorMessage'] ?? 'Booking not found');
-            }
-            if (is_array($data2) && isset($data2['errorMessage'])) {
-                $go = new \App\Http\Controllers\RoundTripController();
-                return $go->paymentFailed($data2['errorMessage'] ?? 'Booking not found');
-            }
+            try {
+                $data1 = $round->roundtrip($transToken, $transToken, null, $code1, 'cash');
+                $data2 = $round->roundtrip($transToken, $transToken, null, $code2, 'cash');
 
-            $red = new RedirectController();
-            return $red->showRoundTripBookingStatus($data1, $data2);
+                if (is_array($data1) && isset($data1['errorMessage'])) {
+                    session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
+                    $go = new RoundTripController();
+                    return $go->paymentFailed($data1['errorMessage'] ?? 'Booking not found');
+                }
+                if (is_array($data2) && isset($data2['errorMessage'])) {
+                    session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
+                    $go = new RoundTripController();
+                    return $go->paymentFailed($data2['errorMessage'] ?? 'Booking not found');
+                }
+
+                session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
+
+                $red = new RedirectController();
+                return $red->showRoundTripBookingStatus($data1, $data2);
+            } catch (\Exception $e) {
+                Log::error('Round trip cash payment processing failed', [
+                    'error' => $e->getMessage(),
+                    'booking1_code' => $code1,
+                    'booking2_code' => $code2,
+                ]);
+
+                session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
+
+                $go = new RoundTripController();
+                return $go->paymentFailed($e->getMessage());
+            }
         }
+
         $code = $booking->booking_code;
         $booking = Booking::where('booking_code', $code)->first();
 
@@ -116,13 +135,11 @@ class CashController extends Controller
             ];
         }
 
-        // Check for duplicate processing
-        if ($booking->payment_status !== 'Unpaid') {
-            Log::warning('Booking already processed', ['transaction_ref_id' => $transToken]);
-            return view('dpo.success', [
-                'message' => 'Payment already processed',
-                'booking' => $booking
-            ]);
+        if (!in_array($booking->payment_status, ['Unpaid', 'resaved'], true)) {
+            Log::info('Cash: Booking already paid', ['booking_code' => $booking->booking_code]);
+            Session::forget('booking');
+            $url = new RedirectController();
+            return $url->_redirect($booking->id);
         }
 
         $user = Auth::user();
@@ -140,12 +157,9 @@ class CashController extends Controller
             }
         }
 
-        // Begin transaction
         DB::beginTransaction();
 
         try {
-            $bimaAmount = $booking->bima_amount ?? 0;
-
             $user = auth()->user();
             $deduct = round($booking->amount);
             $vb = $user->VenderBalances;
@@ -167,6 +181,7 @@ class CashController extends Controller
             $busOwnerAmount = $settled['bus_owner_amount'];
             $systemBalanceAmount = $settled['system_balance_amount'];
             $paymentFeesAmount = $settled['payment_fees_amount'];
+            $bimaAmount = $booking->bima_amount ?? 0;
 
             DB::commit();
 
@@ -178,10 +193,10 @@ class CashController extends Controller
                     'payment_method' => 'cash',
                     'amount' => $booking->amount,
                 ]);
-                
+
                 $tra = new \App\Services\TraVfdService();
                 $fiscalized = $tra->fiscalize($booking->refresh());
-                
+
                 if ($fiscalized) {
                     Log::info('TRA Fiscalization Successful (Cash Payment)', [
                         'booking_id' => $booking->id,
@@ -207,7 +222,7 @@ class CashController extends Controller
             }
             // -----------------------
 
-            Log::info('DPO Payment processed successfully', [
+            Log::info('Cash Payment processed successfully', [
                 'booking_id' => $booking->id,
                 'company_id' => $bus->campany->id,
                 'company_balance_increment' => $busOwnerAmount,
@@ -218,33 +233,16 @@ class CashController extends Controller
                 'bima_amount' => $bimaAmount,
             ]);
 
-            /*return view('dpo.success', [
-                'message' => 'Payment processed successfully',
-                'booking' => $booking->fresh() // Get updated booking
-            ]);*/
-
             Session::forget('booking');
             Session::forget('cancel');
             $key = new FunctionsController();
             $key->delete_key($booking);
 
-            /* if (auth()->check()) {
-                if (auth()->user()->role == 'customer') {
-                    return redirect()->route('customer.mybooking')->with('success', 'Payment processed successfully');
-                } elseif(auth()->user()->role == 'vender') {
-                    return redirect()->route('vender.index')->with('success', 'Payment processed successfully');
-                }else{
-                    return redirect()->route('home')->with('success', 'Payment processed successfully');
-                }
-            }else{
-                return redirect()->route('home')->with('success', 'Payment processed successfully');
-            } */
-
             $url = new RedirectController();
             return $url->_redirect($booking->id);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to update records in DPO payment', [
+            Log::error('Failed to process Cash payment', [
                 'error' => $e->getMessage(),
                 'booking_id' => $booking->id,
                 'transaction_token' => $transToken
@@ -252,12 +250,6 @@ class CashController extends Controller
 
             $url = new RedirectController();
             return $url->_redirect($booking->id);
-
-            /*return [
-                'error' => $e->getMessage(),
-                'booking_id' => $booking->id,
-                'transaction_token' => $transToken
-            ];*/
         }
     }
 }

@@ -19,10 +19,8 @@ use App\Services\BookingSettlementService;
 
 class RoundpaymentController extends Controller
 {
-    public function roundtrip($transToken = null, $companyRef = null, $verifyResponse = null, $code = null)
+    public function roundtrip($transToken = null, $companyRef = null, $verifyResponse = null, $code = null, $paymentMethod = null)
     {
-        // Retrieve booking using CompanyRef (which should be booking_code)
-        //$code = session('booking')->booking_code;
         $booking = Booking::where('booking_code', $code)->first();
 
         if (!$booking) {
@@ -36,8 +34,7 @@ class RoundpaymentController extends Controller
             ];
         }
 
-        // Check for duplicate processing - return booking so callers get consistent type (Booking)
-        if ($booking->payment_status !== 'Unpaid') {
+        if (!in_array($booking->payment_status, ['Unpaid', 'resaved'], true)) {
             Log::warning('Booking already processed', [
                 'booking_code' => $code,
                 'company_ref' => $companyRef,
@@ -45,7 +42,6 @@ class RoundpaymentController extends Controller
             return $booking;
         }
 
-        // Begin transaction
         DB::beginTransaction();
 
         try {
@@ -53,7 +49,7 @@ class RoundpaymentController extends Controller
             $settled = $settlementService->settlePaidBooking($booking, [
                 'trans_status' => 'success',
                 'trans_token' => $transToken,
-                'payment_method' => 'dpo',
+                'payment_method' => $paymentMethod ?? 'dpo',
                 'cancel_amount' => Session::get('cancel', 0),
             ]);
             $booking = $settled['booking'];
@@ -67,26 +63,26 @@ class RoundpaymentController extends Controller
 
             // --- TRA INTEGRATION ---
             try {
-                Log::info('TRA Fiscalization Starting (DPO Round Trip Payment)', [
+                Log::info('TRA Fiscalization Starting (Round Trip Payment)', [
                     'booking_id' => $booking->id,
                     'booking_code' => $booking->booking_code,
-                    'payment_method' => 'dpo',
+                    'payment_method' => $paymentMethod ?? 'dpo',
                     'amount' => $booking->amount,
                     'transaction_token' => $transToken,
                 ]);
-                
+
                 $tra = new \App\Services\TraVfdService();
                 $fiscalized = $tra->fiscalize($booking->refresh());
-                
+
                 if ($fiscalized) {
-                    Log::info('TRA Fiscalization Successful (DPO Round Trip Payment)', [
+                    Log::info('TRA Fiscalization Successful (Round Trip Payment)', [
                         'booking_id' => $booking->id,
                         'booking_code' => $booking->booking_code,
                         'tra_status' => $booking->tra_status,
                         'tra_vnum' => $booking->tra_vnum ?? 'N/A',
                     ]);
                 } else {
-                    Log::warning('TRA Fiscalization Returned False (DPO Round Trip Payment)', [
+                    Log::warning('TRA Fiscalization Returned False (Round Trip Payment)', [
                         'booking_id' => $booking->id,
                         'booking_code' => $booking->booking_code,
                         'tra_status' => $booking->tra_status ?? 'N/A',
@@ -94,7 +90,7 @@ class RoundpaymentController extends Controller
                     ]);
                 }
             } catch (\Exception $e) {
-                Log::error("TRA Fiscalization Failed (DPO Round Trip Payment): " . $e->getMessage(), [
+                Log::error("TRA Fiscalization Failed (Round Trip Payment): " . $e->getMessage(), [
                     'booking_id' => $booking->id,
                     'booking_code' => $booking->booking_code,
                     'transaction_token' => $transToken,
@@ -104,7 +100,7 @@ class RoundpaymentController extends Controller
             }
             // -----------------------
 
-            Log::info('DPO Payment processed successfully', [
+            Log::info('Round Trip Payment processed successfully', [
                 'booking_id' => $booking->id,
                 'company_id' => $bus->campany->id,
                 'company_balance_increment' => $busOwnerAmount,
@@ -115,44 +111,21 @@ class RoundpaymentController extends Controller
                 'bima_amount' => $bimaAmount,
             ]);
 
-            /*return view('dpo.success', [
-                'message' => 'Payment processed successfully',
-                'booking' => $booking->fresh() // Get updated booking
-            ]);*/
-
             Session::forget('booking');
             Session::forget('cancel');
             $key = new FunctionsController();
             $key->delete_key($booking);
-            /*
-            
-            if (auth()->check()) {
-                if (auth()->user()->role == 'customer') {
-                    return redirect()->route('customer.mybooking')->with('success', 'Payment processed successfully');
-                } elseif(auth()->user()->role == 'vender') {
-                    return redirect()->route('vender.index')->with('success', 'Payment processed successfully');
-                }else{
-                    return redirect()->route('home')->with('success', 'Payment processed successfully');
-                }
-            }else{
-                return redirect()->route('home')->with('success', 'Payment processed successfully');
-            }   
-                */
 
-            $url = new RedirectController();
-
-            // Return the processed booking for success handling
             return $booking;
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to update records in DPO payment', [
+            Log::error('Failed to process Round Trip payment', [
                 'error' => $e->getMessage(),
                 'booking_id' => $booking->id,
                 'transaction_token' => $transToken
             ]);
 
-            // Redirect to the round trip failed page
             $go = new RoundTripController();
             return $go->paymentFailed($e->getMessage());
         }

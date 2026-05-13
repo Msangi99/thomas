@@ -193,85 +193,15 @@ class PDOController extends Controller
                     'response' => $verifyResponse
                 ]);
 
-                // TODO: Update your database - mark order as completed
-                // Process successful payment
-
-                //////////////////////////payment success/////////////////////////////
-
-                /*return json_encode([
-                    'callback' => $transToken,
-                    'CompanyRef' => $request->CompanyRef,
-                    'booking' => session('booking')
-                ]);*/
-
                 $vender = Session::get('vender') ?? '';
 
-                $booking1 = session()->get('booking1');
-                $booking2 = session()->get('booking2');
-
-                // Original condition: if(is_null($booking1) && is_null($booking2))
-                // Problem: If both are null, attempting to access ->booking_code on them will cause an error.
-                // The intent for roundtrip processing should be when *both* bookings are present.
-                if (!is_null($booking1) && !is_null($booking2)) {
-                    $round = new RoundpaymentController();
-                    $code1 = $booking1->booking_code ?? 'N/A';
-                    $code2 = $booking2->booking_code ?? 'N/A';
-                    
-                    try {
-                        $data1 = $round->roundtrip($transToken, $transToken, $verifyResponse, $code1);
-                        $data2 = $round->roundtrip($transToken, $transToken, $verifyResponse, $code2);
-
-                        if (is_array($data1) && isset($data1['errorMessage'])) {
-                            session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
-                            return view('dpo.error', [
-                                'message' => $data1['errorMessage'] ?? 'Booking not found',
-                                'transactionToken' => $transToken
-                            ]);
-                        }
-                        if (is_array($data2) && isset($data2['errorMessage'])) {
-                            session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
-                            return view('dpo.error', [
-                                'message' => $data2['errorMessage'] ?? 'Booking not found',
-                                'transactionToken' => $transToken
-                            ]);
-                        }
-
-                        // Clear round trip session data after successful processing
-                        session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
-
-                        $red = new RedirectController();
-                        return $red->showRoundTripBookingStatus($data1, $data2);
-                    } catch (\Exception $e) {
-                        Log::error('Round trip payment processing failed', [
-                            'error' => $e->getMessage(),
-                            'booking1_code' => $code1,
-                            'booking2_code' => $code2,
-                            'transaction_token' => $transToken
-                        ]);
-                        
-                        // Clear session data on error
-                        session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
-                        
-                        return view('dpo.error', [
-                            'message' => 'Failed to process round trip payment: ' . $e->getMessage(),
-                            'transactionToken' => $transToken
-                        ]);
-                    }
-                    
-                } else if (!$vender) {
-
+                if (!$vender) {
                     return $this->processSuccessfulPayment($transToken, $request->CompanyRef, $verifyResponse);
                 } else {
                     Session::forget('vender');
                     $venderclass = new VenderWalletController();
                     return $venderclass->returned();
                 }
-
-
-
-
-
-                /////////////////////////////////////////////////////////////////////
 
             } else {
                 $errorMessage = isset($verifyResponse->ResultExplanation)
@@ -453,17 +383,17 @@ class PDOController extends Controller
 
     private function processSuccessfulPayment($transToken, $companyRef, $verifyResponse)
     {
-        // Retrieve booking using CompanyRef (which should be booking_code)
         $booking1 = session()->get('booking1');
         $booking2 = session()->get('booking2');
+
         if (!is_null($booking1) && !is_null($booking2)) {
             $round = new RoundpaymentController();
             $code1 = $booking1->booking_code ?? 'N/A';
             $code2 = $booking2->booking_code ?? 'N/A';
-            
+
             try {
-                $data1 = $round->roundtrip($transToken, $transToken, $verifyResponse, $code1);
-                $data2 = $round->roundtrip($transToken, $transToken, $verifyResponse, $code2);
+                $data1 = $round->roundtrip($transToken, $transToken, $verifyResponse, $code1, 'dpo');
+                $data2 = $round->roundtrip($transToken, $transToken, $verifyResponse, $code2, 'dpo');
 
                 if (is_array($data1) && isset($data1['errorMessage'])) {
                     session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
@@ -480,7 +410,6 @@ class PDOController extends Controller
                     ]);
                 }
 
-                // Clear round trip session data after successful processing
                 session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
 
                 $red = new RedirectController();
@@ -492,17 +421,16 @@ class PDOController extends Controller
                     'booking2_code' => $code2,
                     'transaction_token' => $transToken
                 ]);
-                
-                // Clear session data on error
+
                 session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
-                
+
                 return view('dpo.error', [
                     'message' => 'Failed to process round trip payment: ' . $e->getMessage(),
                     'transactionToken' => $transToken
                 ]);
             }
         }
-        
+
         $code = session('booking')->booking_code;
         $booking = Booking::where('booking_code', $code)->first();
 
@@ -517,19 +445,13 @@ class PDOController extends Controller
             ];
         }
 
-        // Check for duplicate processing
-        if ($booking->payment_status !== 'Unpaid') {
-            Log::warning('Booking already processed', [
-                'booking_code' => $code,
-                'company_ref' => $companyRef,
-            ]);
-            return view('dpo.success', [
-                'message' => 'Payment already processed',
-                'booking' => $booking
-            ]);
+        if (!in_array($booking->payment_status, ['Unpaid', 'resaved'], true)) {
+            Log::info('DPO: Booking already paid', ['booking_code' => $booking->booking_code]);
+            Session::forget('booking');
+            $url = new RedirectController();
+            return $url->_redirect($booking->id);
         }
 
-        // Begin transaction
         DB::beginTransaction();
 
         try {
@@ -548,7 +470,7 @@ class PDOController extends Controller
             $bimaAmount = $booking->bima_amount ?? 0;
 
             DB::commit();
-            
+
             // --- TRA INTEGRATION ---
             try {
                 Log::info('TRA Fiscalization Starting (DPO Payment)', [
@@ -558,10 +480,10 @@ class PDOController extends Controller
                     'amount' => $booking->amount,
                     'transaction_token' => $transToken,
                 ]);
-                
+
                 $tra = new \App\Services\TraVfdService();
                 $fiscalized = $tra->fiscalize($booking->refresh());
-                
+
                 if ($fiscalized) {
                     Log::info('TRA Fiscalization Successful (DPO Payment)', [
                         'booking_id' => $booking->id,
@@ -599,29 +521,10 @@ class PDOController extends Controller
                 'bima_amount' => $bimaAmount,
             ]);
 
-            /*return view('dpo.success', [
-                'message' => 'Payment processed successfully',
-                'booking' => $booking->fresh() // Get updated booking
-            ]);*/
-
             Session::forget('booking');
             Session::forget('cancel');
             $key = new FunctionsController();
             $key->delete_key($booking);
-            /*
-            
-            if (auth()->check()) {
-                if (auth()->user()->role == 'customer') {
-                    return redirect()->route('customer.mybooking')->with('success', 'Payment processed successfully');
-                } elseif(auth()->user()->role == 'vender') {
-                    return redirect()->route('vender.index')->with('success', 'Payment processed successfully');
-                }else{
-                    return redirect()->route('home')->with('success', 'Payment processed successfully');
-                }
-            }else{
-                return redirect()->route('home')->with('success', 'Payment processed successfully');
-            }   
-                */
 
             $url = new RedirectController();
             return $url->_redirect($booking->id);
@@ -635,12 +538,6 @@ class PDOController extends Controller
 
             $url = new RedirectController();
             return $url->_redirect($booking->id);
-
-            /* return [
-                'error' => $e->getMessage(),
-                'booking_id' => $booking->id,
-                'transaction_token' => $transToken
-            ];*/
         }
     }
 } 

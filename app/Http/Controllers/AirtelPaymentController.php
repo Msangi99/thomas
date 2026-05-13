@@ -290,12 +290,11 @@ class AirtelPaymentController extends Controller
                 throw new \RuntimeException('Missing required callback parameters');
             }
 
-            // Airtel success status code is "TS"
             if (strtoupper($status) !== 'TS' && strtolower($status) !== 'success') {
                 $booking = Booking::where('booking_code', $reference)
                                ->orWhere('transaction_ref_id', $reference)
                                ->first();
-                if ($booking && $booking->payment_status === 'Unpaid') {
+                if ($booking && in_array($booking->payment_status, ['Unpaid', 'resaved'], true)) {
                     $booking->update(['payment_status' => 'Failed', 'trans_status' => $status]);
                 }
                 return response()->json(['status' => 'received']);
@@ -310,7 +309,7 @@ class AirtelPaymentController extends Controller
                 return response()->json(['status' => 'error', 'message' => 'Booking not found'], 404);
             }
 
-            if ($booking->payment_status !== 'Unpaid') {
+            if (!in_array($booking->payment_status, ['Unpaid', 'resaved'], true)) {
                 return response()->json(['status' => 'already_processed']);
             }
 
@@ -324,26 +323,80 @@ class AirtelPaymentController extends Controller
                 'cancel_amount' => Session::get('cancel', 0),
             ]);
             $booking = $settled['booking'];
+            $bus = $settled['bus'];
             $busOwnerAmount = $settled['bus_owner_amount'];
             $systemBalanceAmount = $settled['system_balance_amount'];
             $paymentFeesAmount = $settled['payment_fees_amount'];
             $governmentLevy = $settled['government_levy'];
+            $bimaAmount = $booking->bima_amount ?? 0;
 
             DB::commit();
 
-            Log::info('Airtel payment settled', [
-                'booking_code'    => $booking->booking_code,
-                'bus_owner_share' => $busOwnerAmount,
-                'commission'      => $systemBalanceAmount,
-                'service_fees'    => $paymentFeesAmount,
-                'govt_levy'       => $governmentLevy,
+            // --- TRA INTEGRATION ---
+            try {
+                Log::info('TRA Fiscalization Starting (Airtel Payment)', [
+                    'booking_id' => $booking->id,
+                    'booking_code' => $booking->booking_code,
+                    'payment_method' => 'airtel',
+                    'amount' => $booking->amount,
+                    'transaction_token' => $reference,
+                ]);
+
+                $tra = new \App\Services\TraVfdService();
+                $fiscalized = $tra->fiscalize($booking->refresh());
+
+                if ($fiscalized) {
+                    Log::info('TRA Fiscalization Successful (Airtel Payment)', [
+                        'booking_id' => $booking->id,
+                        'booking_code' => $booking->booking_code,
+                        'tra_status' => $booking->tra_status,
+                        'tra_vnum' => $booking->tra_vnum ?? 'N/A',
+                    ]);
+                } else {
+                    Log::warning('TRA Fiscalization Returned False (Airtel Payment)', [
+                        'booking_id' => $booking->id,
+                        'booking_code' => $booking->booking_code,
+                        'tra_status' => $booking->tra_status ?? 'N/A',
+                        'tra_error' => $booking->tra_error ?? 'N/A',
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::error("TRA Fiscalization Failed (Airtel Payment): " . $e->getMessage(), [
+                    'booking_id' => $booking->id,
+                    'booking_code' => $booking->booking_code,
+                    'transaction_token' => $reference,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+            }
+            // -----------------------
+
+            Log::info('Airtel Payment processed successfully', [
+                'booking_id' => $booking->id,
+                'booking_code' => $booking->booking_code,
+                'company_id' => $bus->campany->id,
+                'company_balance_increment' => $busOwnerAmount,
+                'system_balance' => $systemBalanceAmount,
+                'payment_fees' => $paymentFeesAmount,
+                'vendor_fee_share' => $booking->vender_fee ?? 0,
+                'vendor_service_share' => $booking->vender_service ?? 0,
+                'govt_levy' => $governmentLevy,
+                'bima_amount' => $bimaAmount,
             ]);
+
+            Session::forget('booking');
+            Session::forget('cancel');
+            $key = new FunctionsController();
+            $key->delete_key($booking);
 
             return response()->json(['status' => 'success']);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Airtel callback settlement failed: ' . $e->getMessage());
+            Log::error('Airtel callback settlement failed: ' . $e->getMessage(), [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 400);
         }
     }

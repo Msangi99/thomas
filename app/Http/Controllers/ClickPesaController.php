@@ -524,56 +524,7 @@ class ClickPesaController extends Controller
 
                 $vender = Session::get('vender') ?? '';
 
-                $booking1 = session()->get('booking1');
-                $booking2 = session()->get('booking2');
-
-                // Handle round trip bookings
-                if (!is_null($booking1) && !is_null($booking2)) {
-                    $round = new RoundpaymentController();
-                    $code1 = $booking1->booking_code ?? 'N/A';
-                    $code2 = $booking2->booking_code ?? 'N/A';
-
-                    try {
-                        $data1 = $round->roundtrip($reference, $reference, $verifyResponse, $code1);
-                        $data2 = $round->roundtrip($reference, $reference, $verifyResponse, $code2);
-
-                        if (is_array($data1) && isset($data1['errorMessage'])) {
-                            session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
-                            return view('clickpesa.error', [
-                                'message' => $data1['errorMessage'] ?? __('all.booking_not_found'),
-                                'reference' => $reference
-                            ]);
-                        }
-                        if (is_array($data2) && isset($data2['errorMessage'])) {
-                            session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
-                            return view('clickpesa.error', [
-                                'message' => $data2['errorMessage'] ?? __('all.booking_not_found'),
-                                'reference' => $reference
-                            ]);
-                        }
-
-                        // Clear round trip session data after successful processing
-                        session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
-
-                        $red = new RedirectController();
-                        return $red->showRoundTripBookingStatus($data1, $data2);
-                    } catch (\Exception $e) {
-                        Log::error('Round trip payment processing failed', [
-                            'error' => $e->getMessage(),
-                            'booking1_code' => $code1,
-                            'booking2_code' => $code2,
-                            'reference' => $reference
-                        ]);
-
-                        session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
-
-                        return view('clickpesa.error', [
-                            'message' => __('all.round_trip_payment_process_failed', ['error' => $e->getMessage()]),
-                            'reference' => $reference
-                        ]);
-                    }
-
-                } else if (!$vender) {
+                if (!$vender) {
                     return $this->processSuccessfulPayment($reference, $request->merchant_reference, $verifyResponse);
                 } else {
                     Session::forget('vender');
@@ -1560,8 +1511,8 @@ class ClickPesaController extends Controller
             $code2 = $booking2->booking_code ?? 'N/A';
 
             try {
-                $data1 = $round->roundtrip($transToken, $transToken, $verifyResponse, $code1);
-                $data2 = $round->roundtrip($transToken, $transToken, $verifyResponse, $code2);
+                $data1 = $round->roundtrip($transToken, $transToken, $verifyResponse, $code1, 'clickpesa');
+                $data2 = $round->roundtrip($transToken, $transToken, $verifyResponse, $code2, 'clickpesa');
 
                 if (is_array($data1) && isset($data1['errorMessage'])) {
                     session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
