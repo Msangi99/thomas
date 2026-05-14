@@ -35,8 +35,17 @@ class BookingSettlementService
         }
 
         $bus = Bus::with(['busname', 'route', 'campany.balance'])->find($booking->bus_id);
-        if (!$bus || !$bus->campany || !$bus->campany->balance) {
+        if (!$bus || !$bus->campany) {
             throw new \RuntimeException('Bus/company data not found for settlement');
+        }
+
+        if (!$bus->campany->balance) {
+            $bus->campany->balance()->create([
+                'campany_id' => $bus->campany->id,
+                'amount' => 0,
+                'fees' => 0,
+            ]);
+            $bus->campany->load('balance');
         }
 
         $setting = Setting::first();
