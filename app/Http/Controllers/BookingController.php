@@ -442,7 +442,7 @@ class BookingController extends Controller
         $ins = 0;
         $dis = 0;
         $setting = Setting::first();
-        if (session()->get('booking_form')['bima'] == 1) {
+        if ((session()->get('booking_form')['bima'] ?? 0) == 1) {
 
             if ($request->type == 'local') {
                 $ins = $setting->local;
@@ -563,15 +563,15 @@ class BookingController extends Controller
             return redirect()->route('home')->with('error', 'Session expired. Please try again.');
         }
         $bookingForm = session()->get('booking_form');
-        $bima = session()->get('booking_form')['bima'];
+        $bima = $bookingForm['bima'] ?? 0;
         $xcode = $this->generateRandomId();
         $data = [
-            'account' => session()->get('booking_form')['customer_payment_number'],
+            'account' => $bookingForm['customer_payment_number'],
             'countryCode' => '255',
             'country' => 'TZA',
-            'firstName' => session()->get('booking_form')['customer_name'],
+            'firstName' => $bookingForm['customer_name'],
             'lastName' => '',
-            'email' => session()->get('booking_form')['customer_email'],
+            'email' => $bookingForm['customer_email'],
             'currency' => 'TZS',
             'amount' => round($amount),
             'transactionRefId' => $xcode,
@@ -607,16 +607,16 @@ class BookingController extends Controller
             'customer_phone' => session()->get('booking_form')['customer_number'],
             'customer_name' => session()->get('booking_form')['customer_name'],
             'customer_email' => session()->get('booking_form')['customer_email'],
-            'bima' => session()->get('booking_form')['bima'],
-            'insuranceDate' => session()->get('booking_form')['insuranceDate'],
+            'bima' => $bookingForm['bima'] ?? 0,
+            'insuranceDate' => $bookingForm['insuranceDate'] ?? null,
             'vender_id' => $pop,
-            'discount' => session()->get('booking_form')['discount'],
-            'discount_amount' => session()->get('booking_form')['discount_amount'],
-            'distance' => session()->get('booking_form')['route_distance'],
-            'busFee' => session()->get('booking_form')['dispo'] ?? session()->get('booking_form')['total_amount'],
-            'schedule_id' => session()->get('booking_form')['schedule_id'],
-            'cancel_key' => session()->get('booking_form')['cancel_key'],
-            'excess_luggage' => session()->get('booking_form')['excess_luggage'], // Add excess luggage
+            'discount' => $bookingForm['discount'] ?? '',
+            'discount_amount' => $bookingForm['discount_amount'] ?? 0,
+            'distance' => $bookingForm['route_distance'] ?? null,
+            'busFee' => $bookingForm['dispo'] ?? $bookingForm['total_amount'],
+            'schedule_id' => $bookingForm['schedule_id'],
+            'cancel_key' => $bookingForm['cancel_key'] ?? null,
+            'excess_luggage' => $bookingForm['excess_luggage'] ?? 0,
             'excess_luggage_description' => session()->get('booking_form')['excess_luggage_description'], // Add excess luggage description
         ];
 
