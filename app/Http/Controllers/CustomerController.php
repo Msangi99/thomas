@@ -183,7 +183,6 @@ class CustomerController extends Controller
     public function booking_form($id, $from, $to)
     {
 
-        $date = session()->get('departure_date');
         $car = Bus::with([
             'busname',
             'route',
@@ -192,6 +191,14 @@ class CustomerController extends Controller
             },
             'route.points'
         ])->find($id);
+
+        if ($car === null || $car->route === null || $car->schedule === null) {
+            return redirect()->route('customer.mybooking.search')->with(
+                'error',
+                'This trip is not available. Please run a new search and try again.'
+            );
+        }
+
         $time = [
             'start' => $car->route->route_start,
             'end' => $car->route->route_end,
@@ -207,11 +214,11 @@ class CustomerController extends Controller
         //$filteredPoints = $car->route->points;
 
         if ($car->route->from == $car->schedule->from) {
-            $filteredPoints = $car->route->points->filter(function ($point) use ($car) {
+            $filteredPoints = $car->route->points->filter(function ($point) {
                 return $point->state === 'no';
             });
         } else {
-            $filteredPoints = $car->route->points->filter(function ($point) use ($car) {
+            $filteredPoints = $car->route->points->filter(function ($point) {
                 return $point->state === 'yes';
             });
         }

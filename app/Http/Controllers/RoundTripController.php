@@ -335,7 +335,6 @@ class RoundTripController extends Controller
 
     public function booking_form($id, $from, $to)
     {
-        $date = session()->get('departure_date');
         $car = Bus::with([
             'busname',
             'route',
@@ -345,9 +344,16 @@ class RoundTripController extends Controller
             'route.points'
         ])->find($id);
 
+        if ($car === null || $car->route === null || $car->schedule === null) {
+            return redirect()->route('round.trip')->with(
+                'error',
+                'This trip is not available. Please run a new search and try again.'
+            );
+        }
+
         $time = [
-            'start' => optional($car->schedule)->start ?? optional($car->route)->route_start,
-            'end'   => optional($car->schedule)->end ?? optional($car->route)->route_end,
+            'start' => $car->schedule->start ?? $car->route->route_start,
+            'end'   => $car->schedule->end ?? $car->route->route_end,
         ];
 
         session()->put('time', $time);
@@ -358,11 +364,11 @@ class RoundTripController extends Controller
         //$filteredPoints = $car->route->points;
 
         if ($car->route->from == $car->schedule->from) {
-            $filteredPoints = $car->route->points->filter(function ($point) use ($car) {
+            $filteredPoints = $car->route->points->filter(function ($point) {
                 return $point->state === 'no';
             });
         } else {
-            $filteredPoints = $car->route->points->filter(function ($point) use ($car) {
+            $filteredPoints = $car->route->points->filter(function ($point) {
                 return $point->state === 'yes';
             });
         }

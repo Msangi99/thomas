@@ -350,6 +350,14 @@ class VenderController extends Controller
             },
             'route.points'
         ])->find($id);
+
+        if ($car === null || $car->route === null || $car->schedule === null) {
+            return redirect()->route('vender.route')->with(
+                'error',
+                'This trip is not available. Please run a new search and try again.'
+            );
+        }
+
         $time = [
             'start' => $car->route->route_start,
             'end' => $car->route->route_end,
@@ -361,7 +369,7 @@ class VenderController extends Controller
         $filteredPoints = collect();
 
         // Post-process the points if route and schedule exist
-        if ($car && $car->route && $car->schedule && $car->schedule->schedule_date === $date) {
+        if ($car->schedule->schedule_date === $date) {
             $route = $car->route;
             $schedule = $car->schedule;
 
