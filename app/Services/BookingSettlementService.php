@@ -10,12 +10,9 @@ use App\Models\GovernmentLevy;
 use App\Models\PaymentFees;
 use App\Models\Setting;
 use App\Models\SystemBalance;
-<<<<<<< Updated upstream
+use App\Models\VenderBalance;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
-=======
-use App\Models\VenderBalance;
->>>>>>> Stashed changes
 
 class BookingSettlementService
 {
