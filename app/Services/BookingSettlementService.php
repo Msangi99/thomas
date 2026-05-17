@@ -10,8 +10,12 @@ use App\Models\GovernmentLevy;
 use App\Models\PaymentFees;
 use App\Models\Setting;
 use App\Models\SystemBalance;
+<<<<<<< Updated upstream
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+=======
+use App\Models\VenderBalance;
+>>>>>>> Stashed changes
 
 class BookingSettlementService
 {
@@ -60,9 +64,12 @@ class BookingSettlementService
             auth()->user()->temp_wallets->save();
         }
 
+        $booking->loadMissing(['vender.VenderAccount', 'vender.VenderBalances']);
+
+        $vendor = $booking->vender_id > 0 ? $booking->vender : null;
         $vendorPct = null;
-        if ($booking->vender_id > 0 && $booking->vender && $booking->vender->VenderAccount) {
-            $vendorPct = (float) ($booking->vender->VenderAccount->percentage ?? 0);
+        if ($vendor && $vendor->VenderAccount) {
+            $vendorPct = (float) ($vendor->VenderAccount->percentage ?? 0);
         }
 
         $result = $this->formulaService->calculateSettlement(
@@ -80,10 +87,17 @@ class BookingSettlementService
         $vendorFee = 0.0;
         $vendorService = 0.0;
 
-        if ($booking->vender_id > 0 && $booking->vender && $booking->vender->VenderBalances) {
+        if ($vendor) {
             $vendorFee = (float) $result['commission_to_vendor'];
             $vendorService = (float) $result['service_fees_to_vendor'];
-            $booking->vender->VenderBalances->increment('amount', $vendorFee + $vendorService);
+            $vendorBalance = $vendor->VenderBalances ?: VenderBalance::firstOrCreate(
+                ['user_id' => $vendor->id],
+                ['amount' => 0]
+            );
+            if ($vendorBalance->amount === null) {
+                $vendorBalance->forceFill(['amount' => 0])->save();
+            }
+            $vendorBalance->increment('amount', $vendorFee + $vendorService);
             $systemBalanceAmount = max(0, $systemBalanceAmount - $vendorFee);
         }
 
