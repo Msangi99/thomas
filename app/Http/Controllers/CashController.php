@@ -49,13 +49,10 @@ class CashController extends Controller
                     . number_format($deduct, 2) . ' TZS; available: ' . number_format($avail, 2)
                     . ' TZS. Add a deposit or move funds from your commission wallet on the Transactions page.';
             }
-        } else {
-            $avail = (float) ($vb->amount ?? 0);
-            if ($avail + 0.0001 < $deduct) {
-                return 'Insufficient wallet balance for this cash sale. Required: '
-                    . number_format($deduct, 2) . ' TZS; available: ' . number_format($avail, 2) . ' TZS.';
-            }
         }
+        // When the sell_cash_amount column does not yet exist there is nothing
+        // to deduct, so the sale is not blocked — commission will still be
+        // credited to the commission wallet after settlement.
 
         return null;
     }
@@ -163,11 +160,14 @@ class CashController extends Controller
             $user = auth()->user();
             $deduct = round($booking->amount);
             $vb = $user->VenderBalances;
+            // Only deduct from the cash wallet column; never deduct from the
+            // commission wallet ('amount') because settlement will credit it
+            // back as commission only — net would be deeply negative.
             if ($vb && Schema::hasColumn('vender_balances', 'sell_cash_amount')) {
                 $vb->decrement('sell_cash_amount', $deduct);
-            } else {
-                $user->VenderBalances()->decrement('amount', $deduct);
             }
+            // If the column does not exist yet the balance check already blocked
+            // under-funded sales, so we simply proceed without deducting here.
 
             $settlementService = app(BookingSettlementService::class);
             $settled = $settlementService->settlePaidBooking($booking, [

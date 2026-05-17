@@ -63,13 +63,17 @@ class FareFormulaService
     }
 
     /**
-     * Traveller-facing service fee: % applied directly to full fare + fixed adding.
+     * Traveller-facing service fee: % applied on levy-exclusive fare + fixed adding.
+     *
+     * Government levy (5 %) is stripped first so the service fee is consistent
+     * with the settlement formula which also uses the levy-exclusive base.
      */
     public function calculateTravellerServiceFee(float $typeFare, ?Setting $setting): float
     {
         $rates = $this->resolveRates($setting);
+        $levyExclusiveFare = $typeFare * (1 - $rates['government_levy_percent'] / 100);
 
-        return ($typeFare * ($rates['service_percent'] / 100)) + $rates['service_adding'];
+        return ($levyExclusiveFare * ($rates['service_percent'] / 100)) + $rates['service_adding'];
     }
 
     public function calculateTravellerTotal(array $input, ?Setting $setting): array
