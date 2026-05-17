@@ -223,14 +223,15 @@ class CashController extends Controller
             // -----------------------
 
             Log::info('Cash Payment processed successfully', [
-                'booking_id' => $booking->id,
-                'company_id' => $bus->campany->id,
+                'booking_id'           => $booking->id,
+                'vender_id'            => $booking->vender_id,
+                'company_id'           => $bus->campany->id,
                 'company_balance_increment' => $busOwnerAmount,
-                'system_balance' => $systemBalanceAmount,
-                'payment_fees' => $paymentFeesAmount,
-                'vendor_fee_share' => $booking->vender_fee ?? 0,
+                'system_balance'       => $systemBalanceAmount,
+                'payment_fees'         => $paymentFeesAmount,
+                'vendor_fee_share'     => $booking->vender_fee ?? 0,
                 'vendor_service_share' => $booking->vender_service ?? 0,
-                'bima_amount' => $bimaAmount,
+                'bima_amount'          => $bimaAmount,
             ]);
 
             Session::forget('booking');
