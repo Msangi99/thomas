@@ -77,28 +77,27 @@ class FareFormulaServiceTest extends TestCase
         $this->assertEquals(100.0, $result['system_commission_total']);
     }
 
-    public function test_traveller_service_fee_uses_levy_exclusive_base(): void
+    public function test_traveller_service_fee_uses_displayed_seat_fare(): void
     {
         $service = new FareFormulaService();
         $setting = new Setting();
         $setting->service_percentage = 2;
         $setting->service = 100;
 
-        // Sheet B38: type fare 1000 levy-inclusive → 950 levy-exclusive; 2% + 100 = 119
+        // Seat price 1000: 2% + 100 = 120 → payable 1120 with fare
         $fee = $service->calculateTravellerServiceFee(1000.0, $setting);
-        $this->assertEquals(119.0, $fee);
+        $this->assertEquals(120.0, $fee);
     }
 
-    public function test_traveller_service_fee_matches_sheet_example_two_thousand_total(): void
+    public function test_traveller_service_fee_scales_with_total_bus_fare(): void
     {
         $service = new FareFormulaService();
         $setting = new Setting();
         $setting->service_percentage = 2;
         $setting->service = 100;
 
-        // Sheet B13=2000 levy-inclusive → B14=1900; B38 = (1900*2%)+100 = 138
         $fee = $service->calculateTravellerServiceFee(2000.0, $setting);
-        $this->assertEquals(138.0, $fee);
+        $this->assertEquals(140.0, $fee);
     }
 
     public function test_admin_service_fees_match_sheet_b16_with_two_seats(): void

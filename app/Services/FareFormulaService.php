@@ -11,7 +11,7 @@ use App\Models\Setting;
  *   The adding figure is {@see \App\Models\Campany::$commission_amount} (admin: company row "Amount" next to "%").
  * - System commission (admin, cell B15): (levy-inclusive bus fare × commission %) × seats + commission adding.
  * - Service fees (admin / settlement, cell B16): (levy-inclusive bus fare × service fee %) × seats + service adding.
- * - Traveller service fee (system calculator, cell B38): (levy-exclusive bus fare × service fee %) + service adding.
+ * - Traveller service fee (checkout): (seat / type fare shown to customer × service fee %) + service adding.
  * - Government levy on service fee (cell B23): 5% of admin service fees.
  * - Rates may be stored as decimals (0.05 = 5%) or whole percents (5 = 5%).
  */
@@ -65,21 +65,18 @@ class FareFormulaService
     }
 
     /**
-     * Traveller-facing service fee (Sheet1 B38): (levy-exclusive fare × service %) + service adding.
+     * Traveller-facing service fee at checkout: (displayed bus fare × service %) + service adding.
      *
-     * Government levy (5%) is stripped first per spreadsheet cell B14 (fare minus B21).
+     * Uses the seat price the customer sees (Type Fare), e.g. 1,000 × 2% + 100 = 120 → total 1,120.
+     * Government levy on fare is handled in admin settlement, not deducted again here.
      *
-     * @param  float  $typeFareLevyInclusive  Total bus fare including 5% government levy on fare
+     * @param  float  $typeFare  Total bus fare for selected seat(s) as shown in booking
      */
-    public function calculateTravellerServiceFee(float $typeFareLevyInclusive, ?Setting $setting): float
+    public function calculateTravellerServiceFee(float $typeFare, ?Setting $setting): float
     {
         $rates = $this->resolveRates($setting);
-        $levyExclusiveFare = $this->levyExclusiveFromInclusive(
-            $typeFareLevyInclusive,
-            $rates['government_levy_percent']
-        );
 
-        return ($levyExclusiveFare * ($rates['service_percent'] / 100)) + $rates['service_adding'];
+        return ($typeFare * ($rates['service_percent'] / 100)) + $rates['service_adding'];
     }
 
     public function calculateTravellerTotal(array $input, ?Setting $setting): array
