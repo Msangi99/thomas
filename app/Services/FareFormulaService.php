@@ -5,12 +5,14 @@ namespace App\Services;
 use App\Models\Setting;
 
 /**
- * Bus fare, service fee, and settlement math aligned with "New Formular Update (Thomas).xlsx" (Sheet1).
+ * Bus fare, service fee, and settlement math aligned with "Updated formular (1).xlsx" (Sheet1).
  *
  * - System commission: (bus fare levy-inclusive × system commission %) + system commission adding figure.
  *   The adding figure is {@see \App\Models\Campany::$commission_amount} (admin: company row "Amount" next to "%").
- * - Service fees (settlement): (bus fare levy-inclusive × service fee %) + service adding (settings).
- * - Traveller service fee (calculator): percent on levy-exclusive bus fare (after 5% government levy on fare) + service adding.
+ * - System commission (admin, cell B15): (levy-inclusive bus fare × commission %) × seats + commission adding.
+ * - Service fees (admin / settlement, cell B16): (levy-inclusive bus fare × service fee %) × seats + service adding.
+ * - Traveller service fee (system calculator, cell B38): (levy-exclusive bus fare × service fee %) + service adding.
+ * - Government levy on service fee (cell B23): 5% of admin service fees.
  * - Rates may be stored as decimals (0.05 = 5%) or whole percents (5 = 5%).
  */
 class FareFormulaService
@@ -63,13 +65,19 @@ class FareFormulaService
     }
 
     /**
-     * Traveller-facing service fee: % applied directly to full fare + fixed adding.
+     * Traveller-facing service fee (Sheet1 B38): (levy-exclusive fare × service %) + service adding.
+     *
+     * @param  float  $typeFareLevyInclusive  Total bus fare including 5% government levy on fare
      */
-    public function calculateTravellerServiceFee(float $typeFare, ?Setting $setting): float
+    public function calculateTravellerServiceFee(float $typeFareLevyInclusive, ?Setting $setting): float
     {
         $rates = $this->resolveRates($setting);
+        $levyExclusiveFare = $this->levyExclusiveFromInclusive(
+            $typeFareLevyInclusive,
+            $rates['government_levy_percent']
+        );
 
-        return ($typeFare * ($rates['service_percent'] / 100)) + $rates['service_adding'];
+        return ($levyExclusiveFare * ($rates['service_percent'] / 100)) + $rates['service_adding'];
     }
 
     public function calculateTravellerTotal(array $input, ?Setting $setting): array
@@ -104,17 +112,24 @@ class FareFormulaService
         float $cancelAmount,
         ?Setting $setting,
         $company = null,
-        ?float $vendorPercentage = null
+        ?float $vendorPercentage = null,
+        ?int $seatCount = null
     ): array {
         $rates = $this->resolveRates($setting, $company, $vendorPercentage);
         $governmentLevyOnFare = $busFareLevyInclusive * ($rates['government_levy_percent'] / 100);
-        $levyExclusiveFare = $busFareLevyInclusive - $governmentLevyOnFare;
+        $levyExclusiveFare = $this->levyExclusiveFromInclusive(
+            $busFareLevyInclusive,
+            $rates['government_levy_percent']
+        );
 
-        // Sheet ADMIN: system commission & service fees use levy-inclusive bus fare as % base.
-        $systemCommissionTotal = ($busFareLevyInclusive * ($rates['commission_percent'] / 100))
+        $seats = max(1, $seatCount ?? 1);
+
+        // Sheet ADMIN (B15, B16): levy-inclusive total × rate × seats + adding figure.
+        $systemCommissionTotal = ($busFareLevyInclusive * ($rates['commission_percent'] / 100)) * $seats
             + $rates['commission_adding'];
 
-        $serviceFees = ($busFareLevyInclusive * ($rates['service_percent'] / 100)) + $rates['service_adding'];
+        $serviceFees = ($busFareLevyInclusive * ($rates['service_percent'] / 100)) * $seats
+            + $rates['service_adding'];
         $governmentLevyOnServiceFee = $serviceFees * ($rates['government_levy_percent'] / 100);
         $totalGovernmentLevies = $governmentLevyOnFare + $governmentLevyOnServiceFee;
 
@@ -149,6 +164,16 @@ class FareFormulaService
             'highlink_share_vendor_ticket' => $systemCommissionRemainder + $servicePoolAfterVendor,
             'bima_amount' => $bimaAmount,
         ];
+    }
+
+    /**
+     * Levy-exclusive fare (cell B14): levy-inclusive total minus government levy on fare (B21).
+     */
+    private function levyExclusiveFromInclusive(float $levyInclusive, float $governmentLevyPercent): float
+    {
+        $governmentLevyOnFare = $levyInclusive * ($governmentLevyPercent / 100);
+
+        return $levyInclusive - $governmentLevyOnFare;
     }
 
     private function fallbackPositive($value, float $fallback): float

@@ -17,6 +17,7 @@
     @php
         $ok = session('command_ok');
         $err = session('command_err');
+        $log = session('log_output');
     @endphp
     @if($ok)
         <div class="rounded-xl border border-emerald-200 bg-emerald-50/90 p-4 shadow-sm" role="status">
@@ -28,6 +29,12 @@
         <div class="rounded-xl border border-red-200 bg-red-50/90 p-4 shadow-sm" role="alert">
             <p class="text-sm font-semibold text-red-900">Failed (exit {{ $err['exit_code'] }})</p>
             <pre class="mt-2 text-xs text-red-950 bg-white/80 border border-red-100 rounded-lg p-3 overflow-x-auto whitespace-pre-wrap font-mono">{{ $err['output'] ?: '—' }}</pre>
+        </div>
+    @endif
+    @if($log)
+        <div class="rounded-xl border {{ $log['error'] ? 'border-amber-200 bg-amber-50/90' : 'border-slate-200 bg-slate-50/90' }} p-4 shadow-sm" role="status">
+            <p class="text-sm font-semibold {{ $log['error'] ? 'text-amber-900' : 'text-slate-900' }}">Laravel log (storage/logs/laravel.log)</p>
+            <pre class="mt-2 text-xs {{ $log['error'] ? 'text-amber-950 bg-white/80 border-amber-100' : 'text-slate-950 bg-white/80 border-slate-100' }} border rounded-lg p-3 overflow-x-auto whitespace-pre-wrap font-mono max-h-[32rem] overflow-y-auto">{{ $log['output'] ?: '— (empty)' }}</pre>
         </div>
     @endif
 
@@ -94,6 +101,21 @@
             </div>
         </section>
     </div>
+
+    <section class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/80">
+            <h2 class="text-lg font-semibold text-slate-900">Application log</h2>
+            <p class="text-xs text-slate-600 mt-0.5">Last portion of <code class="bg-slate-100 px-1 rounded">storage/logs/laravel.log</code> (up to 500 lines).</p>
+        </div>
+        <div class="p-5">
+            <form action="{{ route('system.commands.log') }}" method="post">
+                @csrf
+                <button type="submit" class="inline-flex items-center px-4 py-2.5 rounded-lg bg-slate-800 text-white text-sm font-medium shadow-sm hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2">
+                    Read Laravel log
+                </button>
+            </form>
+        </div>
+    </section>
 
     <section class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">

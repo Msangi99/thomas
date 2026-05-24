@@ -97,19 +97,16 @@
                                 $insuranceAmount = (float) ($data->bima_amount ?? 0);
                                 $storedCustomerTotal = (float) ($data->customer_paid_total ?? 0);
 
-                                // Preferred: traveler-facing fee from canonical settlement fields.
-                                // system_service_fee stores ADMIN service fee; traveler pays +5% levy on that fee.
-                                $systemServiceFee = (float) ($data->system_service_fee ?? 0);
-                                $travelerServiceFee = $systemServiceFee > 0
-                                    ? ($systemServiceFee + ($systemServiceFee * 0.05))
-                                    : 0;
+                                // Traveller service fee (sheet B38): % on levy-exclusive bus fare + adding.
+                                $travelerServiceFee = app(\App\Services\FareFormulaService::class)
+                                    ->calculateTravellerServiceFee($ticketFee, \App\Models\Setting::first());
 
-                                // Backward-compatible fallback for old rows where canonical fields were not populated.
+                                // Backward-compatible fallback for old rows where busFee is missing.
                                 $legacyServiceFee = (float) ($data->service ?? 0)
                                     + (float) ($data->vender_service ?? 0)
                                     + (float) ($data->service_vat ?? 0);
 
-                                $displayServiceFee = $travelerServiceFee > 0 ? $travelerServiceFee : $legacyServiceFee;
+                                $displayServiceFee = $ticketFee > 0 ? $travelerServiceFee : $legacyServiceFee;
                                 $computedTotal = $ticketFee + $displayServiceFee + $insuranceAmount;
 
                                 // Use amount actually charged at checkout/gateway (matches wallet / receipt).

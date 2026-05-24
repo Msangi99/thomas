@@ -82,6 +82,62 @@ class ArtisanCommandsController extends Controller
         return $this->respond($request, $result['exit_code'] === 0, $result['exit_code'], $result['output']);
     }
 
+    public function readLog(Request $request)
+    {
+        $path = storage_path('logs/laravel.log');
+
+        if (! is_file($path)) {
+            return redirect()
+                ->route('system.commands')
+                ->with('log_output', [
+                    'error' => true,
+                    'output' => 'Log file not found at storage/logs/laravel.log',
+                ]);
+        }
+
+        return redirect()
+            ->route('system.commands')
+            ->with('log_output', [
+                'error' => false,
+                'output' => $this->tailLogFile($path),
+            ]);
+    }
+
+    private function tailLogFile(string $path, int $maxLines = 500, int $maxBytes = 524288): string
+    {
+        $size = filesize($path);
+        if ($size === false || $size === 0) {
+            return '';
+        }
+
+        $readBytes = (int) min($size, $maxBytes);
+        $handle = fopen($path, 'rb');
+        if ($handle === false) {
+            return '';
+        }
+
+        if ($readBytes < $size) {
+            fseek($handle, -$readBytes, SEEK_END);
+        }
+
+        $chunk = fread($handle, $readBytes);
+        fclose($handle);
+
+        if ($chunk === false || $chunk === '') {
+            return '';
+        }
+
+        $lines = explode("\n", $chunk);
+        if (count($lines) > $maxLines) {
+            $lines = array_slice($lines, -$maxLines);
+            array_unshift($lines, '… (truncated — showing last '.$maxLines.' lines) …');
+        } elseif ($readBytes < $size) {
+            array_unshift($lines, '… (truncated — showing last '.number_format($readBytes).' bytes) …');
+        }
+
+        return implode("\n", $lines);
+    }
+
     /**
      * @param  array<string, mixed>  $params
      * @return array{exit_code: int, output: string}

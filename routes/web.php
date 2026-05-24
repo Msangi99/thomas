@@ -429,6 +429,7 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/commands', [ArtisanCommandsController::class, 'index'])->name('system.commands');
         Route::post('/commands/run', [ArtisanCommandsController::class, 'run'])->name('system.commands.run');
+        Route::post('/commands/log', [ArtisanCommandsController::class, 'readLog'])->name('system.commands.log');
     });
 
     Route::prefix('vender')->middleware(['role:vender', '2fa', 'vendor.enabled'])->group(function () {

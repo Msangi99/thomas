@@ -72,7 +72,8 @@ class BookingSettlementService
             $cancelAmount,
             $setting,
             $bus->campany,
-            $vendorPct
+            $vendorPct,
+            $this->countBookingSeats($booking->seat)
         );
 
         $systemBalanceAmount = (float) $result['system_commission_total'];
@@ -149,6 +150,17 @@ class BookingSettlementService
             'vendor_service_share' => $vendorService,
             'government_levy' => (float) $result['government_levy_on_fare'],
         ];
+    }
+
+    private function countBookingSeats(?string $seat): int
+    {
+        if ($seat === null || trim($seat) === '') {
+            return 1;
+        }
+
+        $seats = array_filter(array_map('trim', explode(',', $seat)));
+
+        return max(1, count($seats));
     }
 
     private function transactionMeta(array $meta): array
