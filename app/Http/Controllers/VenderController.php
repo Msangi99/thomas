@@ -814,6 +814,7 @@ class VenderController extends Controller
         } elseif ($method == 'clickpesa') {
             try {
                 $clickpesa = new ClickPesaController();
+                Session::forget(['vender', 'amount']);
                 Session::put('booking', $booking);
                 // Use the same initiatePayment method that works correctly for customers
                 return $clickpesa->initiatePayment(

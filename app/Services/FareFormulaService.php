@@ -67,6 +67,8 @@ class FareFormulaService
     /**
      * Traveller-facing service fee (Sheet1 B38): (levy-exclusive fare × service %) + service adding.
      *
+     * Government levy (5%) is stripped first per spreadsheet cell B14 (fare minus B21).
+     *
      * @param  float  $typeFareLevyInclusive  Total bus fare including 5% government levy on fare
      */
     public function calculateTravellerServiceFee(float $typeFareLevyInclusive, ?Setting $setting): float

@@ -10,6 +10,7 @@ use App\Models\GovernmentLevy;
 use App\Models\PaymentFees;
 use App\Models\Setting;
 use App\Models\SystemBalance;
+use App\Models\VenderBalance;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
@@ -21,6 +22,17 @@ class BookingSettlementService
 
     public function settlePaidBooking(Booking $booking, array $meta = []): array
     {
+        // ── Diagnostic: confirm this version of the code is running ──────────
+        Log::warning('Settlement: settlePaidBooking START', [
+            'booking_id'     => $booking->id,
+            'booking_code'   => $booking->booking_code,
+            'vender_id_raw'  => $booking->vender_id,
+            'vender_id_gt0'  => ($booking->vender_id > 0),
+            'payment_method' => $meta['payment_method'] ?? 'unknown',
+            'amount'         => $booking->amount,
+            'busFee'         => $booking->busFee,
+        ]);
+
         $adminWallet = AdminWallet::find(1);
         if (!$adminWallet) {
             $adminWallet = AdminWallet::query()->first();
@@ -60,9 +72,47 @@ class BookingSettlementService
             auth()->user()->temp_wallets->save();
         }
 
-        $vendorPct = null;
-        if ($booking->vender_id > 0 && $booking->vender && $booking->vender->VenderAccount) {
-            $vendorPct = (float) ($booking->vender->VenderAccount->percentage ?? 0);
+        $booking->loadMissing(['vender.VenderAccount', 'vender.VenderBalances']);
+
+        // ── Vendor resolution ────────────────────────────────────────────────
+        // $vendorPct = null  → no vendor on this booking → formula gives 0 %.
+        // $vendorPct = 0.0   → vendor exists but no percentage row → formula
+        //                       applies the 10 % default via fallbackPositive.
+        $vendor = $booking->vender_id > 0 ? $booking->vender : null;
+
+        if ($booking->vender_id > 0 && $vendor === null) {
+            Log::warning('Settlement: vender_id set but User record not found — commission skipped', [
+                'booking_id'  => $booking->id,
+                'vender_id'   => $booking->vender_id,
+                'reason'      => 'User row missing or soft-deleted',
+            ]);
+        }
+
+        // When a vendor is present, start at 0.0 so the formula falls back to
+        // the 10 % default if no VenderAccount row exists.  Passing null would
+        // tell the formula "no vendor" and produce 0 % commission.
+        $vendorPct = $vendor ? 0.0 : null;
+
+        if ($vendor) {
+            if ($vendor->VenderAccount) {
+                $vendorPct = (float) ($vendor->VenderAccount->percentage ?? 0);
+                Log::info('Settlement: vendor percentage from VenderAccount', [
+                    'booking_id' => $booking->id,
+                    'vender_id'  => $vendor->id,
+                    'percentage' => $vendorPct,
+                ]);
+            } else {
+                Log::warning('Settlement: vendor has no VenderAccount row — using default 10 % commission', [
+                    'booking_id' => $booking->id,
+                    'vender_id'  => $vendor->id,
+                    'reason'     => 'No vender_account row for this user; fallbackPositive will apply 10 %',
+                ]);
+            }
+        } else {
+            Log::info('Settlement: no vendor on this booking — vendor commission is 0', [
+                'booking_id' => $booking->id,
+                'vender_id'  => $booking->vender_id,
+            ]);
         }
 
         $result = $this->formulaService->calculateSettlement(
@@ -76,15 +126,67 @@ class BookingSettlementService
             $this->countBookingSeats($booking->seat)
         );
 
+        Log::info('Settlement: formula result', [
+            'booking_id'             => $booking->id,
+            'total_fare'             => $totalFare,
+            'bus_fare'               => $busFare,
+            'vendor_percent_used'    => $result['rates']['vendor_percent'],
+            'commission_to_vendor'   => $result['commission_to_vendor'],
+            'service_fees_to_vendor' => $result['service_fees_to_vendor'],
+            'system_commission'      => $result['system_commission_total'],
+            'bus_owner_share'        => $result['bus_owner_share'],
+        ]);
+
         $systemBalanceAmount = (float) $result['system_commission_total'];
         $paymentFeesAmount = (float) $result['service_pool_after_vendor'];
         $vendorFee = 0.0;
         $vendorService = 0.0;
 
-        if ($booking->vender_id > 0 && $booking->vender && $booking->vender->VenderBalances) {
-            $vendorFee = (float) $result['commission_to_vendor'];
+        if ($vendor) {
+            $vendorFee    = (float) $result['commission_to_vendor'];
             $vendorService = (float) $result['service_fees_to_vendor'];
-            $booking->vender->VenderBalances->increment('amount', $vendorFee + $vendorService);
+
+            if (($vendorFee + $vendorService) <= 0) {
+                Log::warning('Settlement: vendor commission resolved to zero — check formula rates', [
+                    'booking_id'           => $booking->id,
+                    'vender_id'            => $vendor->id,
+                    'vendor_percent_used'  => $result['rates']['vendor_percent'],
+                    'system_commission'    => $result['system_commission_total'],
+                    'reason'               => 'commission_to_vendor + service_fees_to_vendor = 0; verify FareFormulaService rates',
+                ]);
+            }
+
+            $vendorBalance = $vendor->VenderBalances ?: VenderBalance::firstOrCreate(
+                ['user_id' => $vendor->id],
+                ['amount'  => 0]
+            );
+
+            if ($vendorBalance->wasRecentlyCreated) {
+                Log::info('Settlement: created missing vender_balances row', [
+                    'booking_id' => $booking->id,
+                    'vender_id'  => $vendor->id,
+                ]);
+            }
+
+            if ($vendorBalance->amount === null) {
+                Log::warning('Settlement: vender_balances.amount was NULL — resetting to 0 before increment', [
+                    'booking_id' => $booking->id,
+                    'vender_id'  => $vendor->id,
+                ]);
+                $vendorBalance->forceFill(['amount' => 0])->save();
+            }
+
+            $vendorBalance->increment('amount', $vendorFee + $vendorService);
+
+            Log::info('Settlement: vendor commission credited', [
+                'booking_id'     => $booking->id,
+                'vender_id'      => $vendor->id,
+                'vendor_fee'     => $vendorFee,
+                'vendor_service' => $vendorService,
+                'total_credited' => $vendorFee + $vendorService,
+                'new_balance'    => $vendorBalance->fresh()->amount,
+            ]);
+
             $systemBalanceAmount = max(0, $systemBalanceAmount - $vendorFee);
         }
 
