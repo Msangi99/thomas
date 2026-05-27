@@ -5,14 +5,15 @@ namespace App\Services;
 use App\Models\Setting;
 
 /**
- * Bus fare, service fee, and settlement math aligned with "Updated formular (1).xlsx" (Sheet1).
+ * Bus fare, service fee, and settlement math aligned with "New Formular Update(1).xlsx".
  *
- * - System commission: (bus fare levy-inclusive × system commission %) + system commission adding figure.
- *   The adding figure is {@see \App\Models\Campany::$commission_amount} (admin: company row "Amount" next to "%").
- * - System commission (admin, cell B15): (levy-inclusive bus fare × commission %) × seats + commission adding.
- * - Service fees (admin / settlement, cell B16): (levy-inclusive bus fare × service fee %) × seats + service adding.
- * - Traveller service fee (checkout): (seat / type fare shown to customer × service fee %) + service adding.
- * - Government levy on service fee (cell B23): 5% of admin service fees.
+ * Multi-seat: pass the combined levy-inclusive bus fare (seats × per-seat price). Do not multiply
+ * rates by seat count again — the same rule applies at checkout and in settlement.
+ *
+ * - System commission: (total bus fare levy-inclusive × commission %) + commission adding.
+ * - Service fees (admin / settlement): (total bus fare levy-inclusive × service %) + service adding.
+ * - Traveller service fee (checkout): same as settlement service fees.
+ * - Government levy on service fee: 5% of admin service fees.
  * - Rates may be stored as decimals (0.05 = 5%) or whole percents (5 = 5%).
  */
 class FareFormulaService
@@ -79,6 +80,21 @@ class FareFormulaService
         return ($typeFare * ($rates['service_percent'] / 100)) + $rates['service_adding'];
     }
 
+    /**
+     * Bus fare base for service-fee calculation (uses discounted fare when a coupon was applied).
+     *
+     * @param  array<string, mixed>  $bookingForm
+     */
+    public function busFareForServiceFeeFromBookingForm(array $bookingForm): float
+    {
+        $dispo = (float) ($bookingForm['dispo'] ?? 0);
+        if ($dispo > 0) {
+            return $dispo;
+        }
+
+        return (float) ($bookingForm['total_amount'] ?? 0);
+    }
+
     public function calculateTravellerTotal(array $input, ?Setting $setting): array
     {
         $busFare = (float) ($input['bus_fare'] ?? 0);
@@ -121,14 +137,11 @@ class FareFormulaService
             $rates['government_levy_percent']
         );
 
-        $seats = max(1, $seatCount ?? 1);
-
-        // Sheet ADMIN (B15, B16): levy-inclusive total × rate × seats + adding figure.
-        $systemCommissionTotal = ($busFareLevyInclusive * ($rates['commission_percent'] / 100)) * $seats
+        // Same as traveller checkout: total levy-inclusive bus fare for all seats (no extra × seat count).
+        $systemCommissionTotal = ($busFareLevyInclusive * ($rates['commission_percent'] / 100))
             + $rates['commission_adding'];
 
-        $serviceFees = ($busFareLevyInclusive * ($rates['service_percent'] / 100)) * $seats
-            + $rates['service_adding'];
+        $serviceFees = $this->calculateTravellerServiceFee($busFareLevyInclusive, $setting);
         $governmentLevyOnServiceFee = $serviceFees * ($rates['government_levy_percent'] / 100);
         $totalGovernmentLevies = $governmentLevyOnFare + $governmentLevyOnServiceFee;
 

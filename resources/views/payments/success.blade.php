@@ -97,7 +97,7 @@
                                 $insuranceAmount = (float) ($data->bima_amount ?? 0);
                                 $storedCustomerTotal = (float) ($data->customer_paid_total ?? 0);
 
-                                // Traveller service fee (sheet B38): % on levy-exclusive bus fare + adding.
+                                // Traveller service fee: (total bus fare × %) + adding (multi-seat uses combined busFee).
                                 $travelerServiceFee = app(\App\Services\FareFormulaService::class)
                                     ->calculateTravellerServiceFee($ticketFee, \App\Models\Setting::first());
 

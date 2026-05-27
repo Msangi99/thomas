@@ -523,8 +523,9 @@ class VenderController extends Controller
         $info = session()->get('booking_form');
         $time = session()->get('time');
         $date = session()->get('booking_form')['travel_date'];
-        $fees = app(FareFormulaService::class)->calculateTravellerServiceFee(
-            (float) session()->get('booking_form')['total_amount'],
+        $formulaService = app(FareFormulaService::class);
+        $fees = $formulaService->calculateTravellerServiceFee(
+            $formulaService->busFareForServiceFeeFromBookingForm(session()->get('booking_form', [])),
             $setting
         );
         $distance = session()->get('booking_form')['route_distance'] ?? 0;
@@ -613,11 +614,12 @@ class VenderController extends Controller
 
         Session::put('cancel', $bus_info['cancel_amount']);
 
-        $fees = app(FareFormulaService::class)->calculateTravellerServiceFee(
-            (float) session()->get('booking_form')['total_amount'],
+        $formulaService = app(FareFormulaService::class);
+        $bus_info = session()->get('booking_form', []);
+        $fees = $formulaService->calculateTravellerServiceFee(
+            $formulaService->busFareForServiceFeeFromBookingForm($bus_info),
             $setting
         );
-        $bus_info = session()->get('booking_form', []);
         $bus_info['discount_amount'] = $dis;
         $bus_info['payable_amount'] = round($price + $fees);
         session()->put('booking_form', $bus_info);

@@ -377,8 +377,9 @@ class CustomerController extends Controller
         $info = session()->get('booking_form');
         $time = session()->get('time');
         $date = session()->get('booking_form')['travel_date'];
-        $fees = app(FareFormulaService::class)->calculateTravellerServiceFee(
-            (float) session()->get('booking_form')['total_amount'],
+        $formulaService = app(FareFormulaService::class);
+        $fees = $formulaService->calculateTravellerServiceFee(
+            $formulaService->busFareForServiceFeeFromBookingForm(session()->get('booking_form', [])),
             $setting
         );
 
@@ -479,11 +480,12 @@ class CustomerController extends Controller
             $price = $total_amount + $ins + $excessLuggageFee;
         }
 
-        $fees = app(FareFormulaService::class)->calculateTravellerServiceFee(
-            (float) session()->get('booking_form')['total_amount'],
+        $formulaService = app(FareFormulaService::class);
+        $bus_info = session()->get('booking_form', []);
+        $fees = $formulaService->calculateTravellerServiceFee(
+            $formulaService->busFareForServiceFeeFromBookingForm($bus_info),
             $setting
         );
-        $bus_info = session()->get('booking_form', []);
         $bus_info['discount_amount'] = $dis;
         $bus_info['payable_amount'] = round($price + $fees);
         session()->put('booking_form', $bus_info);
