@@ -378,9 +378,11 @@ class CustomerController extends Controller
         $time = session()->get('time');
         $date = session()->get('booking_form')['travel_date'];
         $formulaService = app(FareFormulaService::class);
+        $bookingForm = session()->get('booking_form', []);
         $fees = $formulaService->calculateTravellerServiceFee(
-            $formulaService->busFareForServiceFeeFromBookingForm(session()->get('booking_form', [])),
-            $setting
+            $formulaService->busFareForServiceFeeFromBookingForm($bookingForm),
+            $setting,
+            $formulaService->seatCountFromBookingForm($bookingForm)
         );
 
         $distance = session()->get('booking_form')['route_distance'] ?? 0;
@@ -484,7 +486,8 @@ class CustomerController extends Controller
         $bus_info = session()->get('booking_form', []);
         $fees = $formulaService->calculateTravellerServiceFee(
             $formulaService->busFareForServiceFeeFromBookingForm($bus_info),
-            $setting
+            $setting,
+            $formulaService->seatCountFromBookingForm($bus_info)
         );
         $bus_info['discount_amount'] = $dis;
         $bus_info['payable_amount'] = round($price + $fees);

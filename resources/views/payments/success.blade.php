@@ -97,9 +97,11 @@
                                 $insuranceAmount = (float) ($data->bima_amount ?? 0);
                                 $storedCustomerTotal = (float) ($data->customer_paid_total ?? 0);
 
-                                // Traveller service fee: (total bus fare × %) + adding (multi-seat uses combined busFee).
-                                $travelerServiceFee = app(\App\Services\FareFormulaService::class)
-                                    ->calculateTravellerServiceFee($ticketFee, \App\Models\Setting::first());
+                                // Traveller service fee: (total bus fare × %) + (adding × seat count).
+                                $fareService = app(\App\Services\FareFormulaService::class);
+                                $seatCountForFee = $fareService->seatCountFromSeatString($data->seat ?? null);
+                                $travelerServiceFee = $fareService
+                                    ->calculateTravellerServiceFee($ticketFee, \App\Models\Setting::first(), $seatCountForFee);
 
                                 // Backward-compatible fallback for old rows where busFee is missing.
                                 $legacyServiceFee = (float) ($data->service ?? 0)

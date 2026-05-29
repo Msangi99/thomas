@@ -204,8 +204,10 @@
                     $ticketFeeForPrint = (float) ($data->busFee ?? 0);
                     $insuranceForPrint = (float) ($data->bima_amount ?? 0);
                     $storedCustomerTotalForPrint = (float) ($data->customer_paid_total ?? 0);
-                    $travelerServiceFeeForPrint = app(\App\Services\FareFormulaService::class)
-                        ->calculateTravellerServiceFee($ticketFeeForPrint, \App\Models\Setting::first());
+                    $fareServiceForPrint = app(\App\Services\FareFormulaService::class);
+                    $seatCountForPrint = $fareServiceForPrint->seatCountFromSeatString($data->seat ?? null);
+                    $travelerServiceFeeForPrint = $fareServiceForPrint
+                        ->calculateTravellerServiceFee($ticketFeeForPrint, \App\Models\Setting::first(), $seatCountForPrint);
                     $legacyServiceFeeForPrint = (float) ($data->service ?? 0)
                         + (float) ($data->vender_service ?? 0)
                         + (float) ($data->service_vat ?? 0);

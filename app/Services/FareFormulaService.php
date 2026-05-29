@@ -66,18 +66,19 @@ class FareFormulaService
     }
 
     /**
-     * Traveller-facing service fee at checkout: (displayed bus fare × service %) + service adding.
+     * Traveller-facing service fee at checkout: (total bus fare × service %) + (service adding × seat count).
      *
-     * Uses the seat price the customer sees (Type Fare), e.g. 1,000 × 2% + 100 = 120 → total 1,120.
-     * Government levy on fare is handled in admin settlement, not deducted again here.
+     * The flat service_adding is charged once per seat, so two seats at 140 each = 280 total service fee.
      *
-     * @param  float  $typeFare  Total bus fare for selected seat(s) as shown in booking
+     * @param  float  $typeFare   Total bus fare for all selected seat(s) as shown in booking
+     * @param  int    $seatCount  Number of seats selected (default 1)
      */
-    public function calculateTravellerServiceFee(float $typeFare, ?Setting $setting): float
+    public function calculateTravellerServiceFee(float $typeFare, ?Setting $setting, int $seatCount = 1): float
     {
         $rates = $this->resolveRates($setting);
+        $count = max(1, $seatCount);
 
-        return ($typeFare * ($rates['service_percent'] / 100)) + $rates['service_adding'];
+        return ($typeFare * ($rates['service_percent'] / 100)) + ($rates['service_adding'] * $count);
     }
 
     /**
@@ -93,6 +94,37 @@ class FareFormulaService
         }
 
         return (float) ($bookingForm['total_amount'] ?? 0);
+    }
+
+    /**
+     * Extract the number of seats from a booking form session array.
+     * Handles both comma-separated strings ("A1,A2") and arrays.
+     *
+     * @param  array<string, mixed>  $bookingForm
+     */
+    public function seatCountFromBookingForm(array $bookingForm): int
+    {
+        $seats = $bookingForm['seats'] ?? '';
+        if (is_array($seats)) {
+            return max(1, count(array_filter($seats)));
+        }
+        if (is_string($seats) && $seats !== '') {
+            $parts = array_filter(array_map('trim', explode(',', $seats)));
+            return max(1, count($parts));
+        }
+        return 1;
+    }
+
+    /**
+     * Extract seat count from a stored booking seat string (e.g. "A1,A2" → 2).
+     */
+    public function seatCountFromSeatString(?string $seatString): int
+    {
+        if (empty($seatString)) {
+            return 1;
+        }
+        $parts = array_filter(array_map('trim', explode(',', $seatString)));
+        return max(1, count($parts));
     }
 
     public function calculateTravellerTotal(array $input, ?Setting $setting): array
@@ -141,7 +173,7 @@ class FareFormulaService
         $systemCommissionTotal = ($busFareLevyInclusive * ($rates['commission_percent'] / 100))
             + $rates['commission_adding'];
 
-        $serviceFees = $this->calculateTravellerServiceFee($busFareLevyInclusive, $setting);
+        $serviceFees = $this->calculateTravellerServiceFee($busFareLevyInclusive, $setting, max(1, (int) $seatCount));
         $governmentLevyOnServiceFee = $serviceFees * ($rates['government_levy_percent'] / 100);
         $totalGovernmentLevies = $governmentLevyOnFare + $governmentLevyOnServiceFee;
 

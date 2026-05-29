@@ -84,20 +84,23 @@ class FareFormulaServiceTest extends TestCase
         $setting->service_percentage = 2;
         $setting->service = 100;
 
-        // Seat price 1000: 2% + 100 = 120 → payable 1120 with fare
-        $fee = $service->calculateTravellerServiceFee(1000.0, $setting);
+        // 1 seat at 1000: (1000×2%) + (100×1) = 20 + 100 = 120 → payable 1120
+        $fee = $service->calculateTravellerServiceFee(1000.0, $setting, 1);
         $this->assertEquals(120.0, $fee);
     }
 
-    public function test_traveller_service_fee_scales_with_total_bus_fare(): void
+    public function test_traveller_service_fee_scales_per_seat(): void
     {
         $service = new FareFormulaService();
         $setting = new Setting();
         $setting->service_percentage = 2;
         $setting->service = 100;
 
-        $fee = $service->calculateTravellerServiceFee(2000.0, $setting);
-        $this->assertEquals(140.0, $fee);
+        // 1 seat at 2000: (2000×2%) + (100×1) = 40 + 100 = 140
+        $this->assertEquals(140.0, $service->calculateTravellerServiceFee(2000.0, $setting, 1));
+
+        // 2 seats at 2000 each (total 4000): (4000×2%) + (100×2) = 80 + 200 = 280
+        $this->assertEquals(280.0, $service->calculateTravellerServiceFee(4000.0, $setting, 2));
     }
 
     public function test_settlement_service_fees_match_traveller_fee_for_multi_seat(): void
@@ -107,14 +110,14 @@ class FareFormulaServiceTest extends TestCase
         $setting->service_percentage = 2;
         $setting->service = 100;
 
-        // 2 seats × 1000 = 2000 total bus fare → (2000×2%)+100 = 140 at checkout and settlement
+        // 2 seats × 1000 = 2000 total: (2000×2%) + (100×2) = 240
         $busFare = 2000.0;
-        $travellerFee = $service->calculateTravellerServiceFee($busFare, $setting);
+        $travellerFee = $service->calculateTravellerServiceFee($busFare, $setting, 2);
         $result = $service->calculateSettlement($busFare, $busFare, 0, 0, $setting, null, null, 2);
 
-        $this->assertEquals(140.0, $travellerFee);
+        $this->assertEquals(240.0, $travellerFee);
         $this->assertEquals($travellerFee, $result['service_fees']);
-        $this->assertEquals(7.0, $result['government_levy_on_service_fee']);
+        $this->assertEquals(12.0, $result['government_levy_on_service_fee']);
         $this->assertEquals(100.0, $result['system_commission_total']);
     }
 }

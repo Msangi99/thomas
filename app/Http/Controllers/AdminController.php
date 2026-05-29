@@ -1536,7 +1536,7 @@ $q->where('id', auth()->user()->campany->id);
 
         // Retrieve settings for fees
         $setting = Setting::first();
-        $fees = app(FareFormulaService::class)->calculateTravellerServiceFee((float) $newAmount, $setting);
+        $fees = app(FareFormulaService::class)->calculateTravellerServiceFee((float) $newAmount, $setting, $numberOfSeats);
 
         // Calculate VAT (0.5% as seen in BookingController::handleCallback)
         $newVat = $newAmount * (0.5 / 100);
