@@ -51,13 +51,26 @@ class CustomerController extends Controller
 
     public function mybooking()
     {
-    $booking = Booking::with('bus.route','vender','campany.busOwnerAccount')
-            ->where('customer_email', Auth::user()->email)
-            ->orWhere('user_id', auth()->user()->id)
+        $user = Auth::user();
+
+        $booking = Booking::with('bus.route', 'vender', 'campany.busOwnerAccount')
+            ->where(function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+
+                if (!empty($user->email)) {
+                    $query->orWhere('customer_email', $user->email);
+                }
+
+                $phone = $user->contact ?? $user->phone ?? null;
+                if (!empty($phone)) {
+                    $normalizedPhone = normalize_tanzania_phone_for_booking((string) $phone);
+                    if ($normalizedPhone !== '') {
+                        $query->orWhere('customer_phone', $normalizedPhone);
+                    }
+                }
+            })
             ->latest()
             ->get();
-
-        //return $booking; 
 
         return view('customer.mybooking', compact('booking'));
     }
@@ -546,7 +559,7 @@ class CustomerController extends Controller
         $bus_info['customer_number'] = $contactNumber;
         $bus_info['customer_payment_number'] = $paymentContact !== '' ? $paymentContact : $contactNumber;
 
-        $bus_info['customer_email'] = $request->contactEmail;
+        $bus_info['customer_email'] = $request->contactEmail ?: (auth()->user()->email ?? '');
         $bus_info['countrycode'] = $request->countrycode ?? '';
 
         $user = $request->user_id ?? "";
@@ -772,6 +785,7 @@ class CustomerController extends Controller
             'customer_phone' => $bookingForm['customer_number'],
             'customer_name' => $bookingForm['customer_name'],
             'customer_email' => $bookingForm['customer_email'],
+            'user_id' => auth()->id(),
             'bima' => $bookingForm['bima'],
             'insuranceDate' => $bookingForm['insuranceDate'],
             'vender_id' => '',
