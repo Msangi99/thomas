@@ -305,6 +305,8 @@ class CustomerController extends Controller
         $seats = $request->selected_seats;
         if ((auth()->user()->temp_wallets->amount ?? 0) > 0) {
             $price  = $request->total_amount - auth()->user()->temp_wallets->amount;
+            $bus_info['cancel_key'] = auth()->user()->temp_wallets->user_key ?? '';
+            $bus_info['cancel_amount'] = auth()->user()->temp_wallets->amount ?? 0;
         } else {
             $price = $request->total_amount;
         }
@@ -423,6 +425,8 @@ class CustomerController extends Controller
         $bus_info['bima'] = $request->Insurance ?? 0;
         $bus_info['insuranceDate'] = $request->insuranceDate;
         $bus_info['discount'] = $request->discount ?? '';
+        $bus_info['cancel_amount'] = $request->amount_cancel ?? ($bus_info['cancel_amount'] ?? 0);
+        $bus_info['cancel_key'] = $request->key ?? ($bus_info['cancel_key'] ?? '');
         $bus_info['excess_luggage'] = $request->excess_luggage ?? 0; // Add excess luggage checkbox value
         $bus_info['excess_luggage_description'] = $request->excess_luggage_description ?? null; // Add excess luggage description
         session()->put('booking_form', $bus_info);
@@ -776,7 +780,7 @@ class CustomerController extends Controller
             'distance' => $bookingForm['route_distance'],
             'busFee' => $bookingForm['dispo'] ?? $bookingForm['total_amount'],
             'schedule_id' => $bookingForm['schedule_id'],
-            'cancel_key' => $bookingForm['cancel_key'],
+            'cancel_key' => $bookingForm['cancel_key'] ?? null,
             'excess_luggage' => $bookingForm['excess_luggage'],
             'excess_luggage_description' => $bookingForm['excess_luggage_description'],
             'transaction_ref_id' => $xcode,
