@@ -194,9 +194,9 @@
                                     <div class="d-flex flex-column">
                                         <p class="text-xs mb-0"><span class="font-weight-bold">seat fee:</span>  {{ $booking['amount'] ?? 'N/A' }}</p>
                                         </p>
-                                        <p class="text-xs mb-0"><span class="font-weight-bold">commision fee:</span> {{ $booking['commision'] ?? 'N/A' }}
+                                        <p class="text-xs mb-0"><span class="font-weight-bold">commission:</span> {{ $booking['commision'] ?? 'N/A' }}
                                         </p>
-                                        <p class="text-xs mb-0"><span class="font-weight-bold">gov. levy (service):</span> {{ $booking['gov_levy_service'] ?? '0' }}</p>
+                                        <p class="text-xs mb-0"><span class="font-weight-bold">gov. levy:</span> {{ $booking['gov_levy'] ?? ($booking['gov_levy_service'] ?? '0') }}</p>
                                     </div>
                                 </td>
                                 <td>

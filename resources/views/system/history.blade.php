@@ -97,18 +97,17 @@
                                         </td>
                                         <td class="py-2 px-4">
                                             @php
-                                                $govLevyOnService = (float) $booking->governmentLeviesOnService->sum('amount');
+                                                $govLevyOnFare = (float) ($booking->government_levy ?? 0);
+                                                $totalCommission = ($booking->fee ?? 0) + ($booking->vender_fee ?? 0);
                                             @endphp
                                             <div class="flex flex-col commission-breakdown"
-                                                data-fee="{{ $booking->fee ?? 0 }}"
-                                                data-vender-fee="{{ $booking->vender_fee ?? 0 }}"
+                                                data-commission-total="{{ $totalCommission }}"
                                                 data-discount="{{ $booking->discount_amount ?? 0 }}"
-                                                data-gov-levy-service="{{ $govLevyOnService }}"
+                                                data-gov-levy="{{ $govLevyOnFare }}"
                                                 data-vat="{{ $booking->vat ?? 0 }}">
-                                                <p class="text-gray-500 font-medium mb-0">System: {{ $currency }} {{ convert_money($booking->fee ?? 0) }}</p>
-                                                <p class="text-gray-500 font-medium mb-0">Vendor: {{ $currency }} {{ convert_money($booking->vender_fee ?? 0) }}</p>
+                                                <p class="text-gray-500 font-medium mb-0">Commission: {{ $currency }} {{ convert_money($totalCommission) }}</p>
                                                 <p class="text-gray-500 font-medium mb-0">Discount: {{ $currency }} {{ convert_money($booking->discount_amount ?? 0) }}</p>
-                                                <p class="text-gray-500 font-medium mb-0">Gov. levy (service): {{ $currency }} {{ convert_money($govLevyOnService) }}</p>
+                                                <p class="text-gray-500 font-medium mb-0">Gov. levy: {{ $currency }} {{ convert_money($govLevyOnFare) }}</p>
                                                 <p class="text-gray-500 font-medium mb-0">VAT: {{ $currency }} {{ convert_money($booking->vat ?? 0) }}</p>
                                             </div>
                                         </td>
@@ -354,23 +353,19 @@
                         amount: ($(row[5]).find('p').first().text().trim() || 'N/A'),
                         commision: (function() {
                             const c = $(row[6]).find('.commission-breakdown');
-                            return c.length ? ('{{ $currency }} ' + formatAmount(parseFloat(c.attr('data-fee')) || 0)) : (($(row[6]).find('p').first().text().replace('System: ', '').trim()) || 'N/A');
-                        })(),
-                        service: (function() {
-                            const c = $(row[6]).find('.commission-breakdown');
-                            return c.length ? ('{{ $currency }} ' + formatAmount(parseFloat(c.attr('data-vender-fee')) || 0)) : (($(row[6]).find('p').eq(1).text().replace('Vendor: ', '').trim()) || 'N/A');
+                            return c.length ? ('{{ $currency }} ' + formatAmount(parseFloat(c.attr('data-commission-total')) || 0)) : (($(row[6]).find('p').first().text().replace('Commission: ', '').trim()) || 'N/A');
                         })(),
                         discount: (function() {
                             const c = $(row[6]).find('.commission-breakdown');
-                            return c.length ? ('{{ $currency }} ' + formatAmount(parseFloat(c.attr('data-discount')) || 0)) : (($(row[6]).find('p').eq(2).text().replace('Discount: ', '').trim()) || 'N/A');
+                            return c.length ? ('{{ $currency }} ' + formatAmount(parseFloat(c.attr('data-discount')) || 0)) : (($(row[6]).find('p').eq(1).text().replace('Discount: ', '').trim()) || 'N/A');
                         })(),
-                        gov_levy_service: (function() {
+                        gov_levy: (function() {
                             const c = $(row[6]).find('.commission-breakdown');
-                            return c.length ? ('{{ $currency }} ' + formatAmount(parseFloat(c.attr('data-gov-levy-service')) || 0)) : 'N/A';
+                            return c.length ? ('{{ $currency }} ' + formatAmount(parseFloat(c.attr('data-gov-levy')) || 0)) : (($(row[6]).find('p').eq(2).text().replace('Gov. levy: ', '').trim()) || 'N/A');
                         })(),
                         vat: (function() {
                             const c = $(row[6]).find('.commission-breakdown');
-                            return c.length ? ('{{ $currency }} ' + formatAmount(parseFloat(c.attr('data-vat')) || 0)) : (($(row[6]).find('p').eq(3).text().replace('Levies: ', '').replace('VAT: ', '').trim()) || 'N/A');
+                            return c.length ? ('{{ $currency }} ' + formatAmount(parseFloat(c.attr('data-vat')) || 0)) : (($(row[6]).find('p').eq(3).text().replace('VAT: ', '').trim()) || 'N/A');
                         })(),
                         total: (function() {
                             // Calculate total from the data attributes
