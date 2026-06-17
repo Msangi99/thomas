@@ -34,6 +34,8 @@ return [
     'pickup' => 'Pickup:',
     'drop_point' => 'Drop-point:',
     'system' => 'Service cashFee:',
+    'commission_total' => 'Commission:',
+    'government_levy' => 'Gov. levy:',
     'vendor' => 'Vendor:',
     'vendor_service' => 'Vendor service:',
     'discount' => 'Discount:',

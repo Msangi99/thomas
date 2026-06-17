@@ -34,6 +34,8 @@ return [
     'pickup' => 'Mahali pa Kuchukuliwa:',
     'drop_point' => 'Mahali pa Kushukia:',
     'system' => 'Mfumo:',
+    'commission_total' => 'Tume:',
+    'government_levy' => 'Kodi ya serikali:',
     'vendor' => 'Muuzaji:',
     'vendor_service' => 'Huduma ya muuzaji:',
     'discount' => 'Punguzo:',
