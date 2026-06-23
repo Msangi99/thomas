@@ -98,16 +98,18 @@
                                         <td class="py-2 px-4">
                                             @php
                                                 $govLevyOnFare = (float) ($booking->government_levy ?? 0);
+                                                $govLevyOnService = (float) $booking->governmentLeviesOnService->sum('amount');
+                                                $totalGovLevy = $govLevyOnFare + $govLevyOnService;
                                                 $totalCommission = ($booking->fee ?? 0) + ($booking->vender_fee ?? 0);
                                             @endphp
                                             <div class="flex flex-col commission-breakdown"
                                                 data-commission-total="{{ $totalCommission }}"
                                                 data-discount="{{ $booking->discount_amount ?? 0 }}"
-                                                data-gov-levy="{{ $govLevyOnFare }}"
+                                                data-gov-levy="{{ $totalGovLevy }}"
                                                 data-vat="{{ $booking->vat ?? 0 }}">
                                                 <p class="text-gray-500 font-medium mb-0">Commission: {{ $currency }} {{ convert_money($totalCommission) }}</p>
                                                 <p class="text-gray-500 font-medium mb-0">Discount: {{ $currency }} {{ convert_money($booking->discount_amount ?? 0) }}</p>
-                                                <p class="text-gray-500 font-medium mb-0">Gov. levy: {{ $currency }} {{ convert_money($govLevyOnFare) }}</p>
+                                                <p class="text-gray-500 font-medium mb-0">Gov. levy: {{ $currency }} {{ convert_money($totalGovLevy) }}</p>
                                                 <p class="text-gray-500 font-medium mb-0">VAT: {{ $currency }} {{ convert_money($booking->vat ?? 0) }}</p>
                                             </div>
                                         </td>

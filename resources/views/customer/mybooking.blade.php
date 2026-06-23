@@ -56,13 +56,22 @@
                                         @elseif ($book->payment_status == 'Cancel')
                                             <span
                                                 class="bg-red-200 text-red-800 py-1 px-3 rounded-full text-xs">Cancel</span>
+                                        @elseif ($book->payment_status == 'Refund')
+                                            <span
+                                                class="bg-purple-200 text-purple-800 py-1 px-3 rounded-full text-xs">{{ __('customer/myticket.Refund') }}</span>
+                                        @elseif (in_array($book->payment_status, ['Refund Pending', 'refunded']))
+                                            <span
+                                                class="bg-yellow-200 text-yellow-800 py-1 px-3 rounded-full text-xs">{{ __('customer/myticket.Refund_pending') }}</span>
+                                        @elseif ($book->payment_status == 'Refund Rejected')
+                                            <span
+                                                class="bg-red-200 text-red-800 py-1 px-3 rounded-full text-xs">{{ __('customer/myticket.Refund_rejected') }}</span>
                                         @else
                                             <span
                                                 class="bg-red-200 text-red-800 py-1 px-3 rounded-full text-xs">{{ __('customer/myticket.Failed') }}</span>
                                         @endif
                                     </td>
                                     <td class="px-4 py-3">
-                                        @if ($book->payment_status == 'Paid')
+                                        @if (in_array($book->payment_status, ['Paid', 'Refund Rejected']))
                                             <div class="relative inline-block group">
                                                 <form action="{{ route('customer.cancel') }}" method="get">
                                                     @csrf
@@ -235,6 +244,8 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                        @elseif(in_array($book->payment_status, ['Refund Pending', 'refunded', 'Refund']))
+                                            <span class="text-gray-400 text-xs">—</span>
                                         @elseif($book->payment_status == 'Unpaid')
                                             <div class="relative inline-block group">
                                                 <button

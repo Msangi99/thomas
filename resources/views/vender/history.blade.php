@@ -109,15 +109,26 @@
                                         </td>
                                         <td class="py-2 px-4">
                                             @php
-                                                $govLevyOnServiceV = (float) $booking->governmentLeviesOnService->sum('amount');
+                                                $govLevyOnFare = (float) ($booking->government_levy ?? 0);
+                                                $govLevyOnService = (float) $booking->governmentLeviesOnService->sum('amount');
+                                                $totalGovLevy = $govLevyOnFare + $govLevyOnService;
+                                                $totalCommission = ($booking->fee ?? 0) + ($booking->vender_fee ?? 0);
                                             @endphp
-                                            <div class="flex flex-col">
-                                                <p class="text-gray-500 font-medium mb-0">{{ __('vender/history.system') }} {{ $booking->fee ?? __('vender/history.na') }}</p>
-                                                <p class="text-gray-500 font-medium mb-0">{{ __('vender/history.vendor') }} {{ $booking->vender_fee ?? __('vender/history.na') }}</p>
-                                                <p class="text-gray-500 font-medium mb-0">{{ __('vender/history.vendor_service') }} {{ $booking->vender_service ?? __('vender/history.na') }}</p>
-                                                <p class="text-gray-500 font-medium mb-0">{{ __('vender/history.discount') }} {{ $booking->discount_amount ?? __('vender/history.na') }}</p>
-                                                <p class="text-gray-500 font-medium mb-0">{{ __('vender/history.government_levy_service') }} {{ convert_money($govLevyOnServiceV) }}</p>
-                                                <p class="text-gray-500 font-medium mb-0">{{ __('vender/history.vat') }} {{ $booking->vat ?? __('vender/history.na') }}</p>
+                                            <div class="flex flex-col commission-breakdown"
+                                                data-commission-total="{{ $totalCommission }}"
+                                                data-discount="{{ $booking->discount_amount ?? 0 }}"
+                                                data-gov-levy="{{ $totalGovLevy }}"
+                                                data-vat="{{ $booking->vat ?? 0 }}">
+                                                <p class="text-gray-500 font-medium mb-0">
+                                                    {{ __('vender/history.commission_total') }}
+                                                    {{ $currency ?? 'TSH' }} {{ convert_money($totalCommission) }}</p>
+                                                <p class="text-gray-500 font-medium mb-0">
+                                                    {{ __('vender/history.discount') }}
+                                                    {{ $currency ?? 'TSH' }} {{ convert_money($booking->discount_amount ?? 0) }}</p>
+                                                <p class="text-gray-500 font-medium mb-0">{{ __('vender/history.government_levy') }}
+                                                    {{ $currency ?? 'TSH' }} {{ convert_money($totalGovLevy) }}</p>
+                                                <p class="text-gray-500 font-medium mb-0">{{ __('vender/history.vat') }}
+                                                    {{ $currency ?? 'TSH' }} {{ convert_money($booking->vat ?? 0) }}</p>
                                             </div>
                                         </td>
                                         <td class="py-2 px-4">

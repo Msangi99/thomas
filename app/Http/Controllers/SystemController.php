@@ -29,6 +29,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\SmsController;
 use App\Models\Refund;
+use App\Models\RefundPercentage;
 use App\Models\Access;
 use App\Models\CancelledBookings;
 use App\Models\Coaster;
@@ -547,7 +548,7 @@ class SystemController extends Controller
 
         $query = Booking::query()
             ->where('payment_status', 'Paid')
-            ->with(['campany', 'route']);
+            ->with(['campany', 'route', 'governmentLeviesOnService']);
 
         if ($period === 'today') {
             $query->whereDate('created_at', today());
@@ -573,7 +574,12 @@ class SystemController extends Controller
         $bookings = $tableQuery->latest()->paginate(50)->withQueryString();
         $totalPaidAmount = (float) $summaryQuery->sum('amount');
         $totalVat = (float) $summaryQuery->sum('vat');
-        $totalGovernmentLevy = $hasGovernmentLevyColumn ? (float) $summaryQuery->sum('government_levy') : 0.0;
+        $totalGovLevyOnFare = $hasGovernmentLevyColumn ? (float) $summaryQuery->sum('government_levy') : 0.0;
+        $bookingCodes = (clone $summaryQuery)->pluck('booking_code');
+        $totalGovLevyOnService = $bookingCodes->isEmpty()
+            ? 0.0
+            : (float) \App\Models\GovernmentLevy::whereIn('booking_id', $bookingCodes)->sum('amount');
+        $totalGovernmentLevy = $totalGovLevyOnFare + $totalGovLevyOnService;
         $totalSystemServiceFee = $hasSystemServiceFeeColumn ? (float) $summaryQuery->sum('system_service_fee') : 0.0;
 
         return view('system.government_levy', compact(
@@ -583,6 +589,8 @@ class SystemController extends Controller
             'endDate',
             'totalPaidAmount',
             'totalVat',
+            'totalGovLevyOnFare',
+            'totalGovLevyOnService',
             'totalGovernmentLevy',
             'totalSystemServiceFee',
             'hasGovernmentLevyColumn',
@@ -1039,21 +1047,21 @@ class SystemController extends Controller
 
         $booking = Booking::where('booking_code', $refund->booking_code)->first();
 
-        $booking->update([
-            'payment_status' => 'Refund',
-            'refund_id' => $refund->id,
-        ]);
+        if ($booking) {
+            $booking->update([
+                'payment_status' => 'Refund',
+                'refund_id' => $refund->id,
+            ]);
+        }
 
-        $booking->save();
+        if ($booking && $booking->campany_id) {
+            $campany = Campany::with('balance')->find($booking->campany_id);
 
-        $campany = Campany::with('balance')->find($booking->campany_id);
-
-        $campany->balance->decrement('amount', $refund->amount);
-        $campany->save();
-
-        // Here you would typically handle the actual refund process,
-        // e.g., integrate with a payment gateway to send money back.
-        // For this task, we'll just update the status.
+            if ($campany && $campany->balance) {
+                $campany->balance->decrement('amount', $refund->amount);
+                $campany->save();
+            }
+        }
 
         return back()->with('success', 'Refund approved successfully.');
     }
@@ -1063,6 +1071,16 @@ class SystemController extends Controller
         $refund = Refund::findOrFail($id);
         $refund->status = 'Rejected';
         $refund->save();
+
+        $booking = Booking::where('booking_code', $refund->booking_code)->first();
+
+        if ($booking) {
+            $booking->update([
+                'payment_status' => 'Refund Rejected',
+            ]);
+        }
+
+        RefundPercentage::where('booking_code', $refund->booking_code)->delete();
 
         return back()->with('error', 'Refund rejected.');
     }

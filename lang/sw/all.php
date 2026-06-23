@@ -170,6 +170,8 @@ return [
     'close_button' => 'Funga',
     'request_refund' => 'Omba Marejesho',
     'refund_details_for_booking' => 'Tafadhali toa maelezo yako ili kuchakata marejesho ya uwekaji nafasi',
+    'refund_mobile_or_bank_hint' => 'Weka angalau moja: namba ya simu (lazima ilingane na simu ya uwekaji nafasi) au namba ya akaunti ya benki.',
+    'mobile_must_match_booking' => 'Lazima ilingane na namba ya simu iliyotumika kwa uwekaji nafasi huu.',
     'full_name' => 'Jina Kamili',
     'mobile_number' => 'Namba ya Simu',
     'bank_account_number' => 'Namba ya Akaunti ya Benki',

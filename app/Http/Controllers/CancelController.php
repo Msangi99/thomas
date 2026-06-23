@@ -37,7 +37,7 @@ class CancelController extends Controller
         $now = Carbon::parse(now())->format('Y-m-d');
         $booking = Booking::find($request->booking_id);
 
-        if ($booking->travel_date < (new ConstData())->carbon(24)) {
+        if (!(new ConstData())->isCancelAllowed($booking)) {
             return back()->with('error', 'Your rebooking is out of date. You can\'t cancel this booking.');
         }
 

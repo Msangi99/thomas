@@ -13,5 +13,8 @@ return [
     'no_booking_found' => 'Hakuna uhifadhi uliopatikana.',
     'Paid' => 'Imelipiwa',
     'Unpaid' => 'Haijapatikana',
-    'Failed' => 'Haijapatikana',
+    'Failed' => 'Imeshindwa',
+    'Refund' => 'Marejesho',
+    'Refund_pending' => 'Marejesho Yanayosubiri',
+    'Refund_rejected' => 'Marejesho Yamekataliwa',
 ];

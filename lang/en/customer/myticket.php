@@ -14,4 +14,7 @@ return [
     'Paid' => 'Paid',
     'Unpaid' => 'Unpaid',
     'Failed' => 'Failed',
+    'Refund' => 'Refund',
+    'Refund_pending' => 'Refund Pending',
+    'Refund_rejected' => 'Refund Rejected',
 ];

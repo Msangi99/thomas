@@ -54,7 +54,7 @@
             </div>
         @endif
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
                 <p class="text-xs font-medium text-slate-500">Paid Amount</p>
                 <p class="text-xl font-semibold text-slate-800 mt-2">{{ $currency }} {{ convert_money($totalPaidAmount) }}</p>
@@ -64,8 +64,16 @@
                 <p class="text-xl font-semibold text-slate-800 mt-2">{{ $currency }} {{ convert_money($totalVat) }}</p>
             </div>
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
-                <p class="text-xs font-medium text-slate-500">Government Levy</p>
-                <p class="text-xl font-semibold text-emerald-700 mt-2">{{ $currency }} {{ convert_money($totalGovernmentLevy) }}</p>
+                <p class="text-xs font-medium text-slate-500">Gov Levy (Fare)</p>
+                <p class="text-xl font-semibold text-emerald-700 mt-2">{{ $currency }} {{ convert_money($totalGovLevyOnFare) }}</p>
+            </div>
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+                <p class="text-xs font-medium text-slate-500">Gov Levy (Service)</p>
+                <p class="text-xl font-semibold text-emerald-600 mt-2">{{ $currency }} {{ convert_money($totalGovLevyOnService) }}</p>
+            </div>
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+                <p class="text-xs font-medium text-slate-500">Total Gov Levy</p>
+                <p class="text-xl font-semibold text-emerald-800 mt-2">{{ $currency }} {{ convert_money($totalGovernmentLevy) }}</p>
             </div>
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
                 <p class="text-xs font-medium text-slate-500">System Service Fee</p>
@@ -86,12 +94,19 @@
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Route</th>
                             <th class="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase">Paid Amount</th>
                             <th class="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase">VAT</th>
-                            <th class="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase">Gov Levy</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase">Gov Levy (Fare)</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase">Gov Levy (Service)</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase">Total Gov Levy</th>
                             <th class="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase">Service Fee</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @forelse($bookings as $booking)
+                            @php
+                                $govLevyOnFare = (float) ($booking->government_levy ?? 0);
+                                $govLevyOnService = (float) $booking->governmentLeviesOnService->sum('amount');
+                                $totalGovLevy = $govLevyOnFare + $govLevyOnService;
+                            @endphp
                             <tr class="hover:bg-slate-50 transition">
                                 <td class="px-4 py-3 text-sm text-slate-700 font-medium">{{ $booking->booking_code ?? 'N/A' }}</td>
                                 <td class="px-4 py-3 text-sm text-slate-600">{{ optional($booking->created_at)->format('d M Y H:i') }}</td>
@@ -100,12 +115,14 @@
                                 </td>
                                 <td class="px-4 py-3 text-sm text-slate-700 text-right">{{ $currency }} {{ convert_money($booking->amount ?? 0) }}</td>
                                 <td class="px-4 py-3 text-sm text-slate-700 text-right">{{ $currency }} {{ convert_money($booking->vat ?? 0) }}</td>
-                                <td class="px-4 py-3 text-sm text-emerald-700 text-right font-medium">{{ $currency }} {{ convert_money($booking->government_levy ?? 0) }}</td>
+                                <td class="px-4 py-3 text-sm text-emerald-700 text-right font-medium">{{ $currency }} {{ convert_money($govLevyOnFare) }}</td>
+                                <td class="px-4 py-3 text-sm text-emerald-600 text-right font-medium">{{ $currency }} {{ convert_money($govLevyOnService) }}</td>
+                                <td class="px-4 py-3 text-sm text-emerald-800 text-right font-semibold">{{ $currency }} {{ convert_money($totalGovLevy) }}</td>
                                 <td class="px-4 py-3 text-sm text-indigo-700 text-right font-medium">{{ $currency }} {{ convert_money($booking->system_service_fee ?? 0) }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-4 py-8 text-center text-sm text-slate-500">No paid bookings found for this filter.</td>
+                                <td colspan="9" class="px-4 py-8 text-center text-sm text-slate-500">No paid bookings found for this filter.</td>
                             </tr>
                         @endforelse
                     </tbody>

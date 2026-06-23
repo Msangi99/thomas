@@ -58,15 +58,25 @@ class RefundController extends Controller
         }
 
         $booking = Booking::where('id', $request->booking_id)
-            ->where('payment_status', 'Paid')
+            ->whereIn('payment_status', ['Paid', 'Refund Rejected'])
             ->first();
 
         if (!$booking) {
             return back()->with('error', 'Booking not available for refund or does not exist.');
         }
 
-        if ($booking->travel_date < (new ConstData())->carbon(6)) {
-            return back()->with('error', 'Booking not available for refund or does not exist.');
+        $existingPending = Refund::where('booking_code', $booking->booking_code)
+            ->where('status', 'Pending')
+            ->exists();
+
+        if ($existingPending) {
+            return back()->with('error', 'A refund request is already pending for this booking.')->withInput();
+        }
+
+        $constData = new ConstData();
+
+        if (!$constData->isRefundAllowed($booking)) {
+            return back()->with('error', 'Refund is only available more than 6 hours before departure.')->withInput();
         }
 
         // Validate mobile or bank matches an existing number: mobile must match booking customer phone
@@ -78,7 +88,12 @@ class RefundController extends Controller
             }
         }
 
-        $amount = (new ConstData())->refund_logic($booking->id);
+        $amount = $constData->refund_logic($booking->id);
+
+        if ($amount <= 0) {
+            return back()->with('error', 'Refund is not available for this booking at this time.')->withInput();
+        }
+
         $percentage = (float) ($booking->busFee ?? 0) - (float) $amount;
 
         // post request
@@ -91,8 +106,8 @@ class RefundController extends Controller
         ]); 
 
         $booking->update([
-            'payment_status' => 'refunded',
-            //'refund_id' => $data->id,
+            'payment_status' => 'Refund Pending',
+            'refund_id' => $data->id,
         ]);
 
         RefundPercentage::create([

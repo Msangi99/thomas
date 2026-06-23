@@ -169,6 +169,8 @@ return [
     'close_button' => 'Close',
     'request_refund' => 'Request Refund',
     'refund_details_for_booking' => 'Please provide your details to process the refund for booking',
+    'refund_mobile_or_bank_hint' => 'Enter at least one: mobile number (must match booking phone) or bank account number.',
+    'mobile_must_match_booking' => 'Must match the phone number used for this booking.',
     'full_name' => 'Full Name',
     'mobile_number' => 'Mobile Number',
     'bank_account_number' => 'Bank Account Number',
