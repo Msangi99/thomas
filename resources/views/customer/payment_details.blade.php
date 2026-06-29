@@ -566,6 +566,16 @@
                                                             value="{{ round($price + $fees, 2) }}">
                                                     </div>
 
+                                                    <div>
+                                                        <label for="clickpesaPaymentContact"
+                                                            class="block text-sm font-medium text-gray-700 mb-1">{{ __('customer/busroot.mobile_number') }}</label>
+                                                        <input type="text" name="payment_contact" id="clickpesaPaymentContact"
+                                                            maxlength="12"
+                                                            class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 onlydigits"
+                                                            placeholder="{{ __('customer/busroot.connected_mobile_number') }}"
+                                                            required>
+                                                    </div>
+
                                                     <div class="flex items-start">
                                                         <div class="flex items-center h-5">
                                                             <input id="clickpesa_terms" name="clickpesa_terms"
@@ -902,9 +912,23 @@
             const phone = normalizePhoneTo255(document.getElementById('contactNumber').value);
             const email = document.getElementById('contactEmail').value.trim();
 
+            // ClickPesa charges this mobile money number (must be 255 + 9 digits)
+            const payContactEl = document.getElementById('clickpesaPaymentContact');
+            const payPhone = normalizePhoneTo255(payContactEl ? payContactEl.value : '');
+
             if (!phone) {
                 alert('Please enter phone number');
                 return;
+            }
+
+            if (!payPhone) {
+                alert('Please enter the mobile money number to charge');
+                return;
+            }
+
+            // Normalize the mobile money number that ClickPesa will push to
+            if (payContactEl) {
+                payContactEl.value = payPhone;
             }
 
             // Create hidden inputs

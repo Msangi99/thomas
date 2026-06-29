@@ -818,6 +818,16 @@ class VenderController extends Controller
             }
         } elseif ($method == 'clickpesa') {
             try {
+                // ClickPesa charges the mobile-money number entered for payment, not the contact number.
+                $clickpesaPhone = session()->get('booking_form')['customer_payment_number']
+                    ?? session()->get('booking_form')['customer_number'];
+                $normalized = ClickPesaController::normalizeTanzaniaMsisdnForClickPesa((string) $clickpesaPhone);
+                if (!$normalized['ok']) {
+                    return redirect()->route('vender.pay')
+                        ->with('error', 'ClickPesa Payment Failed: ' . ($normalized['error'] ?? 'Invalid mobile money number.'))
+                        ->withErrors(['payment_error' => $normalized['error'] ?? 'Invalid mobile money number.']);
+                }
+
                 $clickpesa = new ClickPesaController();
                 Session::forget(['vender', 'amount']);
                 Session::put('booking', $booking);
@@ -826,7 +836,7 @@ class VenderController extends Controller
                     round($amount),
                     session()->get('booking_form')['customer_name'],
                     session()->get('booking_form')['customer_name'],
-                    session()->get('booking_form')['customer_number'],
+                    $normalized['phone'],
                     session()->get('booking_form')['customer_email'],
                     $xcode
                 );

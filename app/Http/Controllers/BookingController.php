@@ -687,13 +687,24 @@ class BookingController extends Controller
             }
         } elseif ($method == 'clickpesa') {
             try {
+                // ClickPesa charges the mobile-money number the customer entered for payment.
+                // Validate/normalize it up-front so we return a friendly error instead of a rejected push.
+                $clickpesaPhone = session()->get('booking_form')['customer_payment_number']
+                    ?? session()->get('booking_form')['customer_number'];
+                $normalized = ClickPesaController::normalizeTanzaniaMsisdnForClickPesa((string) $clickpesaPhone);
+                if (!$normalized['ok']) {
+                    return redirect()->back()
+                        ->with('error', 'ClickPesa Payment Failed: ' . ($normalized['error'] ?? 'Invalid mobile money number.'))
+                        ->withErrors(['payment_error' => $normalized['error'] ?? 'Invalid mobile money number.']);
+                }
+
                 $clickpesa = new ClickPesaController();
                 Session::put('booking', $booking);
                 return $clickpesa->initiatePayment(
                     round($amount),
                     session()->get('booking_form')['customer_name'],
                     session()->get('booking_form')['customer_name'],
-                    session()->get('booking_form')['customer_number'],
+                    $normalized['phone'],
                     session()->get('booking_form')['customer_email'],
                     $xcode
                 );

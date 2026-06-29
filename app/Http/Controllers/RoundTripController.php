@@ -1051,24 +1051,19 @@ class RoundTripController extends Controller
             }
         } elseif ($method == 'clickpesa') {
             try {
-                // Normalize phone for ClickPesa: digits only, country code 255 without plus (e.g. 255681234567)
-                $phone = preg_replace('/\D/', '', (string) ($commonPaymentInfo['customer_number'] ?? ''));
-                if ($phone === '' && isset($booking1->customer_phone)) {
-                    $phone = preg_replace('/\D/', '', (string) $booking1->customer_phone);
+                // ClickPesa charges the mobile-money number entered for payment, not the contact number.
+                $clickpesaPhone = $commonPaymentInfo['customer_payment_number']
+                    ?? ($commonPaymentInfo['customer_number'] ?? '');
+                if ((string) $clickpesaPhone === '' && isset($booking1->customer_phone)) {
+                    $clickpesaPhone = (string) $booking1->customer_phone;
                 }
-                if ($phone !== '') {
-                    if (strpos($phone, '0') === 0) {
-                        $phone = '255' . substr($phone, 1);
-                    } elseif (strlen($phone) < 12 && substr($phone, 0, 3) !== '255') {
-                        $phone = '255' . $phone;
-                    }
-                }
-                if ($phone === '') {
+                $normalized = ClickPesaController::normalizeTanzaniaMsisdnForClickPesa((string) $clickpesaPhone);
+                if (!$normalized['ok']) {
                     return redirect()->route('round.trip.payment')->withErrors([
-                        'payment_error' => 'Valid phone number is required for ClickPesa. Please enter your mobile number with country code and without the plus sign (e.g. 255681234567).'
+                        'payment_error' => 'ClickPesa Payment Failed: ' . ($normalized['error'] ?? 'Invalid mobile money number.')
                     ]);
                 }
-                $commonPaymentInfo['customer_number'] = $phone;
+                $commonPaymentInfo['customer_number'] = $normalized['phone'];
 
                 $clickpesa = new ClickPesaController();
 

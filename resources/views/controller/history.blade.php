@@ -137,13 +137,11 @@
                                                     {{ $currency ?? 'TSH' }} {{ convert_money($booking->discount_amount ?? 0) }}</p>
                                                 <p class="text-gray-500 font-medium mb-0">{{ __('vender/history.government_levy') }}
                                                     {{ $currency ?? 'TSH' }} {{ convert_money($govLevyOnFare) }}</p>
-                                                <p class="text-gray-500 font-medium mb-0">{{ __('vender/history.vat') }}
-                                                    {{ $currency ?? 'TSH' }} {{ convert_money($booking->vat ?? 0) }}</p>
                                             </div>
                                         </td>
                                         <td class="py-2 px-4">
                                             <div class="flex flex-col">
-                                                @php $rowTotal = round(($booking->amount ?? 0) + ($booking->vat ?? 0)); @endphp
+                                                @php $rowTotal = round($booking->amount ?? 0); @endphp
                                                 <p class="text-gray-500 font-medium mb-0 total-amount"
                                                     data-total="{{ $rowTotal }}">
                                                     {{ $currency ?? 'TSH' }} {{ convert_money($rowTotal) }}
