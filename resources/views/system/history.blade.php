@@ -110,12 +110,15 @@
                                                 <p class="text-gray-500 font-medium mb-0">Commission: {{ $currency }} {{ convert_money($totalCommission) }}</p>
                                                 <p class="text-gray-500 font-medium mb-0">Discount: {{ $currency }} {{ convert_money($booking->discount_amount ?? 0) }}</p>
                                                 <p class="text-gray-500 font-medium mb-0">Gov. levy: {{ $currency }} {{ convert_money($totalGovLevy) }}</p>
-                                                <p class="text-gray-500 font-medium mb-0">VAT: {{ $currency }} {{ convert_money($booking->vat ?? 0) }}</p>
                                             </div>
                                         </td>
                                         <td class="py-2 px-4">
                                             <div class="flex flex-col">
-                                                @php $rowTotal = round(($booking->amount ?? 0) + ($booking->vat ?? 0)); @endphp
+                                                @php
+                                                    // Gross bus fee (fare before commission/service/levy extraction)
+                                                    // straight from the bookings.busFee column.
+                                                    $rowTotal = round((float) ($booking->busFee ?? 0));
+                                                @endphp
                                                 <p class="text-gray-500 font-medium mb-0 total-amount" data-total="{{ $rowTotal }}">
                                                     {{ $currency }} {{ convert_money($rowTotal) }}
                                                 </p>
@@ -370,14 +373,9 @@
                             return c.length ? ('{{ $currency }} ' + formatAmount(parseFloat(c.attr('data-vat')) || 0)) : (($(row[6]).find('p').eq(3).text().replace('VAT: ', '').trim()) || 'N/A');
                         })(),
                         total: (function() {
-                            // Calculate total from the data attributes
-                            let paymentEl = $(row[5]).find('.payment-amount');
+                            // Total = gross bus fee (bookings.busFee), excluding commission/service/levy
                             let totalEl = $(row[7]).find('.total-amount');
-                            let amount = parseFloat(paymentEl.data('amount')) || 0;
-                            let vat = parseFloat(paymentEl.data('vat')) || 0;
-
-                            // Total = seat value only (fare + VAT), excluding commission/fees
-                            let calculatedTotal = amount + vat;
+                            let calculatedTotal = parseFloat(totalEl.data('total')) || 0;
                             return calculatedTotal.toFixed(2);
                         })()
                     });
