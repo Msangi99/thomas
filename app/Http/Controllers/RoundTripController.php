@@ -420,9 +420,13 @@ class RoundTripController extends Controller
     public function seates()
     {
         $booking_form = session()->get('booking_form');
+        if (is_null($booking_form) || empty($booking_form['bus_id'])) {
+            return redirect()->route('round.trip')
+                ->with('error', 'Your booking session was lost. Please search and select a bus again.');
+        }
         $bus_id = $booking_form['bus_id'];
-        $travel_date = $booking_form['travel_date'];
-        $price = $booking_form['dropping_point_amount'];
+        $travel_date = $booking_form['travel_date'] ?? null;
+        $price = $booking_form['dropping_point_amount'] ?? 0;
 
         //return $travel_date;
 
@@ -492,6 +496,15 @@ class RoundTripController extends Controller
             return redirect()->route('round.trip.seats')->with('error', 'Please select at least one seat.');
         }
 
+        // Always store a valid numeric total. If the posted amount is missing/zero
+        // (e.g. JS didn't update the hidden field), recompute it from the per-seat
+        // price so the next step never falsely reports "session expired".
+        $price = is_numeric($price) ? (float) $price : 0;
+        if ($price <= 0) {
+            $perSeat = (float) ($bus_info['dropping_point_amount'] ?? 0);
+            $price = $perSeat * count($selected);
+        }
+
         $booked = Booking::where('bus_id', $bus_info['bus_id'])
             ->where('travel_date', $bus_info['travel_date'])
             ->whereIn('payment_status', ['Paid', 'Reserved', 'resaved'])
@@ -519,9 +532,26 @@ class RoundTripController extends Controller
     public function payment()
     {
         $setting = Setting::first();
-        if (is_null(session()->get('booking_form')) || !isset(session()->get('booking_form')['total_amount'])) {
-            return redirect()->route('home')->with('error', 'Session expired. Please try again.');
+        $bookingForm = session()->get('booking_form');
+
+        // Only treat as a lost session if the core seat-selection data is gone.
+        // A missing/zero total_amount alone should NOT bounce the user out — recompute it.
+        if (is_null($bookingForm) || empty($bookingForm['bus_id']) || empty($bookingForm['seats'])) {
+            Log::warning('Round trip payment(): booking_form missing seat data', [
+                'has_booking_form' => !is_null($bookingForm),
+                'session_keys' => array_keys(session()->all()),
+            ]);
+            return redirect()->route('round.trip')
+                ->with('error', 'Your booking session was lost. Please search and select your seats again.');
         }
+
+        if (!isset($bookingForm['total_amount']) || !is_numeric($bookingForm['total_amount']) || (float) $bookingForm['total_amount'] <= 0) {
+            $seatCount = count(array_filter(array_map('trim', explode(',', (string) $bookingForm['seats']))));
+            $bookingForm['total_amount'] = (float) ($bookingForm['dropping_point_amount'] ?? 0) * max(1, $seatCount);
+            $bookingForm['total_amount_before_coupon'] = $bookingForm['total_amount_before_coupon'] ?? $bookingForm['total_amount'];
+            session()->put('booking_form', $bookingForm);
+        }
+
         $price = session()->get('booking_form')['total_amount'];
         $seats = session()->get('booking_form')['seats'];
         $car = Bus::with([
@@ -559,8 +589,19 @@ class RoundTripController extends Controller
     {
         //return $bus_info = session()->get('booking_form', []);
         $bus_info = session()->get('booking_form', []);
-        if (is_null(session()->get('booking_form')) || !isset(session()->get('booking_form')['total_amount'])) {
-            return redirect()->route('home')->with('error', 'Session expired. Please try again.');
+
+        // Only bounce out if the core seat data is gone. Recompute a missing total.
+        if (empty($bus_info['bus_id']) || empty($bus_info['seats'])) {
+            Log::warning('Round trip payment_info(): booking_form missing seat data', [
+                'session_keys' => array_keys(session()->all()),
+            ]);
+            return redirect()->route('round.trip')
+                ->with('error', 'Your booking session was lost. Please search and select your seats again.');
+        }
+
+        if (!isset($bus_info['total_amount']) || !is_numeric($bus_info['total_amount']) || (float) $bus_info['total_amount'] <= 0) {
+            $seatCount = count(array_filter(array_map('trim', explode(',', (string) $bus_info['seats']))));
+            $bus_info['total_amount'] = (float) ($bus_info['dropping_point_amount'] ?? 0) * max(1, $seatCount);
         }
 
         $bus_info['customer_name'] = $request->customer;
