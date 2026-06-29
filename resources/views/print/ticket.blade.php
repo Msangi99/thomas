@@ -228,14 +228,48 @@
 
         <div class="details">
             <h3>Insurance Details</h3>
+            @php
+                // Insurance type (local vs foreign) is not stored on the booking, so infer it
+                // from the per-day amount paid versus the configured local/foreign rates.
+                $insAmountForType = (float) ($data->bima_amount ?? 0);
+                $insSetting = \App\Models\Setting::first();
+                $localRate = (float) ($insSetting->local ?? 0);
+                $foreignRate = (float) ($insSetting->international ?? 0);
+
+                $insDays = 1;
+                if (!empty($data->travel_date) && !empty($data->insuranceDate)) {
+                    try {
+                        $travelDt = \Carbon\Carbon::parse($data->travel_date);
+                        $insExpiryDt = \Carbon\Carbon::parse($data->insuranceDate);
+                        $insDays = max(1, abs($travelDt->diffInDays($insExpiryDt)) + 1);
+                    } catch (\Exception $e) {
+                        $insDays = 1;
+                    }
+                }
+
+                $perDayPaid = $insDays > 0 ? $insAmountForType / $insDays : $insAmountForType;
+
+                // Decide foreign vs local by whichever configured rate the per-day amount is closest to.
+                $isForeignInsurance = false;
+                if ($foreignRate > 0 || $localRate > 0) {
+                    $isForeignInsurance = abs($perDayPaid - $foreignRate) < abs($perDayPaid - $localRate);
+                }
+
+                $insuranceTypeLabel = $isForeignInsurance ? 'Foreign' : 'Local';
+                $insurancePolicyLabel = $isForeignInsurance ? 'Safiri salama - Foreign' : 'Safiri salama - Domestic';
+            @endphp
             <table>
                 <tr>
                     <td>Insurance company:</td>
                     <td>G.A Insurance</td>
                 </tr>
                 <tr>
+                    <td>Insurance type:</td>
+                    <td>{{ $insuranceTypeLabel }}</td>
+                </tr>
+                <tr>
                     <td>Policy:</td>
-                    <td>Safiri salama - Domestic</td>
+                    <td>{{ $insurancePolicyLabel }}</td>
                 </tr>
                 <tr>
                     <td>Date and time of issue:</td>
