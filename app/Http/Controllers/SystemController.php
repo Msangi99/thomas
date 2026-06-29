@@ -548,7 +548,7 @@ class SystemController extends Controller
 
         $query = Booking::query()
             ->where('payment_status', 'Paid')
-            ->with(['campany', 'route', 'governmentLeviesOnService']);
+            ->with(['campany', 'route', 'vender', 'governmentLeviesOnService']);
 
         if ($period === 'today') {
             $query->whereDate('created_at', today());

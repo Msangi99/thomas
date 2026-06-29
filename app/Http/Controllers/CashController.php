@@ -88,6 +88,25 @@ class CashController extends Controller
             $code1 = $booking1->booking_code ?? 'N/A';
             $code2 = $booking2->booking_code ?? 'N/A';
 
+            // Vendor cash wallet: a round trip debits BOTH legs from the seller's
+            // cash wallet, so check the combined balance up front (mirrors the
+            // single-leg path below) before any settlement runs.
+            $seller = Auth::user();
+            $roundDeduct = (float) round((float) $booking1->amount) + (float) round((float) $booking2->amount);
+            if ($seller instanceof User) {
+                $block = self::vendorCashWalletBlockReason($seller, $roundDeduct);
+                if ($block !== null) {
+                    Log::warning('Vendor round-trip cash sale blocked — insufficient cash wallet', [
+                        'user_id' => $seller->id,
+                        'booking1_code' => $code1,
+                        'booking2_code' => $code2,
+                        'required' => $roundDeduct,
+                    ]);
+
+                    return self::redirectVendorCashBlocked($block);
+                }
+            }
+
             try {
                 $data1 = $round->roundtrip($transToken, $transToken, null, $code1, 'cash');
                 $data2 = $round->roundtrip($transToken, $transToken, null, $code2, 'cash');
@@ -101,6 +120,21 @@ class CashController extends Controller
                     session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);
                     $go = new RoundTripController();
                     return $go->paymentFailed($data2['errorMessage'] ?? 'Booking not found');
+                }
+
+                // Both legs settled successfully — debit the seller's cash wallet
+                // once for the combined round-trip amount.
+                if ($seller instanceof User && self::isVendorTicketSeller($seller)) {
+                    $vb = $seller->VenderBalances;
+                    if ($vb && Schema::hasColumn('vender_balances', 'sell_cash_amount')) {
+                        $vb->decrement('sell_cash_amount', $roundDeduct);
+                        Log::info('Vendor round-trip cash wallet debited', [
+                            'user_id' => $seller->id,
+                            'booking1_code' => $code1,
+                            'booking2_code' => $code2,
+                            'deducted' => $roundDeduct,
+                        ]);
+                    }
                 }
 
                 session()->forget(['booking1', 'booking2', 'is_round', 'booking_form']);

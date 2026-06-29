@@ -143,7 +143,7 @@
                                         </td>
                                         <td class="py-2 px-4">
                                             <div class="flex flex-col">
-                                                @php $rowTotal = round(($booking->fee ?? 0) + ($booking->vender_fee ?? 0) + ($booking->amount ?? 0) + ($booking->vat ?? 0) + ($booking->fee_vat ?? 0)); @endphp
+                                                @php $rowTotal = round(($booking->amount ?? 0) + ($booking->vat ?? 0)); @endphp
                                                 <p class="text-gray-500 font-medium mb-0 total-amount"
                                                     data-total="{{ $rowTotal }}">
                                                     {{ $currency ?? 'TSH' }} {{ convert_money($rowTotal) }}

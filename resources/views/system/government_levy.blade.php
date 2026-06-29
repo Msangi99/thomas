@@ -92,6 +92,7 @@
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Booking</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Date</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Route</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Vendor</th>
                             <th class="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase">Paid Amount</th>
                             <th class="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase">VAT</th>
                             <th class="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase">Gov Levy (Fare)</th>
@@ -113,6 +114,13 @@
                                 <td class="px-4 py-3 text-sm text-slate-600">
                                     {{ $booking->route->from ?? 'N/A' }} - {{ $booking->route->to ?? 'N/A' }}
                                 </td>
+                                <td class="px-4 py-3 text-sm text-slate-600">
+                                    @if (($booking->vender_id ?? 0) > 0)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Involved</span>
+                                    @else
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">Not Involved</span>
+                                    @endif
+                                </td>
                                 <td class="px-4 py-3 text-sm text-slate-700 text-right">{{ $currency }} {{ convert_money($booking->amount ?? 0) }}</td>
                                 <td class="px-4 py-3 text-sm text-slate-700 text-right">{{ $currency }} {{ convert_money($booking->vat ?? 0) }}</td>
                                 <td class="px-4 py-3 text-sm text-emerald-700 text-right font-medium">{{ $currency }} {{ convert_money($govLevyOnFare) }}</td>
@@ -122,7 +130,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="px-4 py-8 text-center text-sm text-slate-500">No paid bookings found for this filter.</td>
+                                <td colspan="10" class="px-4 py-8 text-center text-sm text-slate-500">No paid bookings found for this filter.</td>
                             </tr>
                         @endforelse
                     </tbody>

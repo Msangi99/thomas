@@ -115,7 +115,7 @@
                                         </td>
                                         <td class="py-2 px-4">
                                             <div class="flex flex-col">
-                                                @php $rowTotal = round(($booking->fee ?? 0) + ($booking->vender_fee ?? 0) + ($booking->amount ?? 0) + ($booking->vat ?? 0) + ($booking->fee_vat ?? 0)); @endphp
+                                                @php $rowTotal = round(($booking->amount ?? 0) + ($booking->vat ?? 0)); @endphp
                                                 <p class="text-gray-500 font-medium mb-0 total-amount" data-total="{{ $rowTotal }}">
                                                     {{ $currency }} {{ convert_money($rowTotal) }}
                                                 </p>
@@ -375,13 +375,9 @@
                             let totalEl = $(row[7]).find('.total-amount');
                             let amount = parseFloat(paymentEl.data('amount')) || 0;
                             let vat = parseFloat(paymentEl.data('vat')) || 0;
-                            let discount = parseFloat(paymentEl.data('discount')) || 0;
-                            let fee = parseFloat(paymentEl.data('fee')) || 0;
-                            let vender_fee = parseFloat(paymentEl.data('vender_fee')) || 0;
-                            let fee_vat = parseFloat(paymentEl.data('fee_vat')) || 0;
-                            
-                            // Calculate total: amount + vat + fee + vender_fee + fee_vat - discount
-                            let calculatedTotal = amount + vat + fee + vender_fee + fee_vat - discount;
+
+                            // Total = seat value only (fare + VAT), excluding commission/fees
+                            let calculatedTotal = amount + vat;
                             return calculatedTotal.toFixed(2);
                         })()
                     });

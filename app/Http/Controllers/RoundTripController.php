@@ -834,7 +834,9 @@ class RoundTripController extends Controller
             'dropping_point' => $firstBookingData['dropping_point'],
             'travel_date' => $firstBookingData['travel_date'],
             'seat' => $firstBookingData['seats'],
-            'amount' => round($firstBookingData['price']),
+            // Include the traveller service fee in `amount` so settlement captures the
+            // service pool (same as one-way bookings, where amount = payable_amount).
+            'amount' => round($firstBookingData['payable_amount'] ?? (($firstBookingData['price'] ?? 0) + ($firstBookingData['fees'] ?? 0))),
             'gender' => $firstBookingData['gender'],
             'age' => $firstBookingData['age'],
             'infant_child' => $firstBookingData['infant_child'],
@@ -895,7 +897,9 @@ class RoundTripController extends Controller
             'dropping_point' => $secondBookingData['dropping_point'],
             'travel_date' => $secondBookingData['travel_date'],
             'seat' => $secondBookingData['seats'],
-            'amount' => round($secondBookingData['price']),
+            // Include the traveller service fee in `amount` so settlement captures the
+            // service pool (same as one-way bookings, where amount = payable_amount).
+            'amount' => round($secondBookingData['payable_amount'] ?? (($secondBookingData['price'] ?? 0) + ($secondBookingData['fees'] ?? 0))),
             'gender' => $secondBookingData['gender'],
             'age' => $secondBookingData['age'],
             'infant_child' => $secondBookingData['infant_child'],
@@ -1109,6 +1113,13 @@ class RoundTripController extends Controller
         $secondBookingData = json_decode(session()->get('secondbooking')->data, true);
         $commonPaymentInfo = session()->get('booking_form');
 
+        // Resolve the vendor (if a vendor is booking) so test-mode settlement
+        // credits the vendor commission/service share just like live payments.
+        $pop = '';
+        if (auth()->check() && auth()->user()->role == 'vender') {
+            $pop = auth()->user()->id;
+        }
+
         // Generate test transaction references
         $xcode1 = 'TEST-RT1-' . strtoupper(uniqid() . rand(1000, 9999));
         $xcode2 = 'TEST-RT2-' . strtoupper(uniqid() . rand(1000, 9999));
@@ -1123,7 +1134,8 @@ class RoundTripController extends Controller
             'dropping_point' => $firstBookingData['dropping_point'],
             'travel_date' => $firstBookingData['travel_date'],
             'seat' => $firstBookingData['seats'],
-            'amount' => round($firstBookingData['total_amount']),
+            // Include the traveller service fee in `amount` so settlement captures the service pool.
+            'amount' => round($firstBookingData['payable_amount'] ?? (($firstBookingData['price'] ?? $firstBookingData['total_amount'] ?? 0) + ($firstBookingData['fees'] ?? 0))),
             'gender' => $commonPaymentInfo['gender'],
             'age' => $commonPaymentInfo['age'],
             'infant_child' => $commonPaymentInfo['infant_child'],
@@ -1134,7 +1146,7 @@ class RoundTripController extends Controller
             'customer_email' => $commonPaymentInfo['customer_email'],
             'bima' => $firstBookingData['bima'],
             'insuranceDate' => $firstBookingData['insuranceDate'],
-            'vender_id' => '',
+            'vender_id' => $pop,
             'discount' => $firstBookingData['discount'],
             'discount_amount' => $firstBookingData['discount_amount'],
             'distance' => $firstBookingData['route_distance'],
@@ -1158,7 +1170,8 @@ class RoundTripController extends Controller
             'dropping_point' => $secondBookingData['dropping_point'],
             'travel_date' => $secondBookingData['travel_date'],
             'seat' => $secondBookingData['seats'],
-            'amount' => round($secondBookingData['total_amount']),
+            // Include the traveller service fee in `amount` so settlement captures the service pool.
+            'amount' => round($secondBookingData['payable_amount'] ?? (($secondBookingData['price'] ?? $secondBookingData['total_amount'] ?? 0) + ($secondBookingData['fees'] ?? 0))),
             'gender' => $commonPaymentInfo['gender'],
             'age' => $commonPaymentInfo['age'],
             'infant_child' => $commonPaymentInfo['infant_child'],
@@ -1169,7 +1182,7 @@ class RoundTripController extends Controller
             'customer_email' => $commonPaymentInfo['customer_email'],
             'bima' => $secondBookingData['bima'],
             'insuranceDate' => $secondBookingData['insuranceDate'],
-            'vender_id' => '',
+            'vender_id' => $pop,
             'discount' => $secondBookingData['discount'],
             'discount_amount' => $secondBookingData['discount_amount'],
             'distance' => $secondBookingData['route_distance'],

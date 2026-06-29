@@ -133,8 +133,8 @@
                                         </td>
                                         <td class="py-2 px-4">
                                             @php
-                                                // Use same calculation as busowner history page
-                                                $rowTotal = round($booking->fee + $booking->vender_fee + $booking->amount + $booking->vat + $booking->fee_vat);
+                                                // Show only the seat value (fare + VAT), excluding commission/fees
+                                                $rowTotal = round(($booking->amount ?? 0) + ($booking->vat ?? 0));
                                             @endphp
                                             <div class="flex flex-col">
                                                 <p class="text-gray-500 font-medium mb-0 total-amount" data-total="{{ $rowTotal }}">
