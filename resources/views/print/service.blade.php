@@ -52,13 +52,35 @@
     <div class="ticket-container">
         <div class="header">
             <h2>HIGHLINK ISGC</h2>
-            <p>{{ $data->campany->name ?? 'N/A' }}</p>
-            <p>P. O. Box {{ $data->campany->bus_owner_account->box ?? 'N/A' }}</p>
-            <p>{{ $data->campany->bus_owner_account->region ?? 'N/A/' }},
-                {{ $data->campany->bus_owner_account->country ?? 'N/A' }}</p>
-            <p>Reg. No: {{ $data->campany->bus_owner_account->registration_number ?? 'N/A' }}</p>
-            <p>TIN: {{ $data->campany->bus_owner_account->tin ?? 'N/A' }}</p>
-            <p>VRN: {{ $data->campany->bus_owner_account->vrn ?? 'N/A' }}</p>
+            @php
+                $busOwnerAccount = null;
+                $busCompany = null;
+                if (isset($data->bus) && $data->bus) {
+                    if (isset($data->bus->campany) && $data->bus->campany) {
+                        $busCompany = $data->bus->campany;
+                        $busOwnerAccount = $busCompany->busOwnerAccount ?? null;
+                    } elseif (isset($data->bus->campany_id) && $data->bus->campany_id) {
+                        $busCompany = \App\Models\Campany::with('busOwnerAccount')->find($data->bus->campany_id);
+                        $busOwnerAccount = $busCompany->busOwnerAccount ?? null;
+                    }
+                }
+                if (!$busOwnerAccount && isset($data->campany)) {
+                    if (is_object($data->campany) && isset($data->campany->busOwnerAccount)) {
+                        $busCompany = $data->campany;
+                        $busOwnerAccount = $data->campany->busOwnerAccount;
+                    } elseif (is_object($data->campany) && isset($data->campany->id)) {
+                        $busCompany = \App\Models\Campany::with('busOwnerAccount')->find($data->campany->id);
+                        $busOwnerAccount = $busCompany->busOwnerAccount ?? null;
+                    }
+                }
+            @endphp
+            <p>{{ $busCompany->name ?? ($data->campany->name ?? 'N/A') }}</p>
+            <p>P. O. Box {{ $busOwnerAccount->box ?? 'N/A' }}</p>
+            <p>{{ $busOwnerAccount->region ?? 'N/A' }},
+                {{ $busOwnerAccount->country ?? 'N/A' }}</p>
+            <p>Reg. No: {{ $busOwnerAccount->registration_number ?? 'N/A' }}</p>
+            <p>TIN: {{ $busOwnerAccount->tin ?? 'N/A' }}</p>
+            <p>VRN: {{ $busOwnerAccount->vrn ?? 'N/A' }}</p>
         </div>
 
         <div class="divider"></div>

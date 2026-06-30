@@ -10,6 +10,7 @@ class BusOwnerAccount extends Model
     protected $table = 'bus_owner_account';
 
     protected $fillable = [
+        'campany_id',
         'user_id',
         'registration_number',
         'tin',

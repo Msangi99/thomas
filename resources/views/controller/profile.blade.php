@@ -106,11 +106,16 @@
                             </h3>
                             <div class="h-0.5 bg-gray-200 flex-1"></div>
                         </div>
+
+                        @php
+                            $companyProfile = optional(auth()->user())->campany;
+                            $busOwnerProfile = optional($companyProfile)->busOwnerAccount;
+                        @endphp
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="space-y-1">
                                 <label for="company_name" class="block text-sm font-medium text-gray-700">{{ __('vender/profile.company_name') }}</label>
-                                <input type="text" id="company_name" name="campany_name" value="{{ old('campany_name', auth()->user()->campany->name ?? '') }}"
+                                <input type="text" id="company_name" name="campany_name" value="{{ old('campany_name', $companyProfile->name ?? '') }}"
                                        class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                                 @error('company_name')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -120,7 +125,7 @@
                             <div class="space-y-1">
                                 <label for="registration_number" class="block text-sm font-medium text-gray-700">{{ __('vender/profile.registration_number') }}</label>
                                 <input type="text" id="registration_number" name="registration_number" 
-                                       value="{{ old('registration_number', auth()->user()->campany->busOwnerAccount->registration_number ?? '') }}"
+                                       value="{{ old('registration_number', optional($busOwnerProfile)->registration_number ?? '') }}"
                                        class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                                 @error('registration_number')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -129,7 +134,7 @@
                             
                             <div class="space-y-1">
                                 <label for="tin" class="block text-sm font-medium text-gray-700">{{ __('vender/profile.tin_number') }}</label>
-                                <input type="text" id="tin" name="tin" value="{{ old('tin', auth()->user()->campany->busOwnerAccount->tin ?? '') }}"
+                                <input type="text" id="tin" name="tin" value="{{ old('tin', optional($busOwnerProfile)->tin ?? '') }}"
                                        class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                                 @error('tin')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -138,7 +143,7 @@
                             
                             <div class="space-y-1">
                                 <label for="vrn" class="block text-sm font-medium text-gray-700">{{ __('vender/profile.vrn_number') }}</label>
-                                <input type="text" id="vrn" name="vrn" value="{{ old('vrn', auth()->user()->campany->busOwnerAccount->vrn ?? '') }}"
+                                <input type="text" id="vrn" name="vrn" value="{{ old('vrn', optional($busOwnerProfile)->vrn ?? '') }}"
                                        class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                                 @error('vrn')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -165,42 +170,42 @@
                             <div class="space-y-1">
                                 <label for="office_number" class="block text-sm font-medium text-gray-700">{{ __('vender/profile.office_number') }}</label>
                                 <input type="text" id="office_number" name="office_number" 
-                                       value="{{ old('office_number', auth()->user()->campany->busOwnerAccount->office_number ?? '') }}"
+                                       value="{{ old('office_number', optional($busOwnerProfile)->office_number ?? '') }}"
                                        class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                             </div>
                             
                             <div class="space-y-1">
                                 <label for="street" class="block text-sm font-medium text-gray-700">{{ __('vender/profile.street') }}</label>
                                 <input type="text" id="street" name="street" 
-                                       value="{{ old('street', auth()->user()->campany->busOwnerAccount->street ?? '') }}"
+                                       value="{{ old('street', optional($busOwnerProfile)->street ?? '') }}"
                                        class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                             </div>
                             
                             <div class="space-y-1">
                                 <label for="box" class="block text-sm font-medium text-gray-700">{{ __('vender/profile.po_box') }}</label>
                                 <input type="text" id="box" name="box" 
-                                       value="{{ old('box', auth()->user()->campany->busOwnerAccount->box ?? '') }}"
+                                       value="{{ old('box', optional($busOwnerProfile)->box ?? '') }}"
                                        class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                             </div>
                             
                             <div class="space-y-1">
                                 <label for="town" class="block text-sm font-medium text-gray-700">{{ __('vender/profile.town') }}</label>
                                 <input type="text" id="town" name="town" 
-                                       value="{{ old('town', auth()->user()->campany->busOwnerAccount->town ?? '') }}"
+                                       value="{{ old('town', optional($busOwnerProfile)->town ?? '') }}"
                                        class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                             </div>
                             
                             <div class="space-y-1">
                                 <label for="city" class="block text-sm font-medium text-gray-700">{{ __('vender/profile.district_city') }}</label>
                                 <input type="text" id="city" name="city" 
-                                       value="{{ old('city', auth()->user()->campany->busOwnerAccount->city ?? '') }}"
+                                       value="{{ old('city', optional($busOwnerProfile)->city ?? '') }}"
                                        class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                             </div>
                             
                             <div class="space-y-1">
                                 <label for="region" class="block text-sm font-medium text-gray-700">{{ __('vender/profile.region_province') }}</label>
                                 <input type="text" id="region" name="region" 
-                                       value="{{ old('region', auth()->user()->campany->busOwnerAccount->region ?? '') }}"
+                                       value="{{ old('region', optional($busOwnerProfile)->region ?? '') }}"
                                        class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                             </div>
                         </div>
@@ -224,7 +229,7 @@
                                 <label for="whatsapp_number" class="block text-sm font-medium text-gray-700">{{ __('vender/profile.whatsapp_number') }}</label>
                                 <div class="relative">
                                     <input type="text" id="whatsapp_number" name="whatsapp_number" 
-                                           value="{{ old('whatsapp_number', auth()->user()->campany->busOwnerAccount->whatsapp_number ?? '') }}"
+                                           value="{{ old('whatsapp_number', optional($busOwnerProfile)->whatsapp_number ?? '') }}"
                                            class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                                     <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -237,7 +242,7 @@
                     </div>
 
                     <!-- Bank Account Section (only when no bank info yet) -->
-                    @if (empty(auth()->user()->campany->busOwnerAccount->bank_name) && empty(auth()->user()->campany->busOwnerAccount->bank_number))
+                    @if (empty(optional($busOwnerProfile)->bank_name) && empty(optional($busOwnerProfile)->bank_number))
                         <div class="mb-10">
                             <div class="flex items-center mb-5">
                                 <div class="h-0.5 bg-gray-200 flex-1"></div>
@@ -254,14 +259,14 @@
                                 <div class="space-y-1">
                                     <label for="bank_name" class="block text-sm font-medium text-gray-700">{{ __('vender/profile.bank_name') }}</label>
                                     <input type="text" id="bank_name" name="bank_name" 
-                                           value="{{ old('bank_name', auth()->user()->campany->busOwnerAccount->bank_name ?? '') }}"
+                                           value="{{ old('bank_name', optional($busOwnerProfile)->bank_name ?? '') }}"
                                            class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                                 </div>
                                 
                                 <div class="space-y-1">
                                     <label for="account_number" class="block text-sm font-medium text-gray-700">{{ __('vender/profile.account_number') }}</label>
                                     <input type="text" id="account_number" name="account_number" 
-                                           value="{{ old('account_number', auth()->user()->campany->busOwnerAccount->bank_number ?? '') }}"
+                                           value="{{ old('account_number', optional($busOwnerProfile)->bank_number ?? '') }}"
                                            class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                                 </div>
                             </div>

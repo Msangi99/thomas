@@ -1156,51 +1156,35 @@ $q->where('id', auth()->user()->campany->id);
                 ]);
             }
 
-            // Update or create bus owner account details
-            if ($user->campany && $user->campany->busOwnerAccount) {
-                $boa = $user->campany->busOwnerAccount;
-                $user->campany->busOwnerAccount->update([
+            // Update or create bus owner account details (used on printed tickets)
+            if ($user->campany) {
+                $existingAccount = $user->campany->busOwnerAccount;
+                $accountData = [
                     'registration_number' => $request->input('registration_number'),
                     'tin' => $request->input('tin'),
                     'vrn' => $request->input('vrn'),
                     'office_number' => $request->input('office_number'),
-                    'box' => $request->box,
+                    'box' => $request->input('box'),
                     'street' => $request->input('street'),
                     'town' => $request->input('town'),
                     'city' => $request->input('city'),
                     'region' => $request->input('region'),
                     'whatsapp_number' => $request->input('whatsapp_number'),
-                    // Keep existing bank info when fields are hidden (not in request)
-                    'bank_name' => $request->has('bank_name') ? $request->input('bank_name') : $boa->bank_name,
-                    'bank_number' => $request->has('account_number') ? $request->input('account_number') : $boa->bank_number,
-                ]);
-            } elseif ($user->campany && (
-                $request->input('registration_number') ||
-                $request->input('tin') ||
-                $request->input('vrn') ||
-                $request->input('office_number') ||
-                $request->input('street') ||
-                $request->input('town') ||
-                $request->input('city') ||
-                $request->input('region') ||
-                $request->input('whatsapp_number') ||
-                $request->input('bank_name') ||
-                $request->input('account_number')
-            )) {
-                // Create a new bus owner account if it doesn't exist and any relevant data is provided
-                $user->campany->busOwnerAccount()->create([
-                    'registration_number' => $request->input('registration_number'),
-                    'tin' => $request->input('tin'),
-                    'vrn' => $request->input('vrn'),
-                    'office_number' => $request->input('office_number'),
-                    'street' => $request->input('street'),
-                    'town' => $request->input('town'),
-                    'city' => $request->input('city'),
-                    'region' => $request->input('region'),
-                    'whatsapp_number' => $request->input('whatsapp_number'),
-                    'bank_name' => $request->input('bank_name'),
-                    'bank_number' => $request->input('account_number'),
-                ]);
+                ];
+
+                if ($existingAccount) {
+                    $accountData['bank_name'] = $request->has('bank_name')
+                        ? $request->input('bank_name')
+                        : $existingAccount->bank_name;
+                    $accountData['bank_number'] = $request->has('account_number')
+                        ? $request->input('account_number')
+                        : $existingAccount->bank_number;
+                    $existingAccount->update($accountData);
+                } else {
+                    $accountData['bank_name'] = $request->input('bank_name');
+                    $accountData['bank_number'] = $request->input('account_number');
+                    $user->campany->busOwnerAccount()->create($accountData);
+                }
             }
 
             return back()->with('success', __('vender/profile.profile_updated_success'));
@@ -1267,10 +1251,10 @@ $q->where('id', auth()->user()->campany->id);
         // Load full booking with relations so schedule times are available
         $data = null;
         if ($bookingId) {
-            $data = Booking::with(['bus.route', 'campany.busOwnerAccount', 'schedule', 'vender.VenderBalances'])->find($bookingId);
+            $data = Booking::with(['bus.route', 'bus.campany.busOwnerAccount', 'campany.busOwnerAccount', 'schedule', 'vender.VenderBalances'])->find($bookingId);
         }
         if (!$data && $bookingCode) {
-            $data = Booking::with(['bus.route', 'campany.busOwnerAccount', 'schedule', 'vender.VenderBalances'])->where('booking_code', $bookingCode)->first();
+            $data = Booking::with(['bus.route', 'bus.campany.busOwnerAccount', 'campany.busOwnerAccount', 'schedule', 'vender.VenderBalances'])->where('booking_code', $bookingCode)->first();
         }
         if (!$data) {
             $data = $payload;

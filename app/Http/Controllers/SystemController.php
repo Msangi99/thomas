@@ -932,49 +932,35 @@ class SystemController extends Controller
                 ]);
             }
 
-            // Update or create bus owner account details
-            if ($user->campany && $user->campany->busOwnerAccount) {
-                $user->campany->busOwnerAccount->update([
+            // Update or create bus owner account details (used on printed tickets)
+            if ($user->campany) {
+                $existingAccount = $user->campany->busOwnerAccount;
+                $accountData = [
                     'registration_number' => $request->input('registration_number'),
                     'tin' => $request->input('tin'),
                     'vrn' => $request->input('vrn'),
                     'office_number' => $request->input('office_number'),
-                    'box' => $request->box,
+                    'box' => $request->input('box'),
                     'street' => $request->input('street'),
                     'town' => $request->input('town'),
                     'city' => $request->input('city'),
                     'region' => $request->input('region'),
                     'whatsapp_number' => $request->input('whatsapp_number'),
-                    'bank_name' => $request->input('bank_name'),
-                    'bank_number' => $request->input('account_number'),
-                ]);
-            } elseif ($user->campany && (
-                $request->input('registration_number') ||
-                $request->input('tin') ||
-                $request->input('vrn') ||
-                $request->input('office_number') ||
-                $request->input('street') ||
-                $request->input('town') ||
-                $request->input('city') ||
-                $request->input('region') ||
-                $request->input('whatsapp_number') ||
-                $request->input('bank_name') ||
-                $request->input('account_number')
-            )) {
-                // Create a new bus owner account if it doesn't exist and any relevant data is provided
-                $user->campany->busOwnerAccount()->create([
-                    'registration_number' => $request->input('registration_number'),
-                    'tin' => $request->input('tin'),
-                    'vrn' => $request->input('vrn'),
-                    'office_number' => $request->input('office_number'),
-                    'street' => $request->input('street'),
-                    'town' => $request->input('town'),
-                    'city' => $request->input('city'),
-                    'region' => $request->input('region'),
-                    'whatsapp_number' => $request->input('whatsapp_number'),
-                    'bank_name' => $request->input('bank_name'),
-                    'bank_number' => $request->input('account_number'),
-                ]);
+                ];
+
+                if ($existingAccount) {
+                    $accountData['bank_name'] = $request->has('bank_name')
+                        ? $request->input('bank_name')
+                        : $existingAccount->bank_name;
+                    $accountData['bank_number'] = $request->has('account_number')
+                        ? $request->input('account_number')
+                        : $existingAccount->bank_number;
+                    $existingAccount->update($accountData);
+                } else {
+                    $accountData['bank_name'] = $request->input('bank_name');
+                    $accountData['bank_number'] = $request->input('account_number');
+                    $user->campany->busOwnerAccount()->create($accountData);
+                }
             }
 
             return back()->with('success', 'Profile updated successfully');
