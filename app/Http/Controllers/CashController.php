@@ -60,7 +60,7 @@ class CashController extends Controller
     private static function redirectVendorCashBlocked(string $message): \Illuminate\Http\RedirectResponse
     {
         if (session()->get('is_round')) {
-            return redirect()->route('round.trip.payment')->withErrors(['payment_error' => $message]);
+            return redirect()->route('round.trip.checkout')->withErrors(['payment_error' => $message]);
         }
 
         $u = Auth::user();

@@ -38,6 +38,85 @@ class RoundTripController extends Controller
         return view($view, $data);
     }
 
+    /**
+     * Build round_6 checkout view data from stored leg payloads.
+     */
+    private function buildRoundTripCheckoutData(array $data1, array $data2, ?Setting $setting = null): array
+    {
+        $setting = $setting ?? Setting::first();
+
+        return [
+            'price' => ($data1['price'] ?? 0) + ($data2['price'] ?? 0),
+            'ins' => ($data1['bima_amount'] ?? 0) + ($data2['bima_amount'] ?? 0),
+            'fees' => ($data1['fees'] ?? 0) + ($data2['fees'] ?? 0),
+            'dis' => ($data1['discount_amount'] ?? 0) + ($data2['discount_amount'] ?? 0),
+            'excess_luggage_fee' => ($data1['excess_luggage_fee'] ?? 0) + ($data2['excess_luggage_fee'] ?? 0),
+            'test_mode' => (bool) ($setting->test_mode ?? false),
+        ];
+    }
+
+    /**
+     * Show final round-trip checkout (round_6) when leg data or pending bookings remain in session.
+     */
+    private function roundTripCheckoutResponse()
+    {
+        $setting = Setting::first();
+
+        if (session()->has('firstbooking') && session()->has('secondbooking')) {
+            $data1 = json_decode(session()->get('firstbooking')->data, true);
+            $data2 = json_decode(session()->get('secondbooking')->data, true);
+
+            return $this->direction('round_6', $this->buildRoundTripCheckoutData($data1, $data2, $setting));
+        }
+
+        if (session()->get('is_round') && session()->has('booking1') && session()->has('booking2')) {
+            $b1 = session()->get('booking1');
+            $b2 = session()->get('booking2');
+            if ($b1 instanceof Booking) {
+                $b1 = Booking::find($b1->id) ?? $b1;
+            }
+            if ($b2 instanceof Booking) {
+                $b2 = Booking::find($b2->id) ?? $b2;
+            }
+
+            $ins = (float) ($b1->bima_amount ?? 0) + (float) ($b2->bima_amount ?? 0);
+            $dis = (float) ($b1->discount_amount ?? 0) + (float) ($b2->discount_amount ?? 0);
+            $excess = (float) ($b1->excess_luggage_fee ?? 0) + (float) ($b2->excess_luggage_fee ?? 0);
+            $totalAmount = (float) ($b1->amount ?? 0) + (float) ($b2->amount ?? 0);
+            $legFees = max(0, (float) ($b1->amount ?? 0) - (float) ($b1->busFee ?? 0) - (float) ($b1->bima_amount ?? 0) - (float) ($b1->excess_luggage_fee ?? 0))
+                + max(0, (float) ($b2->amount ?? 0) - (float) ($b2->busFee ?? 0) - (float) ($b2->bima_amount ?? 0) - (float) ($b2->excess_luggage_fee ?? 0));
+            $price = max(0, $totalAmount - $legFees);
+
+            return $this->direction('round_6', [
+                'price' => $price,
+                'ins' => $ins,
+                'fees' => $legFees,
+                'dis' => $dis,
+                'excess_luggage_fee' => $excess,
+                'test_mode' => (bool) ($setting->test_mode ?? false),
+            ]);
+        }
+
+        return null;
+    }
+
+    public function checkout()
+    {
+        if ($response = $this->roundTripCheckoutResponse()) {
+            return $response;
+        }
+
+        return redirect()->route('round.trip')
+            ->with('error', 'Your booking session was lost. Please search and select your seats again.');
+    }
+
+    private function redirectRoundTripCheckout(array $errors = [])
+    {
+        $redirect = redirect()->route('round.trip.checkout');
+
+        return empty($errors) ? $redirect : $redirect->withErrors($errors);
+    }
+
     public function index()
     {
         //$campanies = Campany::with('bus')->all();
@@ -531,6 +610,10 @@ class RoundTripController extends Controller
 
     public function payment()
     {
+        if ($response = $this->roundTripCheckoutResponse()) {
+            return $response;
+        }
+
         $setting = Setting::first();
         $bookingForm = session()->get('booking_form');
 
@@ -722,26 +805,12 @@ class RoundTripController extends Controller
             ->orderByDesc('id')
             ->first();
 
-        $data1 = json_decode($firstbooking->data, true);
-        $data2 = json_decode($secondbooking->data, true);
-
-
-        $data = [
-            'price' => $data1['price'] + $data2['price'],
-            'ins' => ($data1['bima_amount'] ?? 0) + ($data2['bima_amount'] ?? 0),
-            'fees' => $data1['fees'] + $data2['fees'],
-            'dis' => $data1['discount_amount'] + $data2['discount_amount'],
-            // Combine excess luggage fees from both legs so round_6 price summary can show it
-            'excess_luggage_fee' => ($data1['excess_luggage_fee'] ?? 0) + ($data2['excess_luggage_fee'] ?? 0),
-            'test_mode' => (bool) ($setting->test_mode ?? false),
-        ];
-
         session()->forget('key');
 
         session()->put('firstbooking', $firstbooking);
         session()->put('secondbooking', $secondbooking);
 
-        return $this->direction('round_6', $data);
+        return redirect()->route('round.trip.checkout');
 
         // return $this->direction('round_6', $data);
 
@@ -764,11 +833,12 @@ class RoundTripController extends Controller
         $paymentRaw = trim((string) ($request->payment_contact ?? ''));
         $paymentContact = $paymentRaw !== '' ? normalize_tanzania_phone_for_booking($paymentRaw) : '';
 
+        $bus_info = session()->get('booking_form', []);
         $bus_info['customer_number'] = $contactNumber;
         $bus_info['customer_email'] = $request->contactEmail;
         $bus_info['customer_payment_number'] = $paymentContact !== '' ? $paymentContact : $contactNumber;
         $bus_info['countrycode'] = $request->countrycode;
-        $bus_info['customer_name'] = $request->customer_name ?? 'Customer'; // Add customer name
+        $bus_info['customer_name'] = $request->customer_name ?? ($bus_info['customer_name'] ?? 'Customer');
 
         $user = $request->user_id ?? "";
 
@@ -838,74 +908,166 @@ class RoundTripController extends Controller
             return $this->processTestPayment($amount, $user, $method);
         }
 
-        // This method needs to handle two bookings for a round trip
-        $firstBookingData = json_decode(session()->get('firstbooking')->data, true);
-        $secondBookingData = json_decode(session()->get('secondbooking')->data, true);
-
-        //return $secondBookingData;
-
         // Common payment details from the request (e.g., contact number, email)
-        $commonPaymentInfo = session()->get('booking_form'); // This session data is set in get_payment
+        $commonPaymentInfo = session()->get('booking_form', []);
 
-        Log::info('Round Trip Payment Data', [
-            'firstBookingData' => $firstBookingData,
-            'secondBookingData' => $secondBookingData,
-            'commonPaymentInfo' => $commonPaymentInfo
-        ]);
+        $existingBooking1 = session()->get('booking1');
+        $existingBooking2 = session()->get('booking2');
+        $reuseBookings = session()->get('is_round')
+            && $existingBooking1
+            && $existingBooking2
+            && in_array($existingBooking1->payment_status ?? '', ['Unpaid', 'resaved'], true)
+            && in_array($existingBooking2->payment_status ?? '', ['Unpaid', 'resaved'], true);
 
-        // Prepare booking data for the first leg
-        $bookingCode1 = $this->generateRandomCode();
-        $bus1 = Bus::with(['busname', 'campany.balance'])->find($firstBookingData['bus_id']);
-        $pop1 = '';
-        $cust1 = 0;
-        if (auth()->check()) {
-            if (auth()->user()->role == 'vender') {
-                $pop1 = auth()->user()->id;
-            } else if (auth()->user()->role == 'customer') {
-                $cust1 = auth()->user()->id;
+        if ($reuseBookings) {
+            $booking1 = Booking::find($existingBooking1->id);
+            $booking2 = Booking::find($existingBooking2->id);
+            if (!$booking1 || !$booking2) {
+                $reuseBookings = false;
             }
         }
 
-        $bookingData1 = [
-            'booking_code' => $bookingCode1,
-            'campany_id' => $bus1->campany->id,
-            'bus_id' => $firstBookingData['bus_id'],
-            'route_id' => $firstBookingData['route_id'],
-            'pickup_point' => $firstBookingData['pickup_point'],
-            'dropping_point' => $firstBookingData['dropping_point'],
-            'travel_date' => $firstBookingData['travel_date'],
-            'seat' => $firstBookingData['seats'],
-            // Include the traveller service fee in `amount` so settlement captures the
-            // service pool (same as one-way bookings, where amount = payable_amount).
-            'amount' => round($firstBookingData['payable_amount'] ?? (($firstBookingData['price'] ?? 0) + ($firstBookingData['fees'] ?? 0))),
-            'gender' => $firstBookingData['gender'],
-            'age' => $firstBookingData['age'],
-            'infant_child' => $firstBookingData['infant_child'],
-            'age_group' => $firstBookingData['age_group'],
-            'payment_status' => 'Unpaid',
-            'customer_phone' => $commonPaymentInfo['customer_number'],
-            'customer_name' => $firstBookingData['customer_name'],
-            'customer_email' => $commonPaymentInfo['customer_email'],
-            'user_id' => $cust1,
-            'bima' => $firstBookingData['bima'],
-            'insuranceDate' => $firstBookingData['insuranceDate'],
-            'vender_id' => $pop1,
-            'discount' => $firstBookingData['discount'],
-            'discount_amount' => $firstBookingData['discount_amount'],
-            'distance' => $firstBookingData['route_distance'],
-            'busFee' => $firstBookingData['dispo'] ?? $firstBookingData['total_amount'],
-            'schedule_id' => $firstBookingData['schedule_id'],
-            'has_excess_luggage' => $firstBookingData['has_excess_luggage'],
-            'excess_luggage_fee' => $firstBookingData['excess_luggage_fee'],
-        ];
-        if ($firstBookingData['bima'] == 1) {
-            $bookingData1['bima_amount'] = $firstBookingData['bima_amount'];
+        if (!$reuseBookings) {
+            if (!session()->has('firstbooking') || !session()->has('secondbooking')) {
+                return $this->redirectRoundTripCheckout()
+                    ->with('error', 'Your booking session was lost. Please search and select your seats again.');
+            }
+
+            $firstBookingData = json_decode(session()->get('firstbooking')->data, true);
+            $secondBookingData = json_decode(session()->get('secondbooking')->data, true);
+
+            Log::info('Round Trip Payment Data', [
+                'firstBookingData' => $firstBookingData,
+                'secondBookingData' => $secondBookingData,
+                'commonPaymentInfo' => $commonPaymentInfo
+            ]);
+
+            // Prepare booking data for the first leg
+            $bookingCode1 = $this->generateRandomCode();
+            $bus1 = Bus::with(['busname', 'campany.balance'])->find($firstBookingData['bus_id']);
+            $pop1 = '';
+            $cust1 = 0;
+            if (auth()->check()) {
+                if (auth()->user()->role == 'vender') {
+                    $pop1 = auth()->user()->id;
+                } elseif (auth()->user()->role == 'customer') {
+                    $cust1 = auth()->user()->id;
+                }
+            }
+
+            $bookingData1 = [
+                'booking_code' => $bookingCode1,
+                'campany_id' => $bus1->campany->id,
+                'bus_id' => $firstBookingData['bus_id'],
+                'route_id' => $firstBookingData['route_id'],
+                'pickup_point' => $firstBookingData['pickup_point'],
+                'dropping_point' => $firstBookingData['dropping_point'],
+                'travel_date' => $firstBookingData['travel_date'],
+                'seat' => $firstBookingData['seats'],
+                'amount' => round($firstBookingData['payable_amount'] ?? (($firstBookingData['price'] ?? 0) + ($firstBookingData['fees'] ?? 0))),
+                'gender' => $firstBookingData['gender'],
+                'age' => $firstBookingData['age'],
+                'infant_child' => $firstBookingData['infant_child'],
+                'age_group' => $firstBookingData['age_group'],
+                'payment_status' => 'Unpaid',
+                'customer_phone' => $commonPaymentInfo['customer_number'] ?? '',
+                'customer_name' => $firstBookingData['customer_name'],
+                'customer_email' => $commonPaymentInfo['customer_email'] ?? '',
+                'user_id' => $cust1,
+                'bima' => $firstBookingData['bima'],
+                'insuranceDate' => $firstBookingData['insuranceDate'],
+                'vender_id' => $pop1,
+                'discount' => $firstBookingData['discount'],
+                'discount_amount' => $firstBookingData['discount_amount'],
+                'distance' => $firstBookingData['route_distance'],
+                'busFee' => $firstBookingData['dispo'] ?? $firstBookingData['total_amount'],
+                'schedule_id' => $firstBookingData['schedule_id'],
+                'has_excess_luggage' => $firstBookingData['has_excess_luggage'],
+                'excess_luggage_fee' => $firstBookingData['excess_luggage_fee'],
+            ];
+            if ($firstBookingData['bima'] == 1) {
+                $bookingData1['bima_amount'] = $firstBookingData['bima_amount'];
+            } else {
+                $bookingData1['bima_amount'] = 0;
+            }
+
+            // Prepare booking data for the second leg
+            $bookingCode2 = $this->generateRandomCode();
+            $bus2 = Bus::with(['busname', 'campany.balance'])->find($secondBookingData['bus_id']);
+            $pop2 = '';
+            $cust2 = 0;
+            if (auth()->check()) {
+                if (auth()->user()->role == 'vender') {
+                    $pop2 = auth()->user()->id;
+                } elseif (auth()->user()->role == 'customer') {
+                    $cust2 = auth()->user()->id;
+                }
+            }
+
+            $bookingData2 = [
+                'booking_code' => $bookingCode2,
+                'campany_id' => $bus2->campany->id,
+                'bus_id' => $secondBookingData['bus_id'],
+                'route_id' => $secondBookingData['route_id'],
+                'pickup_point' => $secondBookingData['pickup_point'],
+                'dropping_point' => $secondBookingData['dropping_point'],
+                'travel_date' => $secondBookingData['travel_date'],
+                'seat' => $secondBookingData['seats'],
+                'amount' => round($secondBookingData['payable_amount'] ?? (($secondBookingData['price'] ?? 0) + ($secondBookingData['fees'] ?? 0))),
+                'gender' => $secondBookingData['gender'],
+                'age' => $secondBookingData['age'],
+                'infant_child' => $secondBookingData['infant_child'],
+                'age_group' => $secondBookingData['age_group'],
+                'payment_status' => 'Unpaid',
+                'customer_phone' => $commonPaymentInfo['customer_number'] ?? '',
+                'customer_name' => $secondBookingData['customer_name'],
+                'customer_email' => $commonPaymentInfo['customer_email'] ?? '',
+                'user_id' => $cust2,
+                'bima' => $secondBookingData['bima'],
+                'insuranceDate' => $secondBookingData['insuranceDate'],
+                'vender_id' => $pop2,
+                'discount' => $secondBookingData['discount'],
+                'discount_amount' => $secondBookingData['discount_amount'],
+                'distance' => $secondBookingData['route_distance'],
+                'busFee' => $secondBookingData['dispo'] ?? $secondBookingData['total_amount'],
+                'schedule_id' => $secondBookingData['schedule_id'],
+                'has_excess_luggage' => $secondBookingData['has_excess_luggage'],
+                'excess_luggage_fee' => $secondBookingData['excess_luggage_fee'],
+            ];
+            if ($secondBookingData['bima'] == 1) {
+                $bookingData2['bima_amount'] = $secondBookingData['bima_amount'];
+            } else {
+                $bookingData2['bima_amount'] = 0;
+            }
+
+            DB::beginTransaction();
+            try {
+                $booking1 = Booking::create($bookingData1);
+                $booking2 = Booking::create($bookingData2);
+                DB::commit();
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Log::error('Round trip booking failed: ' . $e->getMessage());
+                return redirect()->route('round.trip.payment.failed')->with('error', 'Failed to create round trip bookings: ' . $e->getMessage());
+            }
+
+            session()->put('booking1', $booking1);
+            session()->put('booking2', $booking2);
+            session()->put('is_round', true);
         } else {
-            $bookingData1['bima_amount'] = 0;
+            $contactUpdate = array_filter([
+                'customer_phone' => $commonPaymentInfo['customer_number'] ?? null,
+                'customer_email' => $commonPaymentInfo['customer_email'] ?? null,
+            ], fn ($value) => $value !== null && $value !== '');
+
+            if (!empty($contactUpdate)) {
+                $booking1->update($contactUpdate);
+                $booking2->update($contactUpdate);
+            }
         }
 
         $data = [
-            'account' => $commonPaymentInfo['customer_payment_number'] ?? '',
+            'account' => $commonPaymentInfo['customer_payment_number'] ?? ($commonPaymentInfo['customer_number'] ?? ''),
             'countryCode' => '255',
             'country' => 'TZA',
             'firstName' => $commonPaymentInfo['customer_name'] ?? '',
@@ -915,81 +1077,6 @@ class RoundTripController extends Controller
             'amount' => round($amount),
             'transactionRefId' => uniqid('Round_'),
         ];
-
-        // Prepare booking data for the second leg
-        $bookingCode2 = $this->generateRandomCode();
-        $bus2 = Bus::with(['busname', 'campany.balance'])->find($secondBookingData['bus_id']);
-        $pop2 = '';
-        $cust2 = 0;
-        if (auth()->check()) {
-            if (auth()->user()->role == 'vender') {
-                $pop2 = auth()->user()->id;
-            } else if (auth()->user()->role == 'customer') {
-                $cust2 = auth()->user()->id;
-            }
-        }
-
-        $bookingData2 = [
-            'booking_code' => $bookingCode2,
-            'campany_id' => $bus2->campany->id,
-            'bus_id' => $secondBookingData['bus_id'],
-            'route_id' => $secondBookingData['route_id'],
-            'pickup_point' => $secondBookingData['pickup_point'],
-            'dropping_point' => $secondBookingData['dropping_point'],
-            'travel_date' => $secondBookingData['travel_date'],
-            'seat' => $secondBookingData['seats'],
-            // Include the traveller service fee in `amount` so settlement captures the
-            // service pool (same as one-way bookings, where amount = payable_amount).
-            'amount' => round($secondBookingData['payable_amount'] ?? (($secondBookingData['price'] ?? 0) + ($secondBookingData['fees'] ?? 0))),
-            'gender' => $secondBookingData['gender'],
-            'age' => $secondBookingData['age'],
-            'infant_child' => $secondBookingData['infant_child'],
-            'age_group' => $secondBookingData['age_group'],
-            'payment_status' => 'Unpaid',
-            'customer_phone' => $commonPaymentInfo['customer_number'],
-            'customer_name' => $secondBookingData['customer_name'],
-            'customer_email' => $commonPaymentInfo['customer_email'],
-            'user_id' => $cust2,
-            'bima' => $secondBookingData['bima'],
-            'insuranceDate' => $secondBookingData['insuranceDate'],
-            'vender_id' => $pop2,
-            'discount' => $secondBookingData['discount'],
-            'discount_amount' => $secondBookingData['discount_amount'],
-            'distance' => $secondBookingData['route_distance'],
-            'busFee' => $secondBookingData['dispo'] ?? $secondBookingData['total_amount'],
-            'schedule_id' => $secondBookingData['schedule_id'],
-            'has_excess_luggage' => $secondBookingData['has_excess_luggage'],
-            'excess_luggage_fee' => $secondBookingData['excess_luggage_fee'],
-        ];
-        if ($secondBookingData['bima'] == 1) {
-            $bookingData2['bima_amount'] = $secondBookingData['bima_amount'];
-        } else {
-            $bookingData2['bima_amount'] = 0;
-        }
-
-        DB::beginTransaction();
-        try {
-            $booking1 = Booking::create($bookingData1);
-            $booking2 = Booking::create($bookingData2);
-
-            // Store bookings in session for payment processing
-            session()->put('booking1', $booking1);
-            session()->put('booking2', $booking2);
-            session()->put('is_round', true);
-
-            // Keep customer payment info in session for DPO payment
-            // Don't clear booking_form yet as it contains customer payment details
-
-            // Redirect to a success page or initiate payment gateway
-            // For now, let's redirect to a generic success page.
-            //return redirect()->route('round.trip.payment.success')->with('success', 'Round trip bookings created successfully!');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            // Log the error
-            \Illuminate\Support\Facades\Log::error('Round trip booking failed: ' . $e->getMessage());
-            return redirect()->route('round.trip.payment.failed')->with('error', 'Failed to create round trip bookings: ' . $e->getMessage());
-        }
 
         if ($method == 'mixx') {
             Log::info('Initiating Mixx Payment for Round Trip', [
@@ -1021,15 +1108,12 @@ class RoundTripController extends Controller
                     'data' => $data,
                     'trace' => $e->getTraceAsString()
                 ]);
-                return redirect()->route('round.trip.payment')->withErrors(['payment_error' => 'Mixx Payment initiation failed: ' . $e->getMessage()]);
+                return $this->redirectRoundTripCheckout(['payment_error' => 'Mixx Payment initiation failed: ' . $e->getMessage()]);
             }
         } elseif ($method == 'dpo') {
 
             try {
                 $dpo = new PDOController();
-
-                // Clear roundtrip session data after storing in bookings
-                session()->forget(['firstbooking', 'secondbooking']);
 
                 Log::info('Initiating DPO Payment for Round Trip', [
                     'amount' => $amount,
@@ -1057,7 +1141,7 @@ class RoundTripController extends Controller
                 // Log the error
                 Log::error('DPO Payment initiation failed: ' . $e->getMessage());
                 // Redirect back with error message instead of returning string
-                return redirect()->route('round.trip.payment')->withErrors(['payment_error' => 'DPO Payment initiation failed: ' . $e->getMessage()]);
+                return $this->redirectRoundTripCheckout(['payment_error' => 'DPO Payment initiation failed: ' . $e->getMessage()]);
             }
         } elseif ($method == 'cash') {
             Log::info('Processing Cash Payment for Round Trip', [
@@ -1088,7 +1172,7 @@ class RoundTripController extends Controller
                     'booking2_id' => $booking2->id ?? 'Not set',
                     'trace' => $e->getTraceAsString()
                 ]);
-                return redirect()->route('round.trip.payment')->withErrors(['payment_error' => 'Cash Payment processing failed: ' . $e->getMessage()]);
+                return $this->redirectRoundTripCheckout(['payment_error' => 'Cash Payment processing failed: ' . $e->getMessage()]);
             }
         } elseif ($method == 'clickpesa') {
             try {
@@ -1100,16 +1184,13 @@ class RoundTripController extends Controller
                 }
                 $normalized = ClickPesaController::normalizeTanzaniaMsisdnForClickPesa((string) $clickpesaPhone);
                 if (!$normalized['ok']) {
-                    return redirect()->route('round.trip.payment')->withErrors([
+                    return $this->redirectRoundTripCheckout([
                         'payment_error' => 'ClickPesa Payment Failed: ' . ($normalized['error'] ?? 'Invalid mobile money number.')
                     ]);
                 }
                 $commonPaymentInfo['customer_number'] = $normalized['phone'];
 
                 $clickpesa = new ClickPesaController();
-
-                // Clear roundtrip session data after storing in bookings
-                session()->forget(['firstbooking', 'secondbooking']);
 
                 Log::info('Initiating ClickPesa Payment for Round Trip', [
                     'amount' => $amount,
@@ -1130,7 +1211,7 @@ class RoundTripController extends Controller
                 return $result;
             } catch (\Exception $e) {
                 Log::error('ClickPesa Payment initiation failed: ' . $e->getMessage());
-                return redirect()->route('round.trip.payment')->withErrors(['payment_error' => 'ClickPesa Payment initiation failed: ' . $e->getMessage()]);
+                return $this->redirectRoundTripCheckout(['payment_error' => 'ClickPesa Payment initiation failed: ' . $e->getMessage()]);
             }
         }
     }

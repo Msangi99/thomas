@@ -18,7 +18,7 @@
                     @endif
 
                     <p class="text-center mt-4">
-                        <a href="{{ route('round.trip.payment') }}" class="btn btn-primary">Try Payment Again</a>
+                        <a href="{{ route('round.trip.checkout') }}" class="btn btn-primary">Try Payment Again</a>
                         <a href="{{ route('home') }}" class="btn btn-secondary">Go to Home</a>
                     </p>
                 </div>

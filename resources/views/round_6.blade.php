@@ -515,6 +515,43 @@
             this.submit();
         });
 
+        const clickpesaForm = document.getElementById('clickpesa');
+        if (clickpesaForm) {
+            clickpesaForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                const code = document.getElementById('countrycode').value;
+                const phone = normalizePhoneTo255(document.getElementById('contactNumber').value);
+                const email = document.getElementById('contactEmail').value.trim();
+
+                if (!phone) {
+                    alert('Please enter phone number');
+                    return;
+                }
+
+                const codeInput = document.createElement('input');
+                codeInput.type = 'hidden';
+                codeInput.name = 'countrycode';
+                codeInput.value = code;
+
+                const phoneInput = document.createElement('input');
+                phoneInput.type = 'hidden';
+                phoneInput.name = 'contactNumber';
+                phoneInput.value = phone;
+
+                const emailInput = document.createElement('input');
+                emailInput.type = 'hidden';
+                emailInput.name = 'contactEmail';
+                emailInput.value = email;
+
+                this.appendChild(codeInput);
+                this.appendChild(phoneInput);
+                this.appendChild(emailInput);
+
+                this.submit();
+            });
+        }
+
         // Tab functionality
         document.querySelectorAll('[role="tablist"] button').forEach(button => {
             button.addEventListener('click', () => {

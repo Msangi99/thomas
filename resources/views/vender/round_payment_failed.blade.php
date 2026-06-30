@@ -24,7 +24,7 @@
                 @endif
 
                 <div class="flex flex-wrap gap-3 justify-center mt-6">
-                    <a href="{{ route('round.trip.payment') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">{{ __('all.retry_payment') }}</a>
+                    <a href="{{ route('round.trip.checkout') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">{{ __('all.retry_payment') }}</a>
                     <a href="{{ route('home') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">{{ __('all.return_home') }}</a>
                 </div>
             </div>
