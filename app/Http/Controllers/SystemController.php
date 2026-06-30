@@ -1021,6 +1021,9 @@ class SystemController extends Controller
         $settings->update([
             'local' => $request->local,
             'international' => $request->international,
+            'insurance_company' => $request->insurance_company,
+            'insurance_policy_local' => $request->insurance_policy_local,
+            'insurance_policy_foreign' => $request->insurance_policy_foreign,
             'service' => $request->service,
             'service_percentage' => $request->service_percentage,
             'enable_customer_sms_notifications' => $request->boolean('enable_customer_sms_notifications'),

@@ -1149,87 +1149,111 @@ class RoundTripController extends Controller
         $secondBookingData = json_decode(session()->get('secondbooking')->data, true);
         $commonPaymentInfo = session()->get('booking_form');
 
-        // Resolve the vendor (if a vendor is booking) so test-mode settlement
-        // credits the vendor commission/service share just like live payments.
-        $pop = '';
-        if (auth()->check() && auth()->user()->role == 'vender') {
-            $pop = auth()->user()->id;
+        $bus1 = Bus::with(['busname', 'campany.balance'])->find($firstBookingData['bus_id']);
+        $bus2 = Bus::with(['busname', 'campany.balance'])->find($secondBookingData['bus_id']);
+
+        $pop1 = '';
+        $cust1 = 0;
+        if (auth()->check()) {
+            if (auth()->user()->role == 'vender') {
+                $pop1 = auth()->user()->id;
+            } elseif (auth()->user()->role == 'customer') {
+                $cust1 = auth()->user()->id;
+            }
+        }
+
+        $pop2 = '';
+        $cust2 = 0;
+        if (auth()->check()) {
+            if (auth()->user()->role == 'vender') {
+                $pop2 = auth()->user()->id;
+            } elseif (auth()->user()->role == 'customer') {
+                $cust2 = auth()->user()->id;
+            }
         }
 
         // Generate test transaction references
         $xcode1 = 'TEST-RT1-' . strtoupper(uniqid() . rand(1000, 9999));
         $xcode2 = 'TEST-RT2-' . strtoupper(uniqid() . rand(1000, 9999));
 
-        // Create first booking
+        // Create first booking (mirror live pay() field sources)
         $bookingData1 = [
             'booking_code' => $this->generateRandomCode(),
-            'campany_id' => $firstBookingData['campany_id'],
+            'campany_id' => $bus1->campany->id,
             'bus_id' => $firstBookingData['bus_id'],
             'route_id' => $firstBookingData['route_id'],
             'pickup_point' => $firstBookingData['pickup_point'],
             'dropping_point' => $firstBookingData['dropping_point'],
             'travel_date' => $firstBookingData['travel_date'],
             'seat' => $firstBookingData['seats'],
-            // Include the traveller service fee in `amount` so settlement captures the service pool.
             'amount' => round($firstBookingData['payable_amount'] ?? (($firstBookingData['price'] ?? $firstBookingData['total_amount'] ?? 0) + ($firstBookingData['fees'] ?? 0))),
-            'gender' => $commonPaymentInfo['gender'],
-            'age' => $commonPaymentInfo['age'],
-            'infant_child' => $commonPaymentInfo['infant_child'],
-            'age_group' => $commonPaymentInfo['age_group'],
+            'gender' => $firstBookingData['gender'],
+            'age' => $firstBookingData['age'],
+            'infant_child' => $firstBookingData['infant_child'],
+            'age_group' => $firstBookingData['age_group'],
             'payment_status' => 'Unpaid',
             'customer_phone' => $commonPaymentInfo['customer_number'],
-            'customer_name' => $commonPaymentInfo['customer_name'],
+            'customer_name' => $firstBookingData['customer_name'],
             'customer_email' => $commonPaymentInfo['customer_email'],
+            'user_id' => $cust1,
             'bima' => $firstBookingData['bima'],
             'insuranceDate' => $firstBookingData['insuranceDate'],
-            'vender_id' => $pop,
+            'vender_id' => $pop1,
             'discount' => $firstBookingData['discount'],
             'discount_amount' => $firstBookingData['discount_amount'],
             'distance' => $firstBookingData['route_distance'],
             'busFee' => $firstBookingData['dispo'] ?? $firstBookingData['total_amount'],
             'schedule_id' => $firstBookingData['schedule_id'],
+            'has_excess_luggage' => $firstBookingData['has_excess_luggage'],
+            'excess_luggage_fee' => $firstBookingData['excess_luggage_fee'],
             'transaction_ref_id' => $xcode1,
             'payment_method' => 'test_mode',
         ];
 
         if ($firstBookingData['bima'] == 1) {
             $bookingData1['bima_amount'] = $firstBookingData['bima_amount'];
+        } else {
+            $bookingData1['bima_amount'] = 0;
         }
 
-        // Create second booking
+        // Create second booking (mirror live pay() field sources)
         $bookingData2 = [
             'booking_code' => $this->generateRandomCode(),
-            'campany_id' => $secondBookingData['campany_id'],
+            'campany_id' => $bus2->campany->id,
             'bus_id' => $secondBookingData['bus_id'],
             'route_id' => $secondBookingData['route_id'],
             'pickup_point' => $secondBookingData['pickup_point'],
             'dropping_point' => $secondBookingData['dropping_point'],
             'travel_date' => $secondBookingData['travel_date'],
             'seat' => $secondBookingData['seats'],
-            // Include the traveller service fee in `amount` so settlement captures the service pool.
             'amount' => round($secondBookingData['payable_amount'] ?? (($secondBookingData['price'] ?? $secondBookingData['total_amount'] ?? 0) + ($secondBookingData['fees'] ?? 0))),
-            'gender' => $commonPaymentInfo['gender'],
-            'age' => $commonPaymentInfo['age'],
-            'infant_child' => $commonPaymentInfo['infant_child'],
-            'age_group' => $commonPaymentInfo['age_group'],
+            'gender' => $secondBookingData['gender'],
+            'age' => $secondBookingData['age'],
+            'infant_child' => $secondBookingData['infant_child'],
+            'age_group' => $secondBookingData['age_group'],
             'payment_status' => 'Unpaid',
             'customer_phone' => $commonPaymentInfo['customer_number'],
-            'customer_name' => $commonPaymentInfo['customer_name'],
+            'customer_name' => $secondBookingData['customer_name'],
             'customer_email' => $commonPaymentInfo['customer_email'],
+            'user_id' => $cust2,
             'bima' => $secondBookingData['bima'],
             'insuranceDate' => $secondBookingData['insuranceDate'],
-            'vender_id' => $pop,
+            'vender_id' => $pop2,
             'discount' => $secondBookingData['discount'],
             'discount_amount' => $secondBookingData['discount_amount'],
             'distance' => $secondBookingData['route_distance'],
             'busFee' => $secondBookingData['dispo'] ?? $secondBookingData['total_amount'],
             'schedule_id' => $secondBookingData['schedule_id'],
+            'has_excess_luggage' => $secondBookingData['has_excess_luggage'],
+            'excess_luggage_fee' => $secondBookingData['excess_luggage_fee'],
             'transaction_ref_id' => $xcode2,
             'payment_method' => 'test_mode',
         ];
 
         if ($secondBookingData['bima'] == 1) {
             $bookingData2['bima_amount'] = $secondBookingData['bima_amount'];
+        } else {
+            $bookingData2['bima_amount'] = 0;
         }
 
         try {

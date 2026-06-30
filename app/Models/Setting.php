@@ -13,6 +13,9 @@ class Setting extends Model
         [
             'international',
             'local',
+            'insurance_company',
+            'insurance_policy_local',
+            'insurance_policy_foreign',
             'service',
             'service_percentage',
             'enable_customer_sms_notifications',

@@ -80,6 +80,45 @@
                         @enderror
                     </div>
                 </div>
+
+                <div class="px-6 pb-6 border-t border-gray-200 pt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="md:col-span-2">
+                        <p class="text-sm text-gray-500 mb-4">These values appear on printed tickets under Insurance Details.</p>
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label for="insurance_company" class="block text-sm font-medium text-gray-700 mb-1">Insurance Company</label>
+                        <input type="text" id="insurance_company" name="insurance_company"
+                               value="{{ old('insurance_company', $settings->insurance_company ?? 'G.A Insurance') }}"
+                               class="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                               placeholder="G.A Insurance">
+                        @error('insurance_company')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="insurance_policy_local" class="block text-sm font-medium text-gray-700 mb-1">Local / Domestic Policy</label>
+                        <input type="text" id="insurance_policy_local" name="insurance_policy_local"
+                               value="{{ old('insurance_policy_local', $settings->insurance_policy_local ?? 'Safiri salama - Domestic') }}"
+                               class="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                               placeholder="Safiri salama - Domestic">
+                        @error('insurance_policy_local')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="insurance_policy_foreign" class="block text-sm font-medium text-gray-700 mb-1">Foreign Policy</label>
+                        <input type="text" id="insurance_policy_foreign" name="insurance_policy_foreign"
+                               value="{{ old('insurance_policy_foreign', $settings->insurance_policy_foreign ?? 'Safiri salama - Foreign') }}"
+                               class="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                               placeholder="Safiri salama - Foreign">
+                        @error('insurance_policy_foreign')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
             </div>
 
             <!-- Service Amounts Section -->

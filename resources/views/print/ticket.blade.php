@@ -199,27 +199,9 @@
                     <td>Seat number:</td>
                     <td>{{ $data->seat ?? 'N/A' }}</td>
                 </tr>
-                @php
-                    // Match payments/success: prefer gateway/checkout total when stored after settlement.
-                    $ticketFeeForPrint = (float) ($data->busFee ?? 0);
-                    $insuranceForPrint = (float) ($data->bima_amount ?? 0);
-                    $storedCustomerTotalForPrint = (float) ($data->customer_paid_total ?? 0);
-                    $fareServiceForPrint = app(\App\Services\FareFormulaService::class);
-                    $seatCountForPrint = $fareServiceForPrint->seatCountFromSeatString($data->seat ?? null);
-                    $travelerServiceFeeForPrint = $fareServiceForPrint
-                        ->calculateTravellerServiceFee($ticketFeeForPrint, \App\Models\Setting::first(), $seatCountForPrint);
-                    $legacyServiceFeeForPrint = (float) ($data->service ?? 0)
-                        + (float) ($data->vender_service ?? 0)
-                        + (float) ($data->service_vat ?? 0);
-                    $displayServiceFeeForPrint = $ticketFeeForPrint > 0 ? $travelerServiceFeeForPrint : $legacyServiceFeeForPrint;
-                    $computedPrintTotal = $ticketFeeForPrint + $displayServiceFeeForPrint + $insuranceForPrint;
-                    $totalAmountPaidForPrint = $storedCustomerTotalForPrint > 0
-                        ? $storedCustomerTotalForPrint
-                        : $computedPrintTotal;
-                @endphp
                 <tr>
                     <td>Total amount paid:</td>
-                    <td>{{ number_format($totalAmountPaidForPrint, 2) }}</td>
+                    <td>{{ number_format((float) ($data->busFee ?? 0), 2) }}</td>
                 </tr>
             </table>
         </div>
@@ -256,12 +238,15 @@
                 }
 
                 $insuranceTypeLabel = $isForeignInsurance ? 'Foreign' : 'Local';
-                $insurancePolicyLabel = $isForeignInsurance ? 'Safiri salama - Foreign' : 'Safiri salama - Domestic';
+                $insuranceCompanyLabel = $insSetting->insurance_company ?? 'G.A Insurance';
+                $insurancePolicyLabel = $isForeignInsurance
+                    ? ($insSetting->insurance_policy_foreign ?? 'Safiri salama - Foreign')
+                    : ($insSetting->insurance_policy_local ?? 'Safiri salama - Domestic');
             @endphp
             <table>
                 <tr>
                     <td>Insurance company:</td>
-                    <td>G.A Insurance</td>
+                    <td>{{ $insuranceCompanyLabel }}</td>
                 </tr>
                 <tr>
                     <td>Insurance type:</td>
