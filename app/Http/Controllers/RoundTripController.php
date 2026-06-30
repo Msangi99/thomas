@@ -102,6 +102,10 @@ class RoundTripController extends Controller
 
     public function checkout()
     {
+        if ($this->roundTripPassengerStepPending()) {
+            return redirect()->route('round.trip.payment');
+        }
+
         if ($response = $this->roundTripCheckoutResponse()) {
             return $response;
         }
@@ -115,6 +119,41 @@ class RoundTripController extends Controller
         $redirect = redirect()->route('round.trip.checkout');
 
         return empty($errors) ? $redirect : $redirect->withErrors($errors);
+    }
+
+    /**
+     * True when the user has picked seats but not yet submitted passenger details (round_5).
+     */
+    private function roundTripPassengerStepPending(?array $bookingForm = null): bool
+    {
+        $bookingForm = $bookingForm ?? session()->get('booking_form');
+
+        return is_array($bookingForm)
+            && !empty($bookingForm['bus_id'])
+            && !empty($bookingForm['seats'])
+            && empty($bookingForm['customer_name']);
+    }
+
+    /**
+     * Keep the same round-trip key across outbound and return legs even if session is partially lost.
+     */
+    private function resolveRoundTripKey(): string
+    {
+        $key = session()->get('key') ?: session()->get('round_trip_pending_key');
+
+        if (empty($key)) {
+            $key = uniqid('Round_');
+        }
+
+        session()->put('key', $key);
+        session()->put('round_trip_pending_key', $key);
+
+        return $key;
+    }
+
+    private function clearRoundTripLegSession(): void
+    {
+        session()->forget(['key', 'round_trip_pending_key']);
     }
 
     public function index()
@@ -610,12 +649,16 @@ class RoundTripController extends Controller
 
     public function payment()
     {
-        if ($response = $this->roundTripCheckoutResponse()) {
+        $bookingForm = session()->get('booking_form');
+
+        // Seats chosen but passenger form not filled — always show round_5, not checkout.
+        if ($this->roundTripPassengerStepPending($bookingForm)) {
+            session()->forget(['firstbooking', 'secondbooking']);
+        } elseif ($response = $this->roundTripCheckoutResponse()) {
             return $response;
         }
 
         $setting = Setting::first();
-        $bookingForm = session()->get('booking_form');
 
         // Only treat as a lost session if the core seat-selection data is gone.
         // A missing/zero total_amount alone should NOT bounce the user out — recompute it.
@@ -775,16 +818,9 @@ class RoundTripController extends Controller
 
 
 
-        if (is_null(session()->get('key'))) {
+        $key = $this->resolveRoundTripKey();
 
-            $key = uniqid('Round_');
-
-            session()->put('key', $key);
-        } else {
-            $key = session()->get('key');
-        }
-
-        $round = Roundtrip::create([
+        Roundtrip::create([
             'key' => $key,
             'data' => json_encode(session()->get('booking_form')),
         ]);
@@ -794,6 +830,8 @@ class RoundTripController extends Controller
         $get = Roundtrip::where('key', $key)->count();
 
         if ($get !== 2) {
+            session()->put('round_trip_pending_key', $key);
+            session()->put('key', $key);
 
             return redirect()->route('round.trip')->with('info', 'proceed with returning booking');
         }
@@ -805,7 +843,7 @@ class RoundTripController extends Controller
             ->orderByDesc('id')
             ->first();
 
-        session()->forget('key');
+        $this->clearRoundTripLegSession();
 
         session()->put('firstbooking', $firstbooking);
         session()->put('secondbooking', $secondbooking);
@@ -1383,6 +1421,7 @@ class RoundTripController extends Controller
     {
         // Clear any lingering session data related to the failed booking attempt
         session()->forget(['booking1', 'booking2', 'is_round', 'firstbooking', 'secondbooking', 'booking_form']);
+        $this->clearRoundTripLegSession();
         $data = [
             'error' => $error
         ];
