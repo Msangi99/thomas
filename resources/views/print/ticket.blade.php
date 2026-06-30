@@ -208,6 +208,7 @@
 
         <div class="divider"></div>
 
+        @if ($data->bima == 1)
         <div class="details">
             <h3>Insurance Details</h3>
             @php
@@ -272,6 +273,7 @@
         </div>
 
         <div class="divider"></div>
+        @endif
 
         <div class="details">
             <table>
