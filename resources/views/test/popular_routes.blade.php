@@ -26,8 +26,8 @@
 
 <section id="popular-routes" class="home-routes">
     <div class="container mx-auto px-4">
-        <h2 class="home-routes__title fade-in">Popular Routes</h2>
-        <p class="home-routes__subtitle fade-in">Top destinations travelled by our passengers</p>
+        <h2 class="home-routes__title fade-in">{{ __('all.popular_routes_title') }}</h2>
+        <p class="home-routes__subtitle fade-in">{{ __('all.popular_routes_subtitle') }}</p>
 
         <div class="home-routes__grid">
             @foreach ($featuredRoutes as $route)
@@ -51,7 +51,7 @@
                         <span class="home-routes__overlay" aria-hidden="true"></span>
                         <span class="home-routes__content">
                             <span class="home-routes__name">{{ $route['from'] }} ➔ {{ $route['to'] }}</span>
-                            <span class="home-routes__price">From TZS {{ number_format($price ?: 1000) }}</span>
+                            <span class="home-routes__price">{{ __('all.from_price') }} TZS {{ number_format($price ?: 1000) }}</span>
                         </span>
                     </button>
                 </form>

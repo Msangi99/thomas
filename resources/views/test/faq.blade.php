@@ -8,16 +8,16 @@
         <div class="max-w-3xl mx-auto space-y-3">
             <div class="faq-item bg-white border border-gray-200 rounded-xl p-5 fade-in">
                 <div class="faq-question flex justify-between items-center cursor-pointer">
-                    <h3 class="font-bold text-base pr-4">Step-by-Step: How to Book a Bus Ticket Online</h3>
+                    <h3 class="font-bold text-base pr-4">{{ __('all.faq_step_by_step_title') }}</h3>
                     <i class="fas fa-chevron-down flex-shrink-0" style="color:var(--home-primary)"></i>
                 </div>
                 <div class="mt-3 text-gray-600 text-sm hidden">
                     <ol class="list-decimal pl-5 space-y-2">
-                        <li>Visit the official site and search your route using From, To, and travel date.</li>
-                        <li>Compare buses, fares, and schedules — then click <strong>View Seats</strong>.</li>
-                        <li>Select your seat(s) and enter passenger details.</li>
-                        <li>Pay via Mobile Money, bank card, or at a booking office.</li>
-                        <li>Receive your e-ticket by SMS/email. Arrive 30 minutes before departure.</li>
+                        <li>{{ __('all.faq_step_1') }}</li>
+                        <li>{!! __('all.faq_step_2', ['view_seats' => '<strong>' . e(__('all.view_seats')) . '</strong>']) !!}</li>
+                        <li>{{ __('all.faq_step_3') }}</li>
+                        <li>{{ __('all.faq_step_4') }}</li>
+                        <li>{{ __('all.faq_step_5') }}</li>
                     </ol>
                 </div>
             </div>

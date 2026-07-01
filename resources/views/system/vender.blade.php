@@ -1,6 +1,6 @@
 @extends('system.app')
 
-@section('title', 'Vendors')
+@section('title', __('system.vendors.title'))
 
 @section('content')
 <div class="container mx-auto px-4 py-6">
@@ -23,13 +23,13 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
-                <h3 class="text-xl font-semibold text-gray-800">Vendors</h3>
+                <h3 class="text-xl font-semibold text-gray-800">{{ __('system.vendors.title') }}</h3>
             </div>
             <div class="mt-4 sm:mt-0 flex items-center space-x-4">
                 <span class="text-sm font-medium bg-gray-100 px-3 py-1 rounded-lg">
-                    Total Balance: <span class="font-bold text-blue-600" id="vendorTotal">0</span>
+                    {{ __('system.vendors.total_balance') }} <span class="font-bold text-blue-600" id="vendorTotal">0</span>
                 </span>
-                <h4 class="text-sm font-medium bg-gray-100 px-3 py-1 rounded-lg">HIGHLINK ISGC</h4>
+                <h4 class="text-sm font-medium bg-gray-100 px-3 py-1 rounded-lg">{{ __('all.highlink_isgc') }}</h4>
             </div>
         </div>
 
@@ -38,14 +38,14 @@
             <table id="vendorTable" class="min-w-full divide-y divide-gray-200 text-sm">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">#</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Work Center</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.name') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.contact') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.balance') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.work_center') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.status') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.details') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -57,7 +57,7 @@
                         <td class="px-4 py-3 whitespace-nowrap amount" data-amount="{{ $vendor->VenderBalances->amount ?? 0 }}">
                             {{ $currency }} {{ convert_money($vendor->VenderBalances->amount ?? 0) }}
                         </td>
-                        <td class="px-4 py-3 whitespace-nowrap">{{ $vendor->VenderAccount->work ?? 'N/A' }}</td>
+                        <td class="px-4 py-3 whitespace-nowrap">{{ $vendor->VenderAccount->work ?? __('system.common.na') }}</td>
                         <td class="px-4 py-3 whitespace-nowrap">
                             <span class="px-2 py-1 text-xs font-medium rounded-full 
                                 @if($vendor->status == 'pending') bg-yellow-100 text-yellow-800
@@ -69,20 +69,20 @@
                         <td class="px-4 py-3 whitespace-nowrap">
                             <button onclick="openModal('vendorModal{{ $vendor->id }}')" 
                                 class="px-3 py-1 bg-blue-100 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors">
-                                View
+                                {{ __('system.common.view') }}
                             </button>
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap">
                             <form class="flex items-center space-x-2" action="{{ route('system.vender.status') }}" method="post">
                                 @csrf
                                 <select name="status" class="text-xs border border-gray-300 rounded-lg px-2 py-1 focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="pending" {{ $vendor->status == 'pending' ? 'selected' : '' }}>Pending</option>
-                                    <option value="accept" {{ $vendor->status == 'accept' ? 'selected' : '' }}>Accept</option>
-                                    <option value="cancel" {{ $vendor->status == 'cancel' ? 'selected' : '' }}>Cancel</option>
+                                    <option value="pending" {{ $vendor->status == 'pending' ? 'selected' : '' }}>{{ __('system.common.pending') }}</option>
+                                    <option value="accept" {{ $vendor->status == 'accept' ? 'selected' : '' }}>{{ __('system.vendors.status_accept') }}</option>
+                                    <option value="cancel" {{ $vendor->status == 'cancel' ? 'selected' : '' }}>{{ __('system.vendors.status_cancel') }}</option>
                                 </select>
                                 <input type="hidden" name="vender_id" value="{{ $vendor->id }}">
                                 <button type="submit" class="px-2 py-1 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700 transition-colors">
-                                    Save
+                                    {{ __('system.common.save') }}
                                 </button>
                             </form>
                         </td>
@@ -101,7 +101,7 @@
     
     <div class="bg-white rounded-xl shadow-xl w-full max-w-4xl relative max-h-[90vh] overflow-y-auto">
         <div class="p-6 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white z-10">
-            <h3 class="text-xl font-semibold text-gray-800">Vendor Details: {{ $vendor->name }}</h3>
+            <h3 class="text-xl font-semibold text-gray-800">{{ __('system.vendors.vendor_details', ['name' => $vendor->name]) }}</h3>
             <button onclick="closeModal('vendorModal{{ $vendor->id }}')" class="text-gray-500 hover:text-gray-700">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -111,12 +111,12 @@
         
         <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="space-y-4">
-                <h4 class="text-lg font-medium text-gray-800 border-b pb-2">User Information</h4>
+                <h4 class="text-lg font-medium text-gray-800 border-b pb-2">{{ __('system.vendors.user_information') }}</h4>
                 <div class="space-y-2">
-                    <p><span class="font-medium text-gray-700">Name:</span> {{ $vendor->name }}</p>
-                    <p><span class="font-medium text-gray-700">Email:</span> {{ $vendor->email }}</p>
-                    <p><span class="font-medium text-gray-700">Contact:</span> {{ $vendor->contact }}</p>
-                    <p><span class="font-medium text-gray-700">Status:</span> 
+                    <p><span class="font-medium text-gray-700">{{ __('system.common.name') }}:</span> {{ $vendor->name }}</p>
+                    <p><span class="font-medium text-gray-700">{{ __('system.common.email') }}:</span> {{ $vendor->email }}</p>
+                    <p><span class="font-medium text-gray-700">{{ __('system.common.contact') }}:</span> {{ $vendor->contact }}</p>
+                    <p><span class="font-medium text-gray-700">{{ __('system.common.status') }}:</span> 
                         <span class="px-2 py-1 text-xs font-medium rounded-full 
                             @if($vendor->status == 'pending') bg-yellow-100 text-yellow-800
                             @elseif($vendor->status == 'accept') bg-green-100 text-green-800
@@ -124,18 +124,18 @@
                             {{ ucfirst($vendor->status) }}
                         </span>
                     </p>
-                    <p><span class="font-medium text-gray-700">Balance:</span> 
+                    <p><span class="font-medium text-gray-700">{{ __('system.common.balance') }}:</span> 
                         {{ $currency }} {{ convert_money($vendor->VenderBalances->amount ?? 0) }}
                     </p>
                 </div>
             </div>
             
             <div class="space-y-4">
-                <h4 class="text-lg font-medium text-gray-800 border-b pb-2">Account Information</h4>
+                <h4 class="text-lg font-medium text-gray-800 border-b pb-2">{{ __('system.vendors.account_information') }}</h4>
                 @if ($vendor->VenderAccount)
                 <div class="space-y-2">
-                    <p><span class="font-medium text-gray-700">TIN:</span> {{ $vendor->VenderAccount->tin ?? 'N/A' }}</p>
-                    <p><span class="font-medium text-gray-700">Address:</span> 
+                    <p><span class="font-medium text-gray-700">{{ __('system.vendors.tin') }}:</span> {{ $vendor->VenderAccount->tin ?? __('system.common.na') }}</p>
+                    <p><span class="font-medium text-gray-700">{{ __('system.vendors.address') }}:</span> 
                         {{ $vendor->VenderAccount->house_number ?? '' }}
                         {{ $vendor->VenderAccount->street ?? '' }},
                         {{ $vendor->VenderAccount->town ?? '' }},
@@ -143,23 +143,23 @@
                         {{ $vendor->VenderAccount->province ?? '' }},
                         {{ $vendor->VenderAccount->country ?? '' }}
                     </p>
-                    <p><span class="font-medium text-gray-700">Work Center:</span> {{ $vendor->VenderAccount->work }}</p>
-                    <p><span class="font-medium text-gray-700">Alt Number:</span> {{ $vendor->VenderAccount->altenative_number ?? 'N/A' }}</p>
-                    <p><span class="font-medium text-gray-700">Bank:</span> {{ $vendor->VenderAccount->bank_name ?? 'N/A' }} ({{ $vendor->VenderAccount->bank_number ?? 'N/A' }})</p>
+                    <p><span class="font-medium text-gray-700">{{ __('system.common.work_center') }}:</span> {{ $vendor->VenderAccount->work }}</p>
+                    <p><span class="font-medium text-gray-700">{{ __('system.vendors.alt_number') }}:</span> {{ $vendor->VenderAccount->altenative_number ?? __('system.common.na') }}</p>
+                    <p><span class="font-medium text-gray-700">{{ __('system.vendors.bank') }}:</span> {{ $vendor->VenderAccount->bank_name ?? __('system.common.na') }} ({{ $vendor->VenderAccount->bank_number ?? __('system.common.na') }})</p>
                     
                     <form class="flex items-center space-x-2 pt-2" method="post" action="{{ route('vender.percent') }}">
                         @csrf
                         <input type="hidden" name="vender_id" value="{{ $vendor->id }}">
-                        <span class="font-medium text-gray-700">Percentage:</span>
+                        <span class="font-medium text-gray-700">{{ __('system.common.percentage') }}:</span>
                         <input type="number" name="percent" max="100" min="0" value="{{ $vendor->VenderAccount->percentage }}"
                             class="w-20 px-2 py-1 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
                         <button type="submit" class="px-3 py-1 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
-                            Save
+                            {{ __('system.common.save') }}
                         </button>
                     </form>
                 </div>
                 @else
-                <p class="text-gray-500">No vendor account information available.</p>
+                <p class="text-gray-500">{{ __('system.vendors.no_account_info') }}</p>
                 @endif
             </div>
         </div>
@@ -167,7 +167,7 @@
         <div class="p-6 border-t border-gray-200 flex justify-end">
             <button onclick="closeModal('vendorModal{{ $vendor->id }}')" 
                 class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors">
-                Close
+                {{ __('system.common.close') }}
             </button>
         </div>
     </div>
@@ -190,11 +190,11 @@ $(document).ready(function() {
         searching: true,
         ordering: true,
         language: {
-            emptyTable: "No vendors found",
+            emptyTable: @json(__('system.common.dt_empty_vendors')),
             search: "_INPUT_",
-            searchPlaceholder: "Search vendors...",
+            searchPlaceholder: @json(__('system.common.dt_search_vendors')),
             lengthMenu: "Show _MENU_",
-            info: "Showing _START_ to _END_ of _TOTAL_ vendors",
+            info: @json(__('system.common.dt_info_vendors')),
             paginate: {
                 first: '<i class="fas fa-angle-double-left"></i>',
                 last: '<i class="fas fa-angle-double-right"></i>',

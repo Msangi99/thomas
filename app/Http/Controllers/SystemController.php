@@ -108,7 +108,7 @@ class SystemController extends Controller
         foreach ($recentBookings as $b) {
             $recentActivity->push([
                 'type' => 'booking',
-                'message' => 'New booking confirmed',
+                'message' => __('system.dashboard.new_booking_confirmed'),
                 'detail' => 'Booking ' . ($b->booking_code ?? '') . ' for ' . ($b->campany->name ?? '') . ' – ' . ($b->route->from ?? '') . ' to ' . ($b->route->to ?? ''),
                 'amount' => $b->amount,
                 'time' => $b->created_at,
@@ -117,7 +117,7 @@ class SystemController extends Controller
         foreach ($recentCancellations as $c) {
             $recentActivity->push([
                 'type' => 'cancelled',
-                'message' => 'Booking cancelled',
+                'message' => __('system.dashboard.booking_cancelled'),
                 'detail' => (optional($c->booking)->booking_code ?? 'N/A') . ' – ' . (optional($c->booking)->customer_name ?? 'N/A'),
                 'amount' => $c->amount,
                 'time' => $c->created_at,
@@ -304,7 +304,7 @@ class SystemController extends Controller
 
         return redirect()
             ->back()
-            ->with('success', 'Withdrawal request marked as ' . $request->status . '.');
+            ->with('success', __('system.messages.withdrawal_marked', ['status' => $request->status]));
     }
 
     /**
@@ -325,7 +325,7 @@ class SystemController extends Controller
 
         return redirect()
             ->back()
-            ->with('success', 'Platform percentage for this operator has been saved.');
+            ->with('success', __('system.messages.platform_percent_saved'));
     }
 
     public function pay_request(Request $request)
@@ -392,7 +392,7 @@ class SystemController extends Controller
         $transaction->status = 'Completed';
         $transaction->save();
 
-        return redirect()->route('pay.request')->with('success', 'Transaction marked as completed.');
+        return redirect()->route('pay.request')->with('success', __('system.messages.transaction_completed'));
     }
 
     public function cancels(Request $request, $transaction, $campany = null)
@@ -401,7 +401,7 @@ class SystemController extends Controller
         $transaction->status = 'Cancelled';
         $transaction->save();
 
-        return redirect()->route('pay.request')->with('success', 'Transaction cancelled.');
+        return redirect()->route('pay.request')->with('success', __('system.messages.transaction_cancelled'));
     }
 
     public function complete(Request $request, $transaction, $campany = null, $vender = null, $reference_number = null)
@@ -410,7 +410,7 @@ class SystemController extends Controller
 
         // Validate company only when this is a company (not vender) transaction
         if ($campany != 0 && (int) $transaction->campany_id !== (int) $campany) {
-            return redirect()->back()->with('error', 'Invalid company for this transaction.');
+            return redirect()->back()->with('error', __('system.messages.invalid_company_transaction'));
         }
         if ($campany != 0) {
             $transaction->status = 'Completed';
@@ -421,7 +421,7 @@ class SystemController extends Controller
             // So we don't need to deduct again when approved - just mark as completed
             // The balance already reflects the pending amount being removed
 
-            return redirect()->back()->with('success', 'Transaction marked as Completed.');
+            return redirect()->back()->with('success', __('system.messages.transaction_completed_back'));
         } else if ($vender != 0) {
             $transaction->status = 'Completed';
             $transaction->reference_number = $request->reference_number;
@@ -432,9 +432,9 @@ class SystemController extends Controller
                 $balance->amount -= $transaction->amount;
                 $balance->save();
             }
-            return redirect()->back()->with('success', 'Transaction marked as Completed.');
+            return redirect()->back()->with('success', __('system.messages.transaction_completed_back'));
         } else {
-            return back()->with('error', 'invalid transaction');
+            return back()->with('error', __('system.messages.invalid_transaction'));
         }
     }
 
@@ -443,7 +443,7 @@ class SystemController extends Controller
         $transaction = Transaction::findOrFail($transaction);
 
         if ($campany != 0 && (int) $transaction->campany_id !== (int) $campany) {
-            return redirect()->back()->with('error', 'Invalid company for this transaction.');
+            return redirect()->back()->with('error', __('system.messages.invalid_company_transaction'));
         }
 
         // If transaction was pending, refund the amount back to balance
@@ -458,7 +458,7 @@ class SystemController extends Controller
         $transaction->status = 'Cancelled';
         $transaction->save();
 
-        return redirect()->back()->with('success', 'Transaction cancelled.');
+        return redirect()->back()->with('success', __('system.messages.transaction_cancelled'));
     }
 
     public function campany()
@@ -482,7 +482,7 @@ class SystemController extends Controller
         $campany->commission_amount = $amount;
         $campany->save();
 
-        return back()->with('success', 'company edit successful');
+        return back()->with('success', __('system.messages.company_edit_success'));
     }
 
     public function campanyShow($id)
@@ -635,19 +635,19 @@ class SystemController extends Controller
         
         // Validate that data exists
         if (empty($data)) {
-            return redirect()->back()->with('error', 'No data provided for income report generation.');
+            return redirect()->back()->with('error', __('system.messages.no_income_data'));
         }
         
         $data = json_decode($data, true);
         
         // Validate JSON decode was successful
         if ($data === null || !is_array($data)) {
-            return redirect()->back()->with('error', 'Invalid data format. Please try again.');
+            return redirect()->back()->with('error', __('system.messages.invalid_income_format'));
         }
         
         // Validate that data array is not empty
         if (empty($data)) {
-            return redirect()->back()->with('error', 'No booking data found for income report generation.');
+            return redirect()->back()->with('error', __('system.messages.no_booking_income_data'));
         }
 
         return $this->generatePDF($data);
@@ -680,7 +680,7 @@ class SystemController extends Controller
         $vender->status = $status;
         $vender->save();
 
-        return back()->with('success', 'changes successful');
+        return back()->with('success', __('system.messages.changes_successful'));
     }
     
     public function vender_percent(Request $request)
@@ -691,7 +691,7 @@ class SystemController extends Controller
         ]);
         $user = user::find($request->vender_id);
         $user->VenderAccount->update(['percentage' => $request->percent]);
-        return back()->with('success','account updated');
+        return back()->with('success', __('system.messages.account_updated'));
     }
 
     public function profile()
@@ -728,15 +728,16 @@ class SystemController extends Controller
             $user->save();
 
 
-            return back()->with('success', 'Profile updated successfully');
+            return back()->with('success', __('system.messages.profile_updated'));
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to update profile: ' . $e->getMessage()])->withInput();
+            return back()->withErrors(['error' => __('system.messages.profile_update_failed', ['error' => $e->getMessage()])])->withInput();
         }
     }
 
     public function cities()
     {
-        return view('system.cities');
+        $cities = City::orderBy('name')->get();
+        return view('system.cities', compact('cities'));
     }
 
     public function store_city(Request $request)
@@ -748,15 +749,15 @@ class SystemController extends Controller
         try {
             // Create a new city
             if (City::where('name', $request->name)->exists()) {
-                return back()->with('error', 'City already exists');
+                return back()->with('error', __('system.messages.city_exists'));
             }
             City::create([
                 'name' => $request->name,
             ]);
 
-            return back()->with('success', 'City created successfully');
+            return back()->with('success', __('system.messages.city_created'));
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to create city: ' . $e->getMessage()])->withInput();
+            return back()->withErrors(['error' => __('system.messages.city_create_failed', ['error' => $e->getMessage()])])->withInput();
         }
     }
 
@@ -778,7 +779,7 @@ class SystemController extends Controller
         $used = $request->used;
 
         if (empty($code) || empty($used)) {
-            return back()->with('error', 'fill all inputs');
+            return back()->with('error', __('system.messages.fill_all_inputs'));
         }
 
         $data = Discount::create([
@@ -805,9 +806,9 @@ class SystemController extends Controller
         }
 
         if ($data) {
-            return back()->with('success', 'Discount coupon created.' . ($smsSent < count($phone) ? ' Some SMS notifications could not be sent.' : ''));
+            return back()->with('success', __('system.messages.discount_created') . ($smsSent < count($phone) ? __('system.messages.discount_sms_partial') : ''));
         } else {
-            return back()->with('error', 'Coupon failed to be created.');
+            return back()->with('error', __('system.messages.discount_failed'));
         }
     }
 
@@ -873,7 +874,7 @@ class SystemController extends Controller
 
         // Check if wallet exists and has sufficient balance
         if (!$wallet || $wallet->balance < $request->amount) {
-            return back()->with('error', 'Insufficient balance or wallet not found');
+            return back()->with('error', __('system.messages.insufficient_balance'));
         }
 
         try {
@@ -888,9 +889,9 @@ class SystemController extends Controller
             // Decrement the balance
             $wallet->decrement('balance', $request->amount);
 
-            return back()->with('success', 'Balance updated successfully');
+            return back()->with('success', __('system.messages.balance_updated'));
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to update balance: ' . $e->getMessage());
+            return back()->with('error', __('system.messages.balance_update_failed', ['error' => $e->getMessage()]));
         }
     }
 
@@ -963,9 +964,9 @@ class SystemController extends Controller
                 }
             }
 
-            return back()->with('success', 'Profile updated successfully');
+            return back()->with('success', __('system.messages.profile_updated'));
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to update profile: ' . $e->getMessage()])->withInput();
+            return back()->withErrors(['error' => __('system.messages.profile_update_failed', ['error' => $e->getMessage()])])->withInput();
         }
     }
     
@@ -1019,7 +1020,7 @@ class SystemController extends Controller
             'test_mode' => $request->boolean('test_mode'),
         ]);
 
-        return back()->with('success', 'settings updated');
+        return back()->with('success', __('system.messages.settings_updated'));
     }
 
     public function refunds()
@@ -1052,7 +1053,7 @@ class SystemController extends Controller
             }
         }
 
-        return back()->with('success', 'Refund approved successfully.');
+        return back()->with('success', __('system.messages.refund_approved'));
     }
 
     public function rejectRefund($id)
@@ -1071,7 +1072,7 @@ class SystemController extends Controller
 
         RefundPercentage::where('booking_code', $refund->booking_code)->delete();
 
-        return back()->with('error', 'Refund rejected.');
+        return back()->with('error', __('system.messages.refund_rejected'));
     }
 
     public function cancelled_bookings(Request $request)

@@ -16,12 +16,12 @@ class RebookController extends Controller
     
         if($booking->travel_date <= $now)
         {
-            return back()->with('error', 'Your rebooking is out to date you cant rebook this booking');
+            return back()->with('error', __('all.rebooking_out_of_date'));
         }
 
         Session::put('rebook', $booking);
 
-        return redirect()->route('customer.mybooking.search')->with('warning', 'Make sure you finish your booking before logout.');
+        return redirect()->route('customer.mybooking.search')->with('warning', __('all.finish_booking_before_logout'));
     }
 
     public function rebook_data($data)
@@ -45,6 +45,6 @@ class RebookController extends Controller
         
         Session::forget('rebook');
 
-        return redirect()->route('customer.mybooking')->with('success', 'Your rebooking has been completed successfully');
+        return redirect()->route('customer.mybooking')->with('success', __('all.rebooking_completed_success'));
     }
 }

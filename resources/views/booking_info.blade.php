@@ -24,7 +24,7 @@
         @if (!empty($searchQuery))
             <p class="text-sm text-gray-600 mb-4 fade-in">
                 {{ __('all.search_button') }}: <strong>{{ $searchQuery }}</strong>
-                · {{ $bookings->count() }} {{ $bookings->count() === 1 ? 'booking' : 'bookings' }}
+                · {{ $bookings->count() }} {{ $bookings->count() === 1 ? __('all.booking_singular') : __('all.bookings_plural') }}
             </p>
         @endif
 
@@ -105,7 +105,7 @@
                                         <form action="{{ route('booking.edit', ['id' => $book->id]) }}" method="get">
                                             @csrf
                                             <input type="hidden" name="booking_id" value="{{ $book->id }}">
-                                            <button type="submit" class="page-btn text-xs py-2 px-3" style="background:#16a34a" title="Edit">
+                                            <button type="submit" class="page-btn text-xs py-2 px-3" style="background:#16a34a" title="{{ __('all.edit_title') }}">
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                         </form>
@@ -113,7 +113,7 @@
                                         <form action="{{ route('ticket.print') }}" method="post">
                                             @csrf
                                             <input type="hidden" name="data" value="{{ $book }}">
-                                            <button type="submit" class="page-btn text-xs py-2 px-3" style="background:#ca8a04" title="Print">
+                                            <button type="submit" class="page-btn text-xs py-2 px-3" style="background:#ca8a04" title="{{ __('all.print_title') }}">
                                                 <i class="fas fa-print"></i>
                                             </button>
                                         </form>
@@ -170,11 +170,28 @@ $(document).ready(function () {
     var $firstRow = $('#guestBookingsTable tbody tr:first');
     if ($firstRow.length && $firstRow.find('td').length === 8) {
         $('#guestBookingsTable').DataTable({
-            paging: true,
-            searching: true,
-            ordering: true,
-            info: true,
-            columnDefs: [{ orderable: false, searchable: false, targets: 7 }]
+            pageLength: 10,
+            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, @json(__('all.dt_all'))]],
+            order: [[5, 'desc']],
+            autoWidth: false,
+            dom: '<"guest-dt-top"lf>rt<"guest-dt-bottom"ip>',
+            language: {
+                search: '',
+                searchPlaceholder: @json(__('all.dt_search_placeholder')),
+                lengthMenu: @json(__('all.dt_per_page')),
+                info: @json(__('all.dt_showing')) + ' _START_ ' + @json(__('all.dt_to')) + ' _END_ ' + @json(__('all.dt_of')) + ' _TOTAL_',
+                infoEmpty: @json(__('customer/myticket.no_booking_found')),
+                paginate: {
+                    first: @json(__('all.dt_first')),
+                    last: @json(__('all.dt_last')),
+                    next: @json(__('all.next')),
+                    previous: @json(__('all.dt_previous'))
+                }
+            },
+            columnDefs: [
+                { orderable: false, targets: [7] },
+                { searchable: false, targets: [0, 7] }
+            ]
         });
     }
 });

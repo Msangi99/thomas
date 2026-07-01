@@ -110,7 +110,7 @@
                     if (!mobile.trim() && !bank.trim()) {
                         event.preventDefault();
                         if (errEl) {
-                            errEl.textContent = @json(__('all.please_enter_mobile_or_bank') ?? 'Please enter a mobile number or bank account number.');
+                            errEl.textContent = @json(__('all.please_enter_mobile_or_bank'));
                             errEl.classList.remove('hidden');
                         }
                         return false;
@@ -139,21 +139,21 @@
 
             $('#ticketsTable').DataTable({
                 pageLength: 10,
-                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, @json(__('all.all') ?? 'All')]],
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, @json(__('all.dt_all'))]],
                 order: [[5, 'desc']],
                 autoWidth: false,
                 dom: '<"tickets-dt-top"lf>rt<"tickets-dt-bottom"ip>',
                 language: {
                     search: '',
-                    searchPlaceholder: @json(__('all.search') ?? 'Search tickets...'),
-                    lengthMenu: @json('_MENU_ per page'),
-                    info: @json(__('all.showing') ?? 'Showing') + ' _START_ ' + @json(__('all.to') ?? 'to') + ' _END_ ' + @json(__('all.of') ?? 'of') + ' _TOTAL_',
+                    searchPlaceholder: @json(__('all.dt_search_placeholder')),
+                    lengthMenu: @json(__('all.dt_per_page')),
+                    info: @json(__('all.dt_showing')) + ' _START_ ' + @json(__('all.dt_to')) + ' _END_ ' + @json(__('all.dt_of')) + ' _TOTAL_',
                     infoEmpty: @json(__('customer/myticket.no_booking_found')),
                     paginate: {
-                        first: @json(__('all.first') ?? 'First'),
-                        last: @json(__('all.last') ?? 'Last'),
-                        next: @json(__('all.next') ?? 'Next'),
-                        previous: @json(__('all.previous') ?? 'Previous')
+                        first: @json(__('all.dt_first')),
+                        last: @json(__('all.dt_last')),
+                        next: @json(__('all.next')),
+                        previous: @json(__('all.dt_previous'))
                     }
                 },
                 columnDefs: [

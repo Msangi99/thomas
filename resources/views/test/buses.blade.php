@@ -23,7 +23,7 @@
                                     fill="none">
                                     <circle cx="4.78114" cy="4.78114" r="4.78114" fill="#38B548"></circle>
                                 </svg>
-                                Plate No. - <label class="mb-0" id="busPlateNumber_0_0">T 583 EBL</label>
+                                {{ __('all.plate_no_label') }} - <label class="mb-0" id="busPlateNumber_0_0">T 583 EBL</label>
                                 <p id="busType_0_0">2x2 Luxury| <span style="color:#d55b4c;" id="busVia_0_0"> VIA
                                         BAGAMOYO</span></p>
                             </div>
@@ -53,12 +53,12 @@
                                     <div class="col-lg-3 col-12 main-button" align="right">
                                         <div class="button1_wrapper">
                                             <img src="images/seatavail.png">
-                                            <small class="mt-1" style="color:#464646">1 Seats Left</small>
+                                            <small class="mt-1" style="color:#464646">{{ __('all.seats_left_label', ['count' => 1]) }}</small>
                                             <div class="pt-2 currencyAvailable_0_0">
                                                 <button type="button" class="btn btn-warning btn-lg"
                                                     id="selectSeats_0_0"
                                                     style="border-radius: 5px;border:none;background: #ED1C24;color:#fff;"
-                                                    onclick="checkCurrency(0, 0, 0)">Select Seats</button>
+                                                    onclick="checkCurrency(0, 0, 0)">{{ __('all.select_seats') }}</button>
                                                 <input type="hidden" id="sub_id_0_0" value="1462971">
                                                 <input type="hidden" id="tdi_id_0_0" value="304068786">
                                                 <input type="hidden" id="lb_id_0_0" value="9919">
@@ -76,7 +76,7 @@
                                             </div>
                                             <div class="currencyNotAvailable_0_0 text-center"
                                                 style="display: none; color: red;">
-                                                Currency Not Supported
+                                                {{ __('all.currency_not_supported') }}
                                             </div>
                                         </div>
                                     </div>
@@ -92,10 +92,10 @@
                                     </div>
                                     <div class="col-md-4 col-9">
                                         <span style="color:#696969;cursor:pointer;"
-                                            onclick="myFunction(0)">Amenities</span>
+                                            onclick="myFunction(0)">{{ __('all.amenities') }}</span>
                                         <span
                                             style="border-right: 1px solid #696969;margin-left: 20px;margin-right: 20px;"></span>
-                                        <span style="color:#696969;">Booking Policy</span>
+                                        <span style="color:#696969;">{{ __('customer/busroot.booking_policy') }}</span>
                                     </div>
                                 </div>
                             </div>

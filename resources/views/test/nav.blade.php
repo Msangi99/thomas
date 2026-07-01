@@ -9,15 +9,15 @@
 
         <!-- OTAPP-style pill nav -->
         <div class="hidden lg:flex home-nav__pill">
-            <a href="{{ route('home') }}" class="home-nav__pill-item home-nav__pill-item--active">Buses</a>
+            <a href="{{ route('home') }}" class="home-nav__pill-item home-nav__pill-item--active">{{ __('all.nav_buses') }}</a>
         </div>
 
         <!-- Desktop links -->
         <nav class="hidden md:flex items-center gap-5">
-            <a href="{{ route('about') }}" class="home-nav__link">About</a>
-            <a href="{{ route('contact') }}" class="home-nav__link">Contact</a>
-            <a href="{{ route('home') }}#testimonials" class="home-nav__link">Testimonials</a>
-            <a href="{{ route('routes') }}" class="home-nav__link @if(request()->routeIs('routes')) font-bold @endif">Routes</a>
+            <a href="{{ route('about') }}" class="home-nav__link">{{ __('all.nav_about') }}</a>
+            <a href="{{ route('contact') }}" class="home-nav__link">{{ __('all.contact') }}</a>
+            <a href="{{ route('home') }}#testimonials" class="home-nav__link">{{ __('all.nav_testimonials') }}</a>
+            <a href="{{ route('routes') }}" class="home-nav__link @if(request()->routeIs('routes')) font-bold @endif">{{ __('all.nav_routes') }}</a>
             <a href="{{ route('info') }}" class="home-nav__link @if(request()->routeIs('info', 'booking_info', 'booking.verification.*')) font-bold @endif">{{ __('all.booking_information') }}</a>
         </nav>
 
@@ -28,48 +28,63 @@
                 <a href="mailto:support@hisgc.co.tz" class="text-gray-500 hover:text-[var(--home-primary)]">support@hisgc.co.tz</a>
             </div>
 
+            <select class="hidden md:block text-xs border rounded-full px-2 py-1.5 font-medium text-gray-700"
+                    aria-label="{{ __('all.language') }}"
+                    onchange="window.location.href = '{{ route('set.locale', ['lang' => '']) }}' + this.value">
+                <option value="en" {{ app()->getLocale() == 'en' ? 'selected' : '' }}>{{ __('all.english') }}</option>
+                <option value="sw" {{ app()->getLocale() == 'sw' ? 'selected' : '' }}>{{ __('all.kiswahili') }}</option>
+            </select>
+
             @guest
-                <a href="{{ route('login') }}" class="hidden md:block px-4 py-2 text-sm font-semibold border rounded-full transition-colors" style="color:var(--home-primary);border-color:var(--home-primary)">Login</a>
-                <a href="{{ route('register') }}" class="hidden md:block px-4 py-2 text-sm font-semibold text-white rounded-full transition-colors" style="background:var(--home-primary)">Register</a>
+                <a href="{{ route('login') }}" class="hidden md:block px-4 py-2 text-sm font-semibold border rounded-full transition-colors" style="color:var(--home-primary);border-color:var(--home-primary)">{{ __('all.login') }}</a>
+                <a href="{{ route('register') }}" class="hidden md:block px-4 py-2 text-sm font-semibold text-white rounded-full transition-colors" style="background:var(--home-primary)">{{ __('all.register') }}</a>
             @endguest
             @auth
                 @if (auth()->user()->isAdmin())
-                    <a href="{{ route('system.index') }}" class="hidden md:block px-4 py-2 text-sm font-semibold text-white rounded-full" style="background:var(--home-primary)">Dashboard</a>
+                    <a href="{{ route('system.index') }}" class="hidden md:block px-4 py-2 text-sm font-semibold text-white rounded-full" style="background:var(--home-primary)">{{ __('all.dashboard') }}</a>
                 @elseif (auth()->user()->isBuscampany())
-                    <a href="{{ route('index') }}" class="hidden md:block px-4 py-2 text-sm font-semibold text-white rounded-full" style="background:var(--home-primary)">Dashboard</a>
+                    <a href="{{ route('index') }}" class="hidden md:block px-4 py-2 text-sm font-semibold text-white rounded-full" style="background:var(--home-primary)">{{ __('all.dashboard') }}</a>
                 @elseif (auth()->user()->isVender())
                     @unless (request()->routeIs('vender.*', 'round.trip*'))
-                        <a href="{{ route('vender.index') }}" class="hidden md:block px-4 py-2 text-sm font-semibold text-white rounded-full" style="background:var(--home-primary)">Dashboard</a>
+                        <a href="{{ route('vender.index') }}" class="hidden md:block px-4 py-2 text-sm font-semibold text-white rounded-full" style="background:var(--home-primary)">{{ __('all.dashboard') }}</a>
                     @endunless
                 @elseif (auth()->user()->role == 'customer')
                     @unless (request()->routeIs('customer.*', 'customer.round.trip*', 'round.trip*'))
-                        <a href="{{ route('customer.index') }}" class="hidden md:block px-4 py-2 text-sm font-semibold text-white rounded-full" style="background:var(--home-primary)">Dashboard</a>
+                        <a href="{{ route('customer.index') }}" class="hidden md:block px-4 py-2 text-sm font-semibold text-white rounded-full" style="background:var(--home-primary)">{{ __('all.dashboard') }}</a>
                     @endunless
                 @endif
             @endauth
 
-            <button type="button" id="mobile-menu-btn" class="md:hidden text-gray-700 p-2 hover:bg-gray-100 rounded-md" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobile-menu">
+            <button type="button" id="mobile-menu-btn" class="md:hidden text-gray-700 p-2 hover:bg-gray-100 rounded-md" aria-label="{{ __('all.toggle_menu') }}" aria-expanded="false" aria-controls="mobile-menu">
                 <i class="fas fa-bars text-xl"></i>
             </button>
         </div>
     </div>
 
     <!-- Mobile menu -->
-    <div id="mobile-menu" class="md:hidden absolute top-full left-0 right-0 z-[60] bg-white border-t border-gray-200 shadow-lg rounded-b-2xl" role="navigation" aria-label="Mobile navigation">
+    <div id="mobile-menu" class="md:hidden absolute top-full left-0 right-0 z-[60] bg-white border-t border-gray-200 shadow-lg rounded-b-2xl" role="navigation" aria-label="{{ __('all.mobile_navigation') }}">
         <div class="flex flex-col p-4 gap-1">
-            <a href="{{ route('home') }}" class="px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-md font-medium">Home</a>
-            <a href="{{ route('about') }}" class="px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-md font-medium">About Us</a>
-            <a href="{{ route('contact') }}" class="px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-md font-medium">Contact Us</a>
-            <a href="{{ route('info') }}" class="px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-md font-medium">Booking Info</a>
-            <a href="{{ route('routes') }}" class="px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-md font-medium">Routes</a>
-            <a href="{{ route('home') }}#testimonials" class="px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-md font-medium">Testimonials</a>
+            <a href="{{ route('home') }}" class="px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-md font-medium">{{ __('all.home') }}</a>
+            <a href="{{ route('about') }}" class="px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-md font-medium">{{ __('all.about_us') }}</a>
+            <a href="{{ route('contact') }}" class="px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-md font-medium">{{ __('all.contact_us_link') }}</a>
+            <a href="{{ route('info') }}" class="px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-md font-medium">{{ __('all.booking_info_short') }}</a>
+            <a href="{{ route('routes') }}" class="px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-md font-medium">{{ __('all.nav_routes') }}</a>
+            <a href="{{ route('home') }}#testimonials" class="px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-md font-medium">{{ __('all.nav_testimonials') }}</a>
+            <div class="px-4 py-2">
+                <label for="mobile-locale" class="block text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">{{ __('all.language') }}</label>
+                <select id="mobile-locale" class="w-full page-input text-sm"
+                        onchange="window.location.href = '{{ route('set.locale', ['lang' => '']) }}' + this.value">
+                    <option value="en" {{ app()->getLocale() == 'en' ? 'selected' : '' }}>{{ __('all.english') }}</option>
+                    <option value="sw" {{ app()->getLocale() == 'sw' ? 'selected' : '' }}>{{ __('all.kiswahili') }}</option>
+                </select>
+            </div>
             <a href="tel:+255755879793" class="px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-md font-medium flex items-center gap-2">
                 <i class="fas fa-phone text-sm"></i> +255 755 879 793
             </a>
             @guest
                 <div class="pt-2 mt-2 border-t border-gray-200 space-y-2">
-                    <a href="{{ route('login') }}" class="block w-full px-4 py-2.5 text-center font-medium border rounded-lg" style="color:var(--home-primary);border-color:var(--home-primary)">Sign In</a>
-                    <a href="{{ route('register') }}" class="block w-full px-4 py-2.5 text-center font-medium text-white rounded-lg" style="background:var(--home-primary)">Register</a>
+                    <a href="{{ route('login') }}" class="block w-full px-4 py-2.5 text-center font-medium border rounded-lg" style="color:var(--home-primary);border-color:var(--home-primary)">{{ __('all.sign_in') }}</a>
+                    <a href="{{ route('register') }}" class="block w-full px-4 py-2.5 text-center font-medium text-white rounded-lg" style="background:var(--home-primary)">{{ __('all.register') }}</a>
                 </div>
             @endguest
             @auth
@@ -122,13 +137,13 @@
                 @else
                 <div class="pt-2 mt-2 border-t border-gray-200">
                     @if (auth()->user()->isAdmin())
-                        <a href="{{ route('system.index') }}" class="block w-full px-4 py-2.5 text-center font-medium text-white rounded-lg" style="background:var(--home-primary)">Dashboard</a>
+                        <a href="{{ route('system.index') }}" class="block w-full px-4 py-2.5 text-center font-medium text-white rounded-lg" style="background:var(--home-primary)">{{ __('all.dashboard') }}</a>
                     @elseif (auth()->user()->isBuscampany())
-                        <a href="{{ route('index') }}" class="block w-full px-4 py-2.5 text-center font-medium text-white rounded-lg" style="background:var(--home-primary)">Dashboard</a>
+                        <a href="{{ route('index') }}" class="block w-full px-4 py-2.5 text-center font-medium text-white rounded-lg" style="background:var(--home-primary)">{{ __('all.dashboard') }}</a>
                     @elseif (auth()->user()->isVender())
-                        <a href="{{ route('vender.index') }}" class="block w-full px-4 py-2.5 text-center font-medium text-white rounded-lg" style="background:var(--home-primary)">Dashboard</a>
+                        <a href="{{ route('vender.index') }}" class="block w-full px-4 py-2.5 text-center font-medium text-white rounded-lg" style="background:var(--home-primary)">{{ __('all.dashboard') }}</a>
                     @elseif (auth()->user()->role == 'customer')
-                        <a href="{{ route('customer.index') }}" class="block w-full px-4 py-2.5 text-center font-medium text-white rounded-lg" style="background:var(--home-primary)">Dashboard</a>
+                        <a href="{{ route('customer.index') }}" class="block w-full px-4 py-2.5 text-center font-medium text-white rounded-lg" style="background:var(--home-primary)">{{ __('all.dashboard') }}</a>
                     @endif
                 </div>
                 @endif

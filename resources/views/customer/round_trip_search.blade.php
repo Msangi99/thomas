@@ -9,20 +9,29 @@
             ? $departureCityName . ' ➔ ' . $arrivalCityName
             : __('customer_sidebar.Round Trip'),
         'subtitle' => $departureCityName && $arrivalCityName
-            ? __('all.departure_date') . ': ' . \Carbon\Carbon::parse($departure_date)->format('l, F j, Y') . ' · Select your outbound bus'
+            ? __('all.departure_date') . ': ' . \Carbon\Carbon::parse($departure_date)->format('l, F j, Y') . ' · ' . __('all.round_trip_select_outbound_bus')
             : __('all.search_bus_schedules'),
         'image' => 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1200&q=80',
     ])
 @endsection
 
 @section('content')
-    @if (session('info'))
+    @if (session('round_trip_outbound_saved'))
+        <section class="page-section pt-6 pb-0">
+            <div class="container mx-auto px-4 max-w-4xl">
+                <div class="booking-alert booking-alert--info fade-in" role="status">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    {{ __('all.outbound_leg_saved_return') }}
+                </div>
+            </div>
+        </section>
+    @elseif (session('info'))
         <section class="page-section pt-6 pb-0">
             <div class="container mx-auto px-4 max-w-4xl">
                 <div class="booking-alert booking-alert--info fade-in" role="status">
                     <i class="fas fa-info-circle mr-2"></i>
                     @if (session('info') === 'proceed with returning booking')
-                        Outbound leg saved. Search and select your return bus below.
+                        {{ __('all.outbound_leg_saved_return') }}
                     @else
                         {{ session('info') }}
                     @endif

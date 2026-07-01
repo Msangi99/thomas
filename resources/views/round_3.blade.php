@@ -10,7 +10,7 @@
 
 @section('page_hero')
     @include('test.partials.page_hero', [
-        'eyebrow' => 'Round Trip · Step 1',
+        'eyebrow' => __('all.round_trip_step_eyebrow', ['step' => 1]),
         'title' => ($car->schedule->from ?? 'Route') . ' ➔ ' . ($car->schedule->to ?? ''),
         'subtitle' => __('all.choose_pickup_dropping_locations'),
         'image' => 'https://images.unsplash.com/photo-1570125909232-e097323dccff?w=1200&q=80',

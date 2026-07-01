@@ -52,13 +52,13 @@ class OtherController extends Controller
             // event(new UserCreated($user));
 
             return redirect()->route('system.local_admin')
-                ->with('success', 'Local admin created successfully!');
+                ->with('success', __('system.messages.local_admin_created'));
         } catch (\Throwable $th) {
             // Log the error for debugging
             \Log::error('Error creating local admin: ' . $th->getMessage());
 
             return back()->withInput()
-                ->with('error', 'Error creating local admin: ' . $th->getMessage());
+                ->with('error', __('system.messages.local_admin_create_error', ['error' => $th->getMessage()]));
         }
     }
 
@@ -90,13 +90,13 @@ class OtherController extends Controller
             $user->save();
 
             return redirect()->route('local_admin.index')
-                ->with('success', 'Local admin updated successfully!');
+                ->with('success', __('system.messages.local_admin_updated'));
         } catch (\Throwable $th) {
             // Log the error for debugging
             \Log::error('Error updating local admin: ' . $th->getMessage());
 
             return back()->withInput()
-                ->with('error', 'Error updating local admin: ' . $th->getMessage());
+                ->with('error', __('system.messages.local_admin_update_error', ['error' => $th->getMessage()]));
         }
     }
     public function local_admin_destroy($id)
@@ -105,12 +105,12 @@ class OtherController extends Controller
         try {
             $user->delete();
             return redirect()->route('system.local_admin')
-                ->with('success', 'Local admin deleted successfully!');
+                ->with('success', __('system.messages.local_admin_deleted'));
         } catch (\Throwable $th) {
             // Log the error for debugging
             \Log::error('Error deleting local admin: ' . $th->getMessage());
 
-            return back()->with('error', 'Error deleting local admin: ' . $th->getMessage());
+            return back()->with('error', __('system.messages.local_admin_delete_error', ['error' => $th->getMessage()]));
         }
     }
 
@@ -136,9 +136,9 @@ class OtherController extends Controller
                 ]
             );
             if ($data->wasRecentlyCreated) {
-                $message = 'Access created successfully!';
+                $message = __('system.messages.access_created');
             } else {
-                $message = 'Access updated successfully!';
+                $message = __('system.messages.access_updated');
             }
 
             return back()
@@ -148,7 +148,7 @@ class OtherController extends Controller
             \Log::error('Error updating user role: ' . $th->getMessage());
 
             return back()->withInput()
-                ->with('error', 'Error updating user role: ' . $th->getMessage());
+                ->with('error', __('system.messages.role_update_error', ['error' => $th->getMessage()]));
         }
     }
 
@@ -176,19 +176,18 @@ class OtherController extends Controller
                 ]
             );
             if ($data->wasRecentlyCreated) {
-                $message = 'Access created successfully!';
+                $message = __('local_bus_owners.access_created_success');
             } else {
-                $message = 'Access updated successfully!';
+                $message = __('local_bus_owners.access_updated_success');
             }
 
             return back()
                 ->with('success', $message);
         } catch (\Throwable $th) {
-            // Log the error for debugging
             \Log::error('Error updating user role: ' . $th->getMessage());
 
             return back()->withInput()
-                ->with('error', 'Error updating user role: ' . $th->getMessage());
+                ->with('error', __('local_bus_owners.error_updating_user_role', ['error' => $th->getMessage()]));
         }
     }
 }

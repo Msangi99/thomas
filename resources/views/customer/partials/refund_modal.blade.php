@@ -6,7 +6,7 @@
             <div class="customer-panel__header flex justify-between items-center gap-3">
                 <h5 class="text-base" id="refundModalLabel{{ $book->id }}">{{ __('all.refund_title') }}</h5>
                 <button type="button" class="tickets-modal__close"
-                    data-close-refund-modal="refundModal{{ $book->id }}" aria-label="Close">
+                    data-close-refund-modal="refundModal{{ $book->id }}" aria-label="{{ __('all.close') }}">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -16,7 +16,7 @@
                     data-book-id="{{ $book->id }}">
                     @csrf
                     <input type="hidden" name="booking_id" value="{{ $book->id }}">
-                    <p class="text-sm text-gray-500">{{ __('all.refund_mobile_or_bank_hint') ?? 'Enter at least one: mobile number (must match booking phone) or bank account number.' }}</p>
+                    <p class="text-sm text-gray-500">{{ __('all.refund_mobile_or_bank_hint') }}</p>
 
                     <div>
                         <label for="fullname{{ $book->id }}" class="block text-sm font-semibold text-gray-700 mb-1">{{ __('all.full_name') }}</label>

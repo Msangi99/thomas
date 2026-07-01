@@ -9,7 +9,7 @@
         <div class="mb-8">
             <a href="{{ route('system.campany') }}" class="inline-flex items-center text-sm text-slate-600 hover:text-indigo-600 mb-4 transition-colors">
                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                Back to Bus Operators
+                {{ __('system.pages.back_to_operators') }}
             </a>
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div class="flex items-center gap-4">
@@ -20,7 +20,7 @@
                         <h1 class="text-2xl font-bold text-slate-800">{{ $campany->name }}</h1>
                         <p class="text-slate-500 text-sm mt-0.5">{{ $campany->user->name ?? '—' }} · {{ $campany->user->contact ?? '—' }}</p>
                         <span class="inline-flex mt-2 items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $campany->status == 1 ? 'bg-emerald-100 text-emerald-800' : ($campany->status == 2 ? 'bg-red-100 text-red-800' : 'bg-slate-100 text-slate-700') }}">
-                            {{ $campany->status == 1 ? 'Active' : ($campany->status == 2 ? 'Disabled' : 'Pending') }}
+                            {{ $campany->status == 1 ? __('system.common.active') : ($campany->status == 2 ? __('system.common.disabled') : __('system.common.pending')) }}
                         </span>
                     </div>
                 </div>
@@ -30,26 +30,26 @@
         {{-- KPI cards --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <div class="kpi-card bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5">
-                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Wallet Balance</p>
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">{{ __('system.pages.wallet_balance') }}</p>
                 <p class="mt-1 text-2xl font-bold text-slate-800">{{ $currency }} {{ number_format($campany->balance->amount ?? 0, 0) }}</p>
             </div>
             <div class="kpi-card bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5">
-                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Booking Revenue</p>
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">{{ __('system.pages.booking_revenue') }}</p>
                 <p class="mt-1 text-2xl font-bold text-emerald-600">{{ $currency }} {{ number_format($totalBookingsRevenue ?? 0, 0) }}</p>
             </div>
             <div class="kpi-card bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5">
-                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Commission (System)</p>
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">{{ __('system.pages.commission_system') }}</p>
                 <p class="mt-1 text-2xl font-bold text-indigo-600">{{ $currency }} {{ number_format($totalCommission ?? 0, 0) }}</p>
             </div>
             <div class="kpi-card bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5">
-                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Service Fees (System)</p>
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">{{ __('system.pages.service_fees_system') }}</p>
                 <p class="mt-1 text-2xl font-bold text-amber-600">{{ $currency }} {{ number_format($totalServiceFees ?? 0, 0) }}</p>
             </div>
         </div>
 
         {{-- Chart --}}
         <div class="chart-card bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 mb-8">
-            <h2 class="text-lg font-semibold text-slate-800 mb-4">Bookings & Revenue (Last 14 Days)</h2>
+            <h2 class="text-lg font-semibold text-slate-800 mb-4">{{ __('system.pages.bookings_revenue_chart') }}</h2>
             <div class="h-64">
                 <canvas id="bookingsChart" width="400" height="200"></canvas>
             </div>
@@ -59,17 +59,17 @@
             {{-- Recent Bookings --}}
             <div class="table-card bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-                    <h2 class="text-lg font-semibold text-slate-800">Recent Bookings</h2>
-                    <p class="text-sm text-slate-500">Paid bookings</p>
+                    <h2 class="text-lg font-semibold text-slate-800">{{ __('system.pages.recent_bookings') }}</h2>
+                    <p class="text-sm text-slate-500">{{ __('system.pages.paid_bookings_label') }}</p>
                 </div>
                 <div class="overflow-x-auto max-h-80 overflow-y-auto">
                     <table class="min-w-full divide-y divide-slate-100">
                         <thead class="bg-slate-50/80 sticky top-0">
                             <tr>
-                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">Code</th>
-                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">Route</th>
-                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">Date</th>
-                                <th class="px-4 py-2.5 text-right text-xs font-semibold text-slate-600">Amount</th>
+                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">{{ __('system.pages.code') }}</th>
+                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">{{ __('system.common.route') }}</th>
+                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">{{ __('system.common.date') }}</th>
+                                <th class="px-4 py-2.5 text-right text-xs font-semibold text-slate-600">{{ __('system.common.amount') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
@@ -81,7 +81,7 @@
                                     <td class="px-4 py-2.5 text-sm text-right font-medium text-slate-800">{{ $currency }} {{ number_format($b->amount ?? 0, 0) }}</td>
                                 </tr>
                             @empty
-                                <tr><td colspan="4" class="px-4 py-8 text-center text-slate-400 text-sm">No bookings yet.</td></tr>
+                                <tr><td colspan="4" class="px-4 py-8 text-center text-slate-400 text-sm">{{ __('system.pages.no_bookings_short') }}</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -91,17 +91,17 @@
             {{-- Schedules --}}
             <div class="table-card bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-                    <h2 class="text-lg font-semibold text-slate-800">Schedules</h2>
-                    <p class="text-sm text-slate-500">Upcoming trips</p>
+                    <h2 class="text-lg font-semibold text-slate-800">{{ __('system.sidebar.bus_schedule') }}</h2>
+                    <p class="text-sm text-slate-500">{{ __('system.pages.upcoming_trips') }}</p>
                 </div>
                 <div class="overflow-x-auto max-h-80 overflow-y-auto">
                     <table class="min-w-full divide-y divide-slate-100">
                         <thead class="bg-slate-50/80 sticky top-0">
                             <tr>
-                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">Bus</th>
-                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">From → To</th>
-                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">Date</th>
-                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">Time</th>
+                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">{{ __('system.pages.bus_label') }}</th>
+                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">{{ __('system.pages.from_to') }}</th>
+                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">{{ __('system.common.date') }}</th>
+                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">{{ __('system.pages.time_label') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
@@ -113,7 +113,7 @@
                                     <td class="px-4 py-2.5 text-sm text-slate-600">{{ $s->start ?? '—' }} - {{ $s->end ?? '—' }}</td>
                                 </tr>
                             @empty
-                                <tr><td colspan="4" class="px-4 py-8 text-center text-slate-400 text-sm">No schedules.</td></tr>
+                                <tr><td colspan="4" class="px-4 py-8 text-center text-slate-400 text-sm">{{ __('system.pages.no_schedules_short') }}</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -125,16 +125,16 @@
             {{-- Buses --}}
             <div class="table-card bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-                    <h2 class="text-lg font-semibold text-slate-800">Buses</h2>
-                    <p class="text-sm text-slate-500">{{ $campany->bus->count() }} total</p>
+                    <h2 class="text-lg font-semibold text-slate-800">{{ __('system.sidebar.buses') }}</h2>
+                    <p class="text-sm text-slate-500">{{ __('system.pages.total_count', ['count' => $campany->bus->count()]) }}</p>
                 </div>
                 <div class="overflow-x-auto max-h-64 overflow-y-auto">
                     <table class="min-w-full divide-y divide-slate-100">
                         <thead class="bg-slate-50/80 sticky top-0">
                             <tr>
-                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">Bus #</th>
-                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">Type</th>
-                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">Seats</th>
+                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">{{ __('system.pages.bus_number') }}</th>
+                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">{{ __('system.pages.type_label') }}</th>
+                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">{{ __('all.seats') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
@@ -145,7 +145,7 @@
                                     <td class="px-4 py-2.5 text-sm text-slate-600">{{ $bus->total_seats ?? '—' }}</td>
                                 </tr>
                             @empty
-                                <tr><td colspan="3" class="px-4 py-8 text-center text-slate-400 text-sm">No buses.</td></tr>
+                                <tr><td colspan="3" class="px-4 py-8 text-center text-slate-400 text-sm">{{ __('system.pages.no_buses_dot') }}</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -155,17 +155,17 @@
             {{-- Payment Requests (Transactions) --}}
             <div class="table-card bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-                    <h2 class="text-lg font-semibold text-slate-800">Payment Requests</h2>
-                    <p class="text-sm text-slate-500">Recent transactions</p>
+                    <h2 class="text-lg font-semibold text-slate-800">{{ __('system.sidebar.payment_request') }}</h2>
+                    <p class="text-sm text-slate-500">{{ __('system.pages.recent_transactions_sub') }}</p>
                 </div>
                 <div class="overflow-x-auto max-h-64 overflow-y-auto">
                     <table class="min-w-full divide-y divide-slate-100">
                         <thead class="bg-slate-50/80 sticky top-0">
                             <tr>
-                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">User</th>
-                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">Amount</th>
-                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">Status</th>
-                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">Date</th>
+                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">{{ __('system.common.user') }}</th>
+                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">{{ __('system.common.amount') }}</th>
+                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">{{ __('system.common.status') }}</th>
+                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-slate-600">{{ __('system.common.date') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
@@ -182,7 +182,7 @@
                                     <td class="px-4 py-2.5 text-sm text-slate-600">{{ $t->created_at ? $t->created_at->format('d M Y H:i') : '—' }}</td>
                                 </tr>
                             @empty
-                                <tr><td colspan="4" class="px-4 py-8 text-center text-slate-400 text-sm">No transactions.</td></tr>
+                                <tr><td colspan="4" class="px-4 py-8 text-center text-slate-400 text-sm">{{ __('system.pages.no_transactions_dot') }}</td></tr>
                             @endforelse
                         </tbody>
                     </table>

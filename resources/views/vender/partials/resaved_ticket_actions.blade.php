@@ -7,7 +7,7 @@
     </form>
 
     <form action="{{ route('vender.cancel.resaved', ['id' => $book->id]) }}" method="POST"
-        onsubmit="return confirm('{{ __('vender/resaved_tickets.cancel_confirm') }}')">
+        onsubmit="return confirm(@json(__('vender/resaved_tickets.cancel_confirm')))">
         @csrf
         <button type="submit" class="ticket-action-btn ticket-action-btn--danger" title="{{ __('all.cancel_title') }}">
             <i class="fas fa-times"></i>

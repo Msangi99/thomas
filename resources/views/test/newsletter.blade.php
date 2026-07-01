@@ -6,14 +6,14 @@
             <div class="glass-card p-8 md:p-12 max-w-4xl mx-auto">
                 <div class="flex flex-col md:flex-row items-center">
                     <div class="md:w-1/2 mb-6 md:mb-0 md:pr-8 fade-in">
-                        <h2 class="text-2xl md:text-3xl font-extrabold mb-3">Stay Updated</h2>
-                        <p class="text-indigo-100">Subscribe to our newsletter for exclusive deals, travel tips, and route updates.</p>
+                        <h2 class="text-2xl md:text-3xl font-extrabold mb-3">{{ __('all.stay_updated') }}</h2>
+                        <p class="text-indigo-100">{{ __('all.subscribe_newsletter') }}</p>
                     </div>
                     <div class="md:w-1/2 w-full fade-in delay-200">
                         <form class="flex">
-                            <input type="email" placeholder="Your email address" class="flex-1 px-4 py-3 rounded-l-lg focus:outline-none text-gray-900">
-                            <button class="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white px-6 py-3 rounded-r-lg font-medium transition-all btn-accent">
-                                Subscribe
+                            <input type="email" placeholder="{{ __('all.your_email_address') }}" class="flex-1 px-4 py-3 rounded-l-lg focus:outline-none text-gray-900">
+                            <button type="button" class="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white px-6 py-3 rounded-r-lg font-medium transition-all btn-accent">
+                                {{ __('all.subscribe') }}
                             </button>
                         </form>
                     </div>

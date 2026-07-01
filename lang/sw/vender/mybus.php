@@ -68,4 +68,12 @@ return [
     'select' => "chagua",
     'close' => "funga",
     'route' => 'Njia',
+    'bus_added_success' => 'Basi limeongezwa kwa mafanikio',
+    'failed_add_bus' => 'Imeshindwa kuongeza basi',
+    'seats_divisible_error' => 'Jumla ya viti lazima igawanyike kwa 4 au ibaki 1 ikigawanywa kwa 4.',
+    'update_successful' => 'Usasishaji umefanikiwa',
+    'bus_delete_successful' => 'Basi limefutwa kwa mafanikio',
+    'print_bus_pdf' => 'Chapisha Taarifa za Basi (PDF)',
+    'printed_at' => 'Ilichapishwa:',
+    'na' => 'H/P',
 ];

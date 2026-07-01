@@ -117,6 +117,12 @@
                                             {{ __('customer/busroot.clickpesa_payment') }}
                                         </button>
                                         <button type="button"
+                                            class="w-full text-left px-4 py-3 rounded-lg bg-white hover:bg-gray-100 text-blue-700" id="tab7-btn"
+                                            data-bs-toggle="tab" data-bs-target="#tab7" role="tab" aria-controls="tab7">
+                                            <i class="fas fa-wallet mr-2"></i>
+                                            Wallet
+                                        </button>
+                                        <button type="button"
                                             class="w-full text-left px-4 py-3 rounded-lg bg-white hover:bg-gray-100 text-blue-700" id="tab6-btn"
                                             data-bs-toggle="tab" data-bs-target="#tab6" role="tab" aria-controls="tab6">
                                             <i class="fas fa-sim-card mr-2"></i> Airtel Money
@@ -439,18 +445,18 @@
                                         <div id="tab6" class="tab-pane" role="tabpanel" aria-labelledby="tab6-btn">
                                             <div class="space-y-4">
                                                 <div class="p-4 bg-red-50 rounded-lg border border-red-100">
-                                                    <p class="text-sm text-gray-700">Enter your Airtel Money number. A payment prompt will be sent to your phone.</p>
+                                                    <p class="text-sm text-gray-700">{{ __('all.airtel_payment_prompt') }}</p>
                                                 </div>
                                                 <div>
-                                                    <label class="block text-sm font-medium text-gray-700 mb-1">Airtel Money Number</label>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('all.airtel_money_number') }}</label>
                                                     <input type="text" id="cust_airtel_phone" maxlength="12"
                                                         class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 onlydigits"
                                                         placeholder="e.g. 0780000000">
                                                 </div>
-                                                <p class="text-sm text-gray-600">Total to pay: <strong id="cust_airtel_total_display">TZS {{ convert_money($price + $fees) }}</strong></p>
+                                                <p class="text-sm text-gray-600">{{ __('all.total_to_pay_label') }} <strong id="cust_airtel_total_display">TZS {{ convert_money($price + $fees) }}</strong></p>
                                                 <button type="button" id="cust_airtel_pay_btn"
                                                     class="w-full mt-2 py-3 px-6 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white font-medium rounded-lg shadow-md transition-all duration-300 flex items-center justify-center">
-                                                    <i class="fas fa-lock mr-2"></i> Pay with Airtel Money
+                                                    <i class="fas fa-lock mr-2"></i> {{ __('all.pay_with_airtel_money') }}
                                                 </button>
                                                 <p id="cust_airtel_status_msg" class="text-sm text-center hidden"></p>
                                             </div>
@@ -642,6 +648,45 @@
                                                 </div>
                                             </form>
                                         </div>
+
+                                        <div id="tab7" class="tab-pane" role="tabpanel" aria-labelledby="tab7-btn">
+                                            <form id="walletpay" action="{{ route('customer.verify') }}" method="POST">
+                                                @csrf
+                                                <input type="hidden" name="payment_method" value="wallet">
+                                                <input type="hidden" name="amount" value="{{ round($price + $fees, 2) }}">
+                                                <div class="space-y-4">
+                                                    <div class="p-4 bg-blue-50 rounded-lg">
+                                                        <p class="text-sm text-gray-700 mb-1">
+                                                            Wallet balance:
+                                                            <strong>{{ $currency }}
+                                                                {{ convert_money(auth()->user()->temp_wallets->amount ?? 0) }}</strong>
+                                                        </p>
+                                                        <p class="text-sm text-gray-700 mb-1">
+                                                            Amount to pay:
+                                                            <strong>{{ $currency }} {{ convert_money($price + $fees) }}</strong>
+                                                        </p>
+                                                    </div>
+                                                    <div class="flex items-start">
+                                                        <div class="flex items-center h-5">
+                                                            <input id="wallet_terms" name="wallet_terms"
+                                                                type="checkbox" value="1" checked
+                                                                class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded">
+                                                        </div>
+                                                        <div class="ml-3 text-sm">
+                                                            <label for="wallet_terms"
+                                                                class="font-medium text-gray-700">{{ __('customer/busroot.i_accept') }}
+                                                                <a href="{{ route('ticket.purchase') }}"
+                                                                    class="text-blue-600 hover:text-blue-500">{{ __('customer/busroot.terms_and_conditions') }}</a></label>
+                                                        </div>
+                                                    </div>
+                                                    <button type="submit"
+                                                        class="w-full mt-4 py-3 px-6 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white font-medium rounded-lg shadow-md transition-all duration-300 flex items-center justify-center">
+                                                        <i class="fas fa-lock mr-2"></i>
+                                                        Pay with Wallet
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -714,6 +759,16 @@
     <script>
         @include('partials.tz_phone_normalize_js')
 
+        const custPayI18n = {
+            enterPhone: @json(__('all.enter_phone_required')),
+            enterMobileMoney: @json(__('all.enter_mobile_money_to_charge')),
+            enterAirtel: @json(__('all.enter_airtel_money_number')),
+            payAirtel: @json(__('all.pay_with_airtel_money')),
+            promptSent: @json(__('all.prompt_sent_phone')),
+            paymentFailed: @json(__('all.payment_failed_try_again')),
+            networkError: @json(__('all.network_error_try_again')),
+        };
+
         // Timer countdown functionality
         function startTimer(duration, displayMinutes, displaySeconds) {
             let timer = duration,
@@ -752,7 +807,7 @@
             const email = document.getElementById('contactEmail').value.trim();
 
             if (!phone) {
-                alert('Please enter phone number');
+                alert(custPayI18n.enterPhone);
                 return;
             }
 
@@ -796,7 +851,7 @@
             const email = document.getElementById('contactEmail').value.trim();
 
             if (!phone) {
-                alert('Please enter phone number');
+                alert(custPayI18n.enterPhone);
                 return;
             }
 
@@ -835,7 +890,7 @@
             const email = document.getElementById('contactEmail').value.trim();
 
             if (!phone) {
-                alert('Please enter phone number');
+                alert(custPayI18n.enterPhone);
                 return;
             }
 
@@ -874,7 +929,7 @@
             const email = document.getElementById('contactEmail').value.trim();
 
             if (!phone) {
-                alert('Please enter phone number');
+                alert(custPayI18n.enterPhone);
                 return;
             }
 
@@ -917,12 +972,12 @@
             const payPhone = normalizePhoneTo255(payContactEl ? payContactEl.value : '');
 
             if (!phone) {
-                alert('Please enter phone number');
+                alert(custPayI18n.enterPhone);
                 return;
             }
 
             if (!payPhone) {
-                alert('Please enter the mobile money number to charge');
+                alert(custPayI18n.enterMobileMoney);
                 return;
             }
 
@@ -956,6 +1011,39 @@
             this.submit();
         });
 
+        document.getElementById('walletpay').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const code = document.getElementById('countrycode').value;
+            const phone = normalizePhoneTo255(document.getElementById('contactNumber').value);
+            const email = document.getElementById('contactEmail').value.trim();
+
+            if (!phone) {
+                alert(custPayI18n.enterPhone);
+                return;
+            }
+
+            const codeInput = document.createElement('input');
+            codeInput.type = 'hidden';
+            codeInput.name = 'countrycode';
+            codeInput.value = code;
+
+            const phoneInput = document.createElement('input');
+            phoneInput.type = 'hidden';
+            phoneInput.name = 'contactNumber';
+            phoneInput.value = phone;
+
+            const emailInput = document.createElement('input');
+            emailInput.type = 'hidden';
+            emailInput.name = 'contactEmail';
+            emailInput.value = email;
+
+            this.appendChild(codeInput);
+            this.appendChild(phoneInput);
+            this.appendChild(emailInput);
+            this.submit();
+        });
+
         // Tab functionality
         document.querySelectorAll('[role="tablist"] button').forEach(button => {
             button.addEventListener('click', () => {
@@ -977,7 +1065,7 @@
         document.getElementById('cust_airtel_pay_btn').addEventListener('click', function () {
             const phone  = document.getElementById('cust_airtel_phone').value.trim();
             const total  = baseTotal;
-            if (!phone) { alert('Please enter your Airtel Money number'); return; }
+            if (!phone) { alert(custPayI18n.enterAirtel); return; }
             this.disabled = true;
             this.textContent = 'Processing…';
             const statusEl = document.getElementById('cust_airtel_status_msg');
@@ -996,20 +1084,20 @@
             .then(r => r.json())
             .then(data => {
                 if (data.status === 'success') {
-                    statusEl.textContent = data.message || 'Prompt sent! Approve on your phone.';
+                    statusEl.textContent = data.message || custPayI18n.promptSent;
                     statusEl.className = 'text-sm text-center text-green-600';
                 } else {
-                    statusEl.textContent = data.message || 'Failed. Please try again.';
+                    statusEl.textContent = data.message || custPayI18n.paymentFailed;
                     statusEl.className = 'text-sm text-center text-red-600';
                     document.getElementById('cust_airtel_pay_btn').disabled = false;
-                    document.getElementById('cust_airtel_pay_btn').innerHTML = '<i class="fas fa-lock mr-2"></i> Pay with Airtel Money';
+                    document.getElementById('cust_airtel_pay_btn').innerHTML = '<i class="fas fa-lock mr-2"></i> ' + custPayI18n.payAirtel;
                 }
             })
             .catch(() => {
-                statusEl.textContent = 'Network error. Try again.';
+                statusEl.textContent = custPayI18n.networkError;
                 statusEl.className = 'text-sm text-center text-red-600';
                 document.getElementById('cust_airtel_pay_btn').disabled = false;
-                document.getElementById('cust_airtel_pay_btn').innerHTML = '<i class="fas fa-lock mr-2"></i> Pay with Airtel Money';
+                document.getElementById('cust_airtel_pay_btn').innerHTML = '<i class="fas fa-lock mr-2"></i> ' + custPayI18n.payAirtel;
             });
         });
 

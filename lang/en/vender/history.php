@@ -80,4 +80,11 @@ return [
         'november' => 'November',
         'december' => 'December',
     ],
+    'no_booking_data_income' => 'No booking data found for income report generation.',
+    'no_data_income' => 'No data provided for income report generation.',
+    'invalid_data_format' => 'Invalid data format. Please try again.',
+    'no_booking_data_manifest' => 'No booking data found for manifest generation.',
+    'no_data_manifest' => 'No data provided for manifest generation.',
+    'bus_number_not_found' => 'Bus number not found in booking data.',
+    'bus_not_found_number' => 'Bus with number :number not found.',
 ];

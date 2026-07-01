@@ -65,8 +65,10 @@ class BookingSettlementService
         $totalFare = (float) $booking->amount;
         $busFare = (float) $booking->busFee;
         $cancelAmount = (float) ($meta['cancel_amount'] ?? (session('cancel') ?? 0));
+        $paymentMethod = (string) ($meta['payment_method'] ?? '');
+        $consumeCancelWallet = !($meta['skip_cancel_wallet_consumption'] ?? false) && $paymentMethod !== 'wallet';
 
-        if (auth()->check() && auth()->user()->role === 'customer' && auth()->user()->temp_wallets) {
+        if ($consumeCancelWallet && auth()->check() && auth()->user()->role === 'customer' && auth()->user()->temp_wallets) {
             $cancelAmount += (float) auth()->user()->temp_wallets->amount;
             auth()->user()->temp_wallets->amount = 0;
             auth()->user()->temp_wallets->save();

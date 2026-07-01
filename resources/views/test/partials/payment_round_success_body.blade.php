@@ -13,11 +13,11 @@
                 <div class="payment-result-card payment-result-leg">
                     <p class="payment-result-leg__label">
                         <i class="fas fa-arrow-right" aria-hidden="true"></i>
-                        {{ __('all.outbound') ?? 'Outbound' }}
+                        {{ __('all.outbound') }}
                     </p>
                     <dl class="payment-result-rows">
                         <div class="payment-result-row">
-                            <dt>{{ __('all.booking_code') ?? 'Booking Code' }}</dt>
+                            <dt>{{ __('all.booking_code') }}</dt>
                             <dd>{{ $booking1->booking_code }}</dd>
                         </div>
                         <div class="payment-result-row">
@@ -54,11 +54,11 @@
                 <div class="payment-result-card payment-result-leg">
                     <p class="payment-result-leg__label">
                         <i class="fas fa-arrow-left" aria-hidden="true"></i>
-                        {{ __('all.return') ?? 'Return' }}
+                        {{ __('all.return_leg') }}
                     </p>
                     <dl class="payment-result-rows">
                         <div class="payment-result-row">
-                            <dt>{{ __('all.booking_code') ?? 'Booking Code' }}</dt>
+                            <dt>{{ __('all.booking_code') }}</dt>
                             <dd>{{ $booking2->booking_code }}</dd>
                         </div>
                         <div class="payment-result-row">

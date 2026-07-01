@@ -1,12 +1,12 @@
 @extends('test.layouts.marketing')
 
-@section('title', 'Popular Routes — ' . __('all.higlink_premium_travel'))
+@section('title', __('all.popular_routes_title') . ' — ' . __('all.higlink_premium_travel'))
 
 @section('page_hero')
     @include('test.partials.page_hero', [
-        'eyebrow' => 'Travel Across Tanzania',
-        'title' => 'Popular Routes',
-        'subtitle' => 'Top destinations travelled by our passengers — book in one click',
+        'eyebrow' => __('all.routes_page_eyebrow'),
+        'title' => __('all.popular_routes_title'),
+        'subtitle' => __('all.routes_page_subtitle'),
         'image' => 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1200&q=80',
     ])
 @endsection
@@ -22,10 +22,10 @@
 
     <section class="page-section page-section--alt">
         <div class="container mx-auto px-4 text-center fade-in">
-            <h2 class="section-title mb-3">Looking for <span style="color:var(--home-primary)">today's</span> buses?</h2>
-            <p class="section-subtitle mb-6">See every departure leaving today and book your seat right away</p>
+            <h2 class="section-title mb-3">{{ __('all.routes_looking_today') }}</h2>
+            <p class="section-subtitle mb-6">{{ __('all.routes_today_desc') }}</p>
             <a href="{{ route('schedules.today') }}" class="home-schedules__explore">
-                View Today's Schedules <i class="fas fa-clock" aria-hidden="true"></i>
+                {{ __('all.view_all_todays_schedules') }} <i class="fas fa-clock" aria-hidden="true"></i>
             </a>
         </div>
     </section>

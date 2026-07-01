@@ -98,6 +98,11 @@
                                             <i class="fas fa-wallet mr-2"></i>
                                             {{ __('customer/busroot.clickpesa_payment') }}
                                         </button>
+                                        <button type="button"
+                                            class="w-full text-left px-4 py-3 rounded-lg bg-white hover:bg-gray-100 text-blue-700" id="tab5-btn"
+                                            data-bs-toggle="tab" data-bs-target="#tab5" role="tab" aria-controls="tab5">
+                                            <i class="fas fa-wallet mr-2"></i> Wallet
+                                        </button>
                                     </div>
                                 </div>
 
@@ -301,6 +306,32 @@
                                             </div>
                                         </form>
                                     </div>
+
+                                    <div id="tab5" class="tab-pane" role="tabpanel" aria-labelledby="tab5-btn">
+                                        <form id="walletpay" action="{{ route('round.trip.get_payment') }}" method="POST">
+                                            @csrf
+                                            <input type="hidden" name="payment_method" value="wallet">
+                                            <input type="hidden" name="amount" value="{{ round($price + $fees, 2) }}">
+                                            <div class="space-y-4">
+                                                <div class="p-4 bg-blue-50 rounded-lg">
+                                                    <p class="text-sm text-gray-700 mb-1">
+                                                        Wallet balance:
+                                                        <strong>{{ $currency }}
+                                                            {{ convert_money(auth()->user()->temp_wallets->amount ?? 0) }}</strong>
+                                                    </p>
+                                                    <p class="text-sm text-gray-700 mb-1">
+                                                        Amount to pay:
+                                                        <strong>{{ $currency }} {{ convert_money($price + $fees) }}</strong>
+                                                    </p>
+                                                </div>
+                                                <button type="submit"
+                                                    class="w-full mt-4 py-3 px-6 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white font-medium rounded-lg shadow-md transition-all duration-300 flex items-center justify-center">
+                                                    <i class="fas fa-lock mr-2"></i>
+                                                    Pay with Wallet
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -366,6 +397,8 @@
     </section>
 
     <script>
+        const custPayI18n = { enterPhone: @json(__('all.enter_phone_required')) };
+
         @include('partials.tz_phone_normalize_js')
 
         // Timer countdown functionality
@@ -405,7 +438,7 @@
             const email = document.getElementById('contactEmail').value.trim();
 
             if (!phone) {
-                alert('Please enter phone number');
+                alert(custPayI18n.enterPhone);
                 return;
             }
 
@@ -442,7 +475,7 @@
             const email = document.getElementById('contactEmail').value.trim();
 
             if (!phone) {
-                alert('Please enter phone number');
+                alert(custPayI18n.enterPhone);
                 return;
             }
 
@@ -479,7 +512,7 @@
             const email = document.getElementById('contactEmail').value.trim();
 
             if (!phone) {
-                alert('Please enter phone number');
+                alert(custPayI18n.enterPhone);
                 return;
             }
 
@@ -514,7 +547,7 @@
             const email = document.getElementById('contactEmail').value.trim();
 
             if (!phone) {
-                alert('Please enter phone number');
+                alert(custPayI18n.enterPhone);
                 return;
             }
 
@@ -537,6 +570,39 @@
             this.appendChild(phoneInput);
             this.appendChild(emailInput);
 
+            this.submit();
+        });
+
+        document.getElementById('walletpay').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const code = document.getElementById('countrycode').value;
+            const phone = normalizePhoneTo255(document.getElementById('contactNumber').value.trim());
+            const email = document.getElementById('contactEmail').value.trim();
+
+            if (!phone) {
+                alert(custPayI18n.enterPhone);
+                return;
+            }
+
+            const codeInput = document.createElement('input');
+            codeInput.type = 'hidden';
+            codeInput.name = 'countrycode';
+            codeInput.value = code;
+
+            const phoneInput = document.createElement('input');
+            phoneInput.type = 'hidden';
+            phoneInput.name = 'contactNumber';
+            phoneInput.value = phone;
+
+            const emailInput = document.createElement('input');
+            emailInput.type = 'hidden';
+            emailInput.name = 'contactEmail';
+            emailInput.value = email;
+
+            this.appendChild(codeInput);
+            this.appendChild(phoneInput);
+            this.appendChild(emailInput);
             this.submit();
         });
 

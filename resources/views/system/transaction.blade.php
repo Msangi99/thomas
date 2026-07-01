@@ -1,4 +1,5 @@
 @extends('system.app')
+@section('title', __('system.sidebar.payment_request'))
 @section('content')
     <!-- DataTables CSS -->
     <link href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" rel="stylesheet">
@@ -11,27 +12,27 @@
         <!-- Requested Transactions Table -->
         <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
             <div class="p-4 bg-gradient-to-r from-blue-500 to-blue-400 text-white flex flex-col sm:flex-row justify-between items-center gap-4">
-                <h2 class="text-lg font-semibold">Requested Transactions</h2>
+                <h2 class="text-lg font-semibold">{{ __('system.transactions.requested_transactions') }}</h2>
             </div>
             <div class="p-4">
                 <div class="flex flex-col sm:flex-row gap-4 mb-4">
                     <div class="w-full sm:w-1/2">
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Filter by:</label>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">{{ __('system.common.filter_by') }}</label>
                         <select id="pendingTimeFilter" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm">
-                            <option value="all">All Time</option>
-                            <option value="day">Today</option>
-                            <option value="week">This Week</option>
-                            <option value="month">This Month</option>
-                            <option value="year">This Year</option>
-                            <option value="custom">Custom Range</option>
+                            <option value="all">{{ __('system.common.all_time') }}</option>
+                            <option value="day">{{ __('system.sidebar.today') }}</option>
+                            <option value="week">{{ __('system.common.this_week') }}</option>
+                            <option value="month">{{ __('system.common.this_month') }}</option>
+                            <option value="year">{{ __('system.common.this_year') }}</option>
+                            <option value="custom">{{ __('system.common.custom_range') }}</option>
                         </select>
                     </div>
                     <div class="w-full sm:w-1/2 hidden" id="pendingDateRangeGroup">
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Date Range:</label>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">{{ __('system.common.date_range') }}</label>
                         <div class="flex flex-col sm:flex-row items-center gap-2">
-                            <input type="text" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm" id="pendingMinDate" placeholder="Start Date">
-                            <span class="text-gray-500 text-sm hidden sm:inline">to</span>
-                            <input type="text" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm" id="pendingMaxDate" placeholder="End Date">
+                            <input type="text" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm" id="pendingMinDate" placeholder="{{ __('system.common.start_date') }}">
+                            <span class="text-gray-500 text-sm hidden sm:inline">{{ __('system.common.to') }}</span>
+                            <input type="text" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm" id="pendingMaxDate" placeholder="{{ __('system.common.end_date') }}">
                         </div>
                     </div>
                 </div>
@@ -40,35 +41,35 @@
                         <thead>
                             <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
                                 <th class="py-2 px-4 text-left font-medium"></th>
-                                <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Company"></th>
-                                <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search User"></th>
-                                <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Payment Method"></th>
-                                <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Payment Number"></th>
-                                <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Amount"></th>
-                                <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Status"></th>
-                                <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Date"></th>
+                                <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="{{ __('system.transactions.search_company') }}"></th>
+                                <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="{{ __('system.transactions.search_user') }}"></th>
+                                <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="{{ __('system.transactions.search_payment_method') }}"></th>
+                                <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="{{ __('system.transactions.search_payment_number') }}"></th>
+                                <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="{{ __('system.transactions.search_amount') }}"></th>
+                                <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="{{ __('system.transactions.search_status') }}"></th>
+                                <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="{{ __('system.transactions.search_date') }}"></th>
                                 <th class="py-2 px-4 text-left font-medium"></th>
                             </tr>
                             <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
                                 <th class="py-2 px-4 text-left font-medium">#</th>
-                                <th class="py-2 px-4 text-left font-medium">Company</th>
-                                <th class="py-2 px-4 text-left font-medium">User</th>
-                                <th class="py-2 px-4 text-left font-medium">Payment Method</th>
-                                <th class="py-2 px-4 text-left font-medium">Payment Number</th>
-                                <th class="py-2 px-4 text-left font-medium">Amount</th>
-                                <th class="py-2 px-4 text-left font-medium">Status</th>
-                                <th class="py-2 px-4 text-left font-medium">Date</th>
-                                <th class="py-2 px-4 text-left font-medium">Action</th>
+                                <th class="py-2 px-4 text-left font-medium">{{ __('system.common.company') }}</th>
+                                <th class="py-2 px-4 text-left font-medium">{{ __('system.common.user') }}</th>
+                                <th class="py-2 px-4 text-left font-medium">{{ __('system.common.payment_method') }}</th>
+                                <th class="py-2 px-4 text-left font-medium">{{ __('system.common.payment_number') }}</th>
+                                <th class="py-2 px-4 text-left font-medium">{{ __('system.common.amount') }}</th>
+                                <th class="py-2 px-4 text-left font-medium">{{ __('system.common.status') }}</th>
+                                <th class="py-2 px-4 text-left font-medium">{{ __('system.common.date') }}</th>
+                                <th class="py-2 px-4 text-left font-medium">{{ __('system.transactions.action') }}</th>
                             </tr>
                         </thead>
                         <tbody class="text-gray-600 text-xs">
                             @forelse ($pendingTransactions as $index => $transaction)
                                 <tr class="border-b border-gray-200 hover:bg-gray-50 transition" data-transaction-id="{{ $transaction->id }}" data-campany-id="{{ $transaction->campany ? $transaction->campany->id : 0 }}" data-vender-id="{{ $transaction->vender_id ?? 0 }}">
                                     <td class="py-2 px-4">{{ $index + 1 }}</td>
-                                    <td class="py-2 px-4">{{ $transaction->campany ? $transaction->campany->name : 'Vender' }}</td>
-                                    <td class="py-2 px-4">{{ $transaction->user ? $transaction->user->name : 'Unknown' }}</td>
-                                    <td class="py-2 px-4">{{ $transaction->payment_method ?? 'Unknown' }}</td>
-                                    <td class="py-2 px-4">{{ $transaction->payment_number ?? 'Unknown' }}</td>
+                                    <td class="py-2 px-4">{{ $transaction->campany ? $transaction->campany->name : __('system.common.vender_label') }}</td>
+                                    <td class="py-2 px-4">{{ $transaction->user ? $transaction->user->name : __('system.common.unknown') }}</td>
+                                    <td class="py-2 px-4">{{ $transaction->payment_method ?? __('system.common.unknown') }}</td>
+                                    <td class="py-2 px-4">{{ $transaction->payment_number ?? __('system.common.unknown') }}</td>
                                     <td class="py-2 px-4 amount" data-amount="{{ $transaction->amount }}">{{ $currency }} {{ convert_money($transaction->amount) }}</td>
                                     <td class="py-2 px-4">
                                         <span class="inline-block px-2 py-1 text-xs font-semibold rounded {{ $transaction->status === 'Completed' ? 'bg-green-500 text-white' : ($transaction->status === 'Pending' ? 'bg-yellow-500 text-black' : 'bg-red-500 text-white') }}">
@@ -82,16 +83,16 @@
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                                 </svg>
-                                                Edit
+                                                {{ __('system.common.edit') }}
                                             </button>
                                         @else
-                                            <span class="text-gray-500">No actions available</span>
+                                            <span class="text-gray-500">{{ __('system.common.no_actions') }}</span>
                                         @endif
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9" class="py-4 px-4 text-center text-gray-500">No pending transactions found.</td>
+                                    <td colspan="9" class="py-4 px-4 text-center text-gray-500">{{ __('system.common.dt_empty_pending_tx') }}</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -103,27 +104,27 @@
         <!-- All Transactions Table -->
         <div class="bg-white rounded-lg shadow-md overflow-hidden">
             <div class="p-4 bg-gradient-to-r from-blue-500 to-blue-400 text-white flex flex-col sm:flex-row justify-between items-center gap-4">
-                <h2 class="text-lg font-semibold">All Transactions</h2>
+                <h2 class="text-lg font-semibold">{{ __('system.transactions.all_transactions') }}</h2>
                 <div class="flex flex-col sm:flex-row items-center gap-4">
-                    <span class="text-sm font-medium">Total: {{ $currency }} <span id="allTransactionsTotal">0</span></span>
+                    <span class="text-sm font-medium">{{ __('system.common.total') }}: {{ $currency }} <span id="allTransactionsTotal">0</span></span>
                     <div class="flex flex-col sm:flex-row gap-4">
                         <div class="w-full sm:w-auto">
-                            <label class="block text-xs font-medium text-white mb-1">Filter by:</label>
+                            <label class="block text-xs font-medium text-white mb-1">{{ __('system.common.filter_by') }}</label>
                             <select id="allTimeFilter" class="w-full sm:w-48 px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm">
-                                <option value="all">All Time</option>
-                                <option value="day">Today</option>
-                                <option value="week">This Week</option>
-                                <option value="month">This Month</option>
-                                <option value="year">This Year</option>
-                                <option value="custom">Custom Range</option>
+                                <option value="all">{{ __('system.common.all_time') }}</option>
+                                <option value="day">{{ __('system.sidebar.today') }}</option>
+                                <option value="week">{{ __('system.common.this_week') }}</option>
+                                <option value="month">{{ __('system.common.this_month') }}</option>
+                                <option value="year">{{ __('system.common.this_year') }}</option>
+                                <option value="custom">{{ __('system.common.custom_range') }}</option>
                             </select>
                         </div>
                         <div class="w-full sm:w-auto hidden" id="allDateRangeGroup">
-                            <label class="block text-xs font-medium text-white mb-1">Date Range:</label>
+                            <label class="block text-xs font-medium text-white mb-1">{{ __('system.common.date_range') }}</label>
                             <div class="flex flex-col sm:flex-row items-center gap-2">
-                                <input type="text" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm" id="allMinDate" placeholder="Start Date">
-                                <span class="text-gray-500 text-sm hidden sm:inline">to</span>
-                                <input type="text" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm" id="allMaxDate" placeholder="End Date">
+                                <input type="text" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm" id="allMinDate" placeholder="{{ __('system.common.start_date') }}">
+                                <span class="text-gray-500 text-sm hidden sm:inline">{{ __('system.common.to') }}</span>
+                                <input type="text" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm" id="allMaxDate" placeholder="{{ __('system.common.end_date') }}">
                             </div>
                         </div>
                     </div>
@@ -135,31 +136,31 @@
                         <thead>
                             <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
                                 <th class="py-2 px-4 text-left font-medium"></th>
-                                <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Company"></th>
-                                <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search User"></th>
-                                <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Amount"></th>
-                                <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Reference"></th>
-                                <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Status"></th>
-                                <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search Date"></th>
+                                <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="{{ __('system.transactions.search_company') }}"></th>
+                                <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="{{ __('system.transactions.search_user') }}"></th>
+                                <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="{{ __('system.transactions.search_amount') }}"></th>
+                                <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="{{ __('system.transactions.search_reference') }}"></th>
+                                <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="{{ __('system.transactions.search_status') }}"></th>
+                                <th class="py-2 px-4 text-left font-medium"><input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="{{ __('system.transactions.search_date') }}"></th>
                                 <th class="py-2 px-4 text-left font-medium"></th>
                             </tr>
                             <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
                                 <th class="py-2 px-4 text-left font-medium">#</th>
-                                <th class="py-2 px-4 text-left font-medium">Company</th>
-                                <th class="py-2 px-4 text-left font-medium">User</th>
-                                <th class="py-2 px-4 text-left font-medium">Amount</th>
-                                <th class="py-2 px-4 text-left font-medium">Reference No</th>
-                                <th class="py-2 px-4 text-left font-medium">Status</th>
-                                <th class="py-2 px-4 text-left font-medium">Date</th>
-                                <th class="py-2 px-4 text-left font-medium">Action</th>
+                                <th class="py-2 px-4 text-left font-medium">{{ __('system.common.company') }}</th>
+                                <th class="py-2 px-4 text-left font-medium">{{ __('system.common.user') }}</th>
+                                <th class="py-2 px-4 text-left font-medium">{{ __('system.common.amount') }}</th>
+                                <th class="py-2 px-4 text-left font-medium">{{ __('system.common.reference_no') }}</th>
+                                <th class="py-2 px-4 text-left font-medium">{{ __('system.common.status') }}</th>
+                                <th class="py-2 px-4 text-left font-medium">{{ __('system.common.date') }}</th>
+                                <th class="py-2 px-4 text-left font-medium">{{ __('system.transactions.action') }}</th>
                             </tr>
                         </thead>
                         <tbody class="text-gray-600 text-xs">
                             @forelse ($allTransactions as $index => $transaction)
                                 <tr class="border-b border-gray-200 hover:bg-gray-50 transition" data-transaction-id="{{ $transaction->id }}" data-campany-id="{{ $transaction->campany ? $transaction->campany->id : 0 }}" data-vender-id="{{ $transaction->vender_id ?? 0 }}">
                                     <td class="py-2 px-4">{{ $index + 1 }}</td>
-                                    <td class="py-2 px-4">{{ $transaction->campany ? $transaction->campany->name : 'Vender' }}</td>
-                                    <td class="py-2 px-4">{{ $transaction->user ? $transaction->user->name : 'Unknown' }}</td>
+                                    <td class="py-2 px-4">{{ $transaction->campany ? $transaction->campany->name : __('system.common.vender_label') }}</td>
+                                    <td class="py-2 px-4">{{ $transaction->user ? $transaction->user->name : __('system.common.unknown') }}</td>
                                     <td class="py-2 px-4 amount" data-amount="{{ $transaction->amount }}">{{ $currency }} {{ convert_money($transaction->amount) }}</td>
                                     <td class="py-2 px-4">{{ $transaction->reference_number }}</td>
                                     <td class="py-2 px-4">
@@ -178,7 +179,7 @@
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
                                                         </svg>
-                                                        Print
+                                                        {{ __('system.common.print') }}
                                                     </button>
                                                 </form>
                                             @else
@@ -189,7 +190,7 @@
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
                                                         </svg>
-                                                        Print
+                                                        {{ __('system.common.print') }}
                                                     </button>
                                                 </form>
                                             @endif
@@ -198,7 +199,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="py-4 px-4 text-center text-gray-500">No transactions found.</td>
+                                    <td colspan="8" class="py-4 px-4 text-center text-gray-500">{{ __('system.common.dt_empty_tx') }}</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -211,7 +212,7 @@
         <div id="transactionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div class="bg-white rounded-lg shadow-lg w-full max-w-md mx-4 transform transition-all">
                 <div class="p-4 flex justify-between items-center border-b border-gray-200">
-                    <h2 class="text-lg font-semibold text-gray-800" id="transactionModalLabel">Update Transaction Status</h2>
+                    <h2 class="text-lg font-semibold text-gray-800" id="transactionModalLabel">{{ __('system.transactions.update_status') }}</h2>
                     <button type="button" class="text-gray-500 hover:text-gray-700" onclick="closeTransactionModal()">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -224,7 +225,7 @@
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <p class="text-sm text-gray-600 mt-2">Loading...</p>
+                        <p class="text-sm text-gray-600 mt-2">{{ __('system.common.loading') }}</p>
                     </div>
                     <div id="modalError" class="hidden text-red-500 text-sm mb-4"></div>
                     <div id="modalContent">
@@ -232,18 +233,18 @@
                         <div class="flex flex-col sm:flex-row gap-2">
                             <form class="flex-1" id="completeForm" action="" method="POST">
                                 @csrf
-                                <input required type="text" name="reference_number" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm mb-2" placeholder="Reference Number">
-                                <button type="submit" class="w-full px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm">Accept</button>
+                                <input required type="text" name="reference_number" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm mb-2" placeholder="{{ __('system.common.reference_number') }}">
+                                <button type="submit" class="w-full px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm">{{ __('system.common.accept') }}</button>
                             </form>
                             <form class="flex-1" id="cancelForm" action="" method="POST">
                                 @csrf
-                                <button type="submit" class="w-full px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm">Cancel</button>
+                                <button type="submit" class="w-full px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm">{{ __('system.common.cancel') }}</button>
                             </form>
                         </div>
                     </div>
                 </div>
                 <div class="p-4 flex justify-end gap-2 border-t border-gray-200">
-                    <button type="button" class="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm" onclick="closeTransactionModal()">Close</button>
+                    <button type="button" class="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm" onclick="closeTransactionModal()">{{ __('system.common.close') }}</button>
                 </div>
             </div>
         </div>
@@ -259,9 +260,9 @@
     <script src="https://cdn.datatables.net/datetime/1.5.1/js/dataTables.dateTime.min.js"></script>
 
     <script>
-        // Expose current currency and USD rate for JS calculations
         const CURRENT_CURRENCY = "{{ session('currency', 'Tsh') }}";
         const USD_TO_TZS_RATE = {{ app('usdToTzs') ?? 2500 }};
+        const txUpdateTemplate = @json(__('system.transactions.update_status_for', ['currency' => '__CUR__', 'amount' => '__AMT__']));
 
         $(document).ready(function() {
             // Create date inputs for Pending Transactions Table
@@ -455,12 +456,12 @@
         function showTransactionModal(transactionId, amount, campanyId, venderId) {
             if (!transactionId || !amount) {
                 console.error('Invalid transaction data:', { transactionId, amount, campanyId, venderId });
-                alert('Error: Invalid transaction data');
+                alert(@json(__('system.transactions.invalid_transaction_data')));
                 return;
             }
 
             // Update the amount display
-            document.getElementById('transactionAmount').textContent = `Update status for transaction of {{ $currency }} ${amount}?`;
+            document.getElementById('transactionAmount').textContent = txUpdateTemplate.replace('__CUR__', '{{ $currency }}').replace('__AMT__', amount);
 
             // Update form action URLs
             const completeForm = document.getElementById('completeForm');
@@ -485,7 +486,7 @@
             modal.classList.add('hidden');
             modalError.classList.add('hidden');
             modalLoading.classList.add('hidden');
-            document.getElementById('transactionAmount').textContent = 'Update status for transaction of {{ $currency }} 0?';
+            document.getElementById('transactionAmount').textContent = txUpdateTemplate.replace('__CUR__', '{{ $currency }}').replace('__AMT__', '0');
             document.getElementById('completeForm').action = '';
             document.getElementById('cancelForm').action = '';
         }

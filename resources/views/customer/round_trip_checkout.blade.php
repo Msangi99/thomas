@@ -6,7 +6,7 @@
     @include('test.partials.page_hero', [
         'eyebrow' => __('customer_sidebar.Round Trip'),
         'title' => __('customer/busroot.complete_your_payment'),
-        'subtitle' => 'Review both legs and pay for your round trip.',
+        'subtitle' => __('all.round_trip_checkout_subtitle'),
         'image' => 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200&q=80',
     ])
 @endsection
@@ -33,7 +33,7 @@
                 </div>
             @else
                 <div class="booking-alert booking-alert--error">
-                    {{ __('customer/busroot.session_expired') ?? 'Your booking session was lost. Please search again.' }}
+                    {{ __('customer/busroot.session_expired') }}
                 </div>
                 <a href="{{ round_trip_route('index') }}" class="page-btn mt-4 inline-flex">{{ __('all.back_button') }}</a>
             @endif
@@ -42,5 +42,6 @@
 @endsection
 
 @push('scripts')
+    @include('test.partials.guest_i18n')
     <script src="{{ asset('js/inline-booking.js') }}"></script>
 @endpush

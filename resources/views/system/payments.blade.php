@@ -17,35 +17,35 @@
         <!-- Page header -->
         <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-8">
             <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-blue-600 mb-1">Admin · Finance</p>
-                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">System Income</h1>
+                <p class="text-xs font-semibold uppercase tracking-wider text-blue-600 mb-1">{{ __('system.pages.admin_finance') }}</p>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">{{ __('system.pages.payments_title') }}</h1>
                 <p class="text-gray-600 mt-2 max-w-2xl text-sm sm:text-base leading-relaxed">
-                    Commission (system balances), service fees, and government levies from paid bookings across all companies and payment methods.
+                    {{ __('system.pages.payments_subtitle') }}
                 </p>
             </div>
             <div class="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm lg:text-right shrink-0">
-                <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Combined total</p>
+                <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">{{ __('system.pages.combined_total') }}</p>
                 <p class="text-2xl font-bold text-gray-900 tabular-nums">{{ $currency }} {{ convert_money($combinedIncome) }}</p>
-                <p class="text-xs text-gray-400 mt-1">HIGHLINK ISGC</p>
+                <p class="text-xs text-gray-400 mt-1">{{ __('all.highlink_isgc') }}</p>
             </div>
         </div>
 
         <!-- KPI summary -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
             <a href="#income-commission" class="group rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 shadow-sm hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                <p class="text-xs font-semibold text-blue-700 uppercase tracking-wide">Commission</p>
+                <p class="text-xs font-semibold text-blue-700 uppercase tracking-wide">{{ __('system.pages.commission') }}</p>
                 <p class="text-xl sm:text-2xl font-bold text-blue-900 tabular-nums mt-1">{{ $currency }} {{ convert_money($totalCommissionBalance) }}</p>
-                <p class="text-xs text-blue-600 opacity-90 mt-2 group-hover:underline">System balance entries · {{ $balances->count() }} rows</p>
+                <p class="text-xs text-blue-600 opacity-90 mt-2 group-hover:underline">{{ __('system.pages.commission_rows', ['count' => $balances->count()]) }}</p>
             </a>
             <a href="#income-service-fees" class="group rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-5 shadow-sm hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">
-                <p class="text-xs font-semibold text-emerald-700 uppercase tracking-wide">Service fees</p>
+                <p class="text-xs font-semibold text-emerald-700 uppercase tracking-wide">{{ __('system.pages.service_fees') }}</p>
                 <p class="text-xl sm:text-2xl font-bold text-emerald-900 tabular-nums mt-1">{{ $currency }} {{ convert_money($totalServiceFees) }}</p>
-                <p class="text-xs text-emerald-600 opacity-90 mt-2 group-hover:underline">Payment fees · {{ $pays->count() }} rows</p>
+                <p class="text-xs text-emerald-600 opacity-90 mt-2 group-hover:underline">{{ __('system.pages.service_fees_rows', ['count' => $pays->count()]) }}</p>
             </a>
             <a href="#income-levy" class="group rounded-xl border border-amber-100 bg-gradient-to-br from-amber-50 to-white p-5 shadow-sm hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2">
-                <p class="text-xs font-semibold text-amber-800 uppercase tracking-wide">Gov. levy (service)</p>
+                <p class="text-xs font-semibold text-amber-800 uppercase tracking-wide">{{ __('system.pages.gov_levy_service') }}</p>
                 <p class="text-xl sm:text-2xl font-bold text-amber-950 tabular-nums mt-1">{{ $currency }} {{ convert_money($totalLevies) }}</p>
-                <p class="text-xs text-amber-700 opacity-90 mt-2 group-hover:underline">Government levy · {{ $levies->count() }} rows</p>
+                <p class="text-xs text-amber-700 opacity-90 mt-2 group-hover:underline">{{ __('system.pages.gov_levy_rows', ['count' => $levies->count()]) }}</p>
             </a>
         </div>
 
@@ -54,25 +54,25 @@
             <section id="income-commission" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden scroll-mt-24">
                 <div class="px-5 sm:px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div>
-                        <h2 class="text-lg font-semibold">Commission (system income)</h2>
-                        <p class="text-blue-100 text-xs sm:text-sm mt-0.5">Per-booking commission credited to system balance</p>
+                        <h2 class="text-lg font-semibold">{{ __('system.pages.commission_section') }}</h2>
+                        <p class="text-blue-100 text-xs sm:text-sm mt-0.5">{{ __('system.pages.commission_desc') }}</p>
                     </div>
                     <div class="text-left sm:text-right">
-                        <span class="text-xs text-blue-100 uppercase tracking-wide font-medium">Section total</span>
+                        <span class="text-xs text-blue-100 uppercase tracking-wide font-medium">{{ __('system.pages.section_total') }}</span>
                         <div class="text-xl font-bold tabular-nums">{{ $currency }} <span id="serviceTotal">{{ convert_money($totalCommissionBalance) }}</span></div>
                     </div>
                 </div>
                 <div class="p-4 sm:p-6">
                     <div class="flex flex-col lg:flex-row gap-4 mb-4 bg-gray-50 rounded-lg border border-gray-100 p-4">
                         <div class="w-full lg:w-64">
-                            <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Period</label>
+                            <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">{{ __('system.pages.period') }}</label>
                             <select id="serviceTimeFilter" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-800">
-                                <option value="all">All Time</option>
-                                <option value="day">Today</option>
-                                <option value="week">This Week</option>
-                                <option value="month">This Month</option>
-                                <option value="year">This Year</option>
-                                <option value="custom">Custom Range</option>
+                                <option value="all">{{ __('system.common.all_time') }}</option>
+                                <option value="day">{{ __('system.sidebar.today') }}</option>
+                                <option value="week">{{ __('system.common.this_week') }}</option>
+                                <option value="month">{{ __('system.common.this_month') }}</option>
+                                <option value="year">{{ __('system.common.this_year') }}</option>
+                                <option value="custom">{{ __('system.common.custom_range') }}</option>
                             </select>
                         </div>
                         <div class="w-full lg:flex-1 hidden" id="serviceDateRangeGroup">
@@ -97,10 +97,10 @@
                                 </tr>
                                 <tr class="bg-gray-50 text-gray-600 uppercase text-xs tracking-wide border-b border-gray-200">
                                     <th class="py-2.5 px-4 text-left font-semibold w-16">No</th>
-                                    <th class="py-2.5 px-4 text-left font-semibold">Company</th>
+                                    <th class="py-2.5 px-4 text-left font-semibold">{{ __('system.pages.col_company') }}</th>
                                     <th class="py-2.5 px-4 text-left font-semibold">Booking code</th>
-                                    <th class="py-2.5 px-4 text-right font-semibold whitespace-nowrap">Amount</th>
-                                    <th class="py-2.5 px-4 text-left font-semibold whitespace-nowrap">Date</th>
+                                    <th class="py-2.5 px-4 text-right font-semibold whitespace-nowrap">{{ __('system.common.amount') }}</th>
+                                    <th class="py-2.5 px-4 text-left font-semibold whitespace-nowrap">{{ __('system.common.date') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="text-gray-700 text-sm divide-y divide-gray-100 bg-white">
@@ -116,7 +116,7 @@
                                         </tr>
                                     @endforeach
                                 @else
-                                    <tr><td colspan="5" class="py-8 px-4 text-center text-gray-500 text-sm">No data found</td></tr>
+                                    <tr><td colspan="5" class="py-8 px-4 text-center text-gray-500 text-sm">{{ __('system.pages.no_data_found') }}</td></tr>
                                 @endif
                             </tbody>
                         </table>
@@ -128,7 +128,7 @@
             <section id="income-service-fees" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden scroll-mt-24">
                 <div class="px-5 sm:px-6 py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div>
-                        <h2 class="text-lg font-semibold">Service fees (system income)</h2>
+                        <h2 class="text-lg font-semibold">{{ __('system.pages.service_fees') }}</h2>
                         <p class="text-emerald-100 text-xs sm:text-sm mt-0.5">Platform service fee pool recorded per booking</p>
                     </div>
                     <div class="text-left sm:text-right">
@@ -171,10 +171,10 @@
                                 </tr>
                                 <tr class="bg-gray-50 text-gray-600 uppercase text-xs tracking-wide border-b border-gray-200">
                                     <th class="py-2.5 px-4 text-left font-semibold w-16">No</th>
-                                    <th class="py-2.5 px-4 text-left font-semibold">Company</th>
+                                    <th class="py-2.5 px-4 text-left font-semibold">{{ __('system.pages.col_company') }}</th>
                                     <th class="py-2.5 px-4 text-left font-semibold">Booking code</th>
-                                    <th class="py-2.5 px-4 text-right font-semibold whitespace-nowrap">Amount</th>
-                                    <th class="py-2.5 px-4 text-left font-semibold whitespace-nowrap">Date</th>
+                                    <th class="py-2.5 px-4 text-right font-semibold whitespace-nowrap">{{ __('system.common.amount') }}</th>
+                                    <th class="py-2.5 px-4 text-left font-semibold whitespace-nowrap">{{ __('system.common.date') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="text-gray-700 text-sm divide-y divide-gray-100 bg-white">
@@ -190,7 +190,7 @@
                                         </tr>
                                     @endforeach
                                 @else
-                                    <tr><td colspan="5" class="py-8 px-4 text-center text-gray-500 text-sm">No data found</td></tr>
+                                    <tr><td colspan="5" class="py-8 px-4 text-center text-gray-500 text-sm">{{ __('system.pages.no_data_found') }}</td></tr>
                                 @endif
                             </tbody>
                         </table>
@@ -245,10 +245,10 @@
                                 </tr>
                                 <tr class="bg-gray-50 text-gray-600 uppercase text-xs tracking-wide border-b border-gray-200">
                                     <th class="py-2.5 px-4 text-left font-semibold w-16">No</th>
-                                    <th class="py-2.5 px-4 text-left font-semibold">Company</th>
+                                    <th class="py-2.5 px-4 text-left font-semibold">{{ __('system.pages.col_company') }}</th>
                                     <th class="py-2.5 px-4 text-left font-semibold">Booking code</th>
-                                    <th class="py-2.5 px-4 text-right font-semibold whitespace-nowrap">Amount</th>
-                                    <th class="py-2.5 px-4 text-left font-semibold whitespace-nowrap">Date</th>
+                                    <th class="py-2.5 px-4 text-right font-semibold whitespace-nowrap">{{ __('system.common.amount') }}</th>
+                                    <th class="py-2.5 px-4 text-left font-semibold whitespace-nowrap">{{ __('system.common.date') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="text-gray-700 text-sm divide-y divide-gray-100 bg-white">
@@ -264,7 +264,7 @@
                                         </tr>
                                     @endforeach
                                 @else
-                                    <tr><td colspan="5" class="py-8 px-4 text-center text-gray-500 text-sm">No data found</td></tr>
+                                    <tr><td colspan="5" class="py-8 px-4 text-center text-gray-500 text-sm">{{ __('system.pages.no_data_found') }}</td></tr>
                                 @endif
                             </tbody>
                         </table>

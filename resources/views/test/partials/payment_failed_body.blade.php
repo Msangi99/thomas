@@ -26,9 +26,9 @@
                 {{ __('all.what_went_wrong') ?? 'What might have gone wrong?' }}
             </h3>
             <ul class="payment-result-error-list">
-                <li><i class="fas fa-times-circle"></i><span>{{ __('all.payment_fail_reason_funds') ?? 'Insufficient funds or incorrect payment details' }}</span></li>
-                <li><i class="fas fa-times-circle"></i><span>{{ __('all.payment_fail_reason_network') ?? 'Network or connectivity issues' }}</span></li>
-                <li><i class="fas fa-times-circle"></i><span>{{ __('all.payment_fail_reason_auth') ?? 'Payment authorization failed or was cancelled' }}</span></li>
+                <li><i class="fas fa-times-circle"></i><span>{{ __('all.payment_fail_reason_funds') }}</span></li>
+                <li><i class="fas fa-times-circle"></i><span>{{ __('all.payment_fail_reason_network') }}</span></li>
+                <li><i class="fas fa-times-circle"></i><span>{{ __('all.payment_fail_reason_auth') }}</span></li>
             </ul>
 
             @isset($data)

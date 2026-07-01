@@ -1,6 +1,6 @@
 @extends('system.app')
 
-@section('title', 'Refunds')
+@section('title', __('system.refunds.title'))
 
 @section('content')
 <div class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50">
@@ -14,8 +14,8 @@
                     </svg>
                 </div>
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-800 tracking-tight">Refund Requests</h1>
-                    <p class="text-sm text-gray-500 mt-0.5">Review and manage customer refund requests</p>
+                    <h1 class="text-2xl font-bold text-gray-800 tracking-tight">{{ __('system.refunds.title') }}</h1>
+                    <p class="text-sm text-gray-500 mt-0.5">{{ __('system.refunds.subtitle') }}</p>
                 </div>
             </div>
         </div>
@@ -50,7 +50,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <div class="refund-card bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200">
                 <div class="p-5">
-                    <p class="text-xs font-semibold uppercase tracking-wider text-yellow-600">Pending</p>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-yellow-600">{{ __('system.common.pending') }}</p>
                     <p class="mt-1 text-2xl font-bold text-gray-800">{{ $pendingCount }}</p>
                     <p class="mt-1 text-sm text-gray-500">{{ $currency }} {{ convert_money($pendingTotal) }}</p>
                 </div>
@@ -58,7 +58,7 @@
             </div>
             <div class="refund-card bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200">
                 <div class="p-5">
-                    <p class="text-xs font-semibold uppercase tracking-wider text-green-600">Approved</p>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-green-600">{{ __('system.common.approved') }}</p>
                     <p class="mt-1 text-2xl font-bold text-gray-800">{{ $approvedCount }}</p>
                     <p class="mt-1 text-sm text-gray-500">{{ $currency }} {{ convert_money($approvedTotal) }}</p>
                 </div>
@@ -66,14 +66,14 @@
             </div>
             <div class="refund-card bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200">
                 <div class="p-5">
-                    <p class="text-xs font-semibold uppercase tracking-wider text-red-600">Rejected</p>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-red-600">{{ __('system.common.rejected') }}</p>
                     <p class="mt-1 text-2xl font-bold text-gray-800">{{ $rejectedCount }}</p>
                 </div>
                 <div class="h-1 bg-red-400"></div>
             </div>
             <div class="refund-card bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200">
                 <div class="p-5">
-                    <p class="text-xs font-semibold uppercase tracking-wider text-indigo-600">Total Requests</p>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-indigo-600">{{ __('system.refunds.total_requests') }}</p>
                     <p class="mt-1 text-2xl font-bold text-gray-800">{{ $refunds->count() }}</p>
                 </div>
                 <div class="h-1 bg-indigo-400"></div>
@@ -83,20 +83,20 @@
         {{-- Table card --}}
         <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <h2 class="text-lg font-semibold text-gray-800">All Refunds</h2>
-                <p class="text-sm text-gray-500 mt-0.5">Search, sort and take action on refund requests</p>
+                <h2 class="text-lg font-semibold text-gray-800">{{ __('system.pages.all_refunds') }}</h2>
+                <p class="text-sm text-gray-500 mt-0.5">{{ __('system.pages.refunds_table_subtitle') }}</p>
             </div>
             <div class="overflow-x-auto">
                 <table id="refundsTable" class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">No</th>
-                            <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Booking ID</th>
-                            <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount</th>
-                            <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                            <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Phone</th>
-                            <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Full name</th>
-                            <th scope="col" class="px-6 py-3.5 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                            <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">{{ __('system.common.no') }}</th>
+                            <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">{{ __('system.pages.booking_id') }}</th>
+                            <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">{{ __('system.common.amount') }}</th>
+                            <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">{{ __('system.common.status') }}</th>
+                            <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">{{ __('system.pages.phone') }}</th>
+                            <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">{{ __('system.pages.full_name') }}</th>
+                            <th scope="col" class="px-6 py-3.5 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">{{ __('system.common.actions') }}</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-100">
@@ -107,11 +107,11 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ convert_money($refund->amount) }} {{ $currency }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     @if($refund->status == 'Pending')
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending</span>
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">{{ __('system.common.pending') }}</span>
                                     @elseif($refund->status == 'Approved')
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Approved</span>
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">{{ __('system.common.approved') }}</span>
                                     @else
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">Rejected</span>
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">{{ __('system.common.rejected') }}</span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $refund->phone }}</td>
@@ -121,15 +121,15 @@
                                         <div class="flex items-center justify-end gap-2">
                                             <form action="{{ route('system.refunds.approve', $refund->id) }}" method="POST" class="inline-block">
                                                 @csrf
-                                                <button type="submit" class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-green-500 text-white hover:bg-green-600 transition-colors shadow-sm">Approve</button>
+                                                <button type="submit" class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-green-500 text-white hover:bg-green-600 transition-colors shadow-sm">{{ __('system.refunds.approve') }}</button>
                                             </form>
                                             <form action="{{ route('system.refunds.reject', $refund->id) }}" method="POST" class="inline-block">
                                                 @csrf
-                                                <button type="submit" class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-red-500 text-white hover:bg-red-600 transition-colors shadow-sm">Reject</button>
+                                                <button type="submit" class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-red-500 text-white hover:bg-red-600 transition-colors shadow-sm">{{ __('system.refunds.reject') }}</button>
                                             </form>
                                         </div>
                                     @else
-                                        <span class="text-gray-400 text-xs">No actions</span>
+                                        <span class="text-gray-400 text-xs">{{ __('system.refunds.no_actions_short') }}</span>
                                     @endif
                                 </td>
                             </tr>
@@ -140,8 +140,8 @@
                                         <svg class="w-14 h-14 mb-4 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                         </svg>
-                                        <p class="text-sm font-medium text-gray-500">No refund requests found.</p>
-                                        <p class="text-xs text-gray-400 mt-1">New requests will appear here.</p>
+                                        <p class="text-sm font-medium text-gray-500">{{ __('system.pages.no_refunds_table') }}</p>
+                                        <p class="text-xs text-gray-400 mt-1">{{ __('system.pages.no_refunds_table_hint') }}</p>
                                     </div>
                                 </td>
                             </tr>
@@ -169,10 +169,15 @@ $(document).ready(function() {
             order: [[0, 'asc']],
             language: {
                 search: '',
-                searchPlaceholder: 'Search refunds...',
-                lengthMenu: 'Show _MENU_ entries',
-                info: 'Showing _START_ to _END_ of _TOTAL_ refunds',
-                paginate: { first: 'First', last: 'Last', next: 'Next', previous: 'Prev' }
+                searchPlaceholder: @json(__('system.pages.dt_search_refunds')),
+                lengthMenu: @json(__('all.dt_show_entries')),
+                info: @json(__('system.pages.dt_info_refunds')),
+                paginate: {
+                    first: @json(__('all.dt_first')),
+                    last: @json(__('all.dt_last')),
+                    next: @json(__('all.dt_next')),
+                    previous: @json(__('all.dt_previous'))
+                }
             },
             columnDefs: [{ orderable: false, targets: 6 }],
             dom: '<"flex flex-wrap justify-between items-center gap-4 mb-4 px-2"lf>rt<"flex justify-between items-center gap-4 mt-4 px-2"ip>',

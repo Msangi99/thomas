@@ -1,4 +1,13 @@
 document.addEventListener('DOMContentLoaded', function () {
+    const i18n = window.HighlinkI18n || {};
+    function t(key, fallback) {
+        return i18n[key] || fallback;
+    }
+    function amountLabel(amount, currency) {
+        const template = t('amount_label', 'Amount: :amount :currency');
+        return template.replace(':amount', amount).replace(':currency', currency);
+    }
+
     const list = document.querySelector('.home-search-results__list');
     const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
@@ -130,12 +139,12 @@ document.addEventListener('DOMContentLoaded', function () {
             form.addEventListener('submit', function (event) {
                 event.preventDefault();
                 if (!termsAccepted()) {
-                    alert('Please accept the terms and conditions.');
+                    alert(t('accept_terms_required', 'Please accept the terms and conditions.'));
                     return;
                 }
                 const contact = getInlineContactFields(paymentRoot);
                 if (!contact.contactNumber) {
-                    alert('Please enter phone number');
+                    alert(t('enter_phone_required', 'Please enter phone number'));
                     return;
                 }
                 appendPaymentContactToForm(form, contact);
@@ -151,6 +160,7 @@ document.addEventListener('DOMContentLoaded', function () {
         bindVerifyForm('inlineMixxForm');
         bindVerifyForm('inlineDpoForm');
         bindVerifyForm('inlineClickpesaForm');
+        bindVerifyForm('inlineWalletForm');
         bindVerifyForm('inlineCashForm');
         bindVerifyForm('inlineResaveForm');
 
@@ -161,7 +171,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 event.preventDefault();
                 const contact = getInlineContactFields(paymentRoot);
                 if (!contact.contactNumber) {
-                    alert('Please enter phone number');
+                    alert(t('enter_phone_required', 'Please enter phone number'));
                     return;
                 }
                 appendContactFieldsToForm(testForm, contact);
@@ -174,7 +184,7 @@ document.addEventListener('DOMContentLoaded', function () {
             nextBtn.dataset.bound = '1';
             nextBtn.addEventListener('click', function () {
                 if (!termsAccepted()) {
-                    alert('Please accept the terms and conditions.');
+                    alert(t('accept_terms_required', 'Please accept the terms and conditions.'));
                     return;
                 }
 
@@ -206,22 +216,22 @@ document.addEventListener('DOMContentLoaded', function () {
             const phone = contact.contactNumber;
 
             if (!termsAccepted()) {
-                alert('Please accept the terms and conditions.');
+                alert(t('accept_terms_required', 'Please accept the terms and conditions.'));
                 return;
             }
 
             if (!phone) {
-                alert('Please enter your mobile number in Contact Details.');
+                alert(t('enter_mobile_contact_details', 'Please enter your mobile number in Contact Details.'));
                 return;
             }
 
             if (nextButton) {
                 nextButton.disabled = true;
-                nextButton.textContent = 'Processing…';
+                nextButton.textContent = t('processing', 'Processing…');
             }
             if (statusEl) {
                 statusEl.classList.remove('hidden');
-                statusEl.textContent = 'Sending payment request…';
+                statusEl.textContent = t('sending_payment_request', 'Sending payment request…');
                 statusEl.className = 'inline-payment__airtel-status inline-payment__airtel-status--info';
             }
 
@@ -244,23 +254,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(function (data) {
                     if (data.status === 'success') {
                         if (statusEl) {
-                            statusEl.textContent = data.message || 'Prompt sent! Approve on your phone.';
+                            statusEl.textContent = data.message || t('prompt_sent_phone', 'Prompt sent! Approve on your phone.');
                             statusEl.className = 'inline-payment__airtel-status inline-payment__airtel-status--success';
                         }
                     } else {
                         if (statusEl) {
-                            statusEl.textContent = data.message || 'Payment failed. Please try again.';
+                            statusEl.textContent = data.message || t('payment_failed_try_again', 'Payment failed. Please try again.');
                             statusEl.className = 'inline-payment__airtel-status inline-payment__airtel-status--error';
                         }
                         if (nextButton) {
                             nextButton.disabled = false;
-                            nextButton.textContent = 'Next';
+                            nextButton.textContent = t('next', 'Next');
                         }
                     }
                 })
                 .catch(function () {
                     if (statusEl) {
-                        statusEl.textContent = 'Network error. Please try again.';
+                        statusEl.textContent = t('network_error_try_again', 'Network error. Please try again.');
                         statusEl.className = 'inline-payment__airtel-status inline-payment__airtel-status--error';
                     }
                     if (nextButton) {
@@ -302,13 +312,52 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function initInlineSelect2(container) {
-        if (typeof window.jQuery === 'undefined' || !window.jQuery.fn.select2) return;
+    function cleanupInlineSelect2(container) {
+        if (typeof window.jQuery === 'undefined') return;
         window.jQuery(container).find('.inline-select2').each(function () {
             const $el = window.jQuery(this);
-            if ($el.data('select2')) return;
-            $el.select2({
-                placeholder: 'Select an option',
+            if ($el.data('select2')) {
+                try { $el.select2('destroy'); } catch (e) { /* already torn down */ }
+            }
+            $el.next('.select2-container').remove();
+            $el.removeClass('select2-hidden-accessible')
+                .removeAttr('data-select2-id')
+                .removeAttr('aria-hidden')
+                .removeAttr('tabindex')
+                .css('width', '');
+        });
+    }
+
+    function resetInlinePickupPanelState(inner) {
+        inner.querySelectorAll('.inline-booking-panel').forEach(function (panel) {
+            if (!panel.querySelector('[data-inline-form="pickup"]')) return;
+            cleanupInlineSelect2(panel);
+            delete panel.dataset.inlineDistanceBound;
+            delete panel._inlineDistanceCalc;
+            delete panel._inlineDistancePromise;
+        });
+        inner.querySelectorAll('[data-inline-form="pickup"]').forEach(function (form) {
+            delete form.dataset.bound;
+        });
+    }
+
+    function capturePickupHtml(inner) {
+        resetInlinePickupPanelState(inner);
+        return inner.innerHTML;
+    }
+
+    function initInlineSelect2(container) {
+        if (typeof window.jQuery === 'undefined' || !window.jQuery.fn.select2) return;
+
+        delete container.dataset.inlineDistanceBound;
+        delete container._inlineDistanceCalc;
+        delete container._inlineDistancePromise;
+
+        cleanupInlineSelect2(container);
+
+        window.jQuery(container).find('.inline-select2').each(function () {
+            window.jQuery(this).select2({
+                placeholder: t('select_option_placeholder', 'Select an option'),
                 allowClear: true,
                 width: '100%',
                 dropdownParent: window.jQuery(container).closest('.home-bus-row__expand'),
@@ -316,6 +365,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         initInlineRouteDistance(container);
+
+        if (typeof container._inlineDistanceCalc === 'function') {
+            container._inlineDistanceCalc();
+        }
     }
 
     function haversineKm(lat1, lon1, lat2, lon2) {
@@ -412,7 +465,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             var token = ++calcToken;
-            setHint('Calculating distance…', true);
+            setHint(t('calculating_distance', 'Calculating distance…'), true);
 
             container._inlineDistancePromise = (async function () {
                 var fromCoords = await geocodeInlinePlace(from);
@@ -501,6 +554,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (stepKey === 'pickup') {
             if (inner._pickupHtml) {
                 inner.innerHTML = inner._pickupHtml;
+                resetInlinePickupPanelState(inner);
                 bindInlineForms(inner);
                 clearPanelError(inner);
                 inner.closest('.home-bus-row-wrap')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -510,18 +564,18 @@ document.addEventListener('DOMContentLoaded', function () {
             const url = inner._inlineFormUrl || wrap?.querySelector('[data-inline-book]')?.dataset.inlineUrl;
             if (!url) return;
 
-            inner.innerHTML = '<div class="inline-booking-loading"><i class="fas fa-spinner fa-spin"></i> Loading…</div>';
+            inner.innerHTML = '<div class="inline-booking-loading"><i class="fas fa-spinner fa-spin"></i> ' + t('loading', 'Loading…') + '</div>';
             try {
                 const res = await fetch(url, {
                     headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' },
                 });
                 if (!res.ok) return;
                 inner.innerHTML = await res.text();
-                inner._pickupHtml = inner.innerHTML;
+                inner._pickupHtml = capturePickupHtml(inner);
                 inner._inlineFormUrl = url;
                 bindInlineForms(inner);
             } catch (err) {
-                showPanelError(inner, 'Network error. Please try again.');
+                showPanelError(inner, t('network_error_try_again', 'Network error. Please try again.'));
             }
             return;
         }
@@ -858,7 +912,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 walletTimer = setTimeout(async function () {
                     const key = walletKey.value.trim();
                     if (!key) {
-                        if (walletAmount) walletAmount.textContent = 'Amount: 0.00 ' + config.currency;
+                        if (walletAmount) walletAmount.textContent = amountLabel('0.00', config.currency);
                         if (walletAmountHidden) walletAmountHidden.value = '0';
                         return;
                     }
@@ -868,7 +922,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         });
                         const data = await res.json();
                         const amt = data.amount || 0;
-                        if (walletAmount) walletAmount.textContent = 'Amount: ' + formatMoney(amt) + ' ' + config.currency;
+                        if (walletAmount) walletAmount.textContent = amountLabel(formatMoney(amt), config.currency);
                         if (walletAmountHidden) walletAmountHidden.value = String(amt);
                     } catch (e) {
                         /* ignore */
@@ -904,17 +958,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 if (!seatsValue) {
-                    showPanelError(wizard, 'Please select at least one seat.');
+                    showPanelError(wizard, t('select_at_least_one_seat', 'Please select at least one seat.'));
                     return;
                 }
 
                 if (insuranceToggle?.checked) {
                     if (!insuranceType?.value) {
-                        showPanelError(wizard, 'Please select insurance type.');
+                        showPanelError(wizard, t('select_insurance_type', 'Please select insurance type.'));
                         return;
                     }
                     if (!insuranceDate?.value) {
-                        showPanelError(wizard, 'Please select insurance date.');
+                        showPanelError(wizard, t('select_insurance_date', 'Please select insurance date.'));
                         return;
                     }
                 }
@@ -943,7 +997,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const data = await res.json().catch(function () { return {}; });
 
                     if (!res.ok || !data.ok) {
-                        showPanelError(wizard, data.message || 'Something went wrong. Please try again.');
+                        showPanelError(wizard, data.message || t('something_went_wrong', 'Something went wrong. Please try again.'));
                         return;
                     }
 
@@ -959,7 +1013,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         setWizardStep(wizard, 'payment');
                     }
                 } catch (err) {
-                    showPanelError(wizard, 'Network error. Please try again.');
+                    showPanelError(wizard, t('network_error_try_again', 'Network error. Please try again.'));
                 } finally {
                     if (submitBtn) submitBtn.disabled = false;
                 }
@@ -1004,7 +1058,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const data = await res.json().catch(function () { return {}; });
 
                     if (!res.ok || !data.ok) {
-                        showPanelError(panel, data.message || 'Something went wrong. Please try again.');
+                        showPanelError(panel, data.message || t('something_went_wrong', 'Something went wrong. Please try again.'));
                         return;
                     }
 
@@ -1015,7 +1069,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     if (data.html) {
                         if (form.dataset.inlineForm === 'pickup') {
-                            inner._pickupHtml = inner.innerHTML;
+                            inner._pickupHtml = capturePickupHtml(inner);
                         }
                         inner.innerHTML = data.html;
                         bindInlineForms(inner);
@@ -1023,7 +1077,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         inner.querySelector('.home-bus-row-wrap')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     }
                 } catch (err) {
-                    showPanelError(panel, 'Network error. Please try again.');
+                    showPanelError(panel, t('network_error_try_again', 'Network error. Please try again.'));
                 }
             });
         });
@@ -1097,7 +1151,7 @@ document.addEventListener('DOMContentLoaded', function () {
         btn.setAttribute('aria-expanded', 'true');
         article?.classList.add('home-bus-row--expanded');
 
-        inner.innerHTML = '<div class="inline-booking-loading"><i class="fas fa-spinner fa-spin"></i> Loading…</div>';
+        inner.innerHTML = '<div class="inline-booking-loading"><i class="fas fa-spinner fa-spin"></i> ' + t('loading', 'Loading…') + '</div>';
 
         try {
             const res = await fetch(btn.dataset.inlineUrl, {
@@ -1110,17 +1164,17 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!res.ok) {
                 const err = await res.json().catch(function () { return {}; });
                 inner.innerHTML = '<div class="inline-booking-panel__error booking-alert booking-alert--error">' +
-                    (err.message || 'Unable to load booking form.') + '</div>';
+                    (err.message || t('unable_load_booking_form', 'Unable to load booking form.')) + '</div>';
                 return;
             }
 
             inner.innerHTML = await res.text();
-            inner._pickupHtml = inner.innerHTML;
+            inner._pickupHtml = capturePickupHtml(inner);
             inner._inlineFormUrl = btn.dataset.inlineUrl;
             bindInlineForms(inner);
             expand.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         } catch (err) {
-            inner.innerHTML = '<div class="inline-booking-panel__error booking-alert booking-alert--error">Network error. Please try again.</div>';
+            inner.innerHTML = '<div class="inline-booking-panel__error booking-alert booking-alert--error">' + t('network_error_try_again', 'Network error. Please try again.') + '</div>';
         }
     });
 

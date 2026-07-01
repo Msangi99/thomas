@@ -16,7 +16,7 @@
         <div class="vendor-panel fade-in">
             <div class="vendor-panel__header">
                 <h3 class="vendor-panel__title flex items-center gap-2">
-                    <i class="fas fa-user"></i> Update Profile
+                    <i class="fas fa-user"></i> {{ __('vender/profile.profile_settings') }}
                 </h3>
             </div>
             <div class="vendor-panel__body">
@@ -39,14 +39,14 @@
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0H9a3 3 0 116 0h-1m-4 0a3 3 0 11-6 0m9 0a3 3 0 01-3 3"></path>
                     </svg>
-                    Personal Information
+                    {{ __('vender/profile.personal_information') }}
                 </h5>
                 <div class="mb-4">
                     <label for="name" class="block text-sm font-medium text-gray-700 flex items-center">
                         <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                         </svg>
-                        Name
+                        {{ __('vender/profile.name') }}
                     </label>
                     <input type="text" class="page-input" id="name" name="name"
                            value="{{ old('name', auth()->user()->name) }}" required>
@@ -60,7 +60,7 @@
                         <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                         </svg>
-                        Email
+                        {{ __('vender/profile.email') }}
                     </label>
                     <input type="email" class="page-input" id="email" name="email"
                            value="{{ old('email', auth()->user()->email) }}" required>
@@ -74,7 +74,7 @@
                         <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
                         </svg>
-                        Contact
+                        {{ __('vender/profile.contact') }}
                     </label>
                     <input type="text" class="page-input" id="contact" name="contact"
                            value="{{ old('contact', auth()->user()->contact ?? '') }}">
@@ -89,10 +89,10 @@
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                         </svg>
-                        Vendor Account Information
+                        {{ __('vender/profile.vendor_account_information') }}
                     </h5>
                     <div class="mb-4">
-                        <label for="tin" class="block text-sm font-medium text-gray-700">TIN</label>
+                        <label for="tin" class="block text-sm font-medium text-gray-700">{{ __('vender/profile.tin_number') }}</label>
                         <input type="text" class="page-input" id="tin" name="tin"
                                value="{{ old('tin', auth()->user()->VenderAccount->tin ?? '') }}">
                         @error('tin')
@@ -107,11 +107,11 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     </svg>
-                    Physical Address
+                    {{ __('vender/profile.physical_address') }}
                 </h5>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="mb-4">
-                        <label for="house_number" class="block text-sm font-medium text-gray-700">House Number</label>
+                        <label for="house_number" class="block text-sm font-medium text-gray-700">{{ __('vender/profile.office_number') }}</label>
                         <input type="text" class="page-input" id="house_number" name="house_number"
                                value="{{ old('house_number', auth()->user()->VenderAccount->house_number ?? '') }}">
                         @error('house_number')
@@ -119,7 +119,7 @@
                         @enderror
                     </div>
                     <div class="mb-4">
-                        <label for="street" class="block text-sm font-medium text-gray-700">Street</label>
+                        <label for="street" class="block text-sm font-medium text-gray-700">{{ __('vender/profile.street') }}</label>
                         <input type="text" class="page-input" id="street" name="street"
                                value="{{ old('street', auth()->user()->VenderAccount->street ?? '') }}">
                         @error('street')
@@ -129,7 +129,7 @@
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="mb-4">
-                        <label for="town" class="block text-sm font-medium text-gray-700">Town</label>
+                        <label for="town" class="block text-sm font-medium text-gray-700">{{ __('vender/profile.town') }}</label>
                         <input type="text" class="page-input" id="town" name="town"
                                value="{{ old('town', auth()->user()->VenderAccount->town ?? '') }}">
                         @error('town')
@@ -137,7 +137,7 @@
                         @enderror
                     </div>
                     <div class="mb-4">
-                        <label for="city" class="block text-sm font-medium text-gray-700">District/City</label>
+                        <label for="city" class="block text-sm font-medium text-gray-700">{{ __('vender/profile.district_city') }}</label>
                         <input type="text" class="page-input" id="city" name="city"
                                value="{{ old('city', auth()->user()->VenderAccount->city ?? '') }}">
                         @error('city')
@@ -145,7 +145,7 @@
                         @enderror
                     </div>
                     <div class="mb-4">
-                        <label for="province" class="block text-sm font-medium text-gray-700">Region/Province</label>
+                        <label for="province" class="block text-sm font-medium text-gray-700">{{ __('vender/profile.region_province') }}</label>
                         <input type="text" class="page-input" id="province" name="province"
                                value="{{ old('province', auth()->user()->VenderAccount->province ?? '') }}">
                         @error('province')
@@ -154,7 +154,7 @@
                     </div>
                 </div>
                 <div class="mb-4">
-                    <label for="country" class="block text-sm font-medium text-gray-700">Country</label>
+                    <label for="country" class="block text-sm font-medium text-gray-700">{{ __('vender/profile.country') }}</label>
                     <input type="text" class="page-input" id="country" name="country"
                            value="{{ old('country', auth()->user()->VenderAccount->country ?? '') }}">
                     @error('country')
@@ -162,7 +162,7 @@
                     @enderror
                 </div>
                 <div class="mb-4">
-                    <label for="work" class="block text-sm font-medium text-gray-700">Working Center</label>
+                    <label for="work" class="block text-sm font-medium text-gray-700">{{ __('vender/profile.working_center') }}</label>
                     <input type="text" class="page-input" id="work" name="work"
                            value="{{ old('work', auth()->user()->VenderAccount->work ?? '') }}">
                     @error('work')
@@ -175,10 +175,10 @@
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
                     </svg>
-                    Contact Information
+                    {{ __('vender/profile.contact_information') }}
                 </h5>
                 <div class="mb-4">
-                    <label for="altenative_number" class="block text-sm font-medium text-gray-700">Alternative Number</label>
+                    <label for="altenative_number" class="block text-sm font-medium text-gray-700">{{ __('vender/profile.alternative_number') }}</label>
                     <input type="text" class="page-input" id="altenative_number" name="altenative_number"
                            value="{{ old('altenative_number', auth()->user()->VenderAccount->altenative_number ?? '') }}">
                     @error('altenative_number')
@@ -194,11 +194,11 @@
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
                         </svg>
-                        Bank Account
+                        {{ __('vender/profile.bank_account_details') }}
                     </h5>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="mb-4">
-                            <label for="bank_name" class="block text-sm font-medium text-gray-700">Bank Name</label>
+                            <label for="bank_name" class="block text-sm font-medium text-gray-700">{{ __('vender/profile.bank_name') }}</label>
                             <input type="text" class="page-input" id="bank_name" name="bank_name"
                                    value="{{ old('bank_name', auth()->user()->VenderAccount->bank_name ?? '') }}">
                             @error('bank_name')
@@ -206,7 +206,7 @@
                             @enderror
                         </div>
                         <div class="mb-4">
-                            <label for="bank_number" class="block text-sm font-medium text-gray-700">Account Number</label>
+                            <label for="bank_number" class="block text-sm font-medium text-gray-700">{{ __('vender/profile.account_number') }}</label>
                             <input type="text" class="page-input" id="bank_number" name="bank_number"
                                    value="{{ old('bank_number', auth()->user()->VenderAccount->bank_number ?? '') }}">
                             @error('bank_number')
@@ -221,10 +221,10 @@
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
                     </svg>
-                    Vendor Balance
+                    {{ __('vender/profile.vendor_balance') }}
                 </h5>
                 <div class="mb-4">
-                    <label for="payment_number" class="block text-sm font-medium text-gray-700">Payment Number</label>
+                    <label for="payment_number" class="block text-sm font-medium text-gray-700">{{ __('vender/profile.payment_number') }}</label>
                     <input type="text" class="page-input" id="payment_number" name="payment_number"
                            value="{{ old('payment_number', auth()->user()->VenderBalances->payment_number ?? '') }}">
                     @error('payment_number')
@@ -237,18 +237,18 @@
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 1.104-.896 2-2 2s-2-.896-2-2 2-4 2-4 2 .896 2 2zM16 11c0 1.104-.896 2-2 2s-2-.896-2-2 2-4 2-4 2 .896 2 2zM8 11c0 1.104-.896 2-2 2s-2-.896-2-2 2-4 2-4 2 .896 2 2z"></path>
                     </svg>
-                    Security
+                    {{ __('vender/profile.security') }}
                 </h5>
                 <div class="mb-4">
-                    <label for="password" class="block text-sm font-medium text-gray-700">Password (leave blank to keep unchanged)</label>
-                    <input type="password" class="page-input" placeholder="Leave blank to keep unchanged"
+                    <label for="password" class="block text-sm font-medium text-gray-700">{{ __('vender/profile.password_leave_unchanged') }}</label>
+                    <input type="password" class="page-input" placeholder="{{ __('vender/profile.leave_blank_password') }}"
                            id="password" name="password">
                     @error('password')
                         <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
                     @enderror
                 </div>
                 <div class="mb-4">
-                    <label for="password_confirmation" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+                    <label for="password_confirmation" class="block text-sm font-medium text-gray-700">{{ __('vender/profile.confirm_password') }}</label>
                     <input type="password" class="page-input" id="password_confirmation" name="password_confirmation">
                     @error('password_confirmation')
                         <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
@@ -258,7 +258,7 @@
                 <!-- Submit Button -->
                 <div class="mt-6">
                     <button type="submit" class="page-btn w-full justify-center">
-                        <i class="fas fa-save"></i> Update Profile
+                        <i class="fas fa-save"></i> {{ __('vender/profile.update_profile') }}
                     </button>
                 </div>
             </form>

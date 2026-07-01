@@ -1,10 +1,9 @@
-@extends('bus_owner.app')
+@extends('admin.app')
 
-@section('title', 'Manage Parcels')
+@section('title', __('vender/parcels.manage_parcels'))
 
 @section('content')
 <div class="container mx-auto px-4 py-6">
-    <!-- Success/Error Messages -->
     @if (session('success'))
         <div class="mb-4 bg-green-50 border-l-4 border-green-500 p-4 rounded-lg shadow-sm">
             <div class="flex">
@@ -22,12 +21,11 @@
 
     <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800">Parcel Management</h1>
-            <p class="mt-1 text-sm text-gray-500">Manage status and acceptance of parcels for your buses.</p>
+            <h1 class="text-2xl font-bold text-gray-800">{{ __('vender/parcels.parcel_management') }}</h1>
+            <p class="mt-1 text-sm text-gray-500">{{ __('vender/parcels.manage_status_subtitle') }}</p>
         </div>
     </div>
 
-    <!-- Bus Toggle Section -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         @foreach($buses as $bus)
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -36,20 +34,20 @@
                     <h3 class="font-bold text-gray-800">{{ $bus->bus_number }}</h3>
                     <p class="text-sm text-gray-500">{{ $bus->bus_model }}</p>
                 </div>
-                
+
                 <form action="{{ route('bus_owner.parcels.toggle_acceptance') }}" method="POST">
                     @csrf
                     <input type="hidden" name="bus_id" value="{{ $bus->id }}">
-                    <button type="submit" 
-                        class="relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 {{ $bus->accept_parcels ? 'bg-green-500' : 'bg-gray-200' }}" 
+                    <button type="submit"
+                        class="relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 {{ $bus->accept_parcels ? 'bg-green-500' : 'bg-gray-200' }}"
                         role="switch" aria-checked="{{ $bus->accept_parcels ? 'true' : 'false' }}">
-                        <span class="sr-only">Accept Parcels</span>
-                        <span aria-hidden="true" 
+                        <span class="sr-only">{{ __('vender/parcels.accept_parcels') }}</span>
+                        <span aria-hidden="true"
                             class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200 {{ $bus->accept_parcels ? 'translate-x-5' : 'translate-x-0' }}">
                         </span>
                     </button>
                     <span class="block text-xs mt-1 {{ $bus->accept_parcels ? 'text-green-600' : 'text-gray-500' }}">
-                        {{ $bus->accept_parcels ? 'Accepting Parcels' : 'Not Accepting' }}
+                        {{ $bus->accept_parcels ? __('vender/parcels.accepting_parcels') : __('vender/parcels.not_accepting') }}
                     </span>
                 </form>
             </div>
@@ -57,22 +55,21 @@
         @endforeach
     </div>
 
-    <!-- Parcels Table -->
     <div class="bg-white shadow rounded-lg overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-medium text-gray-900">Recent Parcels</h3>
+            <h3 class="text-lg font-medium text-gray-900">{{ __('vender/parcels.recent_parcels') }}</h3>
         </div>
         <div class="overflow-x-auto">
             <table id="parcelsTable" class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parcel No</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bus</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Update Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('vender/parcels.parcel_no') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('vender/parcels.bus') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('vender/parcels.type') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('vender/parcels.details') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('vender/parcels.amount') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('vender/parcels.current_status') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('vender/parcels.update_status') }}</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -83,9 +80,9 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $parcel->parcel_type }}</td>
                             <td class="px-6 py-4 text-sm text-gray-500">
                                 <div class="text-xs">
-                                    @if($parcel->weight) <div>W: {{ $parcel->weight }}kg</div> @endif
-                                    @if($parcel->height) <div>H: {{ $parcel->height }}cm</div> @endif
-                                    @if($parcel->width) <div>L: {{ $parcel->width }}cm</div> @endif
+                                    @if($parcel->weight) <div>{{ __('vender/parcels.weight_label') }} {{ $parcel->weight }}kg</div> @endif
+                                    @if($parcel->height) <div>{{ __('vender/parcels.height_label') }} {{ $parcel->height }}cm</div> @endif
+                                    @if($parcel->width) <div>{{ __('vender/parcels.width_label') }} {{ $parcel->width }}cm</div> @endif
                                     @if(!$parcel->weight && !$parcel->height && !$parcel->width) - @endif
                                 </div>
                             </td>
@@ -93,28 +90,34 @@
                                 {{ $currency }} {{ convert_money($parcel->amount_paid) }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                                     {{ $parcel->status === 'completed' ? 'bg-green-100 text-green-800' : '' }}
                                     {{ $parcel->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : '' }}
                                     {{ $parcel->status === 'cancelled' ? 'bg-red-100 text-red-800' : '' }}">
-                                    {{ ucfirst($parcel->status) }}
+                                    @if($parcel->status === 'completed')
+                                        {{ __('vender/parcels.completed') }}
+                                    @elseif($parcel->status === 'pending')
+                                        {{ __('vender/parcels.pending') }}
+                                    @else
+                                        {{ __('vender/parcels.cancelled') }}
+                                    @endif
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <form action="{{ route('bus_owner.parcels.update_status', $parcel->id) }}" method="POST" class="flex items-center space-x-2">
                                     @csrf
                                     <select name="status" class="text-xs border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                                        <option value="pending" {{ $parcel->status === 'pending' ? 'selected' : '' }}>Pending</option>
-                                        <option value="completed" {{ $parcel->status === 'completed' ? 'selected' : '' }}>Completed</option>
-                                        <option value="cancelled" {{ $parcel->status === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                                        <option value="pending" {{ $parcel->status === 'pending' ? 'selected' : '' }}>{{ __('vender/parcels.pending') }}</option>
+                                        <option value="completed" {{ $parcel->status === 'completed' ? 'selected' : '' }}>{{ __('vender/parcels.completed') }}</option>
+                                        <option value="cancelled" {{ $parcel->status === 'cancelled' ? 'selected' : '' }}>{{ __('vender/parcels.cancelled') }}</option>
                                     </select>
-                                    <button type="submit" class="text-indigo-600 hover:text-indigo-900 text-xs font-bold">Update</button>
+                                    <button type="submit" class="text-indigo-600 hover:text-indigo-900 text-xs font-bold">{{ __('vender/parcels.update') }}</button>
                                 </form>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">No parcels found.</td>
+                            <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">{{ __('vender/parcels.no_parcels_found') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

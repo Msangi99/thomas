@@ -7,10 +7,8 @@
             <div class="col-lg-7 col-md-6 ftco-animate d-flex align-items-end">
                 <div class="text">
                     <p style="color:#3DD0FF;">HIGHLINK</p>
-                    <h1 class="mb-4 font-weight-bold">Luxury & Comfort<span>In One Package</span></h1>
-                    <p>Welcome aboard and experience luxury and comfort in one package as you<br> travel with our
-                        executive coaches, we wish
-                        you a happy and comfortable journey with us!</p>
+                    <h1 class="mb-4 font-weight-bold">{{ __('all.home_luxury_comfort') }}<span>{{ __('all.home_in_one_package') }}</span></h1>
+                    <p>{{ __('all.home_welcome_aboard') }}</p>
 
                 </div>
             </div>
@@ -65,7 +63,7 @@
                 </form>>-->
                 <div class="btn btn-info g-3 d-flex align-items-center justify-content-center gap-2 px-5 py-3 custom-btn">
                     <i class="fa fa-calendar-check fs-3 py-2 px-3"></i>
-                    <span class="fs-3">Booking</span>
+                    <span class="fs-3">{{ __('all.home_booking_button') }}</span>
                   </div>
             </div>
         </div>

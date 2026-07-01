@@ -15,13 +15,13 @@
         @if ($showSectionHeader)
             <div class="home-schedules__header fade-in">
                 <div>
-                    <h2 class="home-schedules__title">Today's <span>Schedules</span></h2>
-                    <p class="home-schedules__subtitle">Live departures for {{ now()->format('l, F j, Y') }}</p>
+                    <h2 class="home-schedules__title">{{ __('all.todays_schedules') }}</h2>
+                    <p class="home-schedules__subtitle">{{ __('all.live_departures_for', ['date' => now()->format('l, F j, Y')]) }}</p>
                 </div>
                 @if ($scheduleCount > 0)
-                    <div class="home-schedules__badge" aria-label="{{ $scheduleCount }} departures today">
+                    <div class="home-schedules__badge" aria-label="{{ __('all.departures_today_aria', ['count' => $scheduleCount]) }}">
                         <i class="fas fa-bus" aria-hidden="true"></i>
-                        {{ $scheduleCount }} {{ $scheduleCount === 1 ? 'departure' : 'departures' }}
+                        {{ $scheduleCount }} {{ $scheduleCount === 1 ? __('all.departure_singular') : __('all.departures_plural') }}
                     </div>
                 @endif
             </div>
@@ -82,7 +82,7 @@
                     </div>
 
                     <div class="home-schedule-card__meta">
-                        <span><i class="fas fa-hashtag" aria-hidden="true"></i> Bus {{ $schedule->bus->bus_number ?? 'N/A' }}</span>
+                        <span><i class="fas fa-hashtag" aria-hidden="true"></i> {{ __('all.bus_number_label_short') }} {{ $schedule->bus->bus_number ?? __('all.not_available_short') }}</span>
                         <span><i class="fas fa-calendar-day" aria-hidden="true"></i> {{ $scheduleDate }}</span>
                     </div>
 
@@ -92,23 +92,23 @@
                                 <small>{{ __('all.from_price') }}</small>
                                 <strong>TZS {{ number_format($price) }}</strong>
                             @else
-                                <small>Available today</small>
-                                <strong>Book your seat</strong>
+                                <small>{{ __('all.available_today') }}</small>
+                                <strong>{{ __('all.book_your_seat') }}</strong>
                             @endif
                         </div>
                         <a href="{{ route('booking_form', ['id' => $schedule->bus_id, 'from' => $from, 'to' => $to]) }}"
                             class="home-schedule-card__btn">
-                            Book Now <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                            {{ __('all.book_now') }} <i class="fas fa-arrow-right" aria-hidden="true"></i>
                         </a>
                     </div>
                 </article>
             @empty
                 <div class="home-schedules__empty fade-in">
                     <div class="home-schedules__empty-icon" aria-hidden="true"><i class="fas fa-bus"></i></div>
-                    <h3>No departures today</h3>
-                    <p>There are no buses scheduled for today yet. Search your route above or browse popular destinations.</p>
+                    <h3>{{ __('all.no_departures_today') }}</h3>
+                    <p>{{ __('all.no_departures_today_desc') }}</p>
                     <a href="{{ route('routes') }}" class="home-schedules__empty-link">
-                        Browse Popular Routes <i class="fas fa-route" aria-hidden="true"></i>
+                        {{ __('all.browse_popular_routes') }} <i class="fas fa-route" aria-hidden="true"></i>
                     </a>
                 </div>
             @endforelse
@@ -117,7 +117,7 @@
         @if ($showExploreLink && $scheduleCount > 0)
             <div class="home-schedules__footer fade-in">
                 <a href="{{ route('schedules.today') }}" class="home-schedules__explore">
-                    View All Today's Schedules <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                    {{ __('all.view_all_todays_schedules') }} <i class="fas fa-arrow-right" aria-hidden="true"></i>
                 </a>
             </div>
         @endif

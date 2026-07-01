@@ -32,7 +32,7 @@
             @endif
             @if ($vb)
                 <a href="{{ route('vender.wallet.deposit') }}" class="page-btn page-btn--outline">
-                    <i class="fas fa-plus"></i> Deposit
+                    <i class="fas fa-plus"></i> {{ __('assistance/transaction.deposit') }}
                 </a>
             @endif
         </div>
@@ -44,19 +44,19 @@
                 <div class="vendor-kpi__icon"><i class="fas fa-wallet"></i></div>
                 <span class="vendor-kpi__badge">{{ __('assistance/transaction.balance') }}</span>
             </div>
-            <p class="vendor-kpi__label">Commission wallet</p>
+            <p class="vendor-kpi__label">{{ __('assistance/transaction.commission_wallet') }}</p>
             <p class="vendor-kpi__value">{{ convert_money($commissionBalance) }}</p>
-            <p class="vendor-kpi__hint">{{ $currency }} · Payout requests</p>
+            <p class="vendor-kpi__hint">{{ $currency }} · {{ __('assistance/transaction.payout_requests_hint') }}</p>
         </article>
 
         <article class="vendor-kpi vendor-kpi--cash">
             <div class="vendor-kpi__top">
                 <div class="vendor-kpi__icon"><i class="fas fa-money-bill-wave"></i></div>
-                <span class="vendor-kpi__badge">Cash</span>
+                <span class="vendor-kpi__badge">{{ __('assistance/transaction.cash_badge') }}</span>
             </div>
-            <p class="vendor-kpi__label">Cash wallet</p>
+            <p class="vendor-kpi__label">{{ __('assistance/transaction.cash_wallet') }}</p>
             <p class="vendor-kpi__value">{{ $vendorDualWallet && $vb ? convert_money($cashBalance) : '—' }}</p>
-            <p class="vendor-kpi__hint">{{ $vendorDualWallet ? 'Sell-in-cash float' : 'Not active on this server' }}</p>
+            <p class="vendor-kpi__hint">{{ $vendorDualWallet ? __('assistance/transaction.sell_cash_float') : __('assistance/transaction.wallet_split_not_active') }}</p>
         </article>
 
         <article class="vendor-kpi vendor-kpi--pending">
@@ -66,7 +66,7 @@
             </div>
             <p class="vendor-kpi__label">{{ __('assistance/transaction.pending') }}</p>
             <p class="vendor-kpi__value">{{ convert_money($pending) }}</p>
-            <p class="vendor-kpi__hint">{{ $currency }} awaiting approval</p>
+            <p class="vendor-kpi__hint">{{ $currency }} {{ __('assistance/transaction.awaiting_approval') }}</p>
         </article>
 
         <article class="vendor-kpi vendor-kpi--withdrawn">
@@ -76,7 +76,7 @@
             </div>
             <p class="vendor-kpi__label">{{ __('assistance/transaction.withdrawn') }}</p>
             <p class="vendor-kpi__value">{{ convert_money($accept) }}</p>
-            <p class="vendor-kpi__hint">{{ $currency }} completed payouts</p>
+            <p class="vendor-kpi__hint">{{ $currency }} {{ __('assistance/transaction.completed_payouts') }}</p>
         </article>
     </div>
 
@@ -84,32 +84,32 @@
     <div class="vendor-wallet-grid">
         <div class="vendor-wallet-card">
             <div class="vendor-wallet-card__head">
-                <h3 class="vendor-wallet-card__title">Move amount between wallets</h3>
-                <p class="vendor-wallet-card__sub">Transfer between commission and cash wallets</p>
+                <h3 class="vendor-wallet-card__title">{{ __('assistance/transaction.move_between_wallets') }}</h3>
+                <p class="vendor-wallet-card__sub">{{ __('assistance/transaction.transfer_between_wallets') }}</p>
             </div>
             <div class="vendor-wallet-card__body">
                 <form method="POST" action="{{ route('vender.wallet.transfer') }}" class="flex flex-wrap items-end gap-3">
                     @csrf
                     <div class="vendor-form-field flex-1 min-w-[10rem]">
-                        <label for="transfer-direction">Direction</label>
+                        <label for="transfer-direction">{{ __('assistance/transaction.direction') }}</label>
                         <select name="direction" id="transfer-direction" class="page-input text-sm w-full">
-                            <option value="to_sell_cash">Commission → Cash</option>
-                            <option value="to_commission">Cash → Commission</option>
+                            <option value="to_sell_cash">{{ __('assistance/transaction.commission_to_cash') }}</option>
+                            <option value="to_commission">{{ __('assistance/transaction.cash_to_commission') }}</option>
                         </select>
                     </div>
                     <div class="vendor-form-field">
-                        <label for="transfer-amount">Amount (TZS)</label>
+                        <label for="transfer-amount">{{ __('assistance/transaction.amount_tsh') }}</label>
                         <input type="number" name="amount" id="transfer-amount" step="0.01" min="0.01" required class="page-input text-sm w-36">
                     </div>
-                    <button type="submit" class="page-btn">Transfer</button>
+                    <button type="submit" class="page-btn">{{ __('assistance/transaction.transfer') }}</button>
                 </form>
 
                 @if ((float) ($vb->sell_cash_amount ?? 0) == 0 && (float) ($vb->amount ?? 0) > 0)
                 <div class="vendor-legacy-banner">
-                    <p>If your balance lived in the old single wallet before the cash/commission split, you can move the full commission balance into the cash wallet once.</p>
-                    <form method="POST" action="{{ route('vender.wallet.migrateLegacyCash') }}" onsubmit="return confirm('Move your entire commission wallet balance to the cash wallet?');">
+                    <p>{{ __('assistance/transaction.legacy_wallet_notice') }}</p>
+                    <form method="POST" action="{{ route('vender.wallet.migrateLegacyCash') }}" onsubmit="return confirm(@json(__('assistance/transaction.confirm_move_all_to_cash')));">
                         @csrf
-                        <button type="submit" class="page-btn page-btn--outline" style="font-size:0.8125rem">Move all to cash wallet (one-time)</button>
+                        <button type="submit" class="page-btn page-btn--outline" style="font-size:0.8125rem">{{ __('assistance/transaction.move_all_to_cash_once') }}</button>
                     </form>
                 </div>
                 @endif
@@ -118,12 +118,12 @@
 
         <div class="vendor-wallet-card">
             <div class="vendor-wallet-card__head">
-                <h3 class="vendor-wallet-card__title">Wallet actions</h3>
-                <p class="vendor-wallet-card__sub">Manage float and payout requests</p>
+                <h3 class="vendor-wallet-card__title">{{ __('assistance/transaction.wallet_actions') }}</h3>
+                <p class="vendor-wallet-card__sub">{{ __('assistance/transaction.manage_float_payouts') }}</p>
             </div>
             <div class="vendor-wallet-card__body vendor-wallet-actions">
                 <a href="{{ route('vender.wallet.deposit') }}" class="page-btn">
-                    <i class="fas fa-arrow-down"></i> Deposit to cash wallet
+                    <i class="fas fa-arrow-down"></i> {{ __('assistance/transaction.deposit_to_cash_wallet') }}
                 </a>
                 <button type="button" class="page-btn page-btn--outline" id="openTransactionModalSide">
                     <i class="fas fa-paper-plane"></i> {{ __('assistance/transaction.request_transaction') }}
@@ -232,7 +232,7 @@
                     {{ __('vender/busroot.of') }} <span id="txTotal">{{ $txCount }}</span>
                     {{ __('vender/busroot.entries') }}
                 </p>
-                <nav aria-label="Transaction pagination">
+                <nav aria-label="{{ __('assistance/transaction.transaction_pagination') }}">
                     <ul class="vendor-pagination" id="txPagination"></ul>
                 </nav>
             </div>
@@ -259,7 +259,7 @@
                     @error('amount')
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                     @enderror
-                    <p class="vendor-form-hint">Available: {{ $currency }} {{ convert_money($commissionBalance) }}</p>
+                    <p class="vendor-form-hint">{{ __('assistance/transaction.available_balance_hint', ['currency' => $currency, 'amount' => convert_money($commissionBalance)]) }}</p>
                 </div>
                 <div class="vendor-form-field">
                     <label for="payment_method">{{ __('assistance/transaction.payment_method') }}</label>

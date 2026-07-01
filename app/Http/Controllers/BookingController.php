@@ -184,16 +184,16 @@ class BookingController extends Controller
         $expiresAt = $request->session()->get('booking_verification_expires_at');
 
         if (!$email || !$storedCode || !$expiresAt) {
-            return redirect()->route('info')->withErrors(['email' => 'Verification session expired. Please search again.']);
+            return redirect()->route('info')->withErrors(['email' => __('all.verification_session_expired')]);
         }
 
         // Check if verification code is valid and not expired
         if ($request->verification_code !== $storedCode) {
-            return back()->withErrors(['verification_code' => 'Invalid verification code.'])->withInput();
+            return back()->withErrors(['verification_code' => __('all.invalid_verification_code')])->withInput();
         }
 
         if (now()->isAfter($expiresAt)) {
-            return back()->withErrors(['verification_code' => 'Verification code has expired. Please request a new one.'])->withInput();
+            return back()->withErrors(['verification_code' => __('all.verification_code_expired')])->withInput();
         }
 
         // Clear verification session data
@@ -222,7 +222,7 @@ class BookingController extends Controller
         $email = $request->session()->get('booking_verification_email');
 
         if (!$email) {
-            return redirect()->route('info')->withErrors(['email' => 'Verification session expired. Please search again.']);
+            return redirect()->route('info')->withErrors(['email' => __('all.verification_session_expired')]);
         }
 
         // Generate new verification code
@@ -245,7 +245,7 @@ class BookingController extends Controller
 
         return back()
                 ->with('email', $email)
-                ->with('status', 'A new verification code has been sent to your email.');
+                ->with('status', __('all.new_verification_code_sent'));
     }
 
     public function form()
@@ -280,7 +280,7 @@ class BookingController extends Controller
         if ($car === null) {
             return redirect()->route('booking')->with(
                 'error',
-                'This trip is not available. Please run a new search and try again.'
+                __('all.trip_not_available')
             );
         }
 
@@ -294,7 +294,7 @@ class BookingController extends Controller
         if ($car === null) {
             return response()->json([
                 'ok' => false,
-                'message' => 'This trip is not available. Please try another bus.',
+                'message' => __('all.trip_not_available_try_another'),
             ], 404);
         }
 
@@ -410,12 +410,12 @@ class BookingController extends Controller
     public function inlinePreparePayment(Request $request)
     {
         if (!$this->isInlineBookingRequest($request)) {
-            return response()->json(['ok' => false, 'message' => 'Invalid request.'], 400);
+            return response()->json(['ok' => false, 'message' => __('all.invalid_request')], 400);
         }
 
         $bus_info = session()->get('booking_form', []);
         if (empty($bus_info['bus_id']) || empty($bus_info['travel_date'])) {
-            return response()->json(['ok' => false, 'message' => 'Session expired. Please try again.'], 422);
+            return response()->json(['ok' => false, 'message' => __('all.session_expired_try_again')], 422);
         }
 
         $seats = $request->input('selected_seats');
@@ -431,7 +431,7 @@ class BookingController extends Controller
         }
 
         if (empty($selected)) {
-            return response()->json(['ok' => false, 'message' => 'Please select at least one seat.'], 422);
+            return response()->json(['ok' => false, 'message' => __('all.select_at_least_one_seat')], 422);
         }
 
         $booked = Booking::where('bus_id', $bus_info['bus_id'])
@@ -448,7 +448,7 @@ class BookingController extends Controller
         if (!empty($alreadyBooked)) {
             return response()->json([
                 'ok' => false,
-                'message' => 'One or more selected seats are no longer available. Please choose different seats.',
+                'message' => __('all.seats_no_longer_available'),
             ], 422);
         }
 
@@ -457,15 +457,15 @@ class BookingController extends Controller
             $passengers = json_decode($passengers, true) ?: [];
         }
         if (!is_array($passengers) || count($passengers) !== count($selected)) {
-            return response()->json(['ok' => false, 'message' => 'Please complete details for each selected seat.'], 422);
+            return response()->json(['ok' => false, 'message' => __('all.complete_seat_details_each')], 422);
         }
 
         foreach ($passengers as $passenger) {
             if (empty(trim($passenger['name'] ?? '')) || empty(trim($passenger['phone'] ?? ''))) {
-                return response()->json(['ok' => false, 'message' => 'Please enter name and phone for each selected seat.'], 422);
+                return response()->json(['ok' => false, 'message' => __('all.enter_name_phone_each_seat')], 422);
             }
             if (empty(trim($passenger['age_group'] ?? ''))) {
-                return response()->json(['ok' => false, 'message' => 'Please select age group for each passenger.'], 422);
+                return response()->json(['ok' => false, 'message' => __('all.select_age_group_each_passenger')], 422);
             }
         }
 
@@ -511,11 +511,11 @@ class BookingController extends Controller
             if ($this->isInlineBookingRequest($request)) {
                 return response()->json([
                     'ok' => false,
-                    'message' => 'Please select pickup and dropping points.',
+                    'message' => __('all.select_pickup_dropping_points'),
                 ], 422);
             }
 
-            return back()->with('error', 'Calculate distance before continue');
+            return back()->with('error', __('all.calculate_distance_before_continue'));
         }
 
         $bus_info = [
@@ -536,7 +536,7 @@ class BookingController extends Controller
         if ($this->isInlineBookingRequest($request)) {
             $context = $this->getSeatsContext();
             if (!$context) {
-                return response()->json(['ok' => false, 'message' => 'Session expired. Please try again.'], 422);
+                return response()->json(['ok' => false, 'message' => __('all.session_expired_try_again')], 422);
             }
 
             $inlineUid = $request->input('inline_uid', 'ib_seats');
@@ -555,7 +555,7 @@ class BookingController extends Controller
     {
         $context = $this->getSeatsContext();
         if (!$context) {
-            return redirect()->to(booking_route('home'))->with('error', 'Session expired. Please try again.');
+            return redirect()->to(booking_route('home'))->with('error', __('all.session_expired_try_again'));
         }
 
         return view('seates', $context);
@@ -569,9 +569,9 @@ class BookingController extends Controller
         $bus_info = session()->get('booking_form', []);
         if (empty($bus_info['bus_id']) || empty($bus_info['travel_date'])) {
             if ($this->isInlineBookingRequest($request)) {
-                return response()->json(['ok' => false, 'message' => 'Session expired. Please try again.'], 422);
+                return response()->json(['ok' => false, 'message' => __('all.session_expired_try_again')], 422);
             }
-            return redirect()->to(booking_route('home'))->with('error', 'Session expired. Please try again.');
+            return redirect()->to(booking_route('home'))->with('error', __('all.session_expired_try_again'));
         }
 
         $selected = is_array($seats) ? $seats : (is_string($seats) ? array_map('trim', explode(',', $seats)) : []);
@@ -579,9 +579,9 @@ class BookingController extends Controller
 
         if (empty($selected)) {
             if ($this->isInlineBookingRequest($request)) {
-                return response()->json(['ok' => false, 'message' => 'Please select at least one seat.'], 422);
+                return response()->json(['ok' => false, 'message' => __('all.select_at_least_one_seat')], 422);
             }
-            return redirect()->to(booking_route('seats'))->with('error', 'Please select at least one seat.');
+            return redirect()->to(booking_route('seats'))->with('error', __('all.select_at_least_one_seat'));
         }
 
         $booked = Booking::where('bus_id', $bus_info['bus_id'])
@@ -596,7 +596,7 @@ class BookingController extends Controller
 
         $alreadyBooked = array_intersect($selected, $booked);
         if (!empty($alreadyBooked)) {
-            $msg = 'One or more selected seats are no longer available. Please choose different seats.';
+            $msg = __('all.seats_no_longer_available');
             if ($this->isInlineBookingRequest($request)) {
                 return response()->json(['ok' => false, 'message' => $msg], 422);
             }
@@ -624,7 +624,7 @@ class BookingController extends Controller
     {
         $setting = Setting::first();
         if (is_null(session()->get('booking_form')) || !isset(session()->get('booking_form')['total_amount'])) {
-            return redirect()->to(booking_route('home'))->with('error', 'Session expired. Please try again.');
+            return redirect()->to(booking_route('home'))->with('error', __('all.session_expired_try_again'));
         }
         $price = session()->get('booking_form')['total_amount'];
         $seats = session()->get('booking_form')['seats'];
@@ -652,9 +652,9 @@ class BookingController extends Controller
     {
         if (is_null(session()->get('booking_form')) || !isset(session()->get('booking_form')['total_amount'])) {
             if ($this->isInlineBookingRequest($request)) {
-                return response()->json(['ok' => false, 'message' => 'Session expired. Please try again.'], 422);
+                return response()->json(['ok' => false, 'message' => __('all.session_expired_try_again')], 422);
             }
-            return redirect()->to(booking_route('home'))->with('error', 'Session expired. Please try again.');
+            return redirect()->to(booking_route('home'))->with('error', __('all.session_expired_try_again'));
         }
 
         $bus_info = session()->get('booking_form', []);
@@ -680,15 +680,15 @@ class BookingController extends Controller
             $couponCheck = Discount::where('code', $bus_info['discount'])->first();
             if (!$couponCheck) {
                 if ($this->isInlineBookingRequest($request)) {
-                    return response()->json(['ok' => false, 'message' => 'Invalid coupon code. Please check and try again.'], 422);
+                    return response()->json(['ok' => false, 'message' => __('all.invalid_coupon_code')], 422);
                 }
-                return redirect()->to(booking_route('pay'))->with('error', 'Invalid coupon code. Please check and try again.');
+                return redirect()->to(booking_route('pay'))->with('error', __('all.invalid_coupon_code'));
             }
             if (!$couponCheck->isValid()) {
                 if ($this->isInlineBookingRequest($request)) {
-                    return response()->json(['ok' => false, 'message' => 'This coupon has expired or has reached its usage limit.'], 422);
+                    return response()->json(['ok' => false, 'message' => __('all.coupon_expired_or_limit')], 422);
                 }
-                return redirect()->to(booking_route('pay'))->with('error', 'This coupon has expired or has reached its usage limit.');
+                return redirect()->to(booking_route('pay'))->with('error', __('all.coupon_expired_or_limit'));
             }
         }
 
@@ -831,7 +831,7 @@ class BookingController extends Controller
                 ->withInput();
         }
         if (is_null(session()->get('booking_form')) || !isset(session()->get('booking_form')['total_amount'])) {
-            return redirect()->to(booking_route('home'))->with('error', 'Session expired. Please try again.');
+            return redirect()->to(booking_route('home'))->with('error', __('all.session_expired_try_again'));
         }
         $bus_info = session()->get('booking_form', []);
 
@@ -878,7 +878,7 @@ class BookingController extends Controller
 
         $tigo = new TigosecureController();
         if (is_null(session()->get('booking_form')) || !isset(session()->get('booking_form')['total_amount'])) {
-            return redirect()->to(booking_route('home'))->with('error', 'Session expired. Please try again.');
+            return redirect()->to(booking_route('home'))->with('error', __('all.session_expired_try_again'));
         }
         $bookingForm = session()->get('booking_form');
         $bima = $bookingForm['bima'] ?? 0;
@@ -953,7 +953,7 @@ class BookingController extends Controller
                 'error' => $e->getMessage(),
                 'data' => $bookingData,
             ]);
-            return response()->json(['status' => 'error', 'message' => 'Failed to create booking'], 500);
+            return response()->json(['status' => 'error', 'message' => __('all.failed_create_booking')], 500);
         }
 
         // Initiate payment and get transactionRefId
@@ -971,7 +971,7 @@ class BookingController extends Controller
                     'error' => $e->getMessage(),
                     'booking_id' => $booking->id,
                 ]);
-                return response()->json(['status' => 'error', 'message' => 'Payment initiation failed'], 500);
+                return response()->json(['status' => 'error', 'message' => __('all.payment_initiation_failed')], 500);
             }
         } elseif ($method == 'dpo') {
 
@@ -1002,8 +1002,8 @@ class BookingController extends Controller
                 $normalized = ClickPesaController::normalizeTanzaniaMsisdnForClickPesa((string) $clickpesaPhone);
                 if (!$normalized['ok']) {
                     return redirect()->to(booking_route('pay'))
-                        ->with('error', 'ClickPesa Payment Failed: ' . ($normalized['error'] ?? 'Invalid mobile money number.'))
-                        ->withErrors(['payment_error' => $normalized['error'] ?? 'Invalid mobile money number.']);
+                        ->with('error', __('all.clickpesa_payment_failed', ['error' => $normalized['error'] ?? __('all.invalid_mobile_money_number')]))
+                        ->withErrors(['payment_error' => $normalized['error'] ?? __('all.invalid_mobile_money_number')]);
                 }
 
                 $clickpesa = new ClickPesaController();
@@ -1098,7 +1098,7 @@ class BookingController extends Controller
                 'error' => $e->getMessage(),
                 'data' => $bookingData,
             ]);
-            return redirect()->route('home')->with('error', 'Failed to create booking in test mode');
+            return redirect()->route('home')->with('error', __('all.failed_create_booking_test_mode'));
         }
 
         // Store booking in session for test payment controller
@@ -1164,7 +1164,7 @@ class BookingController extends Controller
 
             if (!$booking) {
                 Log::channel('tigo')->error('Booking not found', ['transaction_ref_id' => $transactionRefId]);
-                return response()->json(['status' => 'error', 'message' => 'Booking not found'], 400);
+                return response()->json(['status' => 'error', 'message' => __('all.booking_not_found')], 400);
             }
 
             // Check for duplicate processing
@@ -1191,7 +1191,7 @@ class BookingController extends Controller
                     'bus_id' => $booking->bus_id,
                     'company_id' => $booking->campany_id,
                 ]);
-                return response()->json(['status' => 'error', 'message' => 'Invalid bus or company'], 400);
+                return response()->json(['status' => 'error', 'message' => __('all.invalid_bus_or_company')], 400);
             }
 
             // Begin transaction
@@ -1275,7 +1275,7 @@ class BookingController extends Controller
                     'error' => $e->getMessage(),
                     'booking_id' => $booking->id,
                 ]);
-                return response()->json(['status' => 'error', 'message' => 'Failed to update records'], 500);
+                return response()->json(['status' => 'error', 'message' => __('all.failed_update_records')], 500);
             }
 
             return response()->json(['status' => 'received'], 200);
@@ -1285,7 +1285,7 @@ class BookingController extends Controller
                 'data' => $request->all(),
                 'timestamp' => now()->toDateTimeString(),
             ]);
-            return response()->json(['status' => 'error', 'message' => 'Server error'], 500);
+            return response()->json(['status' => 'error', 'message' => __('all.server_error')], 500);
         } finally {
             // Clear only payment-related session data
             session()->forget('payment_data');
@@ -1719,13 +1719,13 @@ class BookingController extends Controller
 
             $booking = Booking::find($request->booking_id);
             if (!$booking) {
-                return back()->with('error', 'Booking not found.');
+                return back()->with('error', __('vender/transfer.booking_not_found'));
             }
 
             // Fetch new bus details to get route and company information
             $newBus = Bus::with('route', 'campany')->find($request->new_bus_id);
             if (!$newBus) {
-                return back()->with('error', 'New bus not found.');
+                return back()->with('error', __('vender/transfer.new_bus_not_found'));
             }
 
             // Generate a new booking code
@@ -1775,11 +1775,11 @@ class BookingController extends Controller
             ]);
 
             DB::commit();
-            return redirect()->back()->with('success', 'Booking transferred successfully. Passenger needs to re-enter details and make payment.');
+            return redirect()->back()->with('success', __('vender/transfer.transfer_success'));
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Booking transfer failed: ' . $e->getMessage());
-            return back()->with('error', 'Failed to transfer booking: ' . $e->getMessage());
+            return back()->with('error', __('vender/transfer.transfer_failed', ['error' => $e->getMessage()]));
         }
     }
 }

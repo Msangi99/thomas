@@ -17,4 +17,5 @@ return [
     'Refund' => 'Refund',
     'Refund_pending' => 'Refund Pending',
     'Refund_rejected' => 'Refund Rejected',
+    'Cancel' => 'Cancel',
 ];

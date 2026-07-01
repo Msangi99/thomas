@@ -1,10 +1,10 @@
  <!DOCTYPE html>
- <html lang="en">
+ <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
  <head>
      <meta charset="UTF-8">
      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <title>HIGHLINK ISGC - @yield('title')</title>
+     <title>{{ __('all.highlink_isgc') }} - @yield('title')</title>
      <!-- Tailwind CSS CDN -->
      <script src="https://cdn.tailwindcss.com"></script>
      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
@@ -59,14 +59,14 @@
                                  <path d="M6 18L18 6M6 6l12 12" />
                              </svg>
                          </button>
-                         <h1 class="text-lg font-semibold text-gray-900">HIGHLINK ISGC</h1>
+                         <h1 class="text-lg font-semibold text-gray-900">{{ __('all.highlink_isgc') }}</h1>
                          <div class="relative">
                              <select
                                  class="block appearance-none w-full bg-white border border-gray-300 hover:border-gray-500 px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none focus:shadow-outline"
                                  onchange="window.location.href = '{{ route('set.locale', ['lang' => '']) }}' + this.value">
-                                 <option value="en" {{ app()->getLocale() == 'en' ? 'selected' : '' }}>English
+                                 <option value="en" {{ app()->getLocale() == 'en' ? 'selected' : '' }}>{{ __('all.english') }}
                                  </option>
-                                 <option value="sw" {{ app()->getLocale() == 'sw' ? 'selected' : '' }}>Kiswahili
+                                 <option value="sw" {{ app()->getLocale() == 'sw' ? 'selected' : '' }}>{{ __('all.kiswahili') }}
                                  </option>
                              </select>
                              <div

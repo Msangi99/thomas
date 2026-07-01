@@ -15,5 +15,6 @@ return [
     'bus' => 'Basi',
     'route' => 'Njia',
     'time' => 'Muda',
+    'deperture_time' => 'Muda wa Kuondoka',
     'date' => 'Tarehe',
 ];

@@ -19,7 +19,7 @@
             {{ __('vender/busroot.deposit_to_vendor_wallet') }}
         </h2>
         <p class="text-sm text-gray-600 mb-4 text-center">
-            Deposits are credited to your <strong>cash wallet</strong> (used when you sell tickets for cash). Commission from sold bookings stays in your <strong>commission wallet</strong>. You can move amounts between the two on the transactions page. Use <strong>ClickPesa</strong> or PDO as you prefer.
+            {{ __('assistance/transaction.deposit_wallet_explanation') }}
         </p>
 
         {{-- Success & Error Messages --}}
@@ -63,7 +63,7 @@
                     required>
                     <option value="">{{ __('vender/busroot.select_method') }}</option>
                     {{-- <option value="tigosecure" {{ old('payment_method') == 'tigosecure' ? 'selected' : '' }}>Tigosecure</option> --}}
-                    <option value="clickpesa" {{ old('payment_method') == 'clickpesa' ? 'selected' : '' }}>ClickPesa (mobile money)</option>
+                    <option value="clickpesa" {{ old('payment_method') == 'clickpesa' ? 'selected' : '' }}>{{ __('assistance/transaction.clickpesa_mobile_money') }}</option>
                     <option value="pdo" {{ old('payment_method') == 'pdo' ? 'selected' : '' }}>{{ __('vender/busroot.pdo') }}</option>
                 </select>
                 @error('payment_method')
@@ -75,13 +75,13 @@
                 style="display: {{ old('payment_method') == 'clickpesa' ? 'block' : 'none' }};">
                 <div>
                     <label for="deposit_phone" class="block text-sm font-semibold text-gray-700 mb-1">
-                        Mobile number for USSD (ClickPesa)
+                        {{ __('assistance/transaction.mobile_number_ussd_clickpesa') }}
                     </label>
                     <input id="deposit_phone" type="text" name="deposit_phone"
                         value="{{ old('deposit_phone', auth()->user()->contact ?? auth()->user()->phone ?? '') }}"
                         placeholder="2557xxxxxxxx or 07xxxxxxxx"
                         class="w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-200 h-10 px-2 focus:border-blue-500 @error('deposit_phone') border-red-500 @enderror">
-                    <p class="text-xs text-gray-500 mt-1">Use a Tanzania mobile money number. You can enter <strong>07…</strong> or <strong>06…</strong>, or international form <strong>255…</strong> (no + needed). The system sends <strong>255</strong> plus nine digits to ClickPesa.</p>
+                    <p class="text-xs text-gray-500 mt-1">{{ __('assistance/transaction.deposit_phone_hint') }}</p>
                     @error('deposit_phone')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror

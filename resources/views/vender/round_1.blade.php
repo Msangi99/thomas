@@ -150,10 +150,10 @@
                             <select name="bus_type" id="bus_type"
                                 class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-800">
                                 <option value="any">{{ __('customer/busroot.any') }}</option>
-                                <option value="10" {{ old('bus_type') == '10' ? 'selected' : '' }}>luxury</option>
-                                <option value="20" {{ old('bus_type') == '20' ? 'selected' : '' }}>upper-semiluxury</option>
-                                <option value="30" {{ old('bus_type') == '30' ? 'selected' : '' }}>lower-semiluxury</option>
-                                <option value="40" {{ old('bus_type') == '40' ? 'selected' : '' }}>ordinary</option>
+                                <option value="10" {{ old('bus_type') == '10' ? 'selected' : '' }}>{{ __('all.luxury') }}</option>
+                                <option value="20" {{ old('bus_type') == '20' ? 'selected' : '' }}>{{ __('all.upper_semiluxury') }}</option>
+                                <option value="30" {{ old('bus_type') == '30' ? 'selected' : '' }}>{{ __('all.lower_semiluxury') }}</option>
+                                <option value="40" {{ old('bus_type') == '40' ? 'selected' : '' }}>{{ __('all.ordinary') }}</option>
                             </select>
                         </div>
                     </div>

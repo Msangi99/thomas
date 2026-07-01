@@ -68,5 +68,12 @@ return [
     'select' => "select",
     'close' => "close",
     'route' => 'Route',
-    
+    'bus_added_success' => 'Bus added successfully',
+    'failed_add_bus' => 'Failed to add bus',
+    'seats_divisible_error' => 'Total seats must be divisible by 4 or have a remainder of 1 when divided by 4.',
+    'update_successful' => 'Update successful',
+    'bus_delete_successful' => 'Bus deleted successfully',
+    'print_bus_pdf' => 'Print Bus Info (PDF)',
+    'printed_at' => 'Printed at:',
+    'na' => 'N/A',
 ];

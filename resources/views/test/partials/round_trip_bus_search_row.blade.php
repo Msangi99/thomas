@@ -54,7 +54,7 @@
         @if ($busType)
             <span class="home-bus-row__class">{{ $busType }}</span>
         @endif
-        <span class="home-bus-row__class home-bus-row__class--round">Round Trip</span>
+        <span class="home-bus-row__class home-bus-row__class--round">{{ __('all.round_trip') }}</span>
     </div>
 
     <div>
@@ -86,9 +86,9 @@
                         <i class="fas fa-chair" aria-hidden="true"></i>
                         <span class="{{ $isSoldOut ? 'home-bus-row__seats--none' : ($isLowSeats ? 'home-bus-row__seats--low' : '') }}">
                             @if ($isSoldOut)
-                                Sold out
+                                {{ __('all.sold_out') }}
                             @else
-                                {{ $remainSeats }} {{ $remainSeats == 1 ? 'seat' : 'seats' }} left
+                                {{ $remainSeats == 1 ? __('all.seats_left_one', ['count' => $remainSeats]) : __('all.seats_left_many', ['count' => $remainSeats]) }}
                             @endif
                         </span>
                     </span>
@@ -104,7 +104,7 @@
         </div>
 
         @if ($isSoldOut)
-            <span class="home-bus-row__badge-sold">Sold out</span>
+            <span class="home-bus-row__badge-sold">{{ __('all.sold_out') }}</span>
         @else
             <button type="button"
                 class="home-bus-row__btn"

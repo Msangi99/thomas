@@ -5,7 +5,7 @@
 @elseif ($book->payment_status == 'resaved')
     <span class="page-badge page-badge--resaved">{{ __('customer/busroot.resaved_ticket') }}</span>
 @elseif ($book->payment_status == 'Cancel')
-    <span class="page-badge page-badge--cancel">Cancel</span>
+    <span class="page-badge page-badge--cancel">{{ __('customer/myticket.Cancel') }}</span>
 @elseif ($book->payment_status == 'Refund')
     <span class="page-badge page-badge--refund">{{ __('customer/myticket.Refund') }}</span>
 @elseif (in_array($book->payment_status, ['Refund Pending', 'refunded']))

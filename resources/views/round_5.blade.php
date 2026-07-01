@@ -4,7 +4,7 @@
 
 @section('page_hero')
     @include('test.partials.page_hero', [
-        'eyebrow' => 'Round Trip · Step 3',
+        'eyebrow' => __('all.round_trip_step_eyebrow', ['step' => 3]),
         'title' => __('customer/busroot.complete_your_booking'),
         'subtitle' => ($info['from'] ?? '') . ' ➔ ' . ($info['to'] ?? '') . ' · ' . ($info['travel_date'] ?? ''),
         'image' => 'https://images.unsplash.com/photo-1570125909232-e097323dccff?w=1200&q=80',

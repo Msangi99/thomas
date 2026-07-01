@@ -6,10 +6,10 @@
         'currentStep' => 1,
         'interactive' => true,
         'steps' => [
-            1 => ['label' => 'Pickup & Drop', 'icon' => 'fa-map-marker-alt', 'key' => 'pickup'],
-            2 => ['label' => 'Select Seats', 'icon' => 'fa-chair', 'key' => 'seats'],
-            3 => ['label' => 'Details', 'icon' => 'fa-user', 'key' => 'extras'],
-            4 => ['label' => 'Payment', 'icon' => 'fa-credit-card', 'key' => 'payment'],
+            1 => ['label' => __('all.step_pickup_drop'), 'icon' => 'fa-map-marker-alt', 'key' => 'pickup'],
+            2 => ['label' => __('all.step_select_seats'), 'icon' => 'fa-chair', 'key' => 'seats'],
+            3 => ['label' => __('all.step_details'), 'icon' => 'fa-user', 'key' => 'extras'],
+            4 => ['label' => __('all.step_payment'), 'icon' => 'fa-credit-card', 'key' => 'payment'],
         ],
     ])
 
@@ -68,7 +68,7 @@
                 {{ __('all.back_button') }}
             </button>
             <button type="submit" class="page-btn">
-                Next
+                {{ __('all.next') }}
             </button>
         </div>
     </form>

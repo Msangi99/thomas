@@ -46,17 +46,17 @@ class VenderWalletController extends Controller
             $amount = (float) $request->amount;
             $minTzs = (float) env('CLICKPESA_MIN_AMOUNT_TZS', 908);
             if ($amount < $minTzs) {
-                return back()->withInput()->with('error', "ClickPesa requires at least {$minTzs} TZS per payment.");
+                return back()->withInput()->with('error', __('assistance/transaction.clickpesa_min_amount', ['min' => $minTzs]));
             }
 
             $phone = $request->input('deposit_phone') ?: $user->contact ?: $user->phone;
             if (!$phone) {
-                return back()->withInput()->with('error', 'Enter a mobile number for ClickPesa (or set phone on your profile).');
+                return back()->withInput()->with('error', __('assistance/transaction.clickpesa_enter_mobile'));
             }
 
             $msisdn = ClickPesaController::normalizeTanzaniaMsisdnForClickPesa((string) $phone);
             if (!$msisdn['ok']) {
-                return back()->withInput()->with('error', $msisdn['error'] ?? 'Invalid phone number for ClickPesa.');
+                return back()->withInput()->with('error', $msisdn['error'] ?? __('assistance/transaction.invalid_phone_clickpesa'));
             }
             $phone = $msisdn['phone'];
 
@@ -81,7 +81,7 @@ class VenderWalletController extends Controller
             );
         }
 
-        return back()->with('error', 'Select a payment method');
+        return back()->with('error', __('assistance/transaction.select_payment_method_error'));
     }
 
     public function returned()
@@ -97,7 +97,7 @@ class VenderWalletController extends Controller
         }
         Session::forget(['amount', 'vender']);
 
-        return redirect()->route('vender.transaction')->with('success', 'Payment processed successfully');
+        return redirect()->route('vender.transaction')->with('success', __('assistance/transaction.payment_processed_success'));
     }
 
     /**
@@ -115,7 +115,7 @@ class VenderWalletController extends Controller
     {
         Session::forget('amount');
 
-        return redirect()->route('vender.wallet.deposit')->with('error', 'Deposit was not completed');
+        return redirect()->route('vender.wallet.deposit')->with('error', __('assistance/transaction.deposit_not_completed'));
     }
 
     /**
@@ -131,7 +131,7 @@ class VenderWalletController extends Controller
         $user = auth()->user();
         $vb = $user->VenderBalances;
         if (!$vb || !Schema::hasColumn('vender_balances', 'sell_cash_amount')) {
-            return back()->with('error', 'Wallet split is not available');
+            return back()->with('error', __('assistance/transaction.wallet_split_unavailable'));
         }
 
         $amt = round((float) $request->amount, 2);
@@ -140,13 +140,13 @@ class VenderWalletController extends Controller
                 $locked = VenderBalance::query()->whereKey($vb->id)->lockForUpdate()->firstOrFail();
                 if ($request->direction === 'to_sell_cash') {
                     if ((float) $locked->amount < $amt) {
-                        throw new \RuntimeException('Insufficient commission wallet balance');
+                        throw new \RuntimeException(__('assistance/transaction.insufficient_commission_balance'));
                     }
                     $locked->decrement('amount', $amt);
                     $locked->increment('sell_cash_amount', $amt);
                 } else {
                     if ((float) $locked->sell_cash_amount < $amt) {
-                        throw new \RuntimeException('Insufficient cash wallet balance');
+                        throw new \RuntimeException(__('assistance/transaction.insufficient_cash_balance'));
                     }
                     $locked->decrement('sell_cash_amount', $amt);
                     $locked->increment('amount', $amt);
@@ -156,7 +156,7 @@ class VenderWalletController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
-        return back()->with('success', 'Transfer completed');
+        return back()->with('success', __('assistance/transaction.transfer_completed'));
     }
 
     /**
@@ -168,18 +168,18 @@ class VenderWalletController extends Controller
         $user = auth()->user();
         $vb = $user->VenderBalances;
         if (!$vb || !Schema::hasColumn('vender_balances', 'sell_cash_amount')) {
-            return back()->with('error', 'Wallet split is not available');
+            return back()->with('error', __('assistance/transaction.wallet_split_unavailable'));
         }
 
         try {
             DB::transaction(function () use ($vb) {
                 $locked = VenderBalance::query()->whereKey($vb->id)->lockForUpdate()->firstOrFail();
                 if ((float) ($locked->sell_cash_amount ?? 0) > 0) {
-                    throw new \RuntimeException('Cash wallet is already in use. Use Transfer to move a specific amount.');
+                    throw new \RuntimeException(__('assistance/transaction.cash_wallet_in_use'));
                 }
                 $amt = round((float) $locked->amount, 2);
                 if ($amt <= 0) {
-                    throw new \RuntimeException('No balance in the commission wallet to move.');
+                    throw new \RuntimeException(__('assistance/transaction.no_commission_balance_to_move'));
                 }
                 $locked->decrement('amount', $amt);
                 $locked->increment('sell_cash_amount', $amt);
@@ -188,6 +188,6 @@ class VenderWalletController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
-        return back()->with('success', 'Your previous balance was moved to the cash wallet. New commissions will appear in the commission wallet.');
+        return back()->with('success', __('assistance/transaction.legacy_balance_moved'));
     }
 }

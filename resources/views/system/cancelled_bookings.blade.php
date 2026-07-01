@@ -1,10 +1,10 @@
 @extends('system.app')
 
-@section('title', 'Cancelled Bookings')
+@section('title', __('system.pages.cancelled_title'))
 
 @section('content')
 <div class="container mx-auto px-4 py-6">
-    <h1 class="text-2xl font-semibold text-gray-800 mb-6">Cancelled Bookings</h1>
+    <h1 class="text-2xl font-semibold text-gray-800 mb-6">{{ __('system.pages.cancelled_title') }}</h1>
 
     @if (session('success'))
         <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
@@ -30,7 +30,7 @@
                     </div>
                     <div class="ml-5 w-0 flex-1">
                         <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Total Cancelled</dt>
+                            <dt class="text-sm font-medium text-gray-500 truncate">{{ __('system.pages.total_cancelled') }}</dt>
                             <dd class="text-lg font-medium text-gray-900">{{ $totalCancelled }}</dd>
                         </dl>
                     </div>
@@ -48,7 +48,7 @@
                     </div>
                     <div class="ml-5 w-0 flex-1">
                         <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Total Amount</dt>
+                            <dt class="text-sm font-medium text-gray-500 truncate">{{ __('system.pages.total_amount') }}</dt>
                             <dd class="text-lg font-medium text-gray-900">{{ $currency }} {{ convert_money($totalAmount) }}</dd>
                         </dl>
                     </div>
@@ -95,7 +95,7 @@
 
     <!-- Filter Options -->
     <div class="bg-white shadow-md rounded-lg p-4 mb-6">
-        <h3 class="text-lg font-semibold text-gray-700 mb-4">Filter Options</h3>
+        <h3 class="text-lg font-semibold text-gray-700 mb-4">{{ __('system.pages.filter_options') }}</h3>
         <div class="flex flex-wrap gap-2">
             <a href="{{ route('system.cancelled_bookings') }}" 
                class="px-4 py-2 rounded-md text-sm font-medium {{ !request('filter') ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
@@ -134,7 +134,7 @@
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bus Company</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Route</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Travel Date</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.amount') }}</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cancelled Date</th>
                         </tr>
                     </thead>
@@ -195,7 +195,7 @@
                                         <svg class="h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                         </svg>
-                                        <p class="text-lg font-medium text-gray-500">No cancelled bookings found</p>
+                                        <p class="text-lg font-medium text-gray-500">{{ __('system.pages.no_cancelled_bookings') }}</p>
                                         <p class="text-sm text-gray-400">There are no cancelled bookings to display at the moment.</p>
                                     </div>
                                 </td>

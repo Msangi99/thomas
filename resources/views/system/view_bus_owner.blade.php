@@ -13,7 +13,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
         </div>
-        <h1 class="text-xl font-bold text-gray-800">Update Profile</h1>
+        <h1 class="text-xl font-bold text-gray-800">{{ __('system.pages.update_profile') }}</h1>
       </div>
 
       <form action="{{ route('profile.update.bus') }}" method="POST" class="space-y-5">
@@ -26,26 +26,26 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
-            Personal Information
+            {{ __('system.pages.personal_information') }}
           </h2>
           
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label for="name" class="block text-xs font-medium text-gray-500">Full Name</label>
+              <label for="name" class="block text-xs font-medium text-gray-500">{{ __('system.pages.full_name') }}</label>
               <input type="text" id="name" name="name" value="{{ old('name', $user->name) }}" 
                      class="mt-1 block w-full border border-gray-200 rounded-md py-2 px-3 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
               @error('name')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
             </div>
             
             <div>
-              <label for="email" class="block text-xs font-medium text-gray-500">Email</label>
+              <label for="email" class="block text-xs font-medium text-gray-500">{{ __('system.common.email') }}</label>
               <input type="email" id="email" name="email" value="{{ old('email', $user->email) }}" 
                      class="mt-1 block w-full border border-gray-200 rounded-md py-2 px-3 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
               @error('email')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
             </div>
             
             <div>
-              <label for="contact" class="block text-xs font-medium text-gray-500">Phone</label>
+              <label for="contact" class="block text-xs font-medium text-gray-500">{{ __('system.pages.phone') }}</label>
               <input type="text" id="contact" name="contact" value="{{ old('contact', $user->contact ?? '') }}" 
                      class="mt-1 block w-full border border-gray-200 rounded-md py-2 px-3 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
               @error('contact')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
@@ -64,7 +64,7 @@
           
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label for="company_name" class="block text-xs font-medium text-gray-500">Company Name</label>
+              <label for="company_name" class="block text-xs font-medium text-gray-500">{{ __('system.pages.company_name') }}</label>
               <input type="text" id="company_name" name="campany_name" value="{{ old('campany_name', $user->campany->name ?? '') }}" 
                      class="mt-1 block w-full border border-gray-200 rounded-md py-2 px-3 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
               @error('company_name')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
@@ -168,13 +168,13 @@
             </h2>
             
             <div>
-              <label for="bank_name" class="block text-xs font-medium text-gray-500">Bank Name</label>
+              <label for="bank_name" class="block text-xs font-medium text-gray-500">{{ __('system.pages.bank_name') }}</label>
               <input type="text" id="bank_name" name="bank_name" value="{{ old('bank_name', $user->campany->busOwnerAccount->bank_name ?? '') }}" 
                      class="mt-1 block w-full border border-gray-200 rounded-md py-2 px-3 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
             </div>
             
             <div>
-              <label for="account_number" class="block text-xs font-medium text-gray-500">Account No.</label>
+              <label for="account_number" class="block text-xs font-medium text-gray-500">{{ __('system.pages.account_number') }}</label>
               <input type="text" id="account_number" name="account_number" value="{{ old('account_number', $user->campany->busOwnerAccount->bank_number ?? '') }}" 
                      class="mt-1 block w-full border border-gray-200 rounded-md py-2 px-3 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
             </div>

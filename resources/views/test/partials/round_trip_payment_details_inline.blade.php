@@ -25,7 +25,7 @@
                     // keep raw
                 }
             }
-            $legLabel = $summary['leg_label'] ?? ($index === 0 ? 'Outbound' : 'Return');
+            $legLabel = $summary['leg_label'] ?? ($index === 0 ? __('all.outbound') : __('all.return_leg'));
         @endphp
         <div class="inline-ticket-summary {{ $index > 0 ? 'inline-ticket-summary--spaced' : '' }}">
             <h4 class="inline-payment__heading">
@@ -43,7 +43,7 @@
                             @endif
                         </div>
                     @endif
-                    <span class="home-bus-row__class home-bus-row__class--round">Round Trip</span>
+                    <span class="home-bus-row__class home-bus-row__class--round">{{ __('all.round_trip') }}</span>
                     @if (!empty($summary['via']))
                         <span class="inline-ticket-summary__via-badge">{{ __('all.via') }} {{ $summary['via'] }}</span>
                     @endif
@@ -134,6 +134,12 @@
                         data-inline-pay-tab="clickpesa" role="tab" aria-selected="false">
                         <i class="fas fa-wallet" aria-hidden="true"></i> {{ __('all.clickpesa_payment') }}
                     </button>
+                    @if ($isCustomerPayment)
+                        <button type="button" class="inline-payment__tab"
+                            data-inline-pay-tab="wallet" role="tab" aria-selected="false">
+                            <i class="fas fa-wallet" aria-hidden="true"></i> Wallet
+                        </button>
+                    @endif
                     <button type="button" class="inline-payment__tab"
                         data-inline-pay-tab="airtel" role="tab" aria-selected="false">
                         <i class="fas fa-sim-card" aria-hidden="true"></i> Airtel Money
@@ -188,6 +194,24 @@
                             <input type="hidden" name="amount" value="{{ $totalPayable }}">
                         </form>
                     </div>
+
+                    @if ($isCustomerPayment)
+                        <div class="inline-payment__pane" data-inline-pay-pane="wallet" role="tabpanel" hidden>
+                            <div class="inline-payment__amount-row">
+                                <span>{{ __('all.amount') }}</span>
+                                <strong>{{ __('all.currency_prefix_tzs') }} {{ convert_money($totalPayable) }}</strong>
+                            </div>
+                            <div class="inline-payment__amount-row">
+                                <span>Wallet balance</span>
+                                <strong>{{ __('all.currency_prefix_tzs') }} {{ convert_money(auth()->user()->temp_wallets->amount ?? 0) }}</strong>
+                            </div>
+                            <form id="inlineWalletForm" action="{{ $paymentAction }}" method="POST">
+                                @csrf
+                                <input type="hidden" name="payment_method" value="wallet">
+                                <input type="hidden" name="amount" value="{{ $totalPayable }}">
+                            </form>
+                        </div>
+                    @endif
 
                     <div class="inline-payment__pane" data-inline-pay-pane="airtel" role="tabpanel" hidden>
                         <div class="inline-payment__amount-row">

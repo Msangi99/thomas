@@ -12,7 +12,7 @@
     ];
     $busType = isset($car->bus_type) && array_key_exists($car->bus_type, $mode)
         ? $mode[$car->bus_type]
-        : 'Normal Seat';
+        : __('all.normal_seat');
     $displayPrice = session('currency') == 'Usd'
         ? number_format(($price ?? 0) / ($usdToTzs ?? 2500), 2)
         : ($price ?? 0);
@@ -23,10 +23,10 @@
         'currentStep' => 2,
         'interactive' => true,
         'steps' => [
-            1 => ['label' => 'Pickup & Drop', 'icon' => 'fa-map-marker-alt', 'key' => 'pickup'],
-            2 => ['label' => 'Select Seats', 'icon' => 'fa-chair', 'key' => 'seats'],
-            3 => ['label' => 'Details', 'icon' => 'fa-user', 'key' => 'extras'],
-            4 => ['label' => 'Payment', 'icon' => 'fa-credit-card', 'key' => 'payment'],
+            1 => ['label' => __('all.step_pickup_drop'), 'icon' => 'fa-map-marker-alt', 'key' => 'pickup'],
+            2 => ['label' => __('all.step_select_seats'), 'icon' => 'fa-chair', 'key' => 'seats'],
+            3 => ['label' => __('all.step_details'), 'icon' => 'fa-user', 'key' => 'extras'],
+            4 => ['label' => __('all.step_payment'), 'icon' => 'fa-credit-card', 'key' => 'payment'],
         ],
     ])
 
@@ -57,10 +57,10 @@
 
             <div id="passengersWrap_{{ $inlineUid }}" class="inline-passengers">
                 <h4 class="inline-passengers__title">
-                    <i class="fas fa-users" aria-hidden="true"></i> Passenger details
+                    <i class="fas fa-users" aria-hidden="true"></i> {{ __('customer/busroot.passenger_details') }}
                 </h4>
                 <p class="inline-passengers__empty" id="passengersEmpty_{{ $inlineUid }}">
-                    Select a seat to enter passenger details
+                    {{ __('all.select_seat_passenger_hint') }}
                 </p>
                 <div id="passengersList_{{ $inlineUid }}" class="inline-passengers__list"></div>
             </div>
@@ -80,7 +80,7 @@
                 id="wizardNextExtras_{{ $inlineUid }}"
                 data-wizard-next="extras"
                 disabled>
-                Next
+                {{ __('all.next') }}
             </button>
         </div>
     </div>
@@ -93,28 +93,28 @@
                 <div class="inline-extras-form__row inline-extras-form__row--full">
                     <label class="inline-extras-form__check">
                         <input type="checkbox" name="excess_luggage" value="1" id="excessLuggage_{{ $inlineUid }}">
-                        <span>Excess luggage (exceeds 60X45X50, 20kg) - TSh. 2,500</span>
+                        <span>{{ __('all.excess_luggage_inline') }}</span>
                     </label>
                 </div>
 
                 <div class="inline-extras-form__row inline-extras-form__row--full">
                     <label class="inline-extras-form__check">
                         <input type="checkbox" name="Insurance" value="1" id="insurance_{{ $inlineUid }}" data-inline-insurance-toggle>
-                        <span>Add insurance</span>
+                        <span>{{ __('all.add_insurance') }}</span>
                     </label>
                 </div>
 
                 <div class="inline-extras-form__row inline-extras-form__row--full hidden" data-inline-insurance-fields>
                     <div class="inline-extras-form__row">
                         <div class="booking-field">
-                            <label class="booking-field__label" for="insuranceType_{{ $inlineUid }}">Insurance type</label>
+                            <label class="booking-field__label" for="insuranceType_{{ $inlineUid }}">{{ __('all.insurance_type') }}</label>
                             <select class="page-input" name="type" id="insuranceType_{{ $inlineUid }}" disabled>
-                                <option value="local" selected>Local</option>
-                                <option value="foreign">Foreign</option>
+                                <option value="local" selected>{{ __('customer/busroot.local') }}</option>
+                                <option value="foreign">{{ __('customer/busroot.foreign') }}</option>
                             </select>
                         </div>
                         <div class="booking-field">
-                            <label class="booking-field__label" for="insuranceDate_{{ $inlineUid }}">Insurance date</label>
+                            <label class="booking-field__label" for="insuranceDate_{{ $inlineUid }}">{{ __('all.insurance_date') }}</label>
                             <input type="date" class="page-input" name="insuranceDate" id="insuranceDate_{{ $inlineUid }}"
                                 value="{{ session('booking_form.travel_date') ?? now()->format('Y-m-d') }}" disabled>
                         </div>
@@ -123,29 +123,29 @@
 
                 <div class="inline-extras-form__row inline-extras-form__row--full">
                     <div class="booking-field">
-                        <label class="booking-field__label" for="discount_{{ $inlineUid }}">Discount Coupon</label>
+                        <label class="booking-field__label" for="discount_{{ $inlineUid }}">{{ __('customer/busroot.discount_coupon') }}</label>
                         <input type="text" class="page-input" name="discount" id="discount_{{ $inlineUid }}" placeholder="">
                     </div>
                 </div>
 
                 <div class="inline-extras-form__row">
                     <div class="booking-field">
-                        <label class="booking-field__label">Seat Class</label>
-                        <input type="text" class="page-input page-input--readonly" value="Normal Seat" readonly>
+                        <label class="booking-field__label">{{ __('customer/busroot.seat_class') }}</label>
+                        <input type="text" class="page-input page-input--readonly" value="{{ $busType }}" readonly>
                     </div>
                     <div class="booking-field">
-                        <label class="booking-field__label">Fare</label>
+                        <label class="booking-field__label">{{ __('customer/busroot.fare') }}</label>
                         <input type="text" class="page-input page-input--readonly" id="fareDisplay_{{ $inlineUid }}" value="{{ $displayPrice }}" readonly>
                     </div>
                 </div>
 
                 <div class="inline-extras-form__row inline-extras-form__row--full">
                     <div class="booking-field">
-                        <label class="booking-field__label" for="walletKey_{{ $inlineUid }}">Temp wallet key</label>
+                        <label class="booking-field__label" for="walletKey_{{ $inlineUid }}">{{ __('all.temp_wallet_key') }}</label>
                         <div class="inline-wallet-field">
                             <input type="text" class="page-input" name="key" id="walletKey_{{ $inlineUid }}" placeholder="">
                             <span class="inline-wallet-field__amount" id="walletAmount_{{ $inlineUid }}">
-                                Amount: 0.00 {{ $currency }}
+                                {{ __('all.amount_label', ['amount' => '0.00', 'currency' => $currency]) }}
                             </span>
                             <input type="hidden" name="amount_cancel" id="walletAmountHidden_{{ $inlineUid }}" value="0">
                         </div>
@@ -162,7 +162,7 @@
                     {{ __('all.back_button') }}
                 </button>
                 <button type="submit" class="page-btn">
-                    Next
+                    {{ __('all.next') }}
                 </button>
             </div>
         </form>

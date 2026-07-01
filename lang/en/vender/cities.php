@@ -15,4 +15,6 @@ return [
     'next' => 'Next',
     'previous' => 'Previous',
     'close' => 'close',
+    'city_already_exists' => 'City already exists',
+    'city_created_success' => 'City created successfully',
 ];

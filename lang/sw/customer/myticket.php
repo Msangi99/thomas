@@ -17,4 +17,5 @@ return [
     'Refund' => 'Marejesho',
     'Refund_pending' => 'Marejesho Yanayosubiri',
     'Refund_rejected' => 'Marejesho Yamekataliwa',
+    'Cancel' => 'Imeghairiwa',
 ];

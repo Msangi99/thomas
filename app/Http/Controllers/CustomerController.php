@@ -11,12 +11,14 @@ use App\Models\Booking;
 use App\Models\bus;
 use App\Models\City;
 use App\Models\Discount;
+use App\Models\TempWallet;
 use App\Models\route;
 use App\Models\Schedule;
 use App\Models\Setting;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use App\Services\FareFormulaService;
@@ -119,7 +121,7 @@ class CustomerController extends Controller
         if ($car === null || $car->route === null || $car->schedule === null) {
             return redirect()->route('customer.mybooking.search')->with(
                 'error',
-                'This trip is not available. Please run a new search and try again.'
+                __('all.trip_not_available')
             );
         }
 
@@ -158,7 +160,7 @@ class CustomerController extends Controller
     {
         //return $request->all();
         if ($request->route_distance < 1) {
-            return back()->with('error', 'Calculate distance before continue');
+            return back()->with('error', __('all.calculate_distance_before_continue'));
         }
         $route = Route::find($request->route_id);
         $schedule = Schedule::find($request->schedule_id);
@@ -237,14 +239,14 @@ class CustomerController extends Controller
 
         $bus_info = session()->get('booking_form', []);
         if (empty($bus_info['bus_id']) || empty($bus_info['travel_date'])) {
-            return redirect()->route('home')->with('error', 'Session expired. Please try again.');
+            return redirect()->route('home')->with('error', __('all.session_expired_try_again'));
         }
 
         $selected = is_array($seats) ? $seats : (is_string($seats) ? array_map('trim', explode(',', $seats)) : []);
         $selected = array_filter($selected);
 
         if (empty($selected)) {
-            return redirect()->route('customer.seats')->with('error', 'Please select at least one seat.');
+            return redirect()->route('customer.seats')->with('error', __('all.select_at_least_one_seat'));
         }
 
         $booked = Booking::where('bus_id', $bus_info['bus_id'])
@@ -259,7 +261,9 @@ class CustomerController extends Controller
 
         $alreadyBooked = array_intersect($selected, $booked);
         if (!empty($alreadyBooked)) {
-            return redirect()->route('customer.seats')->with('error', 'One or more selected seats (e.g. ' . implode(', ', array_slice($alreadyBooked, 0, 3)) . ') are no longer available. Please choose different seats.');
+            return redirect()->route('customer.seats')->with('error', __('all.seats_no_longer_available_named', [
+                'seats' => implode(', ', array_slice($alreadyBooked, 0, 3)),
+            ]));
         }
 
         $bus_info['seats'] = $seats;
@@ -273,7 +277,10 @@ class CustomerController extends Controller
             $rebook = Booking::find(session('rebook')->id);
             //return $rebook;
             if ($rebook->busFee < $price) {
-                return redirect()->route('customer.seats')->with('error', 'Your rebooking amount for seat is ' . convert_money($rebook->busFee) . '. ' . app('currency'));
+                return redirect()->route('customer.seats')->with('error', __('all.rebooking_amount_for_seat', [
+                    'amount' => convert_money($rebook->busFee),
+                    'currency' => app('currency'),
+                ]));
             } else {
                 $new = new RebookController();
                 return $new->rebook_data(session()->get('booking_form'));
@@ -281,7 +288,7 @@ class CustomerController extends Controller
         }
 
         if ($seats == null || $seats == []) {
-            return back()->with('error', 'Seats not selected');
+            return back()->with('error', __('all.seats_not_selected'));
         }
 
         return redirect()->route('customer.pay');
@@ -292,7 +299,7 @@ class CustomerController extends Controller
     {
         $setting = Setting::first();
         if (is_null(session()->get('booking_form')) || !isset(session()->get('booking_form')['total_amount'])) {
-            return redirect()->route('home')->with('error', 'Session expired. Please try again.');
+            return redirect()->route('home')->with('error', __('all.session_expired_try_again'));
         }
         $price = session()->get('booking_form')['total_amount'];
         $seats = session()->get('booking_form')['seats'];
@@ -334,7 +341,7 @@ class CustomerController extends Controller
     {
         //return $request->all();
         if (is_null(session()->get('booking_form')) || !isset(session()->get('booking_form')['total_amount'])) {
-            return redirect()->route('home')->with('error', 'Session expired. Please try again.');
+            return redirect()->route('home')->with('error', __('all.session_expired_try_again'));
         }
 
         $bus_info = session()->get('booking_form', []);
@@ -358,10 +365,10 @@ class CustomerController extends Controller
         if (!empty($bus_info['discount'])) {
             $couponCheck = Discount::where('code', $bus_info['discount'])->first();
             if (!$couponCheck) {
-                return redirect()->route('customer.pay')->with('error', 'Invalid coupon code. Please check and try again.');
+                return redirect()->route('customer.pay')->with('error', __('all.invalid_coupon_code'));
             }
             if (!$couponCheck->isValid()) {
-                return redirect()->route('customer.pay')->with('error', 'This coupon has expired or has reached its usage limit.');
+                return redirect()->route('customer.pay')->with('error', __('all.coupon_expired_or_limit'));
             }
         }
 
@@ -460,7 +467,7 @@ class CustomerController extends Controller
 
 
         if (is_null(session()->get('booking_form')) || !isset(session()->get('booking_form')['total_amount'])) {
-            return redirect()->route('home')->with('error', 'Session expired. Please try again.');
+            return redirect()->route('home')->with('error', __('all.session_expired_try_again'));
         }
         $bus_info = session()->get('booking_form', []);
 
@@ -498,7 +505,16 @@ class CustomerController extends Controller
 
         $tigo = new TigosecureController();
         if (is_null(session()->get('booking_form')) || !isset(session()->get('booking_form')['total_amount'])) {
-            return redirect()->route('home')->with('error', 'Session expired. Please try again.');
+            return redirect()->route('home')->with('error', __('all.session_expired_try_again'));
+        }
+        if ($method === 'wallet') {
+            if (!auth()->check() || !auth()->user()->isCustomer()) {
+                return redirect()->back()->with('error', __('all.payment_not_allowed') ?? 'Wallet payment is available for customers only.');
+            }
+            $walletBalance = (float) (auth()->user()->temp_wallets->amount ?? 0);
+            if ($walletBalance + 0.0001 < (float) $amount) {
+                return redirect()->back()->with('error', __('system/messages.insufficient_balance') ?? 'Insufficient wallet balance.');
+            }
         }
         $bookingForm = session()->get('booking_form');
         $bima = session()->get('booking_form')['bima'];
@@ -574,12 +590,12 @@ class CustomerController extends Controller
                 'error' => $e->getMessage(),
                 'data' => $bookingData,
             ]);
-            return response()->json(['status' => 'error', 'message' => 'Failed to create booking'], 500);
+            return response()->json(['status' => 'error', 'message' => __('all.failed_create_booking')], 500);
         }
 
         if ($isResave) {
             session()->forget('booking_form');
-            return redirect()->route('customer.mybooking')->with('success', 'Ticket resaved successfully! Please pay within 24 hours. After that, the booking will be cancelled.');
+            return redirect()->route('customer.mybooking')->with('success', __('all.ticket_resaved_success_24h'));
         }
 
         // Initiate payment and get transactionRefId
@@ -597,7 +613,7 @@ class CustomerController extends Controller
                     'error' => $e->getMessage(),
                     'booking_id' => $booking->id,
                 ]);
-                return response()->json(['status' => 'error', 'message' => 'Payment initiation failed'], 500);
+                return response()->json(['status' => 'error', 'message' => __('all.payment_initiation_failed')], 500);
             }
         } elseif ($method == 'dpo') {
 
@@ -642,8 +658,8 @@ class CustomerController extends Controller
                 $normalized = ClickPesaController::normalizeTanzaniaMsisdnForClickPesa((string) $clickpesaPhone);
                 if (!$normalized['ok']) {
                     return redirect()->back()
-                        ->with('error', 'ClickPesa Payment Failed: ' . ($normalized['error'] ?? 'Invalid mobile money number.'))
-                        ->withErrors(['payment_error' => $normalized['error'] ?? 'Invalid mobile money number.']);
+                        ->with('error', __('all.clickpesa_payment_failed', ['error' => $normalized['error'] ?? __('all.invalid_mobile_money_number')]))
+                        ->withErrors(['payment_error' => $normalized['error'] ?? __('all.invalid_mobile_money_number')]);
                 }
 
                 $clickpesa = new ClickPesaController();
@@ -662,11 +678,81 @@ class CustomerController extends Controller
                     'trace' => $e->getTraceAsString(),
                 ]);
                 $msg = strlen($e->getMessage()) > 200 ? substr($e->getMessage(), 0, 200) . '…' : $e->getMessage();
-                return redirect()->back()->with('error', 'ClickPesa error: ' . $msg)->withErrors(['payment_error' => $msg]);
+                return redirect()->back()->with('error', __('all.clickpesa_error_prefix', ['error' => $msg]))->withErrors(['payment_error' => $msg]);
             }
+        } elseif ($method == 'wallet') {
+            return $this->processWalletPayment($booking, (float) $amount);
         }
 
         return redirect()->back()->with('error', __('customer/busroot.payment_error') ?? 'Payment method not supported.');
+    }
+
+    private function processWalletPayment(Booking $booking, float $amount)
+    {
+        if (!auth()->check()) {
+            return redirect()->back()->with('error', __('all.session_expired_try_again'));
+        }
+
+        $payableAmount = max(0, round($amount, 2));
+
+        DB::beginTransaction();
+        try {
+            $booking = Booking::lockForUpdate()->find($booking->id);
+            if (!$booking || !in_array($booking->payment_status, ['Unpaid', 'resaved'], true)) {
+                DB::rollBack();
+                return redirect()->back()->with('error', __('customer/busroot.payment_error') ?? 'Payment cannot be processed.');
+            }
+
+            $wallet = TempWallet::where('user_id', auth()->id())->lockForUpdate()->first();
+            $walletBalance = (float) ($wallet->amount ?? 0);
+            if ($walletBalance + 0.0001 < $payableAmount) {
+                DB::rollBack();
+                return redirect()->back()->with('error', __('system/messages.insufficient_balance') ?? 'Insufficient wallet balance.');
+            }
+
+            $settlementService = app(\App\Services\BookingSettlementService::class);
+            $settled = $settlementService->settlePaidBooking($booking, [
+                'trans_status' => 'success',
+                'trans_token' => 'WALLET-' . strtoupper(uniqid()),
+                'payment_method' => 'wallet',
+                'cancel_amount' => Session::get('cancel', 0),
+                'skip_cancel_wallet_consumption' => true,
+            ]);
+            $booking = $settled['booking'];
+
+            $wallet->update([
+                'amount' => max(0, $walletBalance - $payableAmount),
+            ]);
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Customer wallet payment failed', [
+                'booking_id' => $booking->id ?? null,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return redirect()->back()->with('error', __('all.payment_initiation_failed'));
+        }
+
+        try {
+            $tra = new \App\Services\TraVfdService();
+            $tra->fiscalize($booking->refresh());
+        } catch (\Throwable $e) {
+            Log::error('Customer wallet TRA fiscalization failed: ' . $e->getMessage(), [
+                'booking_id' => $booking->id ?? null,
+            ]);
+        }
+
+        Session::forget('booking');
+        Session::forget('booking_form');
+        Session::forget('cancel');
+
+        $keyController = new FunctionsController();
+        $keyController->delete_key($booking);
+
+        $redirectController = new RedirectController();
+        return $redirectController->_redirect($booking->id);
     }
 
     /**
@@ -738,7 +824,7 @@ class CustomerController extends Controller
                 'error' => $e->getMessage(),
                 'data' => $bookingData,
             ]);
-            return redirect()->route('home')->with('error', 'Failed to create booking in test mode');
+            return redirect()->route('home')->with('error', __('all.failed_create_booking_test_mode'));
         }
 
         if ($isResave) {
@@ -746,7 +832,7 @@ class CustomerController extends Controller
 
             return redirect()->route('customer.mybooking')->with(
                 'success',
-                'Ticket reserved successfully! Please pay within 24 hours. After that, the booking will be cancelled.'
+                __('all.ticket_reserved_success_24h')
             );
         }
 
@@ -788,9 +874,9 @@ class CustomerController extends Controller
             $user->save();
 
 
-            return back()->with('success', 'Profile updated successfully');
+            return back()->with('success', __('customer/profile.profile_updated_success'));
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to update profile: ' . $e->getMessage()])->withInput();
+            return back()->withErrors(['error' => __('customer/profile.profile_update_failed', ['error' => $e->getMessage()])])->withInput();
         }
     }
 
@@ -811,7 +897,7 @@ class CustomerController extends Controller
             'customer_phone' => $request->phone,
         ]);
 
-        return redirect()->back()->with('success', 'updated successfully');
+        return redirect()->back()->with('success', __('all.payment_details_updated_success'));
     }
 
     public function cancelResavedTicket($id)
@@ -828,7 +914,7 @@ class CustomerController extends Controller
             $partner->update(['payment_status' => 'Cancel']);
         }
 
-        return redirect()->route('customer.mybooking')->with('success', 'Resaved ticket cancelled successfully.');
+        return redirect()->route('customer.mybooking')->with('success', __('all.resaved_ticket_cancelled_success'));
     }
 
     public function payResavedTicket($id)

@@ -261,7 +261,7 @@ class VenderController extends Controller
         if ($car === null || $car->route === null || $car->schedule === null) {
             return redirect()->route('vender.route')->with(
                 'error',
-                'This trip is not available. Please run a new search and try again.'
+                __('all.trip_not_available')
             );
         }
 
@@ -309,7 +309,7 @@ class VenderController extends Controller
 
         //return $request->all();
         if ($request->route_distance < 1) {
-            return back()->with('error', 'Calculate distance before continue');
+            return back()->with('error', __('all.calculate_distance_before_continue'));
         }
         $route = Route::find($request->route_id);
         $schedule = Schedule::find($request->schedule_id);
@@ -381,14 +381,14 @@ class VenderController extends Controller
 
         $bus_info = session()->get('booking_form', []);
         if (empty($bus_info['bus_id']) || empty($bus_info['travel_date'])) {
-            return redirect()->route('home')->with('error', 'Session expired. Please try again.');
+            return redirect()->route('home')->with('error', __('all.session_expired_try_again'));
         }
 
         $selected = is_array($seats) ? $seats : (is_string($seats) ? array_map('trim', explode(',', $seats)) : []);
         $selected = array_filter($selected);
 
         if (empty($selected)) {
-            return redirect()->route('seates.vender')->with('error', 'Please select at least one seat.');
+            return redirect()->route('seates.vender')->with('error', __('all.select_at_least_one_seat'));
         }
 
         $booked = Booking::where('bus_id', $bus_info['bus_id'])
@@ -403,7 +403,9 @@ class VenderController extends Controller
 
         $alreadyBooked = array_intersect($selected, $booked);
         if (!empty($alreadyBooked)) {
-            return redirect()->route('seates.vender')->with('error', 'One or more selected seats (e.g. ' . implode(', ', array_slice($alreadyBooked, 0, 3)) . ') are no longer available. Please choose different seats.');
+            return redirect()->route('seates.vender')->with('error', __('all.seats_no_longer_available_named', [
+                'seats' => implode(', ', array_slice($alreadyBooked, 0, 3)),
+            ]));
         }
 
         $bus_info['total_amount'] = $price;
@@ -419,7 +421,7 @@ class VenderController extends Controller
     {
         $setting = Setting::first();
         if (is_null(session()->get('booking_form')) || !isset(session()->get('booking_form')['total_amount'])) {
-            return redirect()->route('home')->with('error', 'Session expired. Please try again.');
+            return redirect()->route('home')->with('error', __('all.session_expired_try_again'));
         }
         $price = session()->get('booking_form')['total_amount'];
         $seats = session()->get('booking_form')['seats'];
@@ -447,7 +449,7 @@ class VenderController extends Controller
         //return $bus_info = session()->get('booking_form', []);
         $bus_info = session()->get('booking_form', []);
         if (is_null(session()->get('booking_form')) || !isset(session()->get('booking_form')['total_amount'])) {
-            return redirect()->route('home')->with('error', 'Session expired. Please try again.');
+            return redirect()->route('home')->with('error', __('all.session_expired_try_again'));
         }
 
         $bus_info['customer_name'] = $request->customer;
@@ -470,10 +472,10 @@ class VenderController extends Controller
         if (!empty($bus_info['discount'])) {
             $couponCheck = Discount::where('code', $bus_info['discount'])->first();
             if (!$couponCheck) {
-                return redirect()->route('vender.pay')->with('error', 'Invalid coupon code. Please check and try again.');
+                return redirect()->route('vender.pay')->with('error', __('all.invalid_coupon_code'));
             }
             if (!$couponCheck->isValid()) {
-                return redirect()->route('vender.pay')->with('error', 'This coupon has expired or has reached its usage limit.');
+                return redirect()->route('vender.pay')->with('error', __('all.coupon_expired_or_limit'));
             }
         }
 
@@ -549,7 +551,7 @@ class VenderController extends Controller
         ]);
         $bus_info = session()->get('booking_form', []);
         if (is_null(session()->get('booking_form')) || !isset(session()->get('booking_form')['total_amount'])) {
-            return redirect()->route('home')->with('error', 'Session expired. Please try again.');
+            return redirect()->route('home')->with('error', __('all.session_expired_try_again'));
         }
 
         $contactNumber = normalize_tanzania_phone_for_booking((string) $request->contactNumber);
@@ -596,7 +598,7 @@ class VenderController extends Controller
 
         $tigo = new TigosecureController();
         if (is_null(session()->get('booking_form')) || !isset(session()->get('booking_form')['total_amount'])) {
-            return redirect()->route('home')->with('error', 'Session expired. Please try again.');
+            return redirect()->route('home')->with('error', __('all.session_expired_try_again'));
         }
         $bookingForm = session()->get('booking_form');
         $bima = $bookingForm['bima'] ?? 0;
@@ -671,7 +673,7 @@ class VenderController extends Controller
                 'error' => $e->getMessage(),
                 'data' => $bookingData,
             ]);
-            return response()->json(['status' => 'error', 'message' => 'Failed to create booking'], 500);
+            return response()->json(['status' => 'error', 'message' => __('all.failed_create_booking')], 500);
         }
 
         if ($isResave) {
@@ -679,7 +681,7 @@ class VenderController extends Controller
 
             return redirect()->route('vender.resaved.tickets')->with(
                 'success',
-                'Ticket reserved successfully! Please pay within 24 hours. After that, the booking will be cancelled.'
+                __('all.ticket_reserved_success_24h')
             );
         }
 
@@ -698,7 +700,7 @@ class VenderController extends Controller
                     'error' => $e->getMessage(),
                     'booking_id' => $booking->id,
                 ]);
-                return response()->json(['status' => 'error', 'message' => 'Payment initiation failed'], 500);
+                return response()->json(['status' => 'error', 'message' => __('all.payment_initiation_failed')], 500);
             }
         } elseif ($method == 'dpo') {
 
@@ -742,8 +744,8 @@ class VenderController extends Controller
                 $normalized = ClickPesaController::normalizeTanzaniaMsisdnForClickPesa((string) $clickpesaPhone);
                 if (!$normalized['ok']) {
                     return redirect()->route('vender.pay')
-                        ->with('error', 'ClickPesa Payment Failed: ' . ($normalized['error'] ?? 'Invalid mobile money number.'))
-                        ->withErrors(['payment_error' => $normalized['error'] ?? 'Invalid mobile money number.']);
+                        ->with('error', __('all.clickpesa_payment_failed', ['error' => $normalized['error'] ?? __('all.invalid_mobile_money_number')]))
+                        ->withErrors(['payment_error' => $normalized['error'] ?? __('all.invalid_mobile_money_number')]);
                 }
 
                 $clickpesa = new ClickPesaController();
@@ -764,7 +766,7 @@ class VenderController extends Controller
                     'trace' => $e->getTraceAsString(),
                 ]);
                 $msg = strlen($e->getMessage()) > 200 ? substr($e->getMessage(), 0, 200) . '…' : $e->getMessage();
-                return redirect()->route('vender.pay')->with('error', 'ClickPesa error: ' . $msg)->withErrors(['payment_error' => $msg]);
+                return redirect()->route('vender.pay')->with('error', __('all.clickpesa_error_prefix', ['error' => $msg]))->withErrors(['payment_error' => $msg]);
             }
         }
     }
@@ -841,7 +843,7 @@ class VenderController extends Controller
                 'error' => $e->getMessage(),
                 'data' => $bookingData,
             ]);
-            return redirect()->route('home')->with('error', 'Failed to create booking in test mode');
+            return redirect()->route('home')->with('error', __('all.failed_create_booking_test_mode'));
         }
 
         if ($isResave) {
@@ -849,7 +851,7 @@ class VenderController extends Controller
 
             return redirect()->route('vender.resaved.tickets')->with(
                 'success',
-                'Ticket reserved successfully! Please pay within 24 hours. After that, the booking will be cancelled.'
+                __('all.ticket_reserved_success_24h')
             );
         }
 
@@ -960,7 +962,7 @@ class VenderController extends Controller
         $user = auth()->user();
         // Check if the company balance is sufficient
         if ($request->amount > $user->VenderBalances->amount) {
-            return back()->with('error', 'Insufficient balance');
+            return back()->with('error', __('assistance/transaction.insufficient_balance'));
         }
         // Create the transaction
         try {
@@ -973,11 +975,11 @@ class VenderController extends Controller
                 'status' => 'pending',
             ]);
 
-            return back()->with('success', 'Transaction request sent successfully');
+            return back()->with('success', __('assistance/transaction.transaction_request_sent'));
         } catch (\Exception $e) {
             // Log the error for debugging
 
-            return back()->with('error', 'Transaction request failed');
+            return back()->with('error', __('assistance/transaction.transaction_request_failed'));
         }
     }
 
@@ -1125,7 +1127,7 @@ class VenderController extends Controller
             $ids = is_array($request->booking_ids) ? $request->booking_ids : (array) json_decode($request->booking_ids, true);
             $ids = array_filter(array_map('intval', $ids));
             if (empty($ids)) {
-                return redirect()->back()->with('error', __('No booking data found for income report generation.'));
+                return redirect()->back()->with('error', __('vender/history.no_booking_data_income'));
             }
             $bookings = Booking::with(['campany', 'schedule', 'bus.route', 'governmentLeviesOnService'])
                 ->where('vender_id', $venderId)
@@ -1136,16 +1138,16 @@ class VenderController extends Controller
         } else {
             $raw = $request->data;
             if (empty($raw)) {
-                return redirect()->back()->with('error', __('No data provided for income report generation.'));
+                return redirect()->back()->with('error', __('vender/history.no_data_income'));
             }
             $data = json_decode($raw, true);
             if ($data === null || !is_array($data)) {
-                return redirect()->back()->with('error', __('Invalid data format. Please try again.'));
+                return redirect()->back()->with('error', __('vender/history.invalid_data_format'));
             }
         }
 
         if (empty($data)) {
-            return redirect()->back()->with('error', __('No booking data found for income report generation.'));
+            return redirect()->back()->with('error', __('vender/history.no_booking_data_income'));
         }
 
         return $this->generatePDF($data);
@@ -1208,7 +1210,7 @@ class VenderController extends Controller
             $ids = is_array($request->booking_ids) ? $request->booking_ids : (array) json_decode($request->booking_ids, true);
             $ids = array_filter(array_map('intval', $ids));
             if (empty($ids)) {
-                return redirect()->back()->with('error', __('No booking data found for manifest generation.'));
+                return redirect()->back()->with('error', __('vender/history.no_booking_data_manifest'));
             }
             $bookings = Booking::with(['campany', 'schedule', 'bus.route', 'governmentLeviesOnService'])
                 ->where('vender_id', $venderId)
@@ -1220,26 +1222,26 @@ class VenderController extends Controller
         } else {
             $raw = $request->data;
             if (empty($raw)) {
-                return redirect()->back()->with('error', __('No data provided for manifest generation.'));
+                return redirect()->back()->with('error', __('vender/history.no_data_manifest'));
             }
             $data = json_decode($raw, true);
             if ($data === null || !is_array($data)) {
-                return redirect()->back()->with('error', __('Invalid data format. Please try again.'));
+                return redirect()->back()->with('error', __('vender/history.invalid_data_format'));
             }
         }
 
         if (empty($data) || !isset($data[0])) {
-            return redirect()->back()->with('error', __('No booking data found for manifest generation.'));
+            return redirect()->back()->with('error', __('vender/history.no_booking_data_manifest'));
         }
 
         if (!isset($data[0]['bus_number']) || empty(trim($data[0]['bus_number'] ?? ''))) {
-            return redirect()->back()->with('error', __('Bus number not found in booking data.'));
+            return redirect()->back()->with('error', __('vender/history.bus_number_not_found'));
         }
 
         $bus = bus::where('bus_number', $data[0]['bus_number'])->first();
 
         if (!$bus) {
-            return redirect()->back()->with('error', __('Bus with number ') . $data[0]['bus_number'] . __(' not found.'));
+            return redirect()->back()->with('error', __('vender/history.bus_not_found_number', ['number' => $data[0]['bus_number']]));
         }
 
         $pdf = Pdf::loadView('print.manifest', ['bookings' => $data, 'bus' => $bus]);
@@ -1340,9 +1342,9 @@ class VenderController extends Controller
                 $user->VenderBalances()->create($row);
             }
 
-            return back()->with('success', 'Profile updated successfully');
+            return back()->with('success', __('vender/profile.profile_updated_success'));
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to update profile: ' . $e->getMessage())->withInput();
+            return back()->with('error', __('vender/profile.profile_update_failed', ['error' => $e->getMessage()]))->withInput();
         }
     }
 

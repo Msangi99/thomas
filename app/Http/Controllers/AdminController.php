@@ -37,7 +37,7 @@ class AdminController extends Controller
                 'summary' => [],
                 'recentBookings' => collect([]),
                 'todaysTrips' => collect([]),
-                'error' => 'No company associated with your account.',
+                'error' => __('vender/earning.no_company_account'),
             ]);
         }
 
@@ -121,7 +121,7 @@ class AdminController extends Controller
         $user = auth()->user();
         // Check if the company balance is sufficient
         if ($request->amount > $user->campany->balance->amount) {
-            return back()->with('error', 'Insufficient balance');
+            return back()->with('error', __('vender/earning.insufficient_balance'));
         }
         // Create the transaction and deduct amount from balance (pending state)
         try {
@@ -144,12 +144,12 @@ class AdminController extends Controller
             }
 
             \DB::commit();
-            return back()->with('success', 'Transaction request sent successfully');
+            return back()->with('success', __('vender/earning.transaction_request_sent'));
         } catch (\Exception $e) {
             \DB::rollBack();
             // Log the error for debugging
 
-            return back()->with('error', 'Transaction request failed');
+            return back()->with('error', __('vender/earning.transaction_request_failed'));
         }
     }
 
@@ -360,12 +360,12 @@ class AdminController extends Controller
             $res = $bus->route()->create($info);
 
             if ($res) {
-                return redirect()->route('buses')->with('success', 'Bus added successfully');
+                return redirect()->route('buses')->with('success', __('vender/mybus.bus_added_success'));
             } else {
-                return redirect()->back()->with('error', 'Failed to add bus');
+                return redirect()->back()->with('error', __('vender/mybus.failed_add_bus'));
             }
         } else {
-            return back()->with('error', 'Total seats must be divisible by 4 or have a remainder of 1 when divided by 4.');
+            return back()->with('error', __('vender/mybus.seats_divisible_error'));
         }
     }
 
@@ -440,7 +440,7 @@ class AdminController extends Controller
             route::create($info);
         }
 
-        return back()->with('success', 'update successful');
+        return back()->with('success', __('vender/mybus.update_successful'));
     }
 
     public function delete_bus(Request $request)
@@ -451,7 +451,7 @@ class AdminController extends Controller
         Point::where('bus_id', $request->bus_id)->delete();
         schedule::where('bus_id', $request->bus_id)->delete();
 
-        return back()->with('success', 'bus delete successful');
+        return back()->with('success', __('vender/mybus.bus_delete_successful'));
     }
     /////////////////////////////
 
@@ -511,7 +511,7 @@ class AdminController extends Controller
             ]);
         }
 
-        return back()->with('success', 'Route created successfully.');
+        return back()->with('success', __('vender/route.route_created_success'));
     }
 
     public function edit_route($id)
@@ -580,7 +580,7 @@ class AdminController extends Controller
             ]);
         }
 
-        return back()->with('success', 'Route updated successfully.');
+        return back()->with('success', __('vender/route.route_updated_success'));
     }
 
     public function delete_route(Request $request)
@@ -590,7 +590,7 @@ class AdminController extends Controller
         Point::where('route_id', $request->route_id)->delete();
         schedule::where('route_id', $request->route_id)->delete();
 
-        return back()->with('success', 'Route deleted successfully');
+        return back()->with('success', __('vender/route.route_deleted_success'));
     }
 
     //////////////////////////
@@ -696,7 +696,7 @@ $q->where('id', auth()->user()->campany->id);
                 'summary' => [],
                 'recentBookings' => collect([]),
                 'todaysTrips' => collect([]),
-                'error' => 'No company associated with your account.',
+                'error' => __('vender/earning.no_company_account'),
             ]);
         }
 
@@ -874,10 +874,10 @@ $q->where('id', auth()->user()->campany->id);
             }
 
             return redirect()->route('schedules')
-                ->with('success', 'Schedules created successfully.');
+                ->with('success', __('vender/schedule.schedules_created_success'));
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to create schedules: ' . $e->getMessage())
+                ->with('error', __('vender/schedule.failed_create_schedules', ['error' => $e->getMessage()]))
                 ->withInput();
         }
     }
@@ -885,7 +885,7 @@ $q->where('id', auth()->user()->campany->id);
     public function delete_schedule(Request $request)
     {
         schedule::where('id', $request->schedule_id)->delete();
-        return back()->with('success', 'schedule delete successful');
+        return back()->with('success', __('vender/schedule.schedule_delete_successful'));
     }
 
     public function getUnbookedSchedules(Request $request)
@@ -917,7 +917,7 @@ $q->where('id', auth()->user()->campany->id);
     {
         $companyId = Auth::user()->campany->id ?? null;
         if (!$companyId) {
-            return redirect()->back()->with('error', 'No company associated with your account.');
+            return redirect()->back()->with('error', __('vender/earning.no_company_account'));
         }
 
         $data = null;
@@ -963,7 +963,7 @@ $q->where('id', auth()->user()->campany->id);
         }
 
         if (empty($data) || !is_array($data)) {
-            return redirect()->back()->with('error', 'No booking data found for income report generation.');
+            return redirect()->back()->with('error', __('vender/history.no_booking_data_income'));
         }
 
         return $this->generatePDF($data);
@@ -1028,11 +1028,11 @@ $q->where('id', auth()->user()->campany->id);
         $companyId = $isAdmin ? null : ($user->campany->id ?? null);
 
         if (!$isAdmin && !$companyId) {
-            return redirect()->back()->with('error', 'No company associated with your account.');
+            return redirect()->back()->with('error', __('vender/earning.no_company_account'));
         }
 
         if ($isAdmin && !$request->filled('data') && !$request->filled('booking_ids')) {
-            return redirect()->back()->with('error', 'Please select bookings for manifest.');
+            return redirect()->back()->with('error', __('vender/transfer.please_select_manifest'));
         }
 
         $data = null;
@@ -1080,18 +1080,18 @@ $q->where('id', auth()->user()->campany->id);
         }
 
         if (empty($data) || !is_array($data) || !isset($data[0])) {
-            return redirect()->back()->with('error', 'No booking data found for manifest generation.');
+            return redirect()->back()->with('error', __('vender/history.no_booking_data_manifest'));
         }
 
         if (!isset($data[0]['bus_number']) || empty(trim($data[0]['bus_number'] ?? ''))) {
-            return redirect()->back()->with('error', 'Bus number not found in booking data.');
+            return redirect()->back()->with('error', __('vender/history.bus_number_not_found'));
         }
 
         $number = $data[0]['bus_number'];
         $bus = bus::where('bus_number', $number)->first();
 
         if (!$bus) {
-            return redirect()->back()->with('error', 'Bus with number ' . $number . ' not found.');
+            return redirect()->back()->with('error', __('vender/history.bus_not_found_number', ['number' => $number]));
         }
 
         return $this->generateManifest($data, $bus);
@@ -1208,13 +1208,13 @@ $q->where('id', auth()->user()->campany->id);
         try {
             // Create a new city
             if (City::where('name', $request->name)->exists()) {
-                return back()->with('error', 'City already exists');
+                return back()->with('error', __('vender/cities.city_already_exists'));
             }
             City::create([
                 'name' => $request->name,
             ]);
 
-            return back()->with('success', 'City created successfully');
+            return back()->with('success', __('vender/cities.city_created_success'));
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Failed to create city: ' . $e->getMessage()])->withInput();
         }
@@ -1278,13 +1278,13 @@ $q->where('id', auth()->user()->campany->id);
     {
         $user = Auth::user();
         if (!$user->campany()) {
-            return redirect()->back()->with('error', 'You are not authorized to view this page.');
+            return redirect()->back()->with('error', __('vender/earning.unauthorized_view'));
         }
 
         $companyId = $user->campany ? $user->campany->id : null;
 
         if (!$companyId) {
-            return redirect()->back()->with('error', 'No company associated with your account.');
+            return redirect()->back()->with('error', __('vender/earning.no_company_account'));
         }
 
         $localBusOwners = User::where('role', 'local_bus_owner')
@@ -1298,13 +1298,13 @@ $q->where('id', auth()->user()->campany->id);
     {
         $user = Auth::user();
         if (!$user->campany()) {
-            return redirect()->back()->with('error', 'You are not authorized to perform this action.');
+            return redirect()->back()->with('error', __('vender/earning.unauthorized_action'));
         }
 
         $companyId = $user->campany ? $user->campany->id : null;
 
         if (!$companyId) {
-            return redirect()->back()->with('error', 'No company associated with your account.');
+            return redirect()->back()->with('error', __('vender/earning.no_company_account'));
         }
 
         $validator = Validator::make($request->all(), [
@@ -1340,7 +1340,7 @@ $q->where('id', auth()->user()->campany->id);
     {
         $user = Auth::user();
         if (!$user->campany()) {
-            return redirect()->back()->with('error', 'You are not authorized to perform this action.');
+            return redirect()->back()->with('error', __('vender/earning.unauthorized_action'));
         }
 
         $localBusOwner = User::where('role', 'local_bus_owner')
@@ -1377,7 +1377,7 @@ $q->where('id', auth()->user()->campany->id);
     {
         $user = Auth::user();
         if (!$user->campany()) {
-            return redirect()->back()->with('error', 'You are not authorized to perform this action.');
+            return redirect()->back()->with('error', __('vender/earning.unauthorized_action'));
         }
 
         try {
@@ -1415,7 +1415,7 @@ $q->where('id', auth()->user()->campany->id);
         $companyId = $user->campany ? $user->campany->id : null;
 
         if (!$companyId) {
-            return redirect()->back()->with('error', 'No company associated with your account.');
+            return redirect()->back()->with('error', __('vender/earning.no_company_account'));
         }
 
         $bookings = Booking::whereHas('bus', function ($query) use ($companyId) {
@@ -1445,7 +1445,7 @@ $q->where('id', auth()->user()->campany->id);
         $companyId = $user->campany ? $user->campany->id : null;
 
         if (!$companyId) {
-            return redirect()->back()->with('error', 'No company associated with your account.');
+            return redirect()->back()->with('error', __('vender/earning.no_company_account'));
         }
 
         $resavedBookings = Booking::whereHas('bus', function ($query) use ($companyId) {
@@ -1465,7 +1465,7 @@ $q->where('id', auth()->user()->campany->id);
         $companyId = $user->campany ? $user->campany->id : null;
 
         if (!$companyId) {
-            return redirect()->back()->with('error', 'No company associated with your account.');
+            return redirect()->back()->with('error', __('vender/earning.no_company_account'));
         }
 
         $buses = Bus::with('busname', 'route')
@@ -1567,7 +1567,7 @@ $q->where('id', auth()->user()->campany->id);
      
              return view('bus_owner.parcels.index', compact('buses', 'parcels'));
         } else {
-             return back()->with('error', 'No company associated with your account.');
+             return back()->with('error', __('vender/earning.no_company_account'));
         }
     }
 }

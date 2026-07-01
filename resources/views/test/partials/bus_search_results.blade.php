@@ -16,7 +16,7 @@
                     </p>
                 @elseif (($resultsContext ?? '') === 'company' && !empty($departureCityName))
                     <p class="text-sm" style="color:var(--home-muted)">
-                        {{ $departureCityName }} · no upcoming departures
+                        {{ $departureCityName }} · {{ __('all.no_upcoming_departures') }}
                     </p>
                 @endif
                 <a href="{{ ($bookingMode ?? '') === 'round_trip' ? round_trip_route('index') : $br['back_search'] }}" class="home-schedules__empty-link">
@@ -28,17 +28,17 @@
                 <p class="home-search-results__count">
                     <span>{{ $busList->count() }}</span>
                     @if (($resultsContext ?? '') === 'company')
-                        {{ $busList->count() === 1 ? 'departure' : 'departures' }} for {{ $departureCityName }}
+                        {{ $busList->count() === 1 ? __('all.departure_for', ['city' => $departureCityName]) : __('all.departures_for', ['city' => $departureCityName]) }}
                     @else
-                        {{ $busList->count() === 1 ? 'bus' : 'buses' }} found
+                        {{ $busList->count() === 1 ? __('all.buses_found_one') : __('all.buses_found_many') }}
                     @endif
                 </p>
                 <p class="home-search-results__sort">
                     <i class="fas fa-sort-amount-down-alt mr-1" aria-hidden="true"></i>
                     @if (($resultsContext ?? '') === 'company')
-                        Sorted by date &amp; departure time
+                        {{ __('all.sorted_by_date_time') }}
                     @else
-                        Sorted by departure time
+                        {{ __('all.sorted_by_departure_time') }}
                     @endif
                 </p>
             </div>
@@ -63,6 +63,7 @@
     @push('scripts')
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+        @include('test.partials.guest_i18n')
         <script src="{{ asset('js/inline-booking.js') }}"></script>
     @endpush
 @endonce

@@ -80,4 +80,11 @@ return [
         'november' => 'Novemba',
         'december' => 'Desemba',
     ],
+    'no_booking_data_income' => 'Hakuna data ya uhifadhi iliyopatikana kwa kutengeneza ripoti ya mapato.',
+    'no_data_income' => 'Hakuna data iliyotolewa kwa kutengeneza ripoti ya mapato.',
+    'invalid_data_format' => 'Muundo wa data si sahihi. Tafadhali jaribu tena.',
+    'no_booking_data_manifest' => 'Hakuna data ya uhifadhi iliyopatikana kwa kutengeneza orodha ya abiria.',
+    'no_data_manifest' => 'Hakuna data iliyotolewa kwa kutengeneza orodha ya abiria.',
+    'bus_number_not_found' => 'Nambari ya basi haijapatikana katika data ya uhifadhi.',
+    'bus_not_found_number' => 'Basi lenye nambari :number halijapatikana.',
 ];

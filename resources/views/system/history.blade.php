@@ -9,22 +9,22 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
     <div class="container mx-auto px-4 py-6 max-w-7xl">
-        <h4 class="text-blue-600 text-center text-lg font-semibold mb-4">HIGHLINK ISGC</h4>
+        <h4 class="text-blue-600 text-center text-lg font-semibold mb-4">{{ __('all.highlink_isgc') }}</h4>
         <div class="bg-white rounded-lg shadow-md overflow-hidden">
             <!-- Card Header -->
             <div class="p-4 bg-gradient-to-r from-blue-500 to-blue-400 text-white flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div class="flex flex-col">
-                    <h2 class="text-lg font-semibold mb-2">Booking History</h2>
+                    <h2 class="text-lg font-semibold mb-2">{{ __('system.pages.history_title') }}</h2>
                     <div class="flex flex-wrap gap-3 text-sm font-medium">
-                        <span>Total Payment: {{ $currency }} <span id="totalPayment">{{ convert_money($totalPayment ?? 0) }}</span></span>
-                        <span>Total Discount: {{ $currency }} <span id="totalDiscount">{{ convert_money($totalDiscount ?? 0) }}</span></span>
-                        <span>Total VAT: {{ $currency }} <span id="totalVAT">{{ convert_money($totalVAT ?? 0) }}</span></span>
-                        <span>Grand Total: {{ $currency }} <span id="grandTotal">{{ convert_money($grandTotal ?? 0) }}</span></span>
+                        <span>{{ __('system.pages.total_payment') }}: {{ $currency }} <span id="totalPayment">{{ convert_money($totalPayment ?? 0) }}</span></span>
+                        <span>{{ __('system.pages.total_discount') }}: {{ $currency }} <span id="totalDiscount">{{ convert_money($totalDiscount ?? 0) }}</span></span>
+                        <span>{{ __('system.pages.total_vat') }}: {{ $currency }} <span id="totalVAT">{{ convert_money($totalVAT ?? 0) }}</span></span>
+                        <span>{{ __('system.pages.grand_total') }}: {{ $currency }} <span id="grandTotal">{{ convert_money($grandTotal ?? 0) }}</span></span>
                     </div>
                 </div>
                 <div class="flex flex-col sm:flex-row items-center gap-2">
                     <div class="flex items-center gap-2 w-full sm:w-auto">
-                        <input type="text" class="px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm w-full sm:w-48" id="dateRangeFilter" placeholder="Select date range">
+                        <input type="text" class="px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm w-full sm:w-48" id="dateRangeFilter" placeholder="{{ __('system.pages.select_date_range') }}">
                         <button class="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition" id="clearDateFilter">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -41,15 +41,33 @@
                         <thead>
                             <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
                                 <th class="py-2 px-4 text-left font-medium"></th>
-                                @foreach (['Booking ID', 'Bus/Route', 'Travel Details', 'Passenger', 'Seats Payment', 'Commision', 'Total', 'Action'] as $placeholder)
+                                @foreach ([
+                                    __('system.pages.col_booking_id'),
+                                    __('system.pages.col_bus_route'),
+                                    __('system.pages.col_travel_details'),
+                                    __('system.pages.col_passenger'),
+                                    __('system.pages.col_seats_payment'),
+                                    __('system.pages.col_commission'),
+                                    __('system.pages.col_total'),
+                                    __('system.common.actions'),
+                                ] as $placeholder)
                                     <th class="py-2 px-4 text-left font-medium">
-                                        <input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="Search {{ $placeholder }}">
+                                        <input type="text" class="w-full px-2 py-1 border rounded text-xs search-input" placeholder="{{ __('system.pages.search_prefix', ['label' => $placeholder]) }}">
                                     </th>
                                 @endforeach
                             </tr>
                             <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
-                                <th class="py-2 px-4 text-left font-medium">SN</th>
-                                @foreach (['Booking ID', 'Bus/Route', 'Travel Details', 'Passenger', 'Seats Payment', 'Commision', 'Total', 'Action'] as $header)
+                                <th class="py-2 px-4 text-left font-medium">{{ __('system.pages.sn') }}</th>
+                                @foreach ([
+                                    __('system.pages.col_booking_id'),
+                                    __('system.pages.col_bus_route'),
+                                    __('system.pages.col_travel_details'),
+                                    __('system.pages.col_passenger'),
+                                    __('system.pages.col_seats_payment'),
+                                    __('system.pages.col_commission'),
+                                    __('system.pages.col_total'),
+                                    __('system.common.actions'),
+                                ] as $header)
                                     <th class="py-2 px-4 text-left font-medium">{{ $header }}</th>
                                 @endforeach
                             </tr>
@@ -62,7 +80,7 @@
                                         <td class="py-2 px-4">
                                             <div class="flex flex-col">
                                                 <p class="font-medium mb-0">{{ $booking->booking_code ?? 'N/A' }}</p>
-                                                <p class="text-gray-500 mb-0">Confirmed</p>
+                                                <p class="text-gray-500 mb-0">{{ __('system.pages.confirmed') }}</p>
                                                 <p class="text-gray-500 mb-0">Pay Time: {{ $booking->created_at->format('d M Y H:i') }}</p>
                                             </div>
                                         </td>
@@ -76,8 +94,8 @@
                                         <td class="py-2 px-4">
                                             <div class="flex flex-col">
                                                 <p class="font-medium mb-0 view-booking" data-id="{{ $booking->id }}" data-created-at="{{ $booking->created_at->format('Y-m-d') }}">{{ $booking->travel_date ?? 'N/A' }}</p>
-                                                <p class="text-gray-500 mb-0">Seat: {{ $booking->seat ?? 'N/A' }}</p>
-                                                <p class="text-gray-500 mb-0">Pickup: {{ $booking->pickup_point ?? 'N/A' }}</p>
+                                                <p class="text-gray-500 mb-0">{{ __('system.pages.seat') }}: {{ $booking->seat ?? __('system.common.na') }}</p>
+                                                <p class="text-gray-500 mb-0">{{ __('system.pages.pickup') }}: {{ $booking->pickup_point ?? __('system.common.na') }}</p>
                                                 <p class="text-gray-500 mb-0">Drop-point: {{ $booking->dropping_point ?? 'N/A' }}</p>
                                                
                                             </div>
@@ -139,12 +157,12 @@
                                                     <form action="{{ route('ticket.print') }}" method="POST">
                                                         @csrf
                                                         <input type="hidden" name="data" value="{{ $booking }}">
-                                                        <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Print Ticket</button>
+                                                        <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">{{ __('system.pages.print_ticket') }}</button>
                                                     </form>
                                                     <form action="{{ route('print.service') }}" method="POST">
                                                         @csrf
                                                         <input type="hidden" name="data" value="{{ $booking }}">
-                                                        <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Print Service</button>
+                                                        <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">{{ __('system.pages.print_service') }}</button>
                                                     </form>
                                                 </div>
                                             </div>
@@ -153,7 +171,7 @@
                                 @endforeach
                             @else
                                 <tr>
-                                    <td colspan="9" class="py-2 px-4 text-center text-gray-500">No bookings found.</td>
+                                    <td colspan="9" class="py-2 px-4 text-center text-gray-500">{{ __('system.pages.no_bookings_history') }}</td>
                                 </tr>
                             @endif
                         </tbody>
@@ -178,7 +196,7 @@
                 <!-- Dynamic content will be loaded here -->
             </div>
             <div class="p-4 flex justify-end gap-2 border-t border-gray-200">
-                <button type="button" class="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm" onclick="document.getElementById('viewBookingModal').classList.add('hidden')">Close</button>
+                <button type="button" class="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm" onclick="document.getElementById('viewBookingModal').classList.add('hidden')">{{ __('system.common.close') }}</button>
                 <button type="button" class="px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition text-sm print-ticket">
                     <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>

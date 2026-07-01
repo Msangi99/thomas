@@ -6,7 +6,7 @@
 
 <div class="customer-sidebar px-4">
     <div class="text-center mb-6 pt-4">
-        <h4 class="text-white text-xl font-semibold tracking-tight">Customer Dashboard</h4>
+        <h4 class="text-white text-xl font-semibold tracking-tight">{{ __('all.customer_dashboard') }}</h4>
         <hr class="border-gray-300/50 mt-2">
     </div>
 
@@ -18,7 +18,7 @@
                     <path
                         d="M12 0C5.372 0 0 5.372 0 12c0 6.628 5.372 12 12 12s12-5.372 12-12C24 5.372 18.628 0 12 0zm0 22c-5.52 0-10-4.48-10-10S6.48 2 12 2s10 4.48 10 10-4.48 10-10 10zm-1-15h-2v2h2v-2zm0 4h-2v2h2v-2zm0 4h-2v2h2v-2zm4-8h-2v2h2v-2zm0 4h-2v2h2v-2zm0 4h-2v2h2v-2z" />
                 </svg>
-                Wallet: {{ convert_money(auth()->user()->temp_wallets->amount ?? '0') }} {{ $currency }}
+                {{ __('customer_sidebar.Wallet') }}: {{ convert_money(auth()->user()->temp_wallets->amount ?? '0') }} {{ $currency }}
             </a>
         </li>
         <li>
@@ -57,7 +57,7 @@
                 <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                 </svg>
-                Round Trip
+                {{ __('customer_sidebar.Round Trip') }}
             </a>
         </li>
         <li>

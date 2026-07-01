@@ -15,4 +15,6 @@ return [
     'next' => 'Inayofuata',
     'previous' => 'Iliyotangulia',
     'close' => 'Funga',
+    'city_already_exists' => 'Mji tayari upo',
+    'city_created_success' => 'Mji umeundwa kwa mafanikio',
 ];

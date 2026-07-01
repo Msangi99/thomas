@@ -255,16 +255,21 @@
                 var table = $table.DataTable({
                     paging: true,
                     pageLength: 25,
-                    lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+                    lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "{{ __('all.dt_all') }}"]],
                     searching: true,
                     ordering: true,
                     order: [[1, 'desc']],
                     language: {
                         emptyTable: "{{ __('vender/history.no_bookings_found') }}",
-                        search: "Search:",
-                        lengthMenu: "Show _MENU_ entries",
-                        info: "Showing _START_ to _END_ of _TOTAL_ entries",
-                        paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
+                        search: "{{ __('all.dt_search') }}",
+                        lengthMenu: "{{ __('all.dt_show_entries') }}",
+                        info: "{{ __('all.dt_info') }}",
+                        paginate: {
+                            first: "{{ __('all.dt_first') }}",
+                            last: "{{ __('all.dt_last') }}",
+                            next: "{{ __('all.dt_next') }}",
+                            previous: "{{ __('all.dt_previous') }}"
+                        }
                     }
                 });
 

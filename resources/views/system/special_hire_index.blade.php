@@ -1,6 +1,6 @@
 @extends('system.app')
 
-@section('title', 'Special Hire')
+@section('title', __('system.pages.special_hire_title'))
 
 @section('content')
 <div class="container mx-auto px-4 py-6 max-w-7xl">
@@ -21,8 +21,8 @@
     @endif
 
     <div class="mb-6">
-        <h1 class="text-2xl font-semibold text-gray-800">Special hire</h1>
-        <p class="text-gray-600 mt-1">Manage operator accounts and review payout requests they send to admin.</p>
+        <h1 class="text-2xl font-semibold text-gray-800">{{ __('system.pages.special_hire_title') }}</h1>
+        <p class="text-gray-600 mt-1">{{ __('system.pages.special_hire_subtitle') }}</p>
     </div>
 
     <div class="flex flex-wrap gap-2 border-b border-gray-200 mb-6" role="tablist">
@@ -42,14 +42,14 @@
     @if($tab === 'accounts')
         <div class="max-w-5xl">
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4">
-                <label for="special-hire-search" class="block text-sm font-medium text-gray-700 mb-2">Search by name or email</label>
+                <label for="special-hire-search" class="block text-sm font-medium text-gray-700 mb-2">{{ __('system.pages.search_name_email') }}</label>
                 <input type="search" id="special-hire-search" placeholder="Type to filter…"
                        class="w-full max-w-md px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
 
             <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
                 <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                    <h2 class="text-lg font-semibold text-gray-800">Special hire accounts</h2>
+                    <h2 class="text-lg font-semibold text-gray-800">{{ __('system.pages.special_hire_accounts') }}</h2>
                     <p class="text-sm text-gray-500">Role <code class="text-xs bg-gray-200 px-1 rounded">special_hire</code></p>
                 </div>
                 <div class="overflow-x-auto">
@@ -93,7 +93,7 @@
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="7" class="px-4 py-10 text-center text-gray-500">No special hire accounts yet.</td></tr>
+                                <tr><td colspan="7" class="px-4 py-10 text-center text-gray-500">{{ __('system.pages.no_special_hire_accounts') }}</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -124,11 +124,11 @@
                     <table class="min-w-full divide-y divide-gray-200 text-sm">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">Date</th>
+                                <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">{{ __('system.common.date') }}</th>
                                 <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">Operator</th>
-                                <th class="px-4 py-3 text-right font-medium text-gray-500 uppercase text-xs">Amount</th>
+                                <th class="px-4 py-3 text-right font-medium text-gray-500 uppercase text-xs">{{ __('system.common.amount') }}</th>
                                 <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">Pay to</th>
-                                <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">Status</th>
+                                <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">{{ __('system.common.status') }}</th>
                                 <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">Action</th>
                             </tr>
                         </thead>
@@ -181,7 +181,7 @@
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="6" class="px-4 py-10 text-center text-gray-500">No open payout requests.</td></tr>
+                                <tr><td colspan="6" class="px-4 py-10 text-center text-gray-500">{{ __('system.pages.no_open_payout_requests') }}</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -197,11 +197,11 @@
                     <table class="min-w-full divide-y divide-gray-200 text-sm">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">Date</th>
+                                <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">{{ __('system.common.date') }}</th>
                                 <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">Operator</th>
-                                <th class="px-4 py-3 text-right font-medium text-gray-500 uppercase text-xs">Amount</th>
+                                <th class="px-4 py-3 text-right font-medium text-gray-500 uppercase text-xs">{{ __('system.common.amount') }}</th>
                                 <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">Pay to</th>
-                                <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">Status</th>
+                                <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">{{ __('system.common.status') }}</th>
                                 <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">Processed</th>
                             </tr>
                         </thead>
@@ -233,7 +233,7 @@
                                     <td class="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">{{ $wr->processed_at ? $wr->processed_at->format('Y-m-d H:i') : '—' }}</td>
                                 </tr>
                             @empty
-                                <tr><td colspan="6" class="px-4 py-10 text-center text-gray-500">No executed payouts yet.</td></tr>
+                                <tr><td colspan="6" class="px-4 py-10 text-center text-gray-500">{{ __('system.pages.no_executed_payouts') }}</td></tr>
                             @endforelse
                         </tbody>
                     </table>

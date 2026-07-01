@@ -4,9 +4,9 @@
 
 @section('page_hero')
     @include('test.partials.page_hero', [
-        'eyebrow' => 'Round Trip · Step 2',
+        'eyebrow' => __('all.round_trip_step_eyebrow', ['step' => 2]),
         'title' => __('customer/busroot.select_your_seats'),
-        'subtitle' => ($car->bus_model ?? $car->busname->name ?? 'Bus') . ' · ' . convert_money($price) . ' ' . $currency . ' ' . __('customer/busroot.per_seat'),
+        'subtitle' => ($car->bus_model ?? $car->busname->name ?? __('all.bus_number_label_short')) . ' · ' . convert_money($price) . ' ' . $currency . ' ' . __('customer/busroot.per_seat'),
         'image' => 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1200&q=80',
     ])
 @endsection

@@ -95,9 +95,9 @@ class ScheduleController extends Controller
             
             //////////////////////////////////////////////////
 
-            return back()->with('success', 'Schedule updated successfully.');
+            return back()->with('success', __('vender/schedule.schedule_updated_success'));
         }
 
-        return back()->with('success', 'Schedule updated successfully.');
+        return back()->with('success', __('vender/schedule.schedule_updated_success'));
     }
 }

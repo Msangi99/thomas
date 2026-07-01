@@ -1,0 +1,18 @@
+<?php
+
+return [
+    'requested_transactions' => 'Requested Transactions',
+    'all_transactions' => 'All Transactions',
+    'update_status' => 'Update Transaction Status',
+    'update_status_for' => 'Update status for transaction of :currency :amount?',
+    'invalid_transaction_data' => 'Error: Invalid transaction data',
+    'search_company' => 'Search Company',
+    'search_user' => 'Search User',
+    'search_payment_method' => 'Search Payment Method',
+    'search_payment_number' => 'Search Payment Number',
+    'search_amount' => 'Search Amount',
+    'search_status' => 'Search Status',
+    'search_date' => 'Search Date',
+    'search_reference' => 'Search Reference',
+    'action' => 'Action',
+];

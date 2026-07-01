@@ -3,16 +3,16 @@
         'currentStep' => 1,
         'interactive' => true,
         'steps' => [
-            1 => ['label' => 'Pickup & Drop', 'icon' => 'fa-map-marker-alt', 'key' => 'pickup'],
-            2 => ['label' => 'Select Seats', 'icon' => 'fa-chair', 'key' => 'seats'],
-            3 => ['label' => 'Details', 'icon' => 'fa-user', 'key' => 'extras'],
-            4 => ['label' => 'Payment', 'icon' => 'fa-credit-card', 'key' => 'payment'],
+            1 => ['label' => __('all.step_pickup_drop'), 'icon' => 'fa-map-marker-alt', 'key' => 'pickup'],
+            2 => ['label' => __('all.step_select_seats'), 'icon' => 'fa-chair', 'key' => 'seats'],
+            3 => ['label' => __('all.step_details'), 'icon' => 'fa-user', 'key' => 'extras'],
+            4 => ['label' => __('all.step_payment'), 'icon' => 'fa-credit-card', 'key' => 'payment'],
         ],
     ])
 
     <p class="inline-booking-panel__leg-note">
-        <span class="home-bus-row__class home-bus-row__class--round">Round Trip</span>
-        Select pickup and drop-off for this leg.
+        <span class="home-bus-row__class home-bus-row__class--round">{{ __('all.round_trip') }}</span>
+        {{ __('all.select_pickup_drop_leg') }}
     </p>
 
     <div class="inline-booking-panel__error booking-alert booking-alert--error hidden" role="alert"></div>
@@ -70,7 +70,7 @@
                 {{ __('all.back_button') }}
             </button>
             <button type="submit" class="page-btn">
-                Next
+                {{ __('all.next') }}
             </button>
         </div>
     </form>

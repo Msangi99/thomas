@@ -58,7 +58,7 @@
         <a href="#coasters" class="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300">Coasters</a>
         <a href="#drivers" class="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300">Drivers</a>
         <a href="#transactions" class="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300">Orders</a>
-        <a href="#withdrawals" class="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300">Withdrawals</a>
+        <a href="#withdrawals" class="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300">{{ __('system.pages.withdrawals') }}</a>
     </nav>
 
     <div id="stats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -94,7 +94,7 @@
                         <span class="font-medium text-gray-900">{{ number_format($cnt) }}</span>
                     </li>
                 @empty
-                    <li class="text-gray-500">No orders yet.</li>
+                    <li class="text-gray-500">{{ __('system.pages.no_orders_yet') }}</li>
                 @endforelse
             </ul>
         </div>
@@ -107,7 +107,7 @@
                         <span class="font-medium text-gray-900">{{ number_format($cnt) }}</span>
                     </li>
                 @empty
-                    <li class="text-gray-500">No orders yet.</li>
+                    <li class="text-gray-500">{{ __('system.pages.no_orders_yet') }}</li>
                 @endforelse
             </ul>
         </div>
@@ -124,8 +124,8 @@
                         <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">Vehicle</th>
                         <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">Plate</th>
                         <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">Driver</th>
-                        <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">Status</th>
-                        <th class="px-4 py-3 text-right font-medium text-gray-500 uppercase text-xs">Seats</th>
+                        <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">{{ __('system.common.status') }}</th>
+                        <th class="px-4 py-3 text-right font-medium text-gray-500 uppercase text-xs">{{ __('all.seats') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
@@ -157,7 +157,7 @@
                             <td class="px-4 py-3 text-right text-gray-900">{{ number_format($c->capacity) }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">No coasters for this account.</td></tr>
+                        <tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">{{ __('system.pages.no_coasters_account') }}</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -197,7 +197,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="3" class="px-4 py-8 text-center text-gray-500">No drivers assigned to this fleet.</td></tr>
+                        <tr><td colspan="3" class="px-4 py-8 text-center text-gray-500">{{ __('system.pages.no_drivers_fleet') }}</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -246,7 +246,7 @@
                             <td class="px-4 py-3 capitalize text-xs text-gray-700">{{ str_replace('_', ' ', $o->order_status) }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="8" class="px-4 py-8 text-center text-gray-500">No hire orders for this account.</td></tr>
+                        <tr><td colspan="8" class="px-4 py-8 text-center text-gray-500">{{ __('system.pages.no_hire_orders_account') }}</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -263,10 +263,10 @@
                 <table class="min-w-full divide-y divide-gray-200 text-sm">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">Date</th>
-                            <th class="px-4 py-3 text-right font-medium text-gray-500 uppercase text-xs">Amount</th>
+                            <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">{{ __('system.common.date') }}</th>
+                            <th class="px-4 py-3 text-right font-medium text-gray-500 uppercase text-xs">{{ __('system.common.amount') }}</th>
                             <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">Pay to</th>
-                            <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">Status</th>
+                            <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">{{ __('system.common.status') }}</th>
                             <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">Admin action</th>
                         </tr>
                     </thead>
@@ -311,7 +311,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">No open requests.</td></tr>
+                            <tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">{{ __('system.pages.no_open_requests') }}</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -327,10 +327,10 @@
                 <table class="min-w-full divide-y divide-gray-200 text-sm">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">Date</th>
-                            <th class="px-4 py-3 text-right font-medium text-gray-500 uppercase text-xs">Amount</th>
+                            <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">{{ __('system.common.date') }}</th>
+                            <th class="px-4 py-3 text-right font-medium text-gray-500 uppercase text-xs">{{ __('system.common.amount') }}</th>
                             <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">Pay to</th>
-                            <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">Status</th>
+                            <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">{{ __('system.common.status') }}</th>
                             <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase text-xs">Processed</th>
                         </tr>
                     </thead>
@@ -354,7 +354,7 @@
                                 <td class="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">{{ $wr->processed_at ? $wr->processed_at->format('Y-m-d H:i') : '—' }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">No completed requests yet.</td></tr>
+                            <tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">{{ __('system.pages.no_completed_requests') }}</td></tr>
                         @endforelse
                     </tbody>
                 </table>

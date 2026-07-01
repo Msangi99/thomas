@@ -49,4 +49,12 @@ return [
     'enter_via_location' => 'Enter via location',
     'select' => 'Select',
     'no_buses_found' => 'No buses found',
+    'route_from_readonly' => 'This field is read-only.',
+    'via_help' => 'Enter the intermediate location for the route.',
+    'is_return' => 'Is Return?',
+    'yes' => 'Yes',
+    'no' => 'No',
+    'route_created_success' => 'Route created successfully.',
+    'route_updated_success' => 'Route updated successfully.',
+    'route_deleted_success' => 'Route deleted successfully',
 ];

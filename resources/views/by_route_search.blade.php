@@ -4,7 +4,7 @@
 
 @section('page_hero')
     @include('test.partials.page_hero', [
-        'eyebrow' => 'Search Results',
+        'eyebrow' => __('all.search_results'),
         'title' => $departureCityName . ($arrivalCityName ? ' ➔ ' . $arrivalCityName : ''),
         'subtitle' => __('all.departure_date') . ': ' . \Carbon\Carbon::parse($departure_date)->format('l, F j, Y'),
         'image' => 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1200&q=80',

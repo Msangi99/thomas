@@ -9,7 +9,7 @@
         </form>
 
         <form action="{{ route('customer.rebook') }}" method="get"
-            onsubmit="return confirm('This action will delete existing one. Are you sure you want to rebook this ticket?')">
+            onsubmit="return confirm(@json(__('all.confirm_rebook_ticket')))">
             @csrf
             <input type="hidden" name="order_id" value="{{ $book->id }}">
             <button type="submit" class="ticket-action-btn ticket-action-btn--primary" title="{{ __('all.rebook_title') }}">
@@ -57,7 +57,7 @@
         </form>
 
         <form action="{{ route('customer.cancel.resaved', ['id' => $book->id]) }}" method="POST"
-            onsubmit="return confirm('Are you sure you want to cancel this resaved ticket?')">
+            onsubmit="return confirm(@json(__('all.confirm_cancel_resaved_ticket')))">
             @csrf
             <button type="submit" class="ticket-action-btn ticket-action-btn--danger" title="{{ __('all.cancel_title') }}">
                 <i class="fas fa-times"></i>

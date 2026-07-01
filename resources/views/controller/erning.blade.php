@@ -142,7 +142,7 @@
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                                         {{ $transaction->status === 'Completed' ? 'bg-green-100 text-green-800' : 
                                            ($transaction->status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
-                                        {{ $transaction->status }}
+                                        {{ $transaction->status === 'Completed' ? __('vender/earning.status_completed') : ($transaction->status === 'Pending' ? __('vender/earning.status_pending') : __('vender/earning.status_failed')) }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -259,7 +259,16 @@
                 info: true,
                 autoWidth: false,
                 language: {
-                    emptyTable: translations.empty_table
+                    emptyTable: translations.empty_table,
+                    search: "{{ __('all.dt_search') }}",
+                    lengthMenu: "{{ __('all.dt_show_entries') }}",
+                    info: "{{ __('all.dt_info') }}",
+                    paginate: {
+                        first: "{{ __('all.dt_first') }}",
+                        last: "{{ __('all.dt_last') }}",
+                        next: "{{ __('all.dt_next') }}",
+                        previous: "{{ __('all.dt_previous') }}"
+                    }
                 },
                 pageLength: 10,
                 lengthMenu: [5, 10, 20, 50],

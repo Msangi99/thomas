@@ -206,19 +206,24 @@
             });
         });
 
+        const resavedCountdownI18n = {
+            expired: @json(__('all.reservation_expired')),
+            left: @json(__('all.countdown_left')),
+        };
+
         const countdownEl = document.getElementById('resaved-countdown');
         if (countdownEl && countdownEl.dataset.expires) {
             const expires = new Date(countdownEl.dataset.expires).getTime();
             function tick() {
                 const diff = expires - Date.now();
                 if (diff <= 0) {
-                    countdownEl.textContent = 'Reservation expired';
+                    countdownEl.textContent = resavedCountdownI18n.expired;
                     return;
                 }
                 const h = Math.floor(diff / 3600000);
                 const m = Math.floor((diff % 3600000) / 60000);
                 const s = Math.floor((diff % 60000) / 1000);
-                countdownEl.textContent = (h > 0 ? h + 'h ' : '') + m + 'm ' + s + 's left';
+                countdownEl.textContent = (h > 0 ? h + 'h ' : '') + m + 'm ' + s + 's ' + resavedCountdownI18n.left;
             }
             tick();
             setInterval(tick, 1000);

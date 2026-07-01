@@ -1,6 +1,6 @@
 @extends('system.app')
 
-@section('title', 'My Buses')
+@section('title', __('system.pages.buses_title'))
 
 @section('content')
 <div class="container mx-auto px-4 py-6">
@@ -12,7 +12,7 @@
                     <svg class="h-5 w-5 text-indigo-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                     </svg>
-                    My Buses
+                    {{ __('system.pages.buses_title') }}
                 </h2>
                 <div class="relative w-64">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -20,7 +20,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     </div>
-                    <input type="text" id="searchInput" placeholder="Search buses..." 
+                    <input type="text" id="searchInput" placeholder="{{ __('system.pages.search_buses') }}" 
                            class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                 </div>
             </div>
@@ -40,19 +40,19 @@
                             </div>
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Bus Details
+                            {{ __('system.pages.bus_details') }}
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Plate Number
+                            {{ __('system.pages.plate_number') }}
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Route
+                            {{ __('system.common.route') }}
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Seats
+                            {{ __('all.seats') }}
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Conductor
+                            {{ __('system.pages.conductor') }}
                         </th>
                     </tr>
                 </thead>
@@ -110,7 +110,7 @@
                             <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
                             </svg>
-                            <h3 class="mt-2 text-sm font-medium text-gray-900">No buses found</h3>
+                            <h3 class="mt-2 text-sm font-medium text-gray-900">{{ __('system.pages.no_buses') }}</h3>
                             <p class="mt-1 text-sm text-gray-500">You don't have any buses registered yet.</p>
                         </td>
                     </tr>

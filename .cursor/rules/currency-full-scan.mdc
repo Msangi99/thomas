@@ -1,0 +1,49 @@
+---
+description: Trigger a full multi-currency / transaction audit via multcurrencyagent. Use when the user says /currency-scan, "scan currency", "audit all currency", or asks for a whole-system currency transaction review.
+alwaysApply: false
+---
+
+# Full currency system scan command
+
+When the user invokes **`/currency-scan`**, **`scan currency`**, **`audit currency`**, or asks for a **whole-system currency/transaction review**:
+
+1. **Delegate immediately** to **multcurrencyagent** (Task tool, `subagent_type: multcurrencyagent`). Do not stop early, delay, or skim.
+2. **Do not fix bugs** during the scan unless the user explicitly asked to fix — report first.
+3. **Finish the full audit** before returning to the user.
+
+## Scan mandate (include verbatim in the Task prompt)
+
+Scan **everything**:
+
+- **Core pipeline:** `SetCurrency`, `Currency`, `CurrencyController`, `helpers.php` (`convert_money`, `convert_to_tzs`), `routes/web.php`, `Kernel.php`
+- **All payment controllers:** Booking, Customer, Vender, VenderWallet, RoundTrip, Rebook, Resave, Parcel, ClickPesa, Airtel, Tigosecure, MixByYass, PDO, settlement/fare services
+- **All Blade views** with amounts: grep `convert_money`, `$currency`, `$usdToTzs`, `currency_prefix_tzs`, `formatMoney`, `useUsd`, hardcoded `TZS`/`Tsh`
+- **All portals:** guest (`test/*`, payment*, round_*), customer, vendor, bus-owner (`controller/*`, `bus_owner/*`), system admin, parcels, special hire, livewire, print receipts
+- **All JS:** `inline-booking.js`, `bus.js`, inline scripts in payment/seat pages
+- **Lang:** `lang/en/all.php`, `lang/sw/all.php`, currency-related keys elsewhere
+- **Database:** `@hisgnbki_ticket.sql` — amounts stored in TZS only
+
+## Classify each finding
+
+| Status | Meaning |
+|--------|---------|
+| **OK** | Correct display-only conversion; gateways send TZS |
+| **BUG** | Wrong USD display, hardcoded TZS prefix, missing JS divide, label/value mismatch |
+| **RISK** | Gateway or form may charge/store wrong unit |
+| **MISSING** | Raw TZS where peers use `convert_money` |
+
+## Required report sections
+
+A. Executive summary (files scanned, OK/BUG/RISK/MISSING counts)  
+B. Inventory by portal (table)  
+C. Prioritized bug list P0–P3 with file:line  
+D. Payment gateway audit (amount source, currency sent)  
+E. Cross-check vs 9 known patterns in `multcurrencyagent.md`  
+F. Extra scrutiny on recently changed/untracked currency files  
+
+## Principles (do not violate during scan)
+
+- DB and payment gateways: **always TZS**
+- Session toggle (`Tsh`/`Usd`): **display only**
+- Hidden form fields and gateway payloads: **never convert to USD**
+- Reference implementations: `vender/payment.blade.php`, `inline-booking.js`, `system/payments.blade.php`

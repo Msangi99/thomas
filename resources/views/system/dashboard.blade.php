@@ -1,12 +1,12 @@
 @extends('system.app')
 
-@section('title', 'Company Dashboard')
+@section('title', __('system.dashboard.title'))
 
 @section('content')
 <div class="container mx-auto px-4 py-8">
     <!-- Dashboard Header -->
     <div class="flex justify-between items-center mb-8">
-        <h1 class="text-3xl font-bold text-gray-800">Dashboard Overview</h1>
+        <h1 class="text-3xl font-bold text-gray-800">{{ __('system.dashboard.overview') }}</h1>
         <div class="text-sm text-gray-500">
             {{ \Carbon\Carbon::now()->format('l, F j, Y') }}
         </div>
@@ -19,7 +19,7 @@
             <div class="bg-gradient-to-br from-teal-50 to-teal-100 border border-teal-100 rounded-xl p-6 transition-all hover:shadow-md hover:border-teal-200">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-teal-600">Today's Revenue</p>
+                        <p class="text-sm font-medium text-teal-600">{{ __('system.dashboard.todays_revenue') }}</p>
                         <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ $currency }} {{ convert_money($todayAmount) }}</h3>
                     </div>
                     <div class="p-3 rounded-lg bg-teal-100 text-teal-600">
@@ -28,14 +28,14 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-xs text-teal-500 mt-2">{{ $todayPaidCount }} paid {{ $todayPaidCount === 1 ? 'booking' : 'bookings' }} today</p>
+                <p class="text-xs text-teal-500 mt-2">{{ __('system.dashboard.paid_bookings_today', ['count' => $todayPaidCount, 'label' => $todayPaidCount === 1 ? __('system.common.booking') : __('system.common.bookings')]) }}</p>
             </div>
 
             <!-- Total Revenue (paid bookings only) -->
             <div class="bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-100 rounded-xl p-6 transition-all hover:shadow-md hover:border-orange-200">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-orange-600">Total Revenue</p>
+                        <p class="text-sm font-medium text-orange-600">{{ __('system.dashboard.total_revenue') }}</p>
                         <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ $currency }} {{ convert_money($totalAmount) }}</h3>
                     </div>
                     <div class="p-3 rounded-lg bg-orange-100 text-orange-600">
@@ -44,14 +44,14 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-xs text-orange-500 mt-2">{{ number_format($totalPaidCount) }} paid {{ $totalPaidCount === 1 ? 'booking' : 'bookings' }} (all time)</p>
+                <p class="text-xs text-orange-500 mt-2">{{ __('system.dashboard.paid_bookings_all_time', ['count' => number_format($totalPaidCount), 'label' => $totalPaidCount === 1 ? __('system.common.booking') : __('system.common.bookings')]) }}</p>
             </div>
 
             <!-- Total Insurance Amount Card -->
             <div class="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-100 rounded-xl p-6 transition-all hover:shadow-md hover:border-blue-200">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-blue-600">Insurance Amount</p>
+                        <p class="text-sm font-medium text-blue-600">{{ __('system.dashboard.insurance_amount') }}</p>
                         <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ $currency }} {{ convert_money($bima) }}</h3>
                     </div>
                     <div class="p-3 rounded-lg bg-blue-100 text-blue-600">
@@ -60,14 +60,14 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-xs text-blue-500 mt-2">+2.5% from last week</p>
+                <p class="text-xs text-blue-500 mt-2">{{ __('system.dashboard.from_last_week', ['percent' => '2.5']) }}</p>
             </div>
 
             <!-- Total Commission Fees Card -->
             <div class="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-100 rounded-xl p-6 transition-all hover:shadow-md hover:border-purple-200">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-purple-600">Commission Fees</p>
+                        <p class="text-sm font-medium text-purple-600">{{ __('system.dashboard.commission_fees') }}</p>
                         <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ $currency }} {{ convert_money($service) }}</h3>
                     </div>
                     <div class="p-3 rounded-lg bg-purple-100 text-purple-600">
@@ -76,14 +76,14 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-xs text-purple-500 mt-2">+3.1% from last week</p>
+                <p class="text-xs text-purple-500 mt-2">{{ __('system.dashboard.from_last_week', ['percent' => '3.1']) }}</p>
             </div>
 
             <!-- Total Service Fees Card -->
             <div class="bg-gradient-to-br from-green-50 to-green-100 border border-green-100 rounded-xl p-6 transition-all hover:shadow-md hover:border-green-200">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-green-600">Service Fees</p>
+                        <p class="text-sm font-medium text-green-600">{{ __('system.dashboard.service_fees') }}</p>
                         <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ $currency }} {{ convert_money($fees) }}</h3>
                     </div>
                     <div class="p-3 rounded-lg bg-green-100 text-green-600">
@@ -92,7 +92,7 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-xs text-green-500 mt-2">+4.2% from last week</p>
+                <p class="text-xs text-green-500 mt-2">{{ __('system.dashboard.from_last_week', ['percent' => '4.2']) }}</p>
             </div>
 
             <!-- Balance Card -->
@@ -100,7 +100,7 @@
                 <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 border border-indigo-100 rounded-xl p-6 transition-all hover:shadow-md hover:border-indigo-200">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm font-medium text-indigo-600">Available Balance</p>
+                            <p class="text-sm font-medium text-indigo-600">{{ __('system.dashboard.available_balance') }}</p>
                             <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ $currency }} {{ convert_money($balance) }}</h3>
                         </div>
                         <div class="p-3 rounded-lg bg-indigo-100 text-indigo-600">
@@ -109,7 +109,7 @@
                             </svg>
                         </div>
                     </div>
-                    <p class="text-xs text-indigo-500 mt-2">View balance details</p>
+                    <p class="text-xs text-indigo-500 mt-2">{{ __('system.dashboard.view_balance_details') }}</p>
                 </div>
             </a>
         </div>
@@ -119,7 +119,7 @@
             <div class="bg-gradient-to-br from-red-50 to-red-100 border border-red-100 rounded-xl p-6 transition-all hover:shadow-md hover:border-red-200">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-red-600">Cancellation Fees</p>
+                        <p class="text-sm font-medium text-red-600">{{ __('system.dashboard.cancellation_fees') }}</p>
                         <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ $currency }} {{ convert_money($cancelledAmount) }}</h3>
                     </div>
                     <div class="p-3 rounded-lg bg-red-100 text-red-600">
@@ -128,7 +128,7 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-xs text-red-500 mt-2">Total cancelled amount</p>
+                <p class="text-xs text-red-500 mt-2">{{ __('system.dashboard.total_cancelled_amount') }}</p>
             </div>
         </div>
     @endif
@@ -139,11 +139,11 @@
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div class="p-6">
                 <div class="flex justify-between items-center mb-4">
-                    <h5 class="text-lg font-semibold text-gray-800">Weekly Booking Amounts (Paid only)</h5>
+                    <h5 class="text-lg font-semibold text-gray-800">{{ __('system.dashboard.weekly_booking_amounts') }}</h5>
                     <div class="flex space-x-2" id="chartPeriodButtons">
-                        <button type="button" class="chart-period-btn px-3 py-1 text-xs rounded-lg" data-period="week">Week</button>
-                        <button type="button" class="chart-period-btn px-3 py-1 text-xs rounded-lg" data-period="month">Month</button>
-                        <button type="button" class="chart-period-btn px-3 py-1 text-xs rounded-lg" data-period="year">Year</button>
+                        <button type="button" class="chart-period-btn px-3 py-1 text-xs rounded-lg" data-period="week">{{ __('system.sidebar.week') }}</button>
+                        <button type="button" class="chart-period-btn px-3 py-1 text-xs rounded-lg" data-period="month">{{ __('system.sidebar.month') }}</button>
+                        <button type="button" class="chart-period-btn px-3 py-1 text-xs rounded-lg" data-period="year">{{ __('system.sidebar.year') }}</button>
                     </div>
                 </div>
                 <div class="w-full h-64">
@@ -155,7 +155,7 @@
         <!-- Recent Activity (real data) -->
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div class="p-6">
-                <h5 class="text-lg font-semibold text-gray-800 mb-4">Recent Activity</h5>
+                <h5 class="text-lg font-semibold text-gray-800 mb-4">{{ __('system.dashboard.recent_activity') }}</h5>
                 <div class="space-y-4 max-h-80 overflow-y-auto">
                     @forelse ($recentActivity as $activity)
                         <div class="flex items-start">
@@ -180,7 +180,7 @@
                             </div>
                         </div>
                     @empty
-                        <p class="text-sm text-gray-500">No recent activity.</p>
+                        <p class="text-sm text-gray-500">{{ __('system.dashboard.no_recent_activity') }}</p>
                     @endforelse
                 </div>
             </div>
@@ -191,9 +191,9 @@
     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div class="p-6">
             <div class="flex justify-between items-center mb-4">
-                <h5 class="text-lg font-semibold text-gray-800">Today's Bookings (Paid)</h5>
+                <h5 class="text-lg font-semibold text-gray-800">{{ __('system.dashboard.todays_bookings_paid') }}</h5>
                 <div class="relative">
-                    <input type="text" placeholder="Search bookings..." class="pl-8 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <input type="text" placeholder="{{ __('system.dashboard.search_bookings') }}" class="pl-8 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 absolute left-3 top-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
@@ -205,22 +205,22 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <h3 class="mt-2 text-sm font-medium text-gray-900">No bookings found</h3>
-                    <p class="mt-1 text-sm text-gray-500">There are no bookings for today.</p>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">{{ __('system.dashboard.no_bookings_found') }}</h3>
+                    <p class="mt-1 text-sm text-gray-500">{{ __('system.dashboard.no_bookings_today') }}</p>
                 </div>
             @else
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Booking Code</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Route</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Travel Date</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.booking_code') }}</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.customer') }}</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.company') }}</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.route') }}</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.travel_date') }}</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.amount') }}</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.status') }}</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.actions') }}</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
@@ -245,7 +245,7 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <a href="#" class="text-blue-600 hover:text-blue-900">View</a>
+                                        <a href="#" class="text-blue-600 hover:text-blue-900">{{ __('system.common.view') }}</a>
                                     </td>
                                 </tr>
                             @endforeach
@@ -254,14 +254,14 @@
                 </div>
                 <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
                     <div class="text-sm text-gray-500">
-                        Showing <span class="font-medium">1</span> to <span class="font-medium">10</span> of <span class="font-medium">{{ $bookings->count() }}</span> results
+                        {{ __('system.dashboard.showing_results', ['from' => 1, 'to' => min(10, $bookings->count()), 'total' => $bookings->count()]) }}
                     </div>
                     <div class="flex space-x-2">
                         <button class="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                            Previous
+                            {{ __('system.dashboard.previous') }}
                         </button>
                         <button class="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                            Next
+                            {{ __('system.dashboard.next') }}
                         </button>
                     </div>
                 </div>
@@ -277,6 +277,7 @@
         month: @json($weeklyAmountsMonth),
         year: @json($weeklyAmountsYear)
     };
+    const paidAmountLabel = @json(__('system.dashboard.chart_paid_amount', ['currency' => '__C__']));
     const currencySymbol = @json($currency);
     let weeklyChart = null;
 
@@ -291,7 +292,7 @@
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Paid booking amount (' + currencySymbol + ')',
+                    label: paidAmountLabel.replace('__C__', currencySymbol),
                     data: amounts,
                     borderColor: '#3B82F6',
                     backgroundColor: 'rgba(59, 130, 246, 0.05)',

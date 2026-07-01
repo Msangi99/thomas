@@ -52,4 +52,8 @@ return [
     'info' => 'Inaonyesha _START_ hadi _END_ ya _TOTAL_ ingizo',
     'info_empty' => 'Inaonyesha 0 hadi 0 ya 0 ingizo',
     'info_filtered' => '(zimechaguliwa kutoka _MAX_ jumla)',
+    'schedules_created_success' => 'Ratiba zimeundwa kwa mafanikio.',
+    'failed_create_schedules' => 'Imeshindwa kuunda ratiba: :error',
+    'schedule_delete_successful' => 'Ratiba imefutwa kwa mafanikio',
+    'schedule_updated_success' => 'Ratiba imesasishwa kwa mafanikio.',
 ];

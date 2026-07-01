@@ -11,7 +11,7 @@
     <div class="container mx-auto px-4 py-6 max-w-full">
         <div class="bg-white rounded-lg shadow-md overflow-hidden">
             <div class="p-4 bg-gradient-to-r from-blue-500 to-blue-400 text-white flex flex-col sm:flex-row justify-between items-center gap-4">
-                <h2 class="text-lg font-semibold">Travel Insurance Data</h2>
+                <h2 class="text-lg font-semibold">{{ __('system.pages.bima_title') }}</h2>
                 <h3 class="text-base font-medium">HIGHLINK ISGC</h3>
                 <span class="text-sm font-medium">Total: {{ $currency }} <span id="bimaTotal">0</span></span>
             </div>
@@ -19,18 +19,18 @@
             <div class="p-4">
                 <div class="flex flex-col sm:flex-row gap-4 mb-4">
                     <div class="w-full sm:w-1/3">
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Filter by:</label>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">{{ __('system.common.filter_by') }}</label>
                         <select id="bimaTimeFilter" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm">
-                            <option value="all">All Time</option>
-                            <option value="day">Today</option>
-                            <option value="week">This Week</option>
-                            <option value="month">This Month</option>
-                            <option value="year">This Year</option>
-                            <option value="custom">Custom Range</option>
+                            <option value="all">{{ __('system.common.all_time') }}</option>
+                            <option value="day">{{ __('system.sidebar.today') }}</option>
+                            <option value="week">{{ __('system.common.this_week') }}</option>
+                            <option value="month">{{ __('system.common.this_month') }}</option>
+                            <option value="year">{{ __('system.common.this_year') }}</option>
+                            <option value="custom">{{ __('system.common.custom_range') }}</option>
                         </select>
                     </div>
                     <div class="w-full sm:w-2/3 hidden" id="dateRangeGroup">
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Date Range:</label>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">{{ __('system.common.date_range') }}</label>
                         <div class="flex flex-col sm:flex-row items-center gap-2">
                             <input type="text" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm" id="minDate" placeholder="Start Date">
                             <span class="text-gray-500 text-sm">to</span>
@@ -57,15 +57,15 @@
                             </tr>
                             <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
                                 <th class="py-2 px-4 text-left font-medium">#</th>
-                                <th class="py-2 px-4 text-left font-medium">Booking Code</th>
-                                <th class="py-2 px-4 text-left font-medium">Booking Date & Time</th>
-                                <th class="py-2 px-4 text-left font-medium">Username</th>
-                                <th class="py-2 px-4 text-left font-medium">Phone Number</th>
+                                <th class="py-2 px-4 text-left font-medium">{{ __('system.pages.col_booking_code') }}</th>
+                                <th class="py-2 px-4 text-left font-medium">{{ __('system.pages.col_booking_date') }}</th>
+                                <th class="py-2 px-4 text-left font-medium">{{ __('system.pages.col_username') }}</th>
+                                <th class="py-2 px-4 text-left font-medium">{{ __('system.pages.col_phone_number') }}</th>
                                 <th class="py-2 px-4 text-left font-medium">Bus Info</th>
                                 <th class="py-2 px-4 text-left font-medium">Start Date</th>
                                 <th class="py-2 px-4 text-left font-medium">End Date</th>
                                 <th class="py-2 px-4 text-left font-medium">Valid Days</th>
-                                <th class="py-2 px-4 text-left font-medium">Amount</th>
+                                <th class="py-2 px-4 text-left font-medium">{{ __('system.common.amount') }}</th>
                                 <th class="py-2 px-4 text-left font-medium">VAT</th>
                             </tr>
                         </thead>

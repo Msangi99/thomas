@@ -2,14 +2,14 @@
     $currentStep = $currentStep ?? 1;
     $interactive = $interactive ?? false;
     $steps = $steps ?? [
-        1 => ['label' => 'Pickup & Drop', 'icon' => 'fa-map-marker-alt', 'key' => 'pickup'],
-        2 => ['label' => 'Select Seats', 'icon' => 'fa-chair', 'key' => 'seats'],
-        3 => ['label' => 'Payment', 'icon' => 'fa-credit-card', 'key' => 'payment'],
+        1 => ['label' => __('all.step_pickup_drop'), 'icon' => 'fa-map-marker-alt', 'key' => 'pickup'],
+        2 => ['label' => __('all.step_select_seats'), 'icon' => 'fa-chair', 'key' => 'seats'],
+        3 => ['label' => __('all.step_payment'), 'icon' => 'fa-credit-card', 'key' => 'payment'],
     ];
 @endphp
 
 <nav class="booking-steps fade-in {{ $interactive ? 'booking-steps--interactive' : '' }}"
-    aria-label="Booking progress"
+    aria-label="{{ __('all.booking_progress') }}"
     @if ($interactive) data-inline-timeline @endif>
     @foreach ($steps as $num => $step)
         @php
@@ -27,7 +27,7 @@
                 data-booking-step="{{ $stepKey }}"
                 @if (!$isDone) disabled @endif
                 aria-current="{{ $isActive ? 'step' : 'false' }}"
-                aria-label="{{ $isDone ? 'Go back to ' . $step['label'] : $step['label'] }}">
+                aria-label="{{ $isDone ? __('all.go_back_to', ['step' => $step['label']]) : $step['label'] }}">
                 <span class="booking-steps__dot" aria-hidden="true">
                     @if ($isDone)
                         <i class="fas fa-check"></i>

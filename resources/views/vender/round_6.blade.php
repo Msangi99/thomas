@@ -383,6 +383,8 @@
     </section>
 
     <script>
+        const vendPayI18n = { enterPhone: @json(__('all.enter_phone_required')) };
+
         @include('partials.tz_phone_normalize_js')
 
         // Timer countdown functionality
@@ -423,7 +425,7 @@
             const email = document.getElementById('contactEmail').value.trim();
 
             if (!phone) {
-                alert('Please enter phone number');
+                alert(vendPayI18n.enterPhone);
                 return;
             }
 
@@ -467,7 +469,7 @@
             const email = document.getElementById('contactEmail').value.trim();
 
             if (!phone) {
-                alert('Please enter phone number');
+                alert(vendPayI18n.enterPhone);
                 return;
             }
 
@@ -506,7 +508,7 @@
             const email = document.getElementById('contactEmail').value.trim();
 
             if (!phone) {
-                alert('Please enter phone number');
+                alert(vendPayI18n.enterPhone);
                 return;
             }
 
@@ -545,7 +547,7 @@
             const customerName = document.getElementById('customer_name') ? document.getElementById('customer_name').value : 'Customer';
 
             if (!phone) {
-                alert('Please enter phone number');
+                alert(vendPayI18n.enterPhone);
                 return;
             }
 

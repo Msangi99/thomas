@@ -49,4 +49,12 @@ return [
     'enter_via_location' => 'Ingiza mahali pa kupitia',
     'select' => 'Chagua',
     'no_buses_found' => 'Hakuna mabasi yaliyopatikana',
+    'route_from_readonly' => 'Sehemu hii haiwezi kubadilishwa.',
+    'via_help' => 'Ingiza mahali pa kupitia kwa njia.',
+    'is_return' => 'Je, ni kurudi?',
+    'yes' => 'Ndiyo',
+    'no' => 'Hapana',
+    'route_created_success' => 'Njia imeundwa kwa mafanikio.',
+    'route_updated_success' => 'Njia imesasishwa kwa mafanikio.',
+    'route_deleted_success' => 'Njia imefutwa kwa mafanikio',
 ];

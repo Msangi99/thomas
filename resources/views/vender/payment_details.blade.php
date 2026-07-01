@@ -93,7 +93,7 @@
                                     <button type="button" class="w-full text-left px-4 py-3 rounded-lg bg-white hover:bg-gray-100 text-blue-700"
                                         id="tab5-btn" data-bs-toggle="tab" data-bs-target="#tab5" role="tab"
                                         aria-controls="tab5">
-                                        <i class="fas fa-sim-card mr-2"></i> Airtel Money
+                                        <i class="fas fa-sim-card mr-2"></i> {{ __('all.pay_with_airtel_money') }}
                                     </button>
                                 </div>
                             </div>
@@ -399,18 +399,18 @@
                                     <div id="tab5" class="tab-pane" role="tabpanel" aria-labelledby="tab5-btn">
                                         <div class="space-y-4">
                                             <div class="p-4 bg-red-50 rounded-lg border border-red-100">
-                                                <p class="text-sm text-gray-700">Enter the customer's Airtel Money number. A payment prompt will be sent to their phone.</p>
-                                            </div>
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">Airtel Money Number</label>
+                                                <p class="text-sm text-gray-700">{{ __('assistance/transaction.vendor_airtel_customer_prompt') }}</p>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('all.airtel_money_number') }}</label>
                                                 <input type="text" id="vend_airtel_phone" maxlength="12"
                                                     class="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 onlydigits"
                                                     placeholder="e.g. 0780000000">
                                             </div>
-                                            <p class="text-sm text-gray-600">Total: <strong id="vend_airtel_total_display">TZS {{ convert_money($price + $fees) }}</strong></p>
+                                            <p class="text-sm text-gray-600">{{ __('all.total_to_pay_label') }} <strong id="vend_airtel_total_display">TZS {{ convert_money($price + $fees) }}</strong></p>
                                             <button type="button" id="vend_airtel_pay_btn"
                                                 class="w-full mt-2 py-3 px-6 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white font-medium rounded-lg shadow-md">
-                                                <i class="fas fa-lock mr-2"></i> Pay with Airtel Money
+                                                <i class="fas fa-lock mr-2"></i> {{ __('all.pay_with_airtel_money') }}
                                             </button>
                                             <p id="vend_airtel_status_msg" class="text-sm text-center hidden"></p>
                                         </div>
@@ -482,6 +482,17 @@
 <script>
     @include('partials.tz_phone_normalize_js')
 
+    const vendPayI18n = {
+        enterPhone: @json(__('all.enter_phone_required')),
+        enterAirtel: @json(__('all.enter_airtel_money_number')),
+        payAirtel: @json(__('all.pay_with_airtel_money')),
+        processing: @json(__('all.processing')),
+        sendingPayment: @json(__('all.sending_payment_request')),
+        promptSentCustomer: @json(__('all.prompt_sent_customer_phone')),
+        paymentFailed: @json(__('all.payment_failed_try_again')),
+        networkError: @json(__('all.network_error_try_again')),
+    };
+
     // Timer countdown functionality
     function startTimer(duration, displayMinutes, displaySeconds) {
         let timer = duration, minutes, seconds;
@@ -519,7 +530,7 @@
         const email = document.getElementById('contactEmail').value;
 
         if (!phone) {
-            alert('Please enter phone number');
+            alert(vendPayI18n.enterPhone);
             return;
         }
 
@@ -676,12 +687,12 @@
     document.getElementById('vend_airtel_pay_btn').addEventListener('click', function () {
         const phone  = document.getElementById('vend_airtel_phone').value.trim();
         const total  = baseTotal;
-        if (!phone) { alert('Please enter the Airtel Money number'); return; }
+        if (!phone) { alert(vendPayI18n.enterAirtel); return; }
         this.disabled = true;
-        this.textContent = 'Processing…';
+        this.textContent = vendPayI18n.processing;
         const statusEl = document.getElementById('vend_airtel_status_msg');
         statusEl.classList.remove('hidden');
-        statusEl.textContent = 'Sending payment request…';
+        statusEl.textContent = vendPayI18n.sendingPayment;
         statusEl.className = 'text-sm text-center text-blue-600';
         fetch('{{ route("airtel.booking.payment") }}', {
             method: 'POST',
@@ -691,20 +702,20 @@
         .then(r => r.json())
         .then(data => {
             if (data.status === 'success') {
-                statusEl.textContent = data.message || 'Prompt sent to customer phone.';
+                statusEl.textContent = data.message || vendPayI18n.promptSentCustomer;
                 statusEl.className = 'text-sm text-center text-green-600';
             } else {
-                statusEl.textContent = data.message || 'Failed. Try again.';
+                statusEl.textContent = data.message || vendPayI18n.paymentFailed;
                 statusEl.className = 'text-sm text-center text-red-600';
                 document.getElementById('vend_airtel_pay_btn').disabled = false;
-                document.getElementById('vend_airtel_pay_btn').innerHTML = '<i class="fas fa-lock mr-2"></i> Pay with Airtel Money';
+                document.getElementById('vend_airtel_pay_btn').innerHTML = '<i class="fas fa-lock mr-2"></i> ' + vendPayI18n.payAirtel;
             }
         })
         .catch(() => {
-            statusEl.textContent = 'Network error.';
+            statusEl.textContent = vendPayI18n.networkError;
             statusEl.className = 'text-sm text-center text-red-600';
             document.getElementById('vend_airtel_pay_btn').disabled = false;
-            document.getElementById('vend_airtel_pay_btn').innerHTML = '<i class="fas fa-lock mr-2"></i> Pay with Airtel Money';
+            document.getElementById('vend_airtel_pay_btn').innerHTML = '<i class="fas fa-lock mr-2"></i> ' + vendPayI18n.payAirtel;
         });
     });
 

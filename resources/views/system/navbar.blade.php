@@ -2,7 +2,7 @@
  <div class="flex justify-center flex-1">
      <div class="flex-shrink-0 flex items-center">
          <a href="#" class="flex items-center text-lg font-semibold text-gray-800">
-             <i class="bi bi-bus-front mr-2"></i>HIGHLINK ISGC
+             <i class="bi bi-bus-front mr-2"></i>{{ __('all.highlink_isgc') }}
          </a>
      </div>
  </div>
@@ -27,9 +27,9 @@
          <select
              class="block appearance-none w-full bg-white border border-gray-300 hover:border-gray-500 px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none focus:shadow-outline"
              onchange="window.location.href = '{{ route('set.locale', ['lang' => '']) }}' + this.value">
-             <option value="en" {{ app()->getLocale() == 'en' ? 'selected' : '' }}>English
+             <option value="en" {{ app()->getLocale() == 'en' ? 'selected' : '' }}>{{ __('all.english') }}
              </option>
-             <option value="sw" {{ app()->getLocale() == 'sw' ? 'selected' : '' }}>Kiswahili
+             <option value="sw" {{ app()->getLocale() == 'sw' ? 'selected' : '' }}>{{ __('all.kiswahili') }}
              </option>
          </select>
          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">

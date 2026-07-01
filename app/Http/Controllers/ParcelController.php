@@ -82,7 +82,7 @@ class ParcelController extends Controller
             'vender_id' => auth()->id(),
         ]);
 
-        return redirect()->route('vender.parcels.index')->with('success', 'Parcel added successfully and assigned to the bus.');
+        return redirect()->route('vender.parcels.index')->with('success', __('vender/parcels.parcel_added_success'));
     }
 
     public function updateStatus(Request $request, $id)
@@ -98,7 +98,7 @@ class ParcelController extends Controller
 
         $parcel->update(['status' => $request->status]);
 
-        return back()->with('success', 'Parcel status updated successfully.');
+        return back()->with('success', __('vender/parcels.parcel_status_updated'));
     }
 
     public function toggleAcceptance(Request $request)
@@ -107,12 +107,12 @@ class ParcelController extends Controller
         
         // Authorization check needed here ideally to ensure user owns the bus
         if ($bus->campany_id !== auth()->user()->campany->id) {
-             return back()->with('error', 'Unauthorized action.');
+             return back()->with('error', __('vender/parcels.unauthorized_action'));
         }
 
         $bus->accept_parcels = !$bus->accept_parcels;
         $bus->save();
 
-        return back()->with('success', 'Parcel acceptance status updated.');
+        return back()->with('success', __('vender/parcels.parcel_acceptance_updated'));
     }
 }

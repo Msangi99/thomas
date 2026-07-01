@@ -1,6 +1,6 @@
 @extends('system.app')
 
-@section('title', 'System Balance')
+@section('title', __('system.pages.balance_title'))
 
 @section('content')
 <div class="container mx-auto px-4 py-6">
@@ -28,8 +28,8 @@
     <!-- Page Header -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800">Transaction History</h1>
-            <p class="mt-1 text-sm text-gray-500">View and manage all system transactions</p>
+            <h1 class="text-2xl font-bold text-gray-800">{{ __('system.pages.balance_title') }}</h1>
+            <p class="mt-1 text-sm text-gray-500">{{ __('system.pages.balance_subtitle') }}</p>
         </div>
         <button 
             @click="open = true"
@@ -38,26 +38,26 @@
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
             </svg>
-            Add Transaction
+            {{ __('system.pages.add_transaction') }}
         </button>
     </div>
 
     <!-- Transactions Card -->
     <div class="bg-white shadow rounded-lg overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-medium text-gray-900">Recent Transactions</h3>
+            <h3 class="text-lg font-medium text-gray-900">{{ __('system.pages.recent_transactions') }}</h3>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction ID</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Number</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.pages.transaction_id') }}</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.amount') }}</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.payment_number') }}</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.payment_method') }}</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.date') }}</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -89,7 +89,7 @@
                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
                                     </svg>
-                                    Print
+                                    {{ __('system.common.print') }}
                                 </button>
                             </form>
                         </td>
@@ -100,8 +100,8 @@
                             <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                             </svg>
-                            <h3 class="mt-2 text-sm font-medium text-gray-900">No transactions</h3>
-                            <p class="mt-1 text-sm text-gray-500">Get started by adding a new transaction.</p>
+                            <h3 class="mt-2 text-sm font-medium text-gray-900">{{ __('system.pages.no_transactions_title') }}</h3>
+                            <p class="mt-1 text-sm text-gray-500">{{ __('system.pages.no_transactions_hint') }}</p>
                             <div class="mt-6">
                                 <button 
                                     type="button"
@@ -110,7 +110,7 @@
                                     <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                                     </svg>
-                                    New Transaction
+                                    {{ __('system.pages.new_transaction') }}
                                 </button>
                             </div>
                         </td>
@@ -134,14 +134,14 @@
                 <div class="sm:flex sm:items-start">
                     <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                         <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                            Add New Transaction
+                            {{ __('system.pages.add_new_transaction') }}
                         </h3>
                         <div class="mt-5">
                             <form id="transactionForm" action="{{ route('system.update.balance') }}" method="POST">
                                 @csrf
                                 <div class="grid grid-cols-1 gap-y-4">
                                     <div>
-                                        <label for="transRefId" class="block text-sm font-medium text-gray-700">Transaction Reference ID</label>
+                                        <label for="transRefId" class="block text-sm font-medium text-gray-700">{{ __('system.pages.transaction_reference_id') }}</label>
                                         <input type="text" name="trans_ref_id" id="transRefId" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
                                         @error('trans_ref_id')
                                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -149,7 +149,7 @@
                                     </div>
 
                                     <div>
-                                        <label for="amount" class="block text-sm font-medium text-gray-700">Amount ({{ $currency }})</label>
+                                        <label for="amount" class="block text-sm font-medium text-gray-700">{{ __('system.common.amount') }} ({{ $currency }})</label>
                                         <div class="mt-1 relative rounded-md shadow-sm">
                                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                                 <span class="text-gray-500 sm:text-sm">{{ $currency }}</span>
@@ -162,7 +162,7 @@
                                     </div>
 
                                     <div>
-                                        <label for="paymentNumber" class="block text-sm font-medium text-gray-700">Payment Number</label>
+                                        <label for="paymentNumber" class="block text-sm font-medium text-gray-700">{{ __('system.common.payment_number') }}</label>
                                         <input type="text" name="payment_number" id="paymentNumber" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
                                         @error('payment_number')
                                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -170,9 +170,9 @@
                                     </div>
 
                                     <div>
-                                        <label for="paymentMethod" class="block text-sm font-medium text-gray-700">Payment Method</label>
+                                        <label for="paymentMethod" class="block text-sm font-medium text-gray-700">{{ __('system.common.payment_method') }}</label>
                                         <select id="paymentMethod" name="payment_method" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                                            <option value="" disabled selected>Select Payment Method</option>
+                                            <option value="" disabled selected>{{ __('system.pages.select_payment_method') }}</option>
                                             <optgroup label="Mobile Money">
                                                 <option value="M-Pesa">M-Pesa</option>
                                                 <option value="Tigo Pesa">Tigo Pesa</option>
@@ -198,10 +198,10 @@
             </div>
             <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                 <button type="submit" form="transactionForm" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
-                    Save Transaction
+                    {{ __('system.pages.save_transaction') }}
                 </button>
                 <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" onclick="closeModal()">
-                    Cancel
+                    {{ __('system.common.cancel') }}
                 </button>
             </div>
         </div>

@@ -1,6 +1,6 @@
 @extends('system.app')
 
-@section('title', 'Company Dashboard')
+@section('title', __('system.operators.title'))
 
 @section('content')
 <div class="container mx-auto px-4 py-6">
@@ -14,7 +14,7 @@
                     </svg>
                 </div>
                 <div class="ml-3">
-                    <h3 class="text-sm font-medium text-red-800">There were errors with your submission:</h3>
+                    <h3 class="text-sm font-medium text-red-800">{{ __('system.common.submission_errors') }}</h3>
                     <ul class="mt-2 text-sm text-red-700 list-disc pl-5">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -28,11 +28,11 @@
     <!-- Dashboard Header -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800">Company Management</h1>
-            <p class="mt-1 text-sm text-gray-500">View and manage all registered bus companies</p>
+            <h1 class="text-2xl font-bold text-gray-800">{{ __('system.operators.title') }}</h1>
+            <p class="mt-1 text-sm text-gray-500">{{ __('system.operators.subtitle') }}</p>
         </div>
         <div class="mt-4 md:mt-0 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-            <span class="text-sm font-medium text-gray-700">Total Balance:</span>
+            <span class="text-sm font-medium text-gray-700">{{ __('system.common.total_balance') }}:</span>
             <span class="ml-2 font-bold text-indigo-600" id="companyTotal">{{ $currency }} 0.00</span>
         </div>
     </div>
@@ -40,32 +40,32 @@
     <!-- Companies Table -->
     <div class="bg-white shadow rounded-lg overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-medium text-gray-900">Company Data</h3>
+            <h3 class="text-lg font-medium text-gray-900">{{ __('system.operators.company_data') }}</h3>
         </div>
         <div class="overflow-x-auto">
             <table id="companyTable" class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <!-- Search Row -->
                     <tr>
-                        <th class="px-6 py-3"><input type="text" class="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Search No"></th>
-                        <th class="px-6 py-3"><input type="text" class="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Search Company"></th>
-                        <th class="px-6 py-3"><input type="text" class="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Search Owner"></th>
-                        <th class="px-6 py-3"><input type="text" class="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Search Contact"></th>
-                        <th class="px-6 py-3"><input type="text" class="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Search Balance"></th>
+                        <th class="px-6 py-3"><input type="text" class="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500" placeholder="{{ __('system.operators.search_no') }}"></th>
+                        <th class="px-6 py-3"><input type="text" class="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500" placeholder="{{ __('system.operators.search_company') }}"></th>
+                        <th class="px-6 py-3"><input type="text" class="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500" placeholder="{{ __('system.operators.search_owner') }}"></th>
+                        <th class="px-6 py-3"><input type="text" class="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500" placeholder="{{ __('system.operators.search_contact') }}"></th>
+                        <th class="px-6 py-3"><input type="text" class="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500" placeholder="{{ __('system.operators.search_balance') }}"></th>
                         <th class="px-6 py-3"><input type="text" class="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Search %"></th>
-                        <th class="px-6 py-3"><input type="text" class="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Search Status"></th>
+                        <th class="px-6 py-3"><input type="text" class="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500" placeholder="{{ __('system.operators.search_status') }}"></th>
                         <th class="px-6 py-3"></th> <!-- Empty header for Actions -->
                     </tr>
                     <!-- Column Headers -->
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.no') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.company') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.owner') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.contact') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.balance') }}</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">%</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.status') }}</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('system.common.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -97,10 +97,10 @@
                                             <input type="number" name="percentage" min="0" max="100" 
                                                    class="w-16 text-sm border border-gray-300 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500" 
                                                    value="{{ $campany->percentage }}" placeholder="%">
-                                            <span class="text-sm text-gray-500">or</span>
+                                            <span class="text-sm text-gray-500">{{ __('system.common.or') }}</span>
                                             <input type="number" name="commission_amount" step="0.01"
                                                    class="w-24 text-sm border border-gray-300 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500" 
-                                                   value="{{ $campany->commission_amount }}" placeholder="Amount">
+                                                   value="{{ $campany->commission_amount }}" placeholder="{{ __('system.operators.amount_placeholder') }}">
                                         </div>
                                     </td>
                                     <input type="hidden" name="campany_id" value="{{ $campany->id }}">
@@ -109,18 +109,18 @@
                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
                                                   {{ $campany->status == 1 ? 'bg-green-100 text-green-800' : 
                                                      ($campany->status == 2 ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800') }}">
-                                            {{ $campany->status == 1 ? 'Active' : ($campany->status == 2 ? 'Disabled' : 'Pending') }}
+                                            {{ $campany->status == 1 ? __('system.common.active') : ($campany->status == 2 ? __('system.common.disabled') : __('system.common.pending')) }}
                                         </a>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div class="flex items-center space-x-2">
                                             <select name="status" class="text-xs border border-gray-300 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500">
-                                                <option value="0" {{ $campany->status == 0 ? 'selected' : '' }}>Pending</option>
-                                                <option value="1" {{ $campany->status == 1 ? 'selected' : '' }}>Active</option>
-                                                <option value="2" {{ $campany->status == 2 ? 'selected' : '' }}>Disabled</option>
+                                                <option value="0" {{ $campany->status == 0 ? 'selected' : '' }}>{{ __('system.common.pending') }}</option>
+                                                <option value="1" {{ $campany->status == 1 ? 'selected' : '' }}>{{ __('system.common.active') }}</option>
+                                                <option value="2" {{ $campany->status == 2 ? 'selected' : '' }}>{{ __('system.common.disabled') }}</option>
                                             </select>
                                             <button type="submit" class="inline-flex items-center px-2.5 py-1 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                                Save
+                                                {{ __('system.common.save') }}
                                             </button>
                                         </div>
                                     </td>
@@ -133,8 +133,8 @@
                                 <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                                 </svg>
-                                <h3 class="mt-2 text-sm font-medium text-gray-900">No companies found</h3>
-                                <p class="mt-1 text-sm text-gray-500">There are currently no registered bus companies.</p>
+                                <h3 class="mt-2 text-sm font-medium text-gray-900">{{ __('system.operators.no_companies') }}</h3>
+                                <p class="mt-1 text-sm text-gray-500">{{ __('system.operators.no_companies_desc') }}</p>
                             </td>
                         </tr>
                     @endisset
@@ -161,15 +161,15 @@ $(document).ready(function() {
         info: true,
         autoWidth: false,
         language: {
-            emptyTable: "No companies found.",
+            emptyTable: @json(__('system.common.dt_empty_companies')),
             search: "_INPUT_",
-            searchPlaceholder: "Search...",
-            lengthMenu: "Show _MENU_ entries",
+            searchPlaceholder: @json(__('system.common.search')),
+            lengthMenu: @json(__('all.dt_show_entries')),
             paginate: {
-                first: "First",
-                last: "Last",
-                next: "Next",
-                previous: "Previous"
+                first: @json(__('all.dt_first')),
+                last: @json(__('all.dt_last')),
+                next: @json(__('all.dt_next')),
+                previous: @json(__('all.dt_previous'))
             }
         },
         columnDefs: [

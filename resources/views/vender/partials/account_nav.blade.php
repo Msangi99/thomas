@@ -52,14 +52,14 @@
 
                 <div class="customer-account-nav__selects">
                     <select class="customer-account-nav__select"
-                            aria-label="Currency"
+                            aria-label="{{ __('all.currency_label') }}"
                             onchange="window.location.href = '{{ route('set.currency', ['currency' => ':currency']) }}'.replace(':currency', this.value)">
                         <option value="Tsh" {{ session('currency') == 'Tsh' ? 'selected' : '' }}>TSH</option>
                         <option value="Usd" {{ session('currency') == 'Usd' ? 'selected' : '' }}>USD</option>
                     </select>
 
                     <select class="customer-account-nav__select"
-                            aria-label="Language"
+                            aria-label="{{ __('all.language') }}"
                             onchange="window.location.href = '{{ route('set.locale', ['lang' => '']) }}' + this.value">
                         <option value="en" {{ app()->getLocale() == 'en' ? 'selected' : '' }}>{{ __('customer/busroot.english') }}</option>
                         <option value="sw" {{ app()->getLocale() == 'sw' ? 'selected' : '' }}>{{ __('customer/busroot.kiswahili') }}</option>

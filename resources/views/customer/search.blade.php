@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 
 <head>
     <meta charset="UTF-8">
@@ -79,20 +79,20 @@
         <div class="flex space-x-2 mb-4 bg-gray-800 rounded-lg p-1">
             <button
                 class="search-tab flex-1 py-2 px-4 rounded-lg bg-indigo-600 text-white font-medium text-sm uppercase"
-                data-tab="one-way">One Way</button>
+                data-tab="one-way">{{ __('all.one_way') }}</button>
             <button class="search-tab flex-1 py-2 px-4 rounded-lg text-gray-400 font-medium text-sm uppercase"
-                data-tab="bus-name">Bus Name</button>
+                data-tab="bus-name">{{ __('all.bus_name') }}</button>
         </div>
 
         <!-- One Way Form -->
         <form action="{{ route('customer.mybooking.search.form') }}" method="GET" class="search-form" id="one-way-form">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                    <label class="block text-gray-300 text-sm mb-1">From</label>
+                    <label class="block text-gray-300 text-sm mb-1">{{ __('all.from') }}</label>
                     <div class="relative">
                         <select name="departure_city" id="departure_city"
                             class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white">
-                            <option value="">Select Departure City</option>
+                            <option value="">{{ __('customer/busroot.select_departure_city') }}</option>
                             @foreach ($cities as $city)
                                 <option value="{{ $city->id }}"
                                     {{ old('departure_city') == $city->id ? 'selected' : '' }}>{{ $city->name }}
@@ -103,11 +103,11 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-gray-300 text-sm mb-1">To</label>
+                    <label class="block text-gray-300 text-sm mb-1">{{ __('all.to') }}</label>
                     <div class="relative">
                         <select name="arrival_city" id="arrival_city"
                             class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white">
-                            <option value="">Select Arrival City</option>
+                            <option value="">{{ __('customer/busroot.select_arrival_city') }}</option>
                             @foreach ($cities as $city)
                                 <option value="{{ $city->id }}"
                                     {{ old('departure_city') == $city->id ? 'selected' : '' }}>{{ $city->name }}
@@ -118,7 +118,7 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-gray-300 text-sm mb-1">Date</label>
+                    <label class="block text-gray-300 text-sm mb-1">{{ __('all.date') }}</label>
                     <div class="relative">
                         <input type="date" name="departure_date" id="departure_date"
                             class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white">
@@ -127,7 +127,7 @@
                 </div>
             </div>
             <button class="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg font-medium">
-                <i class="fas fa-search mr-2"></i> Find Buses
+                <i class="fas fa-search mr-2"></i> {{ __('all.find_buses') }}
             </button>
         </form>
 
@@ -135,17 +135,17 @@
         <form action="{{ route('customer.mybooking.search') }}" method="GET" class="search-form hidden" id="bus-name-form">
             <div class="grid grid-cols-1 gap-4">
                 <div>
-                    <label class="block text-gray-300 text-sm mb-1">Bus Name</label>
+                    <label class="block text-gray-300 text-sm mb-1">{{ __('all.bus_name') }}</label>
                     <div class="relative">
                         <select name="bus_name" id="bus_name"
                             class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white">
-                            <option value="">Select Bus Name</option>
+                            <option value="">{{ __('all.select_bus_name') }}</option>
                             @forelse (App\Models\Campany::all() as $bus)
                                 <option value="{{ $bus->id }}"
                                     {{ request('bus_name') == $bus->name ? 'selected' : '' }}>
-                                    {{ $bus->name ?? 'N/A' }}</option>
+                                    {{ $bus->name ?? __('all.not_available_short') }}</option>
                             @empty
-                                <option>No companies found.</option>
+                                <option>{{ __('all.no_companies_found') }}</option>
                             @endforelse
                         </select>
                         <i class="fas fa-bus absolute right-3 top-3 text-gray-400"></i>
@@ -153,7 +153,7 @@
                 </div>
             </div>
             <button class="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg font-medium">
-                <i class="fas fa-search mr-2"></i> Find Buses
+                <i class="fas fa-search mr-2"></i> {{ __('all.find_buses') }}
             </button>
         </form>
     </div>
@@ -162,7 +162,7 @@
         $(document).ready(function() {
             // Initialize Select2
             $('#departure_city, #arrival_city, #bus_name').select2({
-                placeholder: "Select an option",
+                placeholder: @json(__('all.select_option_placeholder')),
                 allowClear: true,
                 width: '100%'
             });

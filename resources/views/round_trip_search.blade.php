@@ -1,31 +1,35 @@
 @extends('test.layouts.marketing')
 
-@section('title', ($departureCityName ? $departureCityName . ' ➔ ' . $arrivalCityName : 'Round Trip') . ' — ' . __('all.higlink_premium_travel'))
+@section('title', ($departureCityName ? $departureCityName . ' ➔ ' . $arrivalCityName : __('all.round_trip')) . ' — ' . __('all.higlink_premium_travel'))
 
 @section('page_hero')
     @include('test.partials.page_hero', [
-        'eyebrow' => 'Round Trip',
+        'eyebrow' => __('all.round_trip'),
         'title' => $departureCityName && $arrivalCityName
             ? $departureCityName . ' ➔ ' . $arrivalCityName
-            : 'Round Trip Booking',
+            : __('all.round_trip_booking_title'),
         'subtitle' => $departureCityName && $arrivalCityName
-            ? __('all.departure_date') . ': ' . \Carbon\Carbon::parse($departure_date)->format('l, F j, Y') . ' · Select your outbound bus'
-            : 'Book your outbound and return journey in one go.',
+            ? __('all.departure_date') . ': ' . \Carbon\Carbon::parse($departure_date)->format('l, F j, Y') . ' · ' . __('all.round_trip_select_outbound_bus')
+            : __('all.round_trip_journey_subtitle'),
         'image' => 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1200&q=80',
     ])
 @endsection
 
 @section('content')
-    @if (session('info'))
+    @if (session('round_trip_outbound_saved'))
         <section class="page-section pt-6 pb-0">
             <div class="container mx-auto px-4 max-w-4xl">
                 <div class="booking-alert booking-alert--info fade-in" role="status">
                     <i class="fas fa-info-circle mr-2"></i>
-                    @if (session('info') === 'proceed with returning booking')
-                        Outbound leg saved. Search and select your return bus below.
-                    @else
-                        {{ session('info') }}
-                    @endif
+                    {{ __('all.outbound_leg_saved_return') }}
+                </div>
+            </div>
+        </section>
+    @elseif (session('info'))
+        <section class="page-section pt-6 pb-0">
+            <div class="container mx-auto px-4 max-w-4xl">
+                <div class="booking-alert booking-alert--info fade-in" role="status">
+                    <i class="fas fa-info-circle mr-2"></i>{{ session('info') }}
                 </div>
             </div>
         </section>
