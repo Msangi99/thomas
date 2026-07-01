@@ -284,6 +284,20 @@ body {
     box-shadow: 0 0 0 3px rgba(46, 48, 147, 0.12);
 }
 
+.home-search__control select.home-search__input {
+    cursor: pointer;
+    padding-right: 2.25rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236b7280' d='M1.41 0 6 4.58 10.59 0 12 1.41l-6 6-6-6z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px 8px;
+}
+
+.home-search__control select.home-search__input:invalid,
+.home-search__control select.home-search__input option[value=""] {
+    color: #9ca3af;
+}
+
 .home-search__input[type="date"] {
     padding-right: 8px;
 }

@@ -23,8 +23,8 @@
                     <span class="home-search__label-text">{{ __('all.from') }}</span>
                 </label>
                 <div class="home-search__control">
-                    <select name="departure_city" id="departure_city" class="home-search__input">
-                        <option value=""></option>
+                    <select name="departure_city" id="departure_city" class="home-search__input" required>
+                        <option value="" disabled {{ old('departure_city', request('departure_city')) ? '' : 'selected' }}>{{ __('all.from') }}</option>
                         @foreach ($cities as $city)
                             <option value="{{ $city->id }}" {{ (string) old('departure_city', request('departure_city')) === (string) $city->id ? 'selected' : '' }}>{{ $city->name }}</option>
                         @endforeach
@@ -38,8 +38,8 @@
                     <span class="home-search__label-text">{{ __('all.to') }}</span>
                 </label>
                 <div class="home-search__control">
-                    <select name="arrival_city" id="arrival_city" class="home-search__input">
-                        <option value=""></option>
+                    <select name="arrival_city" id="arrival_city" class="home-search__input" required>
+                        <option value="" disabled {{ old('arrival_city', request('arrival_city')) ? '' : 'selected' }}>{{ __('all.to') }}</option>
                         @foreach ($cities as $city)
                             <option value="{{ $city->id }}" {{ (string) old('arrival_city', request('arrival_city')) === (string) $city->id ? 'selected' : '' }}>{{ $city->name }}</option>
                         @endforeach
@@ -88,8 +88,8 @@
                     <span class="home-search__label-text">{{ __('all.from') }}</span>
                 </label>
                 <div class="home-search__control">
-                    <select name="departure_city" id="rt_departure_city" class="home-search__input">
-                        <option value=""></option>
+                    <select name="departure_city" id="rt_departure_city" class="home-search__input" required>
+                        <option value="" disabled {{ (request('departure_city') ?? old('departure_city')) ? '' : 'selected' }}>{{ __('all.from') }}</option>
                         @foreach ($cities as $city)
                             <option value="{{ $city->id }}" {{ (string) (request('departure_city') ?? old('departure_city')) === (string) $city->id ? 'selected' : '' }}>{{ $city->name }}</option>
                         @endforeach
@@ -103,8 +103,8 @@
                     <span class="home-search__label-text">{{ __('all.to') }}</span>
                 </label>
                 <div class="home-search__control">
-                    <select name="arrival_city" id="rt_arrival_city" class="home-search__input">
-                        <option value=""></option>
+                    <select name="arrival_city" id="rt_arrival_city" class="home-search__input" required>
+                        <option value="" disabled {{ (request('arrival_city') ?? old('arrival_city')) ? '' : 'selected' }}>{{ __('all.to') }}</option>
                         @foreach ($cities as $city)
                             <option value="{{ $city->id }}" {{ (string) (request('arrival_city') ?? old('arrival_city')) === (string) $city->id ? 'selected' : '' }}>{{ $city->name }}</option>
                         @endforeach
@@ -153,8 +153,8 @@
                     <span class="home-search__label-text">{{ __('all.bus_name') }}</span>
                 </label>
                 <div class="home-search__control">
-                    <select name="bus_id" id="bus_departure_date" class="home-search__input">
-                        <option value=""></option>
+                    <select name="bus_id" id="bus_departure_date" class="home-search__input" required>
+                        <option value="" disabled {{ $selectedCompanyId ? '' : 'selected' }}>{{ __('all.bus_name') }}</option>
                         @forelse (App\Models\Campany::all() as $bus)
                             <option value="{{ $bus->id }}" {{ (string) $selectedCompanyId === (string) $bus->id ? 'selected' : '' }}>{{ $bus->name ?? 'N/A' }}</option>
                         @empty
@@ -180,11 +180,7 @@
 </div>
 
 @once
-    @push('styles')
-        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    @endpush
     @push('scripts')
-        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-        <script src="{{ asset('js/home-search.js') }}?v=2"></script>
+        <script src="{{ asset('js/home-search.js') }}?v=3"></script>
     @endpush
 @endonce

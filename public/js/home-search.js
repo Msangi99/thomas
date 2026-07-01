@@ -47,45 +47,12 @@
             });
         });
 
-        // Ensure only the active tab's form is visible on load.
         const activeTab = root.querySelector('.home-search__tab--active') || tabs[0];
         if (activeTab) {
             forms.forEach(hideSearchForm);
             const activeForm = root.querySelector('#' + activeTab.dataset.tab + '-form');
             showSearchForm(activeForm);
         }
-    }
-
-    function initHomeSearchSelect2(root) {
-        if (typeof window.jQuery === 'undefined' || !window.jQuery.fn.select2) {
-            return;
-        }
-
-        const $ = window.jQuery;
-        const placeholders = {
-            departure_city: 'Select an option',
-            arrival_city: 'Select an option',
-            bus_class: 'Any',
-            bus_departure_date: 'Select Bus Company',
-            rt_departure_city: 'Select an option',
-            rt_arrival_city: 'Select an option',
-            rt_bus_class: 'Any',
-        };
-
-        root.querySelectorAll('select.home-search__input').forEach(function (el) {
-            const $el = $(el);
-            if ($el.data('select2')) {
-                return;
-            }
-
-            const id = el.id;
-            $el.select2({
-                placeholder: placeholders[id] || 'Select an option',
-                allowClear: id !== 'bus_class' && id !== 'rt_bus_class',
-                width: '100%',
-                dropdownParent: $(root),
-            });
-        });
     }
 
     function initHomeSearch() {
@@ -101,8 +68,6 @@
         root.querySelectorAll('input[type="date"]').forEach(function (input) {
             input.setAttribute('min', today);
         });
-
-        initHomeSearchSelect2(root);
     }
 
     if (document.readyState === 'loading') {
