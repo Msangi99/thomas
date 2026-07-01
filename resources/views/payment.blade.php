@@ -128,7 +128,7 @@
                                                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                                                onchange="toggleExcessLuggageDescription()">
                                         <label for="excess_luggage_root_payment" class="ml-2 block text-sm font-medium text-gray-700">
-                                            Excess luggage (exceeds 60X45X50, 20kg) - TSh. 2,500
+                                            {{ __('all.excess_luggage') }} (60X45X50, 20kg) - {{ $currency }} {{ convert_money(2500) }}
                                         </label>
                                     </div>
                                     <div id="excessLuggageDescriptionField" class="hidden mt-2">
@@ -202,7 +202,7 @@
                                                        onchange="toggleDateInput()"
                                                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
                                                 <label for="Insurance" class="ml-2 block text-sm font-medium text-gray-700">
-                                                    Insurance (TSh. 3,700)
+                                                    {{ __('all.insurance') }} ({{ $currency }} {{ convert_money(3700) }})
                                                 </label>
                                             </div>
                                             
@@ -314,6 +314,9 @@
     function updateTotalPayableRootPayment() {
         const excessLuggageCheckbox = document.getElementById('excess_luggage_root_payment');
         const totalPayableElement = document.getElementById('total_payable_amount_root_payment');
+        const currencyCode = @json($currency);
+        const isUsdDisplay = @json(session('currency') == 'Usd');
+        const usdRate = parseFloat(@json($usdToTzs ?? 2500));
         let currentTotal = parseFloat("{{ ($price ?? 0) + ($fees ?? 0) }}");
         const excessLuggageFee = 2500; // Defined in the controller later
 
@@ -321,7 +324,8 @@
             currentTotal += excessLuggageFee;
         }
 
-        totalPayableElement.innerHTML = "TZS " + formatMoney(currentTotal);
+        const displayTotal = isUsdDisplay && usdRate > 0 ? (currentTotal / usdRate) : currentTotal;
+        totalPayableElement.innerHTML = currencyCode + " " + formatMoney(displayTotal);
     }
 
     function formatMoney(amount) {

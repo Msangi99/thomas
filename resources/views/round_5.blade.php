@@ -313,6 +313,9 @@
         function updateTotalPayableRoundtrip() {
             const excessLuggageCheckbox = document.getElementById('excess_luggage_roundtrip');
             const totalPayableElement = document.getElementById('total_payable_amount_roundtrip');
+            const currencyCode = @json($currency);
+            const isUsdDisplay = @json(session('currency') == 'Usd');
+            const usdRate = parseFloat(@json($usdToTzs ?? 2500));
             let currentTotal = parseFloat("{{ $fees + $price }}");
             const excessLuggageFee = 2500; // Defined in the controller later
 
@@ -320,7 +323,8 @@
                 currentTotal += excessLuggageFee;
             }
 
-            totalPayableElement.innerHTML = "{{ $currency }}. " + formatMoney(currentTotal);
+            const displayTotal = isUsdDisplay && usdRate > 0 ? (currentTotal / usdRate) : currentTotal;
+            totalPayableElement.innerHTML = currencyCode + " " + formatMoney(displayTotal);
         }
 
         function formatMoney(amount) {

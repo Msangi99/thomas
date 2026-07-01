@@ -28,12 +28,20 @@
                 <a href="mailto:support@hisgc.co.tz" class="text-gray-500 hover:text-[var(--home-primary)]">support@hisgc.co.tz</a>
             </div>
 
-            <select class="hidden md:block text-xs border rounded-full px-2 py-1.5 font-medium text-gray-700"
-                    aria-label="{{ __('all.language') }}"
-                    onchange="window.location.href = '{{ route('set.locale', ['lang' => '']) }}' + this.value">
-                <option value="en" {{ app()->getLocale() == 'en' ? 'selected' : '' }}>{{ __('all.english') }}</option>
-                <option value="sw" {{ app()->getLocale() == 'sw' ? 'selected' : '' }}>{{ __('all.kiswahili') }}</option>
-            </select>
+            <div class="hidden md:flex items-center gap-2">
+                <select class="text-xs border rounded-full px-2 py-1.5 font-medium text-gray-700"
+                        aria-label="{{ __('all.currency_label') }}"
+                        onchange="window.location.href = '{{ route('set.currency', ['currency' => ':currency']) }}'.replace(':currency', this.value)">
+                    <option value="Tsh" {{ session('currency', 'Tsh') == 'Tsh' ? 'selected' : '' }}>TSH</option>
+                    <option value="Usd" {{ session('currency') == 'Usd' ? 'selected' : '' }}>USD</option>
+                </select>
+                <select class="text-xs border rounded-full px-2 py-1.5 font-medium text-gray-700"
+                        aria-label="{{ __('all.language') }}"
+                        onchange="window.location.href = '{{ route('set.locale', ['lang' => '']) }}' + this.value">
+                    <option value="en" {{ app()->getLocale() == 'en' ? 'selected' : '' }}>{{ __('all.english') }}</option>
+                    <option value="sw" {{ app()->getLocale() == 'sw' ? 'selected' : '' }}>{{ __('all.kiswahili') }}</option>
+                </select>
+            </div>
 
             @guest
                 <a href="{{ route('login') }}" class="hidden md:block px-4 py-2 text-sm font-semibold border rounded-full transition-colors" style="color:var(--home-primary);border-color:var(--home-primary)">{{ __('all.login') }}</a>
@@ -76,6 +84,14 @@
                         onchange="window.location.href = '{{ route('set.locale', ['lang' => '']) }}' + this.value">
                     <option value="en" {{ app()->getLocale() == 'en' ? 'selected' : '' }}>{{ __('all.english') }}</option>
                     <option value="sw" {{ app()->getLocale() == 'sw' ? 'selected' : '' }}>{{ __('all.kiswahili') }}</option>
+                </select>
+            </div>
+            <div class="px-4 py-2">
+                <label for="mobile-currency" class="block text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">{{ __('all.currency_label') }}</label>
+                <select id="mobile-currency" class="w-full page-input text-sm"
+                        onchange="window.location.href = '{{ route('set.currency', ['currency' => ':currency']) }}'.replace(':currency', this.value)">
+                    <option value="Tsh" {{ session('currency', 'Tsh') == 'Tsh' ? 'selected' : '' }}>TSH</option>
+                    <option value="Usd" {{ session('currency') == 'Usd' ? 'selected' : '' }}>USD</option>
                 </select>
             </div>
             <a href="tel:+255755879793" class="px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-md font-medium flex items-center gap-2">

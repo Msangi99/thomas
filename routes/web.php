@@ -90,18 +90,75 @@ Route::post('/edit', [BookingController::class, 'update'])->name('booking.update
 
 
 
-Route::get('/set-locale', function (Request $request) {
+// Prevent redirecting back to POST-only URLs (e.g. /by_route_search).
+$resolveSafeBackUrl = function (Request $request, array $fallbackMap = []) {
+    $previousUrl = url()->previous();
+    if (!$previousUrl || $previousUrl === url()->current()) {
+        return route('home');
+    }
+
+    $host = parse_url($previousUrl, PHP_URL_HOST);
+    if ($host && $host !== $request->getHost()) {
+        return route('home');
+    }
+
+    $path = (string) (parse_url($previousUrl, PHP_URL_PATH) ?? '');
+    if (isset($fallbackMap[$path])) {
+        return $fallbackMap[$path];
+    }
+
+    $query = parse_url($previousUrl, PHP_URL_QUERY);
+    $uri = $path !== '' ? $path : '/';
+    if ($query) {
+        $uri .= '?' . $query;
+    }
+
+    try {
+        Route::getRoutes()->match(Request::create($uri, 'GET'));
+        return $previousUrl;
+    } catch (\Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException|\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e) {
+        return $fallbackMap[$path] ?? route('home');
+    }
+};
+
+Route::get('/set-locale', function (Request $request) use ($resolveSafeBackUrl) {
     $locale = $request->input('lang', config('app.locale'));
     if (in_array($locale, ['en', 'sw'])) {
         session(['locale' => $locale]);
     }
-    return redirect()->back();
+    $safeBackUrl = $resolveSafeBackUrl($request, [
+        '/by_route_search' => route('by_route'),
+        '/booking/get_form' => route('seates'),
+        '/booking/seates' => route('seates'),
+        '/booking/payment/data' => route('pay'),
+        '/round-trip/booking_form' => route('round.trip.seats'),
+        '/round-trip/seats' => route('round.trip.seats'),
+        '/round-trip/payment/pay' => route('round.trip.checkout'),
+        '/round-trip/get_payment' => route('round.trip.checkout'),
+        '/customer/mybooking/search/form' => route('customer.by_route'),
+        '/vender/route/by_search' => route('vender.route'),
+    ]);
+
+    return redirect($safeBackUrl);
 })->name('set.locale');
 
-Route::get('/currency/{currency}', function (Request $request, $currency) {
+Route::get('/currency/{currency}', function (Request $request, $currency) use ($resolveSafeBackUrl) {
+    $safeBackUrl = $resolveSafeBackUrl($request, [
+        '/by_route_search' => route('by_route'),
+        '/booking/get_form' => route('seates'),
+        '/booking/seates' => route('seates'),
+        '/booking/payment/data' => route('pay'),
+        '/round-trip/booking_form' => route('round.trip.seats'),
+        '/round-trip/seats' => route('round.trip.seats'),
+        '/round-trip/payment/pay' => route('round.trip.checkout'),
+        '/round-trip/get_payment' => route('round.trip.checkout'),
+        '/customer/mybooking/search/form' => route('customer.by_route'),
+        '/vender/route/by_search' => route('vender.route'),
+    ]);
+
     // Validate currency value
     if (!in_array($currency, ['Tsh', 'Usd', 'TSH', 'USD'])) {
-        return redirect()->back()->with('error', 'Invalid currency selected');
+        return redirect($safeBackUrl)->with('error', 'Invalid currency selected');
     }
     
     // Normalize currency value
@@ -114,13 +171,7 @@ Route::get('/currency/{currency}', function (Request $request, $currency) {
     
     Session::put('currency', $normalizedCurrency);
     
-    // Ensure we have a valid back URL, otherwise redirect to home
-    $backUrl = url()->previous();
-    if (!$backUrl || $backUrl === url()->current()) {
-        $backUrl = route('home');
-    }
-    
-    return redirect($backUrl);
+    return redirect($safeBackUrl);
 })->name('set.currency');
 
 

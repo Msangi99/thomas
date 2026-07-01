@@ -59,7 +59,7 @@
                 <div class="detail-divider"></div>
                 <div class="detail-row amount-row">
                     <span class="detail-label">{{ __('all.amount') }}</span>
-                    <span class="detail-value amount">TZS {{ convert_money($amount) }}</span>
+                    <span class="detail-value amount">{{ $currency ?? 'TSH' }} {{ convert_money($amount) }}</span>
                 </div>
                 <div class="detail-divider"></div>
                 <div class="detail-row">

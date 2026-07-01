@@ -285,7 +285,7 @@
                                                                 placeholder="e.g. 0780000000" required>
                                                         </div>
 
-                                                        <p class="text-sm text-gray-600">Total to pay: <strong id="airtel_total_display">TZS {{ convert_money($price + $fees) }}</strong></p>
+                                                        <p class="text-sm text-gray-600">Total to pay: <strong id="airtel_total_display">{{ $currency }} {{ convert_money($price + $fees) }}</strong></p>
 
                                                         <button type="button" id="airtel_pay_btn"
                                                             class="w-full mt-2 py-3 px-6 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white font-medium rounded-lg shadow-md transition-all duration-300 flex items-center justify-center">
