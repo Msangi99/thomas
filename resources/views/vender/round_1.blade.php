@@ -1,7 +1,18 @@
 @extends('vender.app')
 
+@section('title', __('all.round_trip'))
+
+@section('page_hero')
+    @include('test.partials.page_hero', [
+        'eyebrow' => __('all.highlink_isgc'),
+        'title' => __('all.round_trip'),
+        'subtitle' => __('all.search_bus_schedules'),
+    ])
+@endsection
+
 @section('content')
-    <!-- Dependencies -->
+<section class="page-section page-section--alt">
+    <div class="container mx-auto px-4 max-w-5xl">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.tailwindcss.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -394,4 +405,5 @@
             });
         });
     </script>
+</section>
 @endsection

@@ -1,23 +1,34 @@
-@extends('test.ap')
+@extends('test.layouts.marketing')
+
+@section('title', __('customer/busroot.complete_your_booking') . ' — ' . __('all.higlink_premium_travel'))
+
+@section('page_hero')
+    @include('test.partials.page_hero', [
+        'eyebrow' => 'Round Trip · Step 3',
+        'title' => __('customer/busroot.complete_your_booking'),
+        'subtitle' => ($info['from'] ?? '') . ' ➔ ' . ($info['to'] ?? '') . ' · ' . ($info['travel_date'] ?? ''),
+        'image' => 'https://images.unsplash.com/photo-1570125909232-e097323dccff?w=1200&q=80',
+    ])
+@endsection
 
 @section('content')
-    <section class="bg-gradient-to-b from-gray-200 to-gray-600 py-8 px-4 sm:px-6 lg:px-8 rounded-3xl">
-        <div class="max-w-9/12 mx-auto">
-            <div class="grid grid-cols-1 lg:grid-cols-1 gap-8">
-                <!-- Passenger Details Column -->
-                <div class="lg:col-span-3">
-                    <div class="bg-white rounded-xl shadow-lg p-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <h5 class="text-xl font-bold text-gray-900">{{ __('customer/busroot.complete_your_booking') }}
-                            </h5>
-                            <span class="text-sm text-gray-600">
-                                {{ $info['from'] ?? __('customer/busroot.na') }} {{ __('customer/busroot.to') }}
-                                {{ $info['to'] ?? __('customer/busroot.na') }} |
-                                {{ $info['travel_date'] ?? __('customer/busroot.na') }}
-                                {{ $time['start'] ?? __('customer/busroot.na') }}
-                            </span>
-                        </div>
+    <section class="page-section page-section--alt">
+        <div class="container mx-auto px-4 max-w-6xl">
+            @include('test.partials.booking_steps', ['currentStep' => 3])
 
+            <div class="booking-card fade-in">
+                <div class="booking-card__header">
+                    <div class="flex flex-wrap justify-between items-center gap-2 w-full">
+                        <h2 class="booking-card__title">{{ __('customer/busroot.complete_your_booking') }}</h2>
+                        <span class="text-sm text-gray-600">
+                            {{ $info['from'] ?? __('customer/busroot.na') }} {{ __('customer/busroot.to') }}
+                            {{ $info['to'] ?? __('customer/busroot.na') }} |
+                            {{ $info['travel_date'] ?? __('customer/busroot.na') }}
+                            {{ $time['start'] ?? __('customer/busroot.na') }}
+                        </span>
+                    </div>
+                </div>
+                <div class="booking-card__body">
                         <form action="{{ route('round.trip.payment.pay') }}" method="POST">
                             @csrf
                             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -258,7 +269,6 @@
                                 </div>
                             </div>
                         </form>
-                    </div>
                 </div>
             </div>
         </div>

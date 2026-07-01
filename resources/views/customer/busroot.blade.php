@@ -1,11 +1,10 @@
 @extends('customer.app')
 
-@section('content')
-    <!-- Dependencies -->
+@section('title', __('customer_sidebar.Bus Route'))
+
+@push('styles')
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.tailwindcss.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-
     <style>
         /* Light-themed Select2 */
         .select2-container--default .select2-selection--single {
@@ -32,7 +31,7 @@
             color: #1f2937;
         }
         .select2-container--default .select2-results__option--highlighted[aria-selected] {
-            background-color: #4f46e5;
+            background-color: var(--home-primary);
             color: white;
         }
         input[type="date"] {
@@ -129,12 +128,12 @@
             color: #111827 !important;
         }
         #busTable_wrapper .dataTables_paginate .paginate_button.current {
-            background: linear-gradient(to right, #4f46e5, #4338ca);
-            border-color: #4f46e5;
+            background: var(--home-primary);
+            border-color: var(--home-primary);
             color: #fff !important;
         }
         #busTable_wrapper .dataTables_paginate .paginate_button.current:hover {
-            background: linear-gradient(to right, #4338ca, #3730a3);
+            background: var(--home-primary-hover);
             color: #fff !important;
         }
         #busTable_wrapper .dataTables_paginate .paginate_button.disabled,
@@ -160,10 +159,22 @@
             border: 1px solid #e5e7eb;
         }
     </style>
+@endpush
 
-    <div class="container mx-auto px-4 py-8 max-w-5xl">
-        <div class="bg-white shadow-md rounded-lg p-6">
-            <h2 class="text-2xl font-semibold text-gray-800 mb-6">{{ __('all.search_bus_schedules') }}</h2>
+@section('page_hero')
+    @include('test.partials.page_hero', [
+        'eyebrow' => __('all.highlink_isgc'),
+        'title' => __('all.search_buses'),
+        'subtitle' => __('all.search_bus_schedules'),
+    ])
+@endsection
+
+@section('content')
+<section class="page-section page-section--alt">
+    <div class="container mx-auto px-4 max-w-5xl">
+        <div class="customer-panel fade-in">
+            <div class="customer-panel__body">
+            <h2 class="section-title text-left mb-6" style="font-size:1.25rem">{{ __('all.search_bus_schedules') }}</h2>
 
             <!-- Tab Navigation -->
             <div class="flex space-x-2 mb-6 bg-gray-100 rounded-lg p-1">
@@ -332,9 +343,12 @@
                 <button id="closeModalBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">{{ __('all.close') }}</button>
             </div>
         </dialog>
+            </div>
+        </div>
     </div>
+</section>
 
-    <!-- Scripts -->
+@push('scripts')
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
@@ -425,4 +439,5 @@
             });
         });
     </script>
+@endpush
 @endsection

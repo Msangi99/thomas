@@ -176,7 +176,7 @@ Route::get('/', function () {
     }
     
     $todaySchedules = \App\Models\Schedule::whereDate('schedule_date', \Carbon\Carbon::today())
-        ->with(['bus.campany', 'route'])
+        ->with(['bus.campany', 'bus.busname', 'route'])
         ->whereHas('bus', function ($q) {
             $q->whereHas('busname', function ($b) {
                 $b->where('status', 1);
@@ -185,7 +185,16 @@ Route::get('/', function () {
         ->orderBy('start')
         ->limit(4)
         ->get();
-    return view('welcome', compact('todaySchedules'));
+
+    $popularRoutes = \App\Models\route::query()
+        ->select('from', 'to')
+        ->selectRaw('MIN(id) as id, MIN(price) as min_price')
+        ->groupBy('from', 'to')
+        ->orderByDesc(\Illuminate\Support\Facades\DB::raw('COUNT(*)'))
+        ->limit(12)
+        ->get();
+
+    return view('welcome', compact('todaySchedules', 'popularRoutes'));
 })->name('home');
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -193,6 +202,24 @@ Route::get('/session-timeout', [AuthController::class, 'handleSessionTimeout'])-
 
 Route::view('/about', 'about')->name('about');
 Route::view('/contact', 'contact')->name('contact');
+
+Route::get('/routes', function () {
+    return view('routes');
+})->name('routes');
+
+Route::get('/schedules/today', function () {
+    $todaySchedules = \App\Models\Schedule::whereDate('schedule_date', \Carbon\Carbon::today())
+        ->with(['bus.campany', 'bus.busname', 'route'])
+        ->whereHas('bus', function ($q) {
+            $q->whereHas('busname', function ($b) {
+                $b->where('status', 1);
+            });
+        })
+        ->orderBy('start')
+        ->get();
+
+    return view('schedules_today', compact('todaySchedules'));
+})->name('schedules.today');
 
 // Traveler Routes (Accessible to travelers)
 Route::post('/booking/cancel', [CancelController::class, 'cancel'])->name('cancel');
@@ -202,6 +229,9 @@ Route::get('/booking/choose', [BookingController::class, 'choose'])->name('choos
 Route::get('/booking', [BookingController::class, 'booking'])->name('booking');
 Route::post('/booking', [BookingController::class, 'search'])->name('search');
 Route::get('/booking_form/{id}/{from}/{to}', [BookingController::class, 'booking_form'])->name('booking_form');
+Route::get('/booking/inline/{id}/{from}/{to}', [BookingController::class, 'inlineBookingForm'])->name('booking.inline.form');
+Route::post('/booking/inline/prepare', [BookingController::class, 'inlinePreparePayment'])->name('booking.inline.prepare');
+Route::get('/booking/inline/wallet', [BookingController::class, 'inlineWalletLookup'])->name('booking.inline.wallet');
 Route::get('/booking/seates', [BookingController::class, 'seates'])->name('seates');
 Route::post('/booking/get_form', [BookingController::class, 'get_form'])->name('store');
 Route::post('/booking/seates', [BookingController::class, 'get_seats'])->name('get_seats');
@@ -214,7 +244,6 @@ Route::get('/payment/success', [BookingController::class, 'paymentSuccess'])->na
 Route::get('/payment/failed', [BookingController::class, 'paymentFailed'])->name('payment.failed');
 Route::get('/booking-status/{bookingId}', [RedirectController::class, 'showBookingStatus'])->name('booking.status');
 Route::get('/by_route', [BookingController::class, 'by_route'])->name('by_route');
-Route::get('/schedules/today', [BookingController::class, 'schedulesToday'])->name('schedules.today');
 Route::post('/by_route_search', [BookingController::class, 'by_route_search'])->name('by_route_search');
 
 Route::post('/airtel/auth', [AirtelPaymentController::class, 'getAuthToken']);
@@ -245,6 +274,7 @@ Route::post('/refund', [RefundController::class, 'get_booking'])->name('customer
 Route::post('/resaved-tickets/mix/', [ResaveController::class, 'byMix'])->name('resaved.mix');
 Route::post('/resaved-tickets/pdo/', [ResaveController::class, 'byPdo'])->name('resaved.pdo');
 Route::post('/resaved-tickets/clickpesa/', [ResaveController::class, 'byClickPesa'])->name('resaved.clickpesa')->middleware('auth');
+Route::post('/resaved-tickets/cash/', [ResaveController::class, 'byCash'])->name('resaved.cash')->middleware('auth');
 Route::post('/resaved-tickets/test-pay', [ResaveController::class, 'testPayResaved'])->name('resaved.test.pay')->middleware('auth');
 
 
@@ -435,19 +465,46 @@ Route::middleware('auth')->group(function () {
     Route::prefix('vender')->middleware(['role:vender', '2fa', 'vendor.enabled'])->group(function () {
         Route::get('/', [VenderController::class, 'index'])->name('vender.index');
         Route::get('/route', [VenderController::class, 'mybooking_search'])->name('vender.route');
-        Route::get('route/by_search', [VenderController::class, 'by_route_search'])->name('vender.route.by_route_search');
+        Route::match(['get', 'post'], 'route/by_search', [VenderController::class, 'by_route_search'])->name('vender.route.by_route_search');
         Route::get('/route/road', [VenderController::class, 'route'])->name('vender.route.road');
+        Route::get('/campany/id', [RouteController::class, 'bus_name'])->name('vender.busname');
+
+        Route::get('/round-trip', [RoundTripController::class, 'index'])->name('vender.round.trip');
+        Route::get('/round-trip/by-routesearch', [RoundTripController::class, 'by_routesearch'])->name('vender.round.trip.by.routesearch');
+        Route::get('/round-trip/inline/{id}/{from}/{to}', [RoundTripController::class, 'inlineBookingForm'])->name('vender.round.trip.inline.form');
+        Route::post('/round-trip/inline/prepare', [RoundTripController::class, 'inlinePreparePayment'])->name('vender.round.trip.inline.prepare');
+        Route::get('/round-trip/inline/wallet', [RoundTripController::class, 'inlineWalletLookup'])->name('vender.round.trip.inline.wallet');
+        Route::get('/round-trip/{id}/{from}/{to}', [RoundTripController::class, 'booking_form'])->name('vender.round.trip.booking_form');
+        Route::post('/round-trip/booking_form', [RoundTripController::class, 'get_form'])->name('vender.round.trip.booking_form.store');
+        Route::get('/round-trip/seats', [RoundTripController::class, 'seates'])->name('vender.round.trip.seats');
+        Route::post('/round-trip/seats', [RoundTripController::class, 'get_seats'])->name('vender.round.trip.seats.post');
+        Route::get('/round-trip/payment', [RoundTripController::class, 'payment'])->name('vender.round.trip.payment');
+        Route::post('/round-trip/payment/pay', [RoundTripController::class, 'payment_info'])->name('vender.round.trip.payment.pay');
+        Route::get('/round-trip/checkout', [RoundTripController::class, 'checkout'])->name('vender.round.trip.checkout');
+        Route::post('/round-trip/get_payment', [RoundTripController::class, 'get_payment'])->name('vender.round.trip.get_payment');
+        Route::get('/round-trip/payment/success', [RoundTripController::class, 'paymentSuccess'])->name('vender.round.trip.payment.success');
+        Route::get('/round-trip/payment/failed', [RoundTripController::class, 'paymentFailed'])->name('vender.round.trip.payment.failed');
+
+        Route::get('/booking/inline/{id}/{from}/{to}', [BookingController::class, 'inlineBookingForm'])->name('vender.booking.inline.form');
+        Route::post('/booking/inline/prepare', [BookingController::class, 'inlinePreparePayment'])->name('vender.booking.inline.prepare');
+        Route::get('/booking/inline/wallet', [BookingController::class, 'inlineWalletLookup'])->name('vender.booking.inline.wallet');
         Route::get('/booking_form/{id}/{from}/{to}', [VenderController::class, 'booking_form'])->name('vender.booking_form');
         Route::get('/booking/seates', [VenderController::class, 'seates'])->name('seates.vender');
-        Route::post('/booking/get_form', [VenderController::class, 'get_form'])->name('vender.store');
+        Route::post('/booking/get_form', [BookingController::class, 'get_form'])->name('vender.get_form');
+        Route::post('/booking/get_form/legacy', [VenderController::class, 'get_form'])->name('vender.store');
 
-        Route::post('/booking/seates', [VenderController::class, 'get_seats'])->name('vender.get_seats');
+        Route::post('/booking/seates', [BookingController::class, 'get_seats'])->name('vender.get_seats');
         Route::get('/booking/payment/pay', [VenderController::class, 'payment'])->name('vender.pay');
         Route::post('/booking/payment/pay', [VenderController::class, 'payment_info'])->name('vender.payment_store');
         Route::get('/bus/bus_route', [VenderController::class, 'bus_route'])->name('vender.bus_route');
         Route::get('/transaction', [VenderController::class, 'transaction'])->name('vender.transaction');
         Route::post('/transaction_request', [VenderController::class, 'transaction_request'])->name('vender.transaction.request');
         Route::get('/history', [VenderController::class, 'history'])->name('vender.history');
+        Route::get('/resaved-tickets', [VenderController::class, 'resavedTickets'])->name('vender.resaved.tickets');
+        Route::post('/cancel-resaved/{id}', [VenderController::class, 'cancelResavedTicket'])->name('vender.cancel.resaved');
+        Route::get('/pay-resaved/{id}', [VenderController::class, 'payResavedTicket'])->name('vender.pay.resaved');
+        Route::get('/edit-resaved/{id}', [VenderController::class, 'editResavedTicket'])->name('vender.edit.resaved');
+        Route::post('/update-resaved', [VenderController::class, 'updateResavedTicket'])->name('vender.update.resaved');
         Route::post('/print', [VenderController::class, 'print'])->name('vender.print');
         Route::post('/manifest', [VenderController::class, 'manifest'])->name('vender.print.manifest');
 
@@ -485,13 +542,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [CustomerController::class, 'index'])->name('customer.index');
         Route::get('/mybooking', [CustomerController::class, 'mybooking'])->name('customer.mybooking');
         Route::get('/mybooking/search', [CustomerController::class, 'mybooking_search'])->name('customer.mybooking.search');
-        Route::get('/mybooking/search/form', [CustomerController::class, 'by_route_search'])->name('customer.mybooking.search.form');
-        Route::get('/booking_form/{id}/{from}/{to}', [CustomerController::class, 'booking_form'])->name('customer.booking_form');
-        Route::post('get_form', [CustomerController::class, 'get_form'])->name('customer.get_form');
-        Route::get('/seats', [CustomerController::class, 'seates'])->name('customer.seats');
-        Route::post('/get_seats', [CustomerController::class, 'get_seats'])->name('customer.get_seats');
-        Route::get('/booking/payment', [CustomerController::class, 'payment'])->name('customer.pay');
-        Route::post('/booking/payment', [CustomerController::class, 'payment_info'])->name('customer.payment_store');
+        Route::match(['get', 'post'], '/mybooking/search/form', [CustomerController::class, 'by_route_search'])->name('customer.mybooking.search.form');
+        Route::get('/booking/inline/{id}/{from}/{to}', [BookingController::class, 'inlineBookingForm'])->name('customer.booking.inline.form');
+        Route::post('/booking/inline/prepare', [BookingController::class, 'inlinePreparePayment'])->name('customer.booking.inline.prepare');
+        Route::get('/booking/inline/wallet', [BookingController::class, 'inlineWalletLookup'])->name('customer.booking.inline.wallet');
+        Route::get('/booking_form/{id}/{from}/{to}', [BookingController::class, 'booking_form'])->name('customer.booking_form');
+        Route::post('get_form', [BookingController::class, 'get_form'])->name('customer.get_form');
+        Route::get('/seats', [BookingController::class, 'seates'])->name('customer.seats');
+        Route::post('/get_seats', [BookingController::class, 'get_seats'])->name('customer.get_seats');
+        Route::get('/booking/payment', [BookingController::class, 'payment'])->name('customer.pay');
+        Route::post('/booking/payment', [BookingController::class, 'payment_info'])->name('customer.payment_store');
         Route::post('/booking/payment/data', [CustomerController::class, 'get_payment'])->name('customer.verify');
 
         Route::get('/by_route', [CustomerController::class, 'by_route'])->name('customer.by_route');
@@ -505,6 +565,23 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/edit/{id}', [CustomerController::class, 'edit'])->name('customer.edit');
         Route::post('/edit', [CustomerController::class, 'update'])->name('customer.update');
+
+        Route::get('/round-trip', [RoundTripController::class, 'index'])->name('customer.round.trip');
+        Route::get('/round-trip/by-routesearch', [RoundTripController::class, 'by_routesearch'])->name('customer.round.trip.by.routesearch');
+        Route::get('/round-trip/inline/{id}/{from}/{to}', [RoundTripController::class, 'inlineBookingForm'])->name('customer.round.trip.inline.form');
+        Route::post('/round-trip/inline/prepare', [RoundTripController::class, 'inlinePreparePayment'])->name('customer.round.trip.inline.prepare');
+        Route::get('/round-trip/inline/wallet', [RoundTripController::class, 'inlineWalletLookup'])->name('customer.round.trip.inline.wallet');
+        Route::get('/round-trip/{id}/{from}/{to}', [RoundTripController::class, 'booking_form'])->name('customer.round.trip.booking_form');
+        Route::post('/round-trip/booking_form', [RoundTripController::class, 'get_form'])->name('customer.round.trip.booking_form.store');
+        Route::get('/round-trip/seats', [RoundTripController::class, 'seates'])->name('customer.round.trip.seats');
+        Route::post('/round-trip/seats', [RoundTripController::class, 'get_seats'])->name('customer.round.trip.seats.post');
+        Route::get('/round-trip/payment', [RoundTripController::class, 'payment'])->name('customer.round.trip.payment');
+        Route::post('/round-trip/payment/pay', [RoundTripController::class, 'payment_info'])->name('customer.round.trip.payment.pay');
+        Route::get('/round-trip/checkout', [RoundTripController::class, 'checkout'])->name('customer.round.trip.checkout');
+        Route::post('/round-trip/get_payment', [RoundTripController::class, 'get_payment'])->name('customer.round.trip.get_payment');
+        Route::get('/round-trip/payment/success', [RoundTripController::class, 'paymentSuccess'])->name('customer.round.trip.payment.success');
+        Route::get('/round-trip/payment/failed', [RoundTripController::class, 'paymentFailed'])->name('customer.round.trip.payment.failed');
+        Route::get('/campany/id', [RouteController::class, 'bus_name'])->name('customer.busname');
     });
 
     // Special Hire Routes
@@ -565,6 +642,9 @@ Route::get('/round-trip/by-routesearch', [RoundTripController::class, 'by_routes
 Route::get('/round-trip/by-bus', [RoundTripController::class, 'by_bus'])->name('round.trip.by.bus');
 
 Route::get('/round-trip/schedule', [RoundTripController::class, 'route'])->name('round.trip.schedule');
+Route::get('/round-trip/inline/{id}/{from}/{to}', [RoundTripController::class, 'inlineBookingForm'])->name('round.trip.inline.form');
+Route::post('/round-trip/inline/prepare', [RoundTripController::class, 'inlinePreparePayment'])->name('round.trip.inline.prepare');
+Route::get('/round-trip/inline/wallet', [RoundTripController::class, 'inlineWalletLookup'])->name('round.trip.inline.wallet');
 Route::get('/round-trip/{id}/{from}/{to}', [RoundTripController::class, 'booking_form'])->name('round.trip.booking_form');
 Route::post('/round-trip/booking_form', [RoundTripController::class, 'get_form'])->name('round.trip.booking_form.store');
 

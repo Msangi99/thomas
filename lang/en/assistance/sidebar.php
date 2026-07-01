@@ -8,6 +8,7 @@ return [
     'book_ticket' => 'Book Ticket',
     'booking_history' => 'Booking History',
     'booking_history_menu' => 'Booking History Menu',
+    'reserved_tickets' => 'Reserved Tickets',
     'today' => 'Today',
     'week' => 'Week',
     'month' => 'Month',

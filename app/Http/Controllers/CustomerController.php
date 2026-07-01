@@ -6,6 +6,7 @@ use App\Http\Controllers\ClickPesaController;
 use App\Http\Controllers\PDOController;
 use App\Http\Controllers\TigosecureController;
 use App\Http\Controllers\CashController; // Added this line
+use App\Http\Controllers\BookingController;
 use App\Models\Booking;
 use App\Models\bus;
 use App\Models\City;
@@ -26,6 +27,11 @@ class CustomerController extends Controller
     const EXCESS_LUGGAGE_FEE = 2500; // TSh. 2,500 for excess luggage
 
     public function index()
+    {
+        return $this->dashboard();
+    }
+
+    public function dashboard()
     {
         // Fetch booking counts
         $paidCount = Booking::where('user_id', Auth::user()->id)
@@ -72,125 +78,30 @@ class CustomerController extends Controller
             ->latest()
             ->get();
 
-        return view('customer.mybooking', compact('booking'));
+        $ticketRows = group_ticket_list_rows($booking);
+
+        return view('customer.mybooking', compact('booking', 'ticketRows'));
     }
 
     public function mybooking_search(Request $request)
     {
-        $busList = '';
-        if (!$request->query('query')) {
-            $currentTime = Carbon::now()->format('H:i:s');
-            $currentDate = Carbon::now()->format('Y-m-d');
-
-            $busList = Bus::with(['schedules' => function ($query) use ($currentDate) {
-                    $query->where('schedule_date', '>', $currentDate)
-                    ->orwhere('schedule_date', '=', $currentDate);
-            }])
-                ->where('campany_id', $request->bus_id)
-                ->whereHas('schedules', function ($query) use ($currentDate) {
-                    $query->where('schedule_date','>=', $currentDate);
-                       //->where('start', '>=', Carbon::now()->format('H:i:s')); // Optional
-                })
-                ->get();
+        if ($request->filled('departure_city') && $request->filled('arrival_city')) {
+            return $this->by_route_search($request);
         }
-        return view('customer.busroot', compact('busList'));
+
+        return view('customer.by_route');
     }
 
     public function by_route()
     {
-        // Show the same light search form as busroot so one form works from first click (no dark form)
-        $busList = [];
-        return view('customer.busroot', compact('busList'));
+        return view('customer.by_route');
     }
 
     public function by_route_search(Request $request)
     {
-        // Validate the request
-        //return $request->all();
-        $validated = $request->validate([
-            'departure_city' => 'required|exists:cities,id',
-            'arrival_city' => 'required|exists:cities,id|different:departure_city',
-            'departure_date' => 'required|date|after_or_equal:today',
-            'passengers' => 'sometimes|integer|min:1',
-        ]);
+        $request->attributes->set('_booking_view', 'customer.by_route_search');
 
-        // Retrieve city names and normalize departure date
-        $departureCityName = City::findOrFail($validated['departure_city'])->name;
-        $arrivalCityName = City::findOrFail($validated['arrival_city'])->name;
-        $departure_date = Carbon::parse($validated['departure_date'])->toDateString();
-
-        session()->put('departure_date', $departure_date);
-
-        // Query buses with relationships and filter by route
-        $busQuery = Bus::with([
-            'busname' => function ($query) {
-                $query->where('status', 1);
-            },
-            'route.via',
-            'schedule' => function ($query) use ($departureCityName, $arrivalCityName, $departure_date) {
-                $query->where('from', $departureCityName)
-                    ->where('to', $arrivalCityName)
-                    ->where('schedule_date', $departure_date)
-                    ->where(function ($timeQuery) use ($departure_date) {
-                        // If it's today, only show schedules that haven't started yet
-                        if ($departure_date === Carbon::now()->toDateString()) {
-                            $timeQuery->where('start', '>', Carbon::now()->toTimeString());
-                        }
-                    });
-            },
-            'booking' => function ($query) use ($departure_date) {
-                $query->where('travel_date', $departure_date)
-                    ->whereIn('payment_status', ['Paid', 'Reserved', 'resaved']);
-            }
-        ])
-            ->whereHas('busname', function ($query) {
-                $query->where('status', 1);
-            })
-            ->whereHas('schedule', function ($query) use ($departureCityName, $arrivalCityName, $departure_date) {
-                $query->where('from', $departureCityName)
-                    ->where('to', $arrivalCityName)
-                    ->where('schedule_date', $departure_date)
-                    ->where(function ($timeQuery) use ($departure_date) {
-                        // If it's today, only show schedules that haven't started yet
-                        if ($departure_date === Carbon::now()->toDateString()) {
-                            $timeQuery->where('start', '>', Carbon::now()->toTimeString());
-                        }
-                    });
-            });
-
-        // Optional filter by bus_type if provided and not 'any'
-        if ($request->filled('bus_type') && $request->bus_type !== 'any') {
-            $busQuery->where('bus_type', $request->bus_type);
-        }
-
-        $busList = $busQuery
-            ->get()
-            ->map(function ($bus) {
-                // Ensure total_seats is available
-                $total_seats = $bus->total_seats ?? $bus->busname->total_seats ?? 0;
-
-                // Calculate booked seats from pre-loaded bookings
-                $booked_seats = $bus->booking
-                    ->flatMap(function ($booking) {
-                        // Handle comma-separated seats, trim whitespace, and filter valid seats
-                        return array_filter(array_map('trim', explode(',', $booking->seat)));
-                    })
-                    ->unique()
-                    ->count();
-
-                $bus->booked_seats = $booked_seats;
-                $bus->remain_seats = $total_seats - $booked_seats;
-
-                // Ensure remain_seats is not negative
-                $bus->remain_seats = max(0, $bus->remain_seats);
-
-                return $bus;
-            }); // Convert to array to avoid dynamic property warnings
-
-        // Debugging: Uncomment to inspect the data
-        //return response()->json($busList);
-
-        return view('customer.bookingcard', compact('busList', 'departureCityName', 'arrivalCityName', 'departure_date'));
+        return app(BookingController::class)->by_route_search($request);
     }
 
     public function booking_form($id, $from, $to)
@@ -792,7 +703,8 @@ class CustomerController extends Controller
             'age' => $bookingForm['age'],
             'infant_child' => $bookingForm['infant_child'],
             'age_group' => $bookingForm['age_group'],
-            'payment_status' => 'Unpaid',
+            'payment_status' => $isResave ? 'resaved' : 'Unpaid',
+            'resaved_until' => $isResave ? Carbon::now()->addDay() : null,
             'customer_phone' => $bookingForm['customer_number'],
             'customer_name' => $bookingForm['customer_name'],
             'customer_email' => $bookingForm['customer_email'],
@@ -827,6 +739,15 @@ class CustomerController extends Controller
                 'data' => $bookingData,
             ]);
             return redirect()->route('home')->with('error', 'Failed to create booking in test mode');
+        }
+
+        if ($isResave) {
+            session()->forget('booking_form');
+
+            return redirect()->route('customer.mybooking')->with(
+                'success',
+                'Ticket reserved successfully! Please pay within 24 hours. After that, the booking will be cancelled.'
+            );
         }
 
         // Store booking in session for test payment controller
@@ -902,15 +823,29 @@ class CustomerController extends Controller
 
         $booking->update(['payment_status' => 'Cancel']);
 
+        $partner = round_trip_resaved_partner($booking);
+        if ($partner !== null && ($partner->payment_status ?? '') === 'resaved') {
+            $partner->update(['payment_status' => 'Cancel']);
+        }
+
         return redirect()->route('customer.mybooking')->with('success', 'Resaved ticket cancelled successfully.');
     }
 
     public function payResavedTicket($id)
     {
-        $booking = Booking::where('id', $id)
+        $booking = Booking::with(['route_name', 'bus.busname', 'schedule', 'campany'])
+                          ->where('id', $id)
                           ->where('user_id', Auth::id())
                           ->where('payment_status', 'resaved')
                           ->firstOrFail();
+
+        $partner = round_trip_resaved_partner($booking);
+        if ($partner !== null && ($partner->payment_status ?? '') === 'resaved') {
+            $legs = sort_round_trip_resaved_legs([$booking, $partner]);
+            app(RoundTripController::class)->loadResavedRoundTripCheckout($legs[0], $legs[1]);
+
+            return redirect()->round_trip_route('checkout');
+        }
 
         $setting = Setting::first();
         $price = $booking->amount; // Use the amount from the resaved booking

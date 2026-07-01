@@ -1,610 +1,420 @@
 @extends('vender.app')
 
+@section('title', __('assistance/transaction.transactions'))
+
+@php
+    $vb = auth()->user()->VenderBalances;
+    $vendorDualWallet = \Illuminate\Support\Facades\Schema::hasColumn('vender_balances', 'sell_cash_amount');
+    $commissionBalance = optional($vb)->amount ?? 0;
+    $cashBalance = $vendorDualWallet ? ($vb->sell_cash_amount ?? 0) : 0;
+    $txCount = $coll->count();
+    $filters = [
+        'today' => __('assistance/transaction.today'),
+        'week' => __('assistance/transaction.this_week'),
+        'month' => __('assistance/transaction.this_month'),
+        'year' => __('assistance/transaction.this_year'),
+    ];
+@endphp
+
 @section('content')
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- DataTables CSS -->
-    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <!-- DataTables DateTime CSS -->
-    <link href="https://cdn.datatables.net/datetime/1.5.1/css/dataTables.dateTime.min.css" rel="stylesheet">
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <div class="container mx-auto px-4 py-8 max-w-7xl">
-        <h1 class="text-3xl font-bold text-gray-800 text-center mb-8">{{ __('assistance/transaction.transactions') }}</h1>
-
-        <!-- Cards Section: commission + cash wallets always shown; cash amount only when DB column exists -->
-        @php
-            $vb = auth()->user()->VenderBalances;
-            $vendorDualWallet = \Illuminate\Support\Facades\Schema::hasColumn('vender_balances', 'sell_cash_amount');
-        @endphp
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-            <div class="bg-white rounded-xl shadow-lg p-6 transition-all hover:shadow-xl">
-                <h3 class="text-lg font-semibold text-gray-700 text-center">Commission wallet</h3>
-                <p class="text-2xl font-bold text-gray-900 text-center mt-2">{{ $currency }} {{ convert_money(optional($vb)->amount ?? 0) }}</p>
-                <p class="text-xs text-gray-500 text-center mt-2">Commissions from sold bookings; use this balance for payout requests.</p>
-            </div>
-            <div class="bg-white rounded-xl shadow-lg p-6 transition-all hover:shadow-xl">
-                <h3 class="text-lg font-semibold text-gray-700 text-center">Cash wallet</h3>
-                @if($vendorDualWallet && $vb)
-                    <p class="text-2xl font-bold text-gray-900 text-center mt-2">{{ $currency }} {{ convert_money($vb->sell_cash_amount ?? 0) }}</p>
-                    <p class="text-xs text-gray-500 text-center mt-2">Sell-in-cash bookings, deposits, and ticket float.</p>
-                    <div class="mt-4 text-center">
-                        <a href="{{ route('vender.wallet.deposit') }}" class="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Deposit</a>
-                    </div>
-                @else
-                    <p class="text-2xl font-bold text-gray-400 text-center mt-2">—</p>
-                    <p class="text-xs text-gray-500 text-center mt-2">Cash wallet is not active on this server yet (database update required). Your full balance is shown in the commission wallet until then.</p>
-                    @if($vb)
-                        <div class="mt-4 text-center">
-                            <a href="{{ route('vender.wallet.deposit') }}" class="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Deposit</a>
-                        </div>
-                    @endif
-                @endif
-            </div>
-            <div class="bg-white rounded-xl shadow-lg p-6 transition-all hover:shadow-xl">
-                <h3 class="text-lg font-semibold text-gray-700 text-center">{{ __('assistance/transaction.pending') }}</h3>
-                <p class="text-2xl font-bold text-gray-900 text-center mt-2">{{ $currency }} {{ convert_money($pending) }}</p>
-            </div>
-            <div class="bg-white rounded-xl shadow-lg p-6 transition-all hover:shadow-xl">
-                <h3 class="text-lg font-semibold text-gray-700 text-center">{{ __('assistance/transaction.withdrawn') }}</h3>
-                <p class="text-2xl font-bold text-gray-900 text-center mt-2">{{ $currency }} {{ convert_money($accept) }}</p>
-            </div>
+<div class="vendor-dash fade-in">
+    <header class="vendor-dash__header">
+        <div class="vendor-dash__welcome">
+            <p class="vendor-dash__eyebrow">{{ __('all.highlink_isgc') }}</p>
+            <h1 class="vendor-dash__title">{{ __('assistance/transaction.transactions') }}</h1>
+            <p class="vendor-dash__subtitle">{{ __('assistance/sidebar.transactions') }} · {{ $filters[$filter] ?? $filters['today'] }}</p>
         </div>
-
-        @if($vb && $vendorDualWallet)
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h3 class="text-lg font-semibold text-gray-800 mb-3">Move amount between wallets</h3>
-            <p class="text-sm text-gray-600 mb-4">Transfer any amount between your commission wallet and your cash wallet (for example after an upgrade, or to rebalance float).</p>
-            <form method="POST" action="{{ route('vender.wallet.transfer') }}" class="flex flex-wrap items-end gap-3">
-                @csrf
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Direction</label>
-                    <select name="direction" class="border-gray-300 rounded-lg shadow-sm text-sm">
-                        <option value="to_sell_cash">Commission wallet → Cash wallet</option>
-                        <option value="to_commission">Cash wallet → Commission wallet</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Amount (TZS)</label>
-                    <input type="number" name="amount" step="0.01" min="0.01" required class="border-gray-300 rounded-lg shadow-sm text-sm w-36">
-                </div>
-                <button type="submit" class="bg-gray-800 hover:bg-black text-white font-semibold py-2 px-4 rounded-lg text-sm">Transfer</button>
-            </form>
-            @if((float)($vb->sell_cash_amount ?? 0) == 0 && (float)($vb->amount ?? 0) > 0)
-            <div class="mt-6 pt-6 border-t border-gray-200">
-                <p class="text-sm text-gray-600 mb-2">If your balance lived in the old single wallet before cash/commission split, you can move the full commission balance into the cash wallet once.</p>
-                <form method="POST" action="{{ route('vender.wallet.migrateLegacyCash') }}" onsubmit="return confirm('Move your entire commission wallet balance to the cash wallet?');">
-                    @csrf
-                    <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 px-4 rounded-lg text-sm">Move all to cash wallet (one-time)</button>
-                </form>
-            </div>
+        <div class="vendor-dash__actions">
+            @if ($vb)
+                <button type="button" id="openTransactionModal" class="page-btn">
+                    <i class="fas fa-paper-plane"></i> {{ __('assistance/transaction.request_transaction') }}
+                </button>
+            @endif
+            @if ($vb)
+                <a href="{{ route('vender.wallet.deposit') }}" class="page-btn page-btn--outline">
+                    <i class="fas fa-plus"></i> Deposit
+                </a>
             @endif
         </div>
-        @endif
+    </header>
 
-        <!-- Bookings Table -->
-        <div class="bg-white rounded-xl shadow-lg p-6">
-            <h3 class="text-xl font-semibold text-gray-800 text-center mb-4">{{ __('assistance/transaction.transaction_history') }}</h3>
-            <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
-                <div class="flex items-center gap-3 w-full md:w-auto">
-                    <button id="openTransactionModal" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center">
-                        <i class="bi bi-plus-circle mr-2"></i> {{ __('assistance/transaction.request_transaction') }}
-                    </button>
-                    <div class="flex items-center gap-2">
-                        <select id="timeFilter" class="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
-                            <option value="all">{{ __('assistance/transaction.all_time') }}</option>
-                            <option value="day">{{ __('assistance/transaction.today') }}</option>
-                            <option value="week">{{ __('assistance/transaction.this_week') }}</option>
-                            <option value="month">{{ __('assistance/transaction.this_month') }}</option>
-                            <option value="year">{{ __('assistance/transaction.this_year') }}</option>
-                            <option value="custom">{{ __('assistance/transaction.custom_range') }}</option>
-                        </select>
-                        <div id="dateRangeGroup" class="hidden flex items-center gap-2">
-                            <input type="text" class="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500" id="minDate" placeholder="{{ __('assistance/transaction.search_date') }}">
-                            <span class="text-gray-500">{{ __('assistance/transaction.to') }}</span>
-                            <input type="text" class="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500" id="maxDate" placeholder="{{ __('assistance/transaction.search_date') }}">
-                        </div>
-                    </div>
-                </div>
-                <div class="w-full md:w-64">
-                    <input type="text" id="tableSearch" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500" placeholder="{{ __('assistance/transaction.search_all_columns') }}">
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-gray-600">{{ __('assistance/transaction.rows') }}</span>
-                    <select id="rowsPerPage" class="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
-                        <option value="5">5</option>
-                        <option value="10" selected>10</option>
-                        <option value="20">20</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                    </select>
-                </div>
+    <div class="vendor-kpi-grid">
+        <article class="vendor-kpi vendor-kpi--commission">
+            <div class="vendor-kpi__top">
+                <div class="vendor-kpi__icon"><i class="fas fa-wallet"></i></div>
+                <span class="vendor-kpi__badge">{{ __('assistance/transaction.balance') }}</span>
             </div>
+            <p class="vendor-kpi__label">Commission wallet</p>
+            <p class="vendor-kpi__value">{{ convert_money($commissionBalance) }}</p>
+            <p class="vendor-kpi__hint">{{ $currency }} · Payout requests</p>
+        </article>
 
+        <article class="vendor-kpi vendor-kpi--cash">
+            <div class="vendor-kpi__top">
+                <div class="vendor-kpi__icon"><i class="fas fa-money-bill-wave"></i></div>
+                <span class="vendor-kpi__badge">Cash</span>
+            </div>
+            <p class="vendor-kpi__label">Cash wallet</p>
+            <p class="vendor-kpi__value">{{ $vendorDualWallet && $vb ? convert_money($cashBalance) : '—' }}</p>
+            <p class="vendor-kpi__hint">{{ $vendorDualWallet ? 'Sell-in-cash float' : 'Not active on this server' }}</p>
+        </article>
+
+        <article class="vendor-kpi vendor-kpi--pending">
+            <div class="vendor-kpi__top">
+                <div class="vendor-kpi__icon"><i class="fas fa-hourglass-half"></i></div>
+                <span class="vendor-kpi__badge">{{ __('assistance/transaction.pending') }}</span>
+            </div>
+            <p class="vendor-kpi__label">{{ __('assistance/transaction.pending') }}</p>
+            <p class="vendor-kpi__value">{{ convert_money($pending) }}</p>
+            <p class="vendor-kpi__hint">{{ $currency }} awaiting approval</p>
+        </article>
+
+        <article class="vendor-kpi vendor-kpi--withdrawn">
+            <div class="vendor-kpi__top">
+                <div class="vendor-kpi__icon"><i class="fas fa-circle-check"></i></div>
+                <span class="vendor-kpi__badge">{{ __('assistance/transaction.withdrawn') }}</span>
+            </div>
+            <p class="vendor-kpi__label">{{ __('assistance/transaction.withdrawn') }}</p>
+            <p class="vendor-kpi__value">{{ convert_money($accept) }}</p>
+            <p class="vendor-kpi__hint">{{ $currency }} completed payouts</p>
+        </article>
+    </div>
+
+    @if ($vb && $vendorDualWallet)
+    <div class="vendor-wallet-grid">
+        <div class="vendor-wallet-card">
+            <div class="vendor-wallet-card__head">
+                <h3 class="vendor-wallet-card__title">Move amount between wallets</h3>
+                <p class="vendor-wallet-card__sub">Transfer between commission and cash wallets</p>
+            </div>
+            <div class="vendor-wallet-card__body">
+                <form method="POST" action="{{ route('vender.wallet.transfer') }}" class="flex flex-wrap items-end gap-3">
+                    @csrf
+                    <div class="vendor-form-field flex-1 min-w-[10rem]">
+                        <label for="transfer-direction">Direction</label>
+                        <select name="direction" id="transfer-direction" class="page-input text-sm w-full">
+                            <option value="to_sell_cash">Commission → Cash</option>
+                            <option value="to_commission">Cash → Commission</option>
+                        </select>
+                    </div>
+                    <div class="vendor-form-field">
+                        <label for="transfer-amount">Amount (TZS)</label>
+                        <input type="number" name="amount" id="transfer-amount" step="0.01" min="0.01" required class="page-input text-sm w-36">
+                    </div>
+                    <button type="submit" class="page-btn">Transfer</button>
+                </form>
+
+                @if ((float) ($vb->sell_cash_amount ?? 0) == 0 && (float) ($vb->amount ?? 0) > 0)
+                <div class="vendor-legacy-banner">
+                    <p>If your balance lived in the old single wallet before the cash/commission split, you can move the full commission balance into the cash wallet once.</p>
+                    <form method="POST" action="{{ route('vender.wallet.migrateLegacyCash') }}" onsubmit="return confirm('Move your entire commission wallet balance to the cash wallet?');">
+                        @csrf
+                        <button type="submit" class="page-btn page-btn--outline" style="font-size:0.8125rem">Move all to cash wallet (one-time)</button>
+                    </form>
+                </div>
+                @endif
+            </div>
+        </div>
+
+        <div class="vendor-wallet-card">
+            <div class="vendor-wallet-card__head">
+                <h3 class="vendor-wallet-card__title">Wallet actions</h3>
+                <p class="vendor-wallet-card__sub">Manage float and payout requests</p>
+            </div>
+            <div class="vendor-wallet-card__body vendor-wallet-actions">
+                <a href="{{ route('vender.wallet.deposit') }}" class="page-btn">
+                    <i class="fas fa-arrow-down"></i> Deposit to cash wallet
+                </a>
+                <button type="button" class="page-btn page-btn--outline" id="openTransactionModalSide">
+                    <i class="fas fa-paper-plane"></i> {{ __('assistance/transaction.request_transaction') }}
+                </button>
+                <a href="{{ route('vender.index') }}" class="page-btn page-btn--outline">
+                    <i class="fas fa-gauge-high"></i> {{ __('assistance/sidebar.dashboard') }}
+                </a>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <section class="vendor-table-card">
+        <div class="vendor-table-card__head">
+            <div class="vendor-table-card__title-wrap">
+                <h3>{{ __('assistance/transaction.transaction_history') }}</h3>
+                <p>{{ $txCount }} {{ __('vender/busroot.entries') }} · {{ $filters[$filter] ?? $filters['today'] }}</p>
+            </div>
+            <form method="GET">
+                <div class="vendor-filter-pills" role="group">
+                    @foreach ($filters as $key => $label)
+                        <button type="submit" name="filter" value="{{ $key }}"
+                                class="vendor-filter-pill {{ ($filter ?? 'today') === $key ? 'vendor-filter-pill--active' : '' }}">
+                            {{ $label }}
+                        </button>
+                    @endforeach
+                </div>
+            </form>
+        </div>
+
+        <div class="vendor-table-toolbar">
+            <div class="vendor-search-wrap">
+                <i class="fas fa-search"></i>
+                <input type="text" id="txSearch" class="page-input text-sm" placeholder="{{ __('assistance/transaction.search_all_columns') }}">
+            </div>
+            <label class="flex items-center gap-2 text-sm text-gray-600">
+                <select id="txRowsPerPage" class="page-input text-sm py-1 w-auto">
+                    <option value="10" selected>10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                </select>
+            </label>
+        </div>
+
+        @if ($coll->isEmpty())
+            <div class="vendor-table-empty">
+                <i class="fas fa-receipt"></i>
+                <h4>{{ __('assistance/transaction.no_transactions_found') }}</h4>
+                <p>{{ __('assistance/transaction.transaction_history') }}</p>
+                @if ($vb)
+                    <button type="button" class="page-btn" id="openTransactionModalEmpty">{{ __('assistance/transaction.request_transaction') }}</button>
+                @endif
+            </div>
+        @else
             <div class="overflow-x-auto">
-                <table class="w-full table-auto text-left text-gray-700" id="transactionsTable">
-                    <thead class="bg-gray-100">
+                <table class="vendor-dash-table" id="transactionsTable">
+                    <thead>
                         <tr>
-                            <th class="px-4 py-3 font-semibold">{{ __('assistance/transaction.number') }}</th>
-                            <th class="px-4 py-3 font-semibold">{{ __('assistance/transaction.vender') }}</th>
-                            <th class="px-4 py-3 font-semibold">{{ __('assistance/transaction.payment_method') }}</th>
-                            <th class="px-4 py-3 font-semibold">{{ __('assistance/transaction.date') }}</th>
-                            <th class="px-4 py-3 font-semibold">{{ __('assistance/transaction.amount') }}</th>
-                            <th class="px-4 py-3 font-semibold">{{ __('assistance/transaction.reference_no') }}</th>
-                            <th class="px-4 py-3 font-semibold">{{ __('assistance/transaction.status') }}</th>
-                            <th class="px-4 py-3 font-semibold">{{ __('assistance/transaction.action') }}</th>
-                        </tr>
-                        <tr class="bg-gray-50">
-                            <th></th>
-                            <th class="px-4 py-2"><input type="text" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500" data-column="1" placeholder="{{ __('assistance/transaction.search_name') }}"></th>
-                            <th class="px-4 py-2"><input type="text" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500" data-column="2" placeholder="{{ __('assistance/transaction.search_method') }}"></th>
-                            <th class="px-4 py-2"><input type="text" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500" data-column="3" placeholder="{{ __('assistance/transaction.search_date') }}"></th>
-                            <th class="px-4 py-2"><input type="text" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500" data-column="4" placeholder="{{ __('assistance/transaction.search_amount') }}"></th>
-                            <th class="px-4 py-2"><input type="text" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500" data-column="5" placeholder="{{ __('assistance/transaction.search_transaction_id') }}"></th>
-                            <th class="px-4 py-2"><input type="text" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500" data-column="6" placeholder="{{ __('assistance/transaction.search_status') }}"></th>
-                            <th></th>
+                            <th>#</th>
+                            <th>{{ __('assistance/transaction.vender') }}</th>
+                            <th>{{ __('assistance/transaction.payment_method') }}</th>
+                            <th>{{ __('assistance/transaction.date') }}</th>
+                            <th>{{ __('assistance/transaction.amount') }}</th>
+                            <th>{{ __('assistance/transaction.reference_no') }}</th>
+                            <th>{{ __('assistance/transaction.status') }}</th>
+                            <th>{{ __('assistance/transaction.action') }}</th>
                         </tr>
                     </thead>
-                    <tbody id="tableBody">
-                        @if ($coll->count() > 0)
-                            @foreach ($coll as $data)
-                                <tr class="data-row hover:bg-gray-50 transition-colors">
-                                    <td class="px-4 py-3 row-index"></td>
-                                    <td class="px-4 py-3">{{ $data->user->name }}</td>
-                                    <td class="px-4 py-3">{{ $data->payment_method }}</td>
-                                    <td class="px-4 py-3" data-date="{{ $data->created_at->format('Y-m-d') }}">{{ $data->created_at }}</td>
-                                    <td class="px-4 py-3">{{ $data->amount }}</td>
-                                    <td class="px-4 py-3">{{ $data->reference_number ?? __('assistance/transaction.na') }}</td>
-                                    <td class="px-4 py-3">{{ $data->status }}</td>
-                                    <td class="px-4 py-3">
-                                        <form action="{{ route('print.recipt2') }}" method="POST">
-                                            @csrf
-                                            <input type="hidden" name="data" value="{{ $data }}">
-                                            <button type="submit" class="bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600 transition-colors flex items-center">
-                                                <i class="bi bi-receipt mr-2"></i> {{ __('assistance/transaction.print') }}
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        @else
-                            <tr>
-                                <td colspan="8" class="text-center py-4 text-gray-500">{{ __('assistance/transaction.no_transactions_found') }}</td>
+                    <tbody id="txTableBody">
+                        @foreach ($coll as $data)
+                            @php
+                                $statusKey = strtolower($data->status ?? '');
+                                $statusClass = in_array($statusKey, ['completed', 'complete']) ? 'vendor-status--paid'
+                                    : ($statusKey === 'pending' ? 'vendor-status--unpaid' : 'vendor-status--other');
+                            @endphp
+                            <tr class="tx-row" data-date="{{ $data->created_at->format('Y-m-d') }}">
+                                <td class="row-index text-gray-400"></td>
+                                <td class="font-medium">{{ $data->user->name ?? '—' }}</td>
+                                <td><span class="vendor-tx-method">{{ $data->payment_method }}</span></td>
+                                <td>
+                                    <span class="vendor-schedule-date__day">{{ $data->created_at->format('d M Y') }}</span>
+                                    <span class="vendor-schedule-date__sub">{{ $data->created_at->format('h:i A') }}</span>
+                                </td>
+                                <td class="vendor-tx-amount">{{ $currency }} {{ convert_money($data->amount) }}</td>
+                                <td><span class="vendor-tx-ref">{{ $data->reference_number ?? __('assistance/transaction.na') }}</span></td>
+                                <td><span class="vendor-status {{ $statusClass }}">{{ $data->status }}</span></td>
+                                <td>
+                                    <form action="{{ route('print.recipt2') }}" method="POST" class="inline">
+                                        @csrf
+                                        <input type="hidden" name="data" value="{{ $data }}">
+                                        <button type="submit" class="vendor-tx-print">
+                                            <i class="fas fa-print"></i> {{ __('assistance/transaction.print') }}
+                                        </button>
+                                    </form>
+                                </td>
                             </tr>
-                        @endif
+                        @endforeach
                     </tbody>
                 </table>
             </div>
 
-            <div class="mt-6 flex justify-center">
-                <ul class="data-table-pagination flex gap-2" id="paginationControls"></ul>
+            <div class="vendor-table-footer">
+                <p class="vendor-table-footer__info">
+                    {{ __('vender/busroot.showing') }} <span id="txShowingStart">1</span>
+                    {{ __('vender/busroot.to') }} <span id="txShowingEnd">10</span>
+                    {{ __('vender/busroot.of') }} <span id="txTotal">{{ $txCount }}</span>
+                    {{ __('vender/busroot.entries') }}
+                </p>
+                <nav aria-label="Transaction pagination">
+                    <ul class="vendor-pagination" id="txPagination"></ul>
+                </nav>
             </div>
+        @endif
+    </section>
+</div>
+
+@if ($vb)
+<div id="requestTransactionModal" class="vendor-modal" aria-hidden="true">
+    <div class="vendor-modal__dialog" role="dialog" aria-labelledby="txModalTitle">
+        <div class="vendor-modal__head">
+            <h2 class="vendor-modal__title" id="txModalTitle">{{ __('assistance/transaction.request_transaction_title') }}</h2>
+            <button type="button" class="vendor-modal__close" id="closeTransactionModal" aria-label="{{ __('assistance/transaction.close') }}">&times;</button>
         </div>
+        <form id="requestTransactionForm" action="{{ route('vender.transaction.request') }}" method="POST">
+            @csrf
+            <div class="vendor-modal__body">
+                <div class="vendor-form-field">
+                    <label for="amount">{{ __('assistance/transaction.amount_tsh') }}</label>
+                    <input type="number" class="page-input w-full" id="amount" name="amount" step="0.01" min="1"
+                           max="{{ $commissionBalance }}"
+                           placeholder="{{ __('assistance/transaction.max_amount', ['amount' => number_format($commissionBalance, 2, '.', ',')]) }}"
+                           required>
+                    @error('amount')
+                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                    <p class="vendor-form-hint">Available: {{ $currency }} {{ convert_money($commissionBalance) }}</p>
+                </div>
+                <div class="vendor-form-field">
+                    <label for="payment_method">{{ __('assistance/transaction.payment_method') }}</label>
+                    <select class="page-input w-full" id="payment_method" name="payment_method" required>
+                        <option value="" disabled selected>{{ __('assistance/transaction.select_payment_method') }}</option>
+                        <option value="MPesa">MPesa</option>
+                        <option value="AirtelMoney">Airtel-money</option>
+                        <option value="MixxBYYass">Mixx BY Yass</option>
+                        <option value="Halopesa">Halopesa</option>
+                        <option value="bank">Bank</option>
+                    </select>
+                    @error('payment_method')
+                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div class="vendor-form-field" style="margin-bottom:0">
+                    <label for="payment_number">{{ __('assistance/transaction.payment_number') }}</label>
+                    <input type="text" name="payment_number" id="payment_number" class="page-input w-full bg-gray-50"
+                           readonly value="{{ $vb->payment_number ?? __('assistance/transaction.na') }}" required>
+                    @error('payment_number')
+                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+            <div class="vendor-modal__foot">
+                <button type="button" class="page-btn page-btn--outline" id="closeTransactionModalFooter">{{ __('assistance/transaction.close') }}</button>
+                <button type="submit" class="page-btn">{{ __('assistance/transaction.submit_request') }}</button>
+            </div>
+        </form>
     </div>
-
-    <!-- Request Transaction Modal -->
-    <div id="requestTransactionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4">
-            <div class="p-6 border-b border-gray-200 flex justify-between items-center">
-                <h5 class="text-lg font-semibold text-gray-800">{{ __('assistance/transaction.request_transaction_title') }}</h5>
-                <button id="closeTransactionModal" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
-            </div>
-            <div class="p-6">
-                <form id="requestTransactionForm" action="{{ route('vender.transaction.request') }}" method="POST">
-                    @csrf
-                    <div class="mb-4">
-                        <label for="amount" class="block text-sm font-medium text-gray-700">{{ __('assistance/transaction.amount_tsh') }}</label>
-                        <input type="number" class="mt-1 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500" 
-                               placeholder="{{ __('assistance/transaction.max_amount', ['amount' => number_format(auth()->user()->VenderBalances->amount ?? 0, 2, '.', ',')]) }}" 
-                               id="amount" name="amount" step="0.01" min="1" max="{{ auth()->user()->VenderBalances->amount ?? 0 }}" required>
-                        @error('amount')
-                            <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    <div class="mb-4">
-                        <label for="payment_method" class="block text-sm font-medium text-gray-700">{{ __('assistance/transaction.payment_method') }}</label>
-                        <select class="mt-1 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500" id="payment_method" name="payment_method" required>
-                            <option value="" disabled selected>{{ __('assistance/transaction.select_payment_method') }}</option>
-                            <option value="MPesa">MPesa</option>
-                            <option value="AirtelMoney">Airtel-money</option>
-                            <option value="MixxBYYass">Mixx BY Yass</option>
-                            <option value="Halopesa">Halopesa</option>
-                            <option value="bank">Bank</option>
-                        </select>
-                        @error('payment_method')
-                            <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    <div class="mb-4">
-                        <label for="payment_number" class="block text-sm font-medium text-gray-700">{{ __('assistance/transaction.payment_number') }}</label>
-                        <input type="text" name="payment_number" class="mt-1 w-full border border-gray-300 rounded-lg p-2 bg-gray-100" 
-                               readonly value="{{ auth()->user()->VenderBalances->payment_number ?? __('assistance/transaction.na') }}" required>
-                        @error('payment_number')
-                            <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </form>
-            </div>
-            <div class="p-6 border-t border-gray-200 flex justify-end gap-4">
-                <button id="closeTransactionModalFooter" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors">{{ __('assistance/transaction.close') }}</button>
-                <button type="submit" form="requestTransactionForm" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">{{ __('assistance/transaction.submit_request') }}</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- DataTables JS -->
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-    <!-- Moment.js for date handling -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
-    <!-- DataTables DateTime plugin -->
-    <script src="https://cdn.datatables.net/datetime/1.5.1/js/dataTables.dateTime.min.js"></script>
-
-    <script>
-        $(document).ready(function() {
-            // Modal toggle functionality
-            const modal = document.getElementById('requestTransactionModal');
-            const openModalBtn = document.getElementById('openTransactionModal');
-            const closeModalBtn = document.getElementById('closeTransactionModal');
-            const closeModalFooterBtn = document.getElementById('closeTransactionModalFooter');
-
-            // Open modal
-            openModalBtn.addEventListener('click', () => {
-                modal.classList.remove('hidden');
-                modal.querySelector('input#amount').focus();
-            });
-
-            // Close modal
-            function closeModal() {
-                modal.classList.add('hidden');
-                document.getElementById('requestTransactionForm').reset();
-            }
-
-            closeModalBtn.addEventListener('click', closeModal);
-            closeModalFooterBtn.addEventListener('click', closeModal);
-
-            // Close modal on outside click
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    closeModal();
-                }
-            });
-
-            // Close modal on Escape key
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
-                    closeModal();
-                }
-            });
-
-            // Form submission handling with AJAX
-            $('#requestTransactionForm').on('submit', function(e) {
-                e.preventDefault();
-
-                const form = $(this);
-                const submitButton = form.find('button[type="submit"]');
-                submitButton.prop('disabled', true).text('Submitting...');
-
-                $.ajax({
-                    url: form.attr('action'),
-                    method: form.attr('method'),
-                    data: form.serialize(),
-                    success: function(response) {
-                        alert('Transaction request submitted successfully!');
-                        closeModal();
-                        window.location.reload();
-                    },
-                    error: function(xhr) {
-                        let errorMessage = 'An error occurred. Please try again.';
-                        if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            errorMessage = Object.values(xhr.responseJSON.errors).flat().join('<br>');
-                        }
-                        alert(errorMessage);
-                    },
-                    complete: function() {
-                        submitButton.prop('disabled', false).text('Submit Request');
-                    }
-                });
-            });
-
-            // Form validation (client-side)
-            $('#amount').on('input', function() {
-                const maxAmount = parseFloat($(this).attr('max'));
-                const value = parseFloat($(this).val());
-                if (value > maxAmount) {
-                    $(this).val(maxAmount);
-                    alert('Amount cannot exceed available balance.');
-                }
-            });
-
-            // Create date inputs
-            var minDate = new DateTime($('#minDate'), {
-                format: 'DD MMM YYYY'
-            });
-            var maxDate = new DateTime($('#maxDate'), {
-                format: 'DD MMM YYYY'
-            });
-
-            // Initialize variables
-            let currentPage = 1;
-            let rowsPerPage = parseInt($('#rowsPerPage').val());
-            let allRows = $('.data-row');
-            let filteredRows = allRows;
-
-            // Custom date filtering function
-            function dateFilter(row) {
-                let filterValue = $('#timeFilter').val();
-                let dateStr = $(row).find('td[data-date]').data('date');
-                let date = moment(dateStr, 'YYYY-MM-DD');
-
-                if (!date.isValid()) return true; // Skip invalid dates
-
-                let now = moment();
-
-                if (filterValue === 'custom') {
-                    let min = minDate.val();
-                    let max = maxDate.val();
-
-                    if (min && max) {
-                        let minDateMoment = moment(min, 'DD MMM YYYY');
-                        let maxDateMoment = moment(max, 'DD MMM YYYY');
-                        return date.isBetween(minDateMoment, maxDateMoment, null, '[]');
-                    }
-                    return true;
-                }
-
-                switch (filterValue) {
-                    case 'day':
-                        return date.isSame(now, 'day');
-                    case 'week':
-                        return date.isSame(now, 'week');
-                    case 'month':
-                        return date.isSame(now, 'month');
-                    case 'year':
-                        return date.isSame(now, 'year');
-                    case 'all':
-                    default:
-                        return true;
-                }
-            }
-
-            // Initialize the table
-            function initTable() {
-                updateRowIndices();
-                renderTable();
-                renderPagination();
-            }
-
-            // Update row indices (1, 2, 3, etc.)
-            function updateRowIndices() {
-                $('.row-index').each(function(index) {
-                    $(this).text(index + 1);
-                });
-            }
-
-            // Render the current page of rows
-            function renderTable() {
-                allRows.hide();
-                let dateFilteredRows = allRows.filter(function() {
-                    return dateFilter(this);
-                });
-
-                filteredRows = dateFilteredRows.filter(function() {
-                    const row = $(this);
-                    let rowMatches = true;
-
-                    $('.column-search-input').each(function() {
-                        const columnIndex = $(this).data('column');
-                        const searchTerm = $(this).val().toLowerCase();
-
-                        if (searchTerm) {
-                            const cellText = row.find('td').eq(columnIndex).text().toLowerCase();
-                            if (!cellText.includes(searchTerm)) {
-                                rowMatches = false;
-                                return false;
-                            }
-                        }
-                    });
-
-                    const globalSearchTerm = $('#tableSearch').val().toLowerCase();
-                    if (globalSearchTerm) {
-                        let found = false;
-                        row.find('td').each(function() {
-                            const cellText = $(this).text().toLowerCase();
-                            if (cellText.includes(globalSearchTerm)) {
-                                found = true;
-                                return false;
-                            }
-                        });
-                        if (!found) rowMatches = false;
-                    }
-
-                    return rowMatches;
-                });
-
-                const startIndex = (currentPage - 1) * rowsPerPage;
-                const endIndex = startIndex + rowsPerPage;
-                filteredRows.slice(startIndex, endIndex).show();
-                updateRowIndices();
-                highlightSearchTerms();
-            }
-
-            // Highlight search terms in the table
-            function highlightSearchTerms() {
-                $('span.highlight').each(function() {
-                    $(this).replaceWith($(this).text());
-                });
-
-                const globalSearchTerm = $('#tableSearch').val().toLowerCase();
-                if (globalSearchTerm) {
-                    filteredRows.find('td').each(function() {
-                        const cellText = $(this).text().toLowerCase();
-                        if (cellText.includes(globalSearchTerm)) {
-                            const regex = new RegExp(globalSearchTerm, 'gi');
-                            $(this).html($(this).text().replace(regex,
-                                match => `<span class="bg-yellow-200">${match}</span>`));
-                        }
-                    });
-                }
-
-                $('.column-search-input').each(function() {
-                    const columnIndex = $(this).data('column');
-                    const searchTerm = $(this).val().toLowerCase();
-
-                    if (searchTerm) {
-                        filteredRows.find('td').filter(function() {
-                            return $(this).index() === columnIndex;
-                        }).each(function() {
-                            const cellText = $(this).text().toLowerCase();
-                            if (cellText.includes(searchTerm)) {
-                                const regex = new RegExp(searchTerm, 'gi');
-                                $(this).html($(this).text().replace(regex,
-                                    match => `<span class="bg-yellow-200">${match}</span>`));
-                            }
-                        });
-                    }
-                });
-            }
-
-            // Render pagination controls
-            function renderPagination() {
-                $('#paginationControls').empty();
-                const pageCount = Math.ceil(filteredRows.length / rowsPerPage);
-
-                if (pageCount <= 1) return;
-
-                const prevLi = $('<li>').addClass(currentPage === 1 ? 'opacity-50 cursor-not-allowed' : '')
-                    .html('<a class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-100">«</a>')
-                    .click(function() {
-                        if (currentPage > 1) {
-                            currentPage--;
-                            renderTable();
-                            renderPagination();
-                        }
-                    });
-                $('#paginationControls').append(prevLi);
-
-                const maxVisiblePages = 5;
-                let startPage, endPage;
-
-                if (pageCount <= maxVisiblePages) {
-                    startPage = 1;
-                    endPage = pageCount;
-                } else {
-                    const maxPagesBeforeCurrent = Math.floor(maxVisiblePages / 2);
-                    const maxPagesAfterCurrent = Math.ceil(maxVisiblePages / 2) - 1;
-
-                    if (currentPage <= maxPagesBeforeCurrent) {
-                        startPage = 1;
-                        endPage = maxVisiblePages;
-                    } else if (currentPage + maxPagesAfterCurrent >= pageCount) {
-                        startPage = pageCount - maxVisiblePages + 1;
-                        endPage = pageCount;
-                    } else {
-                        startPage = currentPage - maxPagesBeforeCurrent;
-                        endPage = currentPage + maxPagesAfterCurrent;
-                    }
-                }
-
-                if (startPage > 1) {
-                    const firstLi = $('<li>').html('<a class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-100">1</a>')
-                        .click(function() {
-                            currentPage = 1;
-                            renderTable();
-                            renderPagination();
-                        });
-                    $('#paginationControls').append(firstLi);
-
-                    if (startPage > 2) {
-                        const ellipsisLi = $('<li>').addClass('opacity-50 cursor-not-allowed').html('<a class="px-3 py-1">...</a>');
-                        $('#paginationControls').append(ellipsisLi);
-                    }
-                }
-
-                for (let i = startPage; i <= endPage; i++) {
-                    const pageLi = $('<li>').addClass(i === currentPage ? 'bg-blue-500 text-white' : '')
-                        .html(`<a class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-100">${i}</a>`)
-                        .click(function() {
-                            currentPage = i;
-                            renderTable();
-                            renderPagination();
-                        });
-                    $('#paginationControls').append(pageLi);
-                }
-
-                if (endPage < pageCount) {
-                    if (endPage < pageCount - 1) {
-                        const ellipsisLi = $('<li>').addClass('opacity-50 cursor-not-allowed').html('<a class="px-3 py-1">...</a>');
-                        $('#paginationControls').append(ellipsisLi);
-                    }
-
-                    const lastLi = $('<li>').html('<a class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-100">${pageCount}</a>')
-                        .click(function() {
-                            currentPage = pageCount;
-                            renderTable();
-                            renderPagination();
-                        });
-                    $('#paginationControls').append(lastLi);
-                }
-
-                const nextLi = $('<li>').addClass(currentPage === pageCount ? 'opacity-50 cursor-not-allowed' : '')
-                    .html('<a class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-100">»</a>')
-                    .click(function() {
-                        if (currentPage < pageCount) {
-                            currentPage++;
-                            renderTable();
-                            renderPagination();
-                        }
-                    });
-                $('#paginationControls').append(nextLi);
-            }
-
-            // Global search functionality
-            $('#tableSearch').on('keyup', function() {
-                currentPage = 1;
-                renderTable();
-                renderPagination();
-            });
-
-            // Column-specific search functionality
-            $('.column-search-input').on('keyup', function() {
-                currentPage = 1;
-                renderTable();
-                renderPagination();
-            });
-
-            // Rows per page change
-            $('#rowsPerPage').on('change', function() {
-                rowsPerPage = parseInt($(this).val());
-                currentPage = 1;
-                renderTable();
-                renderPagination();
-            });
-
-            // Time filter change
-            $('#timeFilter').on('change', function() {
-                if ($(this).val() === 'custom') {
-                    $('#dateRangeGroup').show();
-                } else {
-                    $('#dateRangeGroup').hide();
-                    currentPage = 1;
-                    renderTable();
-                    renderPagination();
-                }
-            });
-
-            // Date range change
-            $('#minDate, #maxDate').on('change', function() {
-                if ($('#timeFilter').val() === 'custom') {
-                    currentPage = 1;
-                    renderTable();
-                    renderPagination();
-                }
-            });
-
-            // Initialize the table
-            initTable();
-        });
-    </script>
+</div>
+@endif
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('requestTransactionModal');
+    const openIds = ['openTransactionModal', 'openTransactionModalSide', 'openTransactionModalEmpty'];
+
+    function openModal() {
+        if (!modal) return;
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+        document.getElementById('amount')?.focus();
+    }
+
+    function closeModal() {
+        if (!modal) return;
+        modal.classList.remove('is-open');
+        modal.setAttribute('aria-hidden', 'true');
+        document.getElementById('requestTransactionForm')?.reset();
+    }
+
+    openIds.forEach(id => {
+        document.getElementById(id)?.addEventListener('click', openModal);
+    });
+
+    document.getElementById('closeTransactionModal')?.addEventListener('click', closeModal);
+    document.getElementById('closeTransactionModalFooter')?.addEventListener('click', closeModal);
+
+    modal?.addEventListener('click', e => {
+        if (e.target === modal) closeModal();
+    });
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeModal();
+    });
+
+    @if ($errors->has('amount') || $errors->has('payment_method') || $errors->has('payment_number'))
+        openModal();
+    @endif
+
+    const rows = Array.from(document.querySelectorAll('.tx-row'));
+    if (!rows.length) return;
+
+    const searchInput = document.getElementById('txSearch');
+    const rowsPerPageSelect = document.getElementById('txRowsPerPage');
+    const paginationEl = document.getElementById('txPagination');
+    const showingStart = document.getElementById('txShowingStart');
+    const showingEnd = document.getElementById('txShowingEnd');
+    const totalEl = document.getElementById('txTotal');
+
+    let currentPage = 1;
+    let rowsPerPage = parseInt(rowsPerPageSelect.value, 10);
+    let filteredRows = rows.slice();
+
+    function renderRows() {
+        rows.forEach(r => { r.style.display = 'none'; });
+        const start = (currentPage - 1) * rowsPerPage;
+        filteredRows.slice(start, start + rowsPerPage).forEach((row, i) => {
+            row.style.display = '';
+            row.querySelector('.row-index').textContent = start + i + 1;
+        });
+    }
+
+    function renderPagination() {
+        paginationEl.innerHTML = '';
+        const pageCount = Math.max(1, Math.ceil(filteredRows.length / rowsPerPage));
+
+        const prev = document.createElement('li');
+        prev.innerHTML = '<a href="#">«</a>';
+        if (currentPage === 1) prev.className = 'page-link-disabled';
+        prev.addEventListener('click', e => { e.preventDefault(); if (currentPage > 1) { currentPage--; update(); } });
+        paginationEl.appendChild(prev);
+
+        for (let i = 1; i <= pageCount; i++) {
+            const li = document.createElement('li');
+            li.className = i === currentPage ? 'page-link-active' : '';
+            li.innerHTML = `<a href="#">${i}</a>`;
+            li.addEventListener('click', e => { e.preventDefault(); currentPage = i; update(); });
+            paginationEl.appendChild(li);
+        }
+
+        const next = document.createElement('li');
+        next.innerHTML = '<a href="#">»</a>';
+        if (currentPage === pageCount) next.className = 'page-link-disabled';
+        next.addEventListener('click', e => { e.preventDefault(); if (currentPage < pageCount) { currentPage++; update(); } });
+        paginationEl.appendChild(next);
+    }
+
+    function updateFooter() {
+        const total = filteredRows.length;
+        showingStart.textContent = total === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1;
+        showingEnd.textContent = Math.min(currentPage * rowsPerPage, total);
+        totalEl.textContent = total;
+    }
+
+    function update() {
+        renderRows();
+        renderPagination();
+        updateFooter();
+    }
+
+    searchInput?.addEventListener('input', function () {
+        const term = this.value.toLowerCase().trim();
+        filteredRows = rows.filter(row => row.textContent.toLowerCase().includes(term));
+        currentPage = 1;
+        update();
+    });
+
+    rowsPerPageSelect?.addEventListener('change', function () {
+        rowsPerPage = parseInt(this.value, 10);
+        currentPage = 1;
+        update();
+    });
+
+    const amountInput = document.getElementById('amount');
+    amountInput?.addEventListener('input', function () {
+        const max = parseFloat(this.getAttribute('max'));
+        const val = parseFloat(this.value);
+        if (val > max) this.value = max;
+    });
+
+    update();
+});
+</script>
+@endpush

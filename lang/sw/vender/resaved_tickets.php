@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'title' => 'Tiketi Zilizohifadhiwa',
     'subtitle' => 'Tiketi zilizohifadhiwa (bila malipo bado) za kampuni yako.',
     'no_tickets' => 'Hakuna tiketi zilizohifadhiwa za kampuni yako.',
     'booking_code' => 'Msimbo wa Uhifadhi',
@@ -15,4 +16,7 @@ return [
     'actions' => 'Vitendo',
     'view' => 'Ona',
     'resaved' => 'Ilihifadhiwa',
+    'cancelled_success' => 'Tiketi iliyohifadhiwa imeghairiwa kwa mafanikio.',
+    'updated_success' => 'Tiketi iliyohifadhiwa imesasishwa kwa mafanikio.',
+    'cancel_confirm' => 'Una uhakika unataka kughairi tiketi hii iliyohifadhiwa?',
 ];

@@ -1,23 +1,25 @@
-@extends('test.ap')
+@extends('test.layouts.marketing')
+
+@section('title', __('customer/busroot.select_your_seats') . ' — ' . __('all.higlink_premium_travel'))
+
+@section('page_hero')
+    @include('test.partials.page_hero', [
+        'eyebrow' => 'Round Trip · Step 2',
+        'title' => __('customer/busroot.select_your_seats'),
+        'subtitle' => ($car->bus_model ?? $car->busname->name ?? 'Bus') . ' · ' . convert_money($price) . ' ' . $currency . ' ' . __('customer/busroot.per_seat'),
+        'image' => 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1200&q=80',
+    ])
+@endsection
 
 @section('content')
-<section class="bg-gradient-to-b from-gray-200 to-gray-600 py-8 px-4 sm:px-6 lg:px-8 rounded-3xl">
-    <div class="max-w-6xl mx-auto">
-        <div class="text-center mb-8">
-            <h2 class="text-3xl font-bold text-gray-900">
-                <i class="fas fa-chair text-blue-600 mr-2"></i> {{ __('customer/busroot.select_your_seats') }}
-            </h2>
-            <p class="text-lg text-gray-600 mt-2">
-                {{ ($car->bus_model ?? $car->busname->name ?? 'Bus') . ' -' }}
-                <span class="font-bold text-blue-600">{{ convert_money($price) }} {{ $currency }}</span>
-                {{ __('customer/busroot.per_seat') }}
-            </p>
-        </div>
+<section class="page-section page-section--alt">
+    <div class="container mx-auto px-4 max-w-6xl">
+        @include('test.partials.booking_steps', ['currentStep' => 2])
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Seat Layout Column -->
             <div class="lg:col-span-2">
-                <div class="bg-white w-4/6 rounded-xl shadow-lg p-6">
+                <div class="booking-seat-panel fade-in">
                     <form id="seatSelectionForm" action="{{ route('round.trip.seats.post') }}" method="POST">
                         @csrf
                         <input type="hidden" name="selected_seats" id="hiddenSelectedSeats" value="">

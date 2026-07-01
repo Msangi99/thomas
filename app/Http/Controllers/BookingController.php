@@ -21,10 +21,12 @@ use App\Models\route;
 use App\Models\Schedule;
 use App\Models\Setting;
 use App\Models\SystemBalance;
+use App\Models\TempWallet;
 use App\Models\User;
 use App\Models\VenderBalance;
 use App\Services\BookingSettlementService;
 use App\Services\FareFormulaService;
+use App\Services\RouteDistanceService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Exception;
@@ -34,58 +36,129 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Validator;
 use Milon\Barcode\DNS2D;
 
 class BookingController extends Controller
 {
     public function booking_info(Request $request)
     {
+        $request->validate([
+            'data' => 'required|string|min:3',
+        ]);
+
         $data = trim((string) $request->data);
 
-        // Check if this is an email address
         if (filter_var($data, FILTER_VALIDATE_EMAIL)) {
-            // Check if email exists in bookings
-            $bookingExists = Booking::where('customer_email', $data)->exists();
+            $email = strtolower($data);
+            $bookingExists = Booking::whereRaw('LOWER(customer_email) = ?', [$email])->exists();
 
             if ($bookingExists) {
-                // Generate verification code (we'll store it in session since user might not have account)
                 $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
                 $expiresAt = now()->addMinutes(15);
 
-                // Store verification data in session
-                $request->session()->put('booking_verification_email', $data);
+                $request->session()->put('booking_verification_email', $email);
                 $request->session()->put('booking_verification_code', $verificationCode);
                 $request->session()->put('booking_verification_expires_at', $expiresAt);
 
-                $tempUser = (object) ['email' => $data, 'name' => 'Customer'];
+                $tempUser = (object) ['email' => $email, 'name' => 'Customer'];
                 $verificationCodeForEmail = $verificationCode;
-                dispatch(function () use ($data, $tempUser, $verificationCodeForEmail) {
+                dispatch(function () use ($email, $tempUser, $verificationCodeForEmail) {
                     try {
-                        Mail::to($data)->send(new \App\Mail\EmailVerification($tempUser, $verificationCodeForEmail));
+                        Mail::to($email)->send(new \App\Mail\EmailVerification($tempUser, $verificationCodeForEmail));
                     } catch (\Exception $e) {
                         Log::error('Failed to send verification email: ' . $e->getMessage());
                     }
                 })->afterResponse();
 
                 return redirect()->route('booking.verification.show')
-                    ->with('email', $data)
-                    ->with('status', 'Please verify your email address to view your bookings. A verification code has been sent to your email.');
-            } else {
-                return back()->withErrors(['data' => 'No bookings found for this email address.'])->withInput();
+                    ->with('email', $email)
+                    ->with('status', __('all.booking_verification_sent'));
             }
-        } else {
-            // For phone numbers, show bookings directly (no verification required)
-            $phoneCanonical = normalize_tanzania_phone_to_canonical($data);
-            $phoneVariants = $phoneCanonical !== null
-                ? tanzania_phone_booking_lookup_variants($phoneCanonical)
-                : [$data];
 
-            $bookings = Booking::with(['campany', 'route_name', 'user', 'bus.route', 'vender', 'campany.busOwnerAccount'])
-                ->whereIn('customer_phone', $phoneVariants)
-                ->get();
-
-            return view('booking_info', compact('bookings'));
+            return redirect()->route('info')
+                ->withErrors(['data' => __('all.no_bookings_found_for_contact')])
+                ->withInput();
         }
+
+        $bookings = $this->findGuestBookingsByPhone($data);
+
+        if ($bookings->isEmpty()) {
+            return redirect()->route('info')
+                ->withErrors(['data' => __('all.no_bookings_found_for_contact')])
+                ->withInput();
+        }
+
+        return view('booking_info', [
+            'bookings' => $bookings,
+            'searchQuery' => $data,
+        ]);
+    }
+
+    /**
+     * Find guest bookings by phone using canonical TZ formats and common DB variants.
+     */
+    private function findGuestBookingsByPhone(string $input)
+    {
+        $variants = [];
+        $digits = preg_replace('/\D/', '', $input);
+
+        $canonical = normalize_tanzania_phone_to_canonical($input);
+        if ($canonical !== null) {
+            $variants = array_merge($variants, tanzania_phone_booking_lookup_variants($canonical));
+        }
+
+        $legacy = normalize_tanzania_phone_for_booking($input);
+        if ($legacy !== '') {
+            $variants[] = $legacy;
+            $legacyCanonical = normalize_tanzania_phone_to_canonical($legacy);
+            if ($legacyCanonical !== null) {
+                $variants = array_merge($variants, tanzania_phone_booking_lookup_variants($legacyCanonical));
+            }
+        }
+
+        if ($digits !== '') {
+            $variants[] = $digits;
+            $variants[] = ltrim($input, '+');
+        }
+
+        $variants = array_values(array_unique(array_filter($variants)));
+
+        $relations = ['campany', 'route_name', 'user', 'bus.route', 'vender', 'campany.busOwnerAccount', 'schedule'];
+
+        $bookings = Booking::with($relations)
+            ->whereIn('customer_phone', $variants)
+            ->orderByDesc('travel_date')
+            ->orderByDesc('id')
+            ->get();
+
+        if ($bookings->isNotEmpty()) {
+            return $bookings;
+        }
+
+        if ($canonical !== null && strlen($canonical) >= 12) {
+            $subscriber = substr($canonical, -9);
+
+            return Booking::with($relations)
+                ->where('customer_phone', 'like', '%' . $subscriber)
+                ->orderByDesc('travel_date')
+                ->orderByDesc('id')
+                ->get();
+        }
+
+        return collect();
+    }
+
+    /**
+     * Load bookings for a verified guest email.
+     */
+    private function findGuestBookingsByEmail(string $email)
+    {
+        return Booking::with(['campany', 'route_name', 'user', 'bus.route', 'vender', 'campany.busOwnerAccount', 'schedule'])
+            ->whereRaw('LOWER(customer_email) = ?', [strtolower($email)])
+            ->orderByDesc('travel_date')
+            ->orderByDesc('id')
+            ->get();
     }
 
     /**
@@ -127,12 +200,17 @@ class BookingController extends Controller
         $request->session()->forget(['booking_verification_email', 'booking_verification_code', 'booking_verification_expires_at']);
 
         // Get bookings for the verified email
-        $bookings = Booking::with(['campany', 'route_name', 'user', 'bus.route', 'vender', 'campany.busOwnerAccount'])
-            ->where('customer_email', $email)
-            ->get();
+        $bookings = $this->findGuestBookingsByEmail($email);
 
-        return view('booking_info', compact('bookings'))
-            ->with('success', 'Email verified successfully. Here are your bookings.');
+        if ($bookings->isEmpty()) {
+            return redirect()->route('info')
+                ->withErrors(['data' => __('all.no_bookings_found_for_contact')]);
+        }
+
+        return view('booking_info', [
+            'bookings' => $bookings,
+            'searchQuery' => $email,
+        ])->with('success', __('all.booking_email_verified'));
     }
 
     /**
@@ -195,148 +273,165 @@ class BookingController extends Controller
         //return $bus;
     }
 
-    public function booking_form($id, $from, $to)
+    public function booking_form(Request $request, $id, $from, $to)
     {
-        $car = Bus::with([
-            'busname',
-            'route',
-            'schedule' => function ($query) use ($from, $to) {
-                $query->where('from', $from)->where('to', $to);
-            },
-            'route.points'
-        ])->find($id);
+        $car = $this->loadBookingFormBus($request, $id, $from, $to);
 
-        if ($car === null || $car->route === null || $car->schedule === null) {
+        if ($car === null) {
             return redirect()->route('booking')->with(
                 'error',
                 'This trip is not available. Please run a new search and try again.'
             );
         }
 
-        $time = [
+        return view('booking_form', compact('car'));
+    }
+
+    public function inlineBookingForm(Request $request, $id, $from, $to)
+    {
+        $car = $this->loadBookingFormBus($request, $id, $from, $to);
+
+        if ($car === null) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'This trip is not available. Please try another bus.',
+            ], 404);
+        }
+
+        $inlineUid = 'ib_' . $car->id . '_' . substr(md5($from . $to . session('departure_date')), 0, 8);
+
+        return view('test.partials.booking_form_inline', compact('car', 'inlineUid'));
+    }
+
+    private function loadBookingFormBus(Request $request, $id, $from, $to)
+    {
+        if ($request->filled('departure_date')) {
+            session()->put('departure_date', Carbon::parse($request->departure_date)->toDateString());
+        }
+
+        $car = bus::with([
+            'busname',
+            'route',
+            'schedule' => function ($query) use ($from, $to) {
+                $query->where('from', $from)->where('to', $to);
+                if ($date = session('departure_date')) {
+                    $query->where('schedule_date', $date);
+                }
+            },
+            'route.points',
+        ])->find($id);
+
+        if ($car === null || $car->route === null || $car->schedule === null) {
+            return null;
+        }
+
+        session()->put('time', [
             'start' => $car->schedule->start ?? $car->route->route_start,
-            'end'   => $car->schedule->end ?? $car->route->route_end,
-        ];
-
-        session()->put('time', $time);
-
-        // Initialize a filtered points collection
-        $filteredPoints = collect();
-
-        //$filteredPoints = $car->route->points;
+            'end' => $car->schedule->end ?? $car->route->route_end,
+        ]);
 
         if ($car->route->from == $car->schedule->from) {
-            $filteredPoints = $car->route->points->filter(function ($point) {
-                return $point->state === 'no';
-            });
+            $car->filtered_points = $car->route->points->filter(fn ($point) => $point->state === 'no');
         } else {
-            $filteredPoints = $car->route->points->filter(function ($point) {
-                return $point->state === 'yes';
-            });
+            $car->filtered_points = $car->route->points->filter(fn ($point) => $point->state === 'yes');
         }
 
-        // Add filtered points as a new attribute to the car object
-        $car->filtered_points = $filteredPoints;
-
-        return view('booking_form', compact('car'));
-        //return $car;
+        return $car;
     }
 
-    public function get_form(Request $request)
+    private function isInlineBookingRequest(Request $request): bool
     {
-        //return $request->all();
-        if ($request->route_distance < 1) {
-            return back()->with('error', 'Calculate distance before continue');
-        }
-        $route = Route::find($request->route_id);
-        $schedule = Schedule::find($request->schedule_id);
-        $bus_info = [
-            'bus_id' => $request->bus_id,
-            'from' => $schedule ? $schedule->from : $route->from,
-            'to' => $schedule ? $schedule->to : $route->to,
-            'route_id' => $request->route_id,
-            'pickup_point' => $request->pickup_point ?? ($schedule ? $schedule->from : $route->from),
-            'dropping_point' => $request->dropping_point ?? ($schedule ? $schedule->to : $route->to),
-            'travel_date' => session()->get('departure_date') ?? now()->format('Y-m-d'),
-            'dropping_point_amount' => $request->dropping_point_amount ?? ($route ? $route->price : 0),
-            'route_distance' => $request->route_distance ?? 0,
-            'schedule_id' => $request->schedule_id,
-        ];
-
-        // Store in session
-        session()->put('booking_form', $bus_info);
-        //return session()->get('booking_form');
-        // Redirect to seats route
-        return redirect()->route('seates');
-        //return session()->get('booking_form');
+        return $request->ajax()
+            || $request->boolean('inline')
+            || $request->header('X-Inline-Booking') === '1';
     }
 
-    public function seates()
+    private function getSeatsContext(): ?array
     {
         $booking_form = session()->get('booking_form');
+        if (empty($booking_form['bus_id']) || empty($booking_form['travel_date'])) {
+            return null;
+        }
+
         $bus_id = $booking_form['bus_id'];
         $travel_date = $booking_form['travel_date'];
         $price = $booking_form['dropping_point_amount'];
+        $info = $booking_form;
 
-        //return $travel_date;
-
-        $info = session()->get('booking_form');
-        $car = Bus::with([
+        $car = bus::with([
             'busname',
             'route',
-            'schedule' => function ($query) use ($travel_date) {
-                $query->where('schedule_date', $travel_date)
-                    ->orwhere('schedule_date', '>', $travel_date);
-            },
-            'route.points'
-        ])->find($bus_id);
-
-        $car = Bus::with([
-            'busname',
-            'route',
-            'schedule' => function ($query) use ($travel_date) {
-                $query->where('schedule_date', $travel_date)
-                    ->orwhere('schedule_date', '>', $travel_date);
+            'schedule' => function ($query) use ($travel_date, $booking_form) {
+                $query->where('schedule_date', $travel_date);
+                if (!empty($booking_form['from']) && !empty($booking_form['to'])) {
+                    $query->where('from', $booking_form['from'])->where('to', $booking_form['to']);
+                }
             },
         ])->find($bus_id);
 
-        // Fetch booked seats for the bus and travel date (include Paid, Reserved, and resaved)
+        if (!$car) {
+            return null;
+        }
+
         $booked_seats = Booking::where('bus_id', $bus_id)
             ->where('travel_date', $travel_date)
             ->whereIn('payment_status', ['Paid', 'Reserved', 'resaved'])
-            ->pluck('seat') // Get the 'seat' column (comma-separated seat numbers)
-            ->flatMap(function ($seats) {
-                return explode(',', $seats); // Split comma-separated seats into an array
-            })
-            ->unique() // Remove duplicates
+            ->pluck('seat')
+            ->flatMap(fn ($seats) => explode(',', $seats))
+            ->unique()
             ->values()
             ->toArray();
 
-            // return [
-            //     'car' => $car,
-            //     'info' => $info,
-            // ];
+        $distance = $info['route_distance'] ?? 0;
+        $setting = Setting::first();
+        $formulaService = app(FareFormulaService::class);
+        $provisionalForm = array_merge($info, ['seats' => 'A1', 'total_amount' => $price]);
+        $fees = $formulaService->calculateTravellerServiceFee(
+            $formulaService->busFareForServiceFeeFromBookingForm($provisionalForm),
+            $setting,
+            1
+        );
 
-        return view('seates', compact('price', 'booked_seats', 'car','info'));
-
-        //return  $car;
+        return compact('price', 'booked_seats', 'car', 'info', 'distance', 'fees');
     }
 
-    public function get_seats(Request $request)
+    public function inlineWalletLookup(Request $request)
     {
-        $seats = $request->selected_seats;
-        $price = $request->total_amount;
+        $key = trim((string) $request->query('key', ''));
+        if ($key === '') {
+            return response()->json(['amount' => 0]);
+        }
+
+        $amount = TempWallet::where('user_key', $key)->value('amount') ?? 0;
+
+        return response()->json(['amount' => (float) $amount]);
+    }
+
+    public function inlinePreparePayment(Request $request)
+    {
+        if (!$this->isInlineBookingRequest($request)) {
+            return response()->json(['ok' => false, 'message' => 'Invalid request.'], 400);
+        }
 
         $bus_info = session()->get('booking_form', []);
         if (empty($bus_info['bus_id']) || empty($bus_info['travel_date'])) {
-            return redirect()->route('home')->with('error', 'Session expired. Please try again.');
+            return response()->json(['ok' => false, 'message' => 'Session expired. Please try again.'], 422);
         }
 
+        $seats = $request->input('selected_seats');
+        $price = $request->input('total_amount');
         $selected = is_array($seats) ? $seats : (is_string($seats) ? array_map('trim', explode(',', $seats)) : []);
-        $selected = array_filter($selected);
+        $selected = array_values(array_filter($selected));
+
+        if (empty($selected) && !empty($bus_info['seats'])) {
+            $selected = array_values(array_filter(array_map('trim', explode(',', (string) $bus_info['seats']))));
+            if ($price === null || $price === '') {
+                $price = $bus_info['total_amount'] ?? null;
+            }
+        }
 
         if (empty($selected)) {
-            return redirect()->route('seates')->with('error', 'Please select at least one seat.');
+            return response()->json(['ok' => false, 'message' => 'Please select at least one seat.'], 422);
         }
 
         $booked = Booking::where('bus_id', $bus_info['bus_id'])
@@ -351,7 +446,161 @@ class BookingController extends Controller
 
         $alreadyBooked = array_intersect($selected, $booked);
         if (!empty($alreadyBooked)) {
-            return redirect()->route('seates')->with('error', 'One or more selected seats (e.g. ' . implode(', ', array_slice($alreadyBooked, 0, 3)) . ') are no longer available. Please choose different seats.');
+            return response()->json([
+                'ok' => false,
+                'message' => 'One or more selected seats are no longer available. Please choose different seats.',
+            ], 422);
+        }
+
+        $passengers = $request->input('passengers');
+        if (is_string($passengers)) {
+            $passengers = json_decode($passengers, true) ?: [];
+        }
+        if (!is_array($passengers) || count($passengers) !== count($selected)) {
+            return response()->json(['ok' => false, 'message' => 'Please complete details for each selected seat.'], 422);
+        }
+
+        foreach ($passengers as $passenger) {
+            if (empty(trim($passenger['name'] ?? '')) || empty(trim($passenger['phone'] ?? ''))) {
+                return response()->json(['ok' => false, 'message' => 'Please enter name and phone for each selected seat.'], 422);
+            }
+            if (empty(trim($passenger['age_group'] ?? ''))) {
+                return response()->json(['ok' => false, 'message' => 'Please select age group for each passenger.'], 422);
+            }
+        }
+
+        $bus_info['total_amount'] = $price;
+        $bus_info['total_amount_before_coupon'] = $price;
+        $bus_info['seats'] = implode(',', $selected);
+        $bus_info['passenger_details'] = $passengers;
+        $bus_info['customer_name'] = $passengers[0]['name'];
+        $bus_info['customer_number'] = $passengers[0]['phone'];
+        $bus_info['age_group'] = $passengers[0]['age_group'];
+        session()->put('booking_form', $bus_info);
+
+        $merged = array_merge($request->all(), [
+            'customer' => $passengers[0]['name'],
+            'gender' => 'Male',
+            'age' => 25,
+            'age_group' => $passengers[0]['age_group'],
+            'category' => '',
+            'inline' => '1',
+        ]);
+        $paymentRequest = Request::create(route('payment_store'), 'POST', $merged);
+        $paymentRequest->headers->set('X-Requested-With', 'XMLHttpRequest');
+        $paymentRequest->headers->set('X-Inline-Booking', '1');
+
+        return $this->payment_info($paymentRequest);
+    }
+
+    public function get_form(Request $request)
+    {
+        $route = route::find($request->route_id);
+        $schedule = Schedule::find($request->schedule_id);
+        $pickupPoint = $request->pickup_point ?? ($schedule ? $schedule->from : ($route ? $route->from : null));
+        $droppingPoint = $request->dropping_point ?? ($schedule ? $schedule->to : ($route ? $route->to : null));
+
+        $routeDistance = RouteDistanceService::resolveForBooking(
+            $request->route_distance,
+            $pickupPoint,
+            $droppingPoint,
+            $route ? (float) ($route->distance ?? 0) : null
+        );
+
+        if ($routeDistance < 1) {
+            if ($this->isInlineBookingRequest($request)) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'Please select pickup and dropping points.',
+                ], 422);
+            }
+
+            return back()->with('error', 'Calculate distance before continue');
+        }
+
+        $bus_info = [
+            'bus_id' => $request->bus_id,
+            'from' => $schedule ? $schedule->from : $route->from,
+            'to' => $schedule ? $schedule->to : $route->to,
+            'route_id' => $request->route_id,
+            'pickup_point' => $pickupPoint,
+            'dropping_point' => $droppingPoint,
+            'travel_date' => session()->get('departure_date') ?? now()->format('Y-m-d'),
+            'dropping_point_amount' => $request->dropping_point_amount ?? ($route ? $route->price : 0),
+            'route_distance' => $routeDistance,
+            'schedule_id' => $request->schedule_id,
+        ];
+
+        session()->put('booking_form', $bus_info);
+
+        if ($this->isInlineBookingRequest($request)) {
+            $context = $this->getSeatsContext();
+            if (!$context) {
+                return response()->json(['ok' => false, 'message' => 'Session expired. Please try again.'], 422);
+            }
+
+            $inlineUid = $request->input('inline_uid', 'ib_seats');
+
+            return response()->json([
+                'ok' => true,
+                'step' => 2,
+                'html' => view('test.partials.inline_checkout_wizard', array_merge($context, compact('inlineUid')))->render(),
+            ]);
+        }
+
+        return redirect()->to(booking_route('seats'));
+    }
+
+    public function seates()
+    {
+        $context = $this->getSeatsContext();
+        if (!$context) {
+            return redirect()->to(booking_route('home'))->with('error', 'Session expired. Please try again.');
+        }
+
+        return view('seates', $context);
+    }
+
+    public function get_seats(Request $request)
+    {
+        $seats = $request->selected_seats;
+        $price = $request->total_amount;
+
+        $bus_info = session()->get('booking_form', []);
+        if (empty($bus_info['bus_id']) || empty($bus_info['travel_date'])) {
+            if ($this->isInlineBookingRequest($request)) {
+                return response()->json(['ok' => false, 'message' => 'Session expired. Please try again.'], 422);
+            }
+            return redirect()->to(booking_route('home'))->with('error', 'Session expired. Please try again.');
+        }
+
+        $selected = is_array($seats) ? $seats : (is_string($seats) ? array_map('trim', explode(',', $seats)) : []);
+        $selected = array_filter($selected);
+
+        if (empty($selected)) {
+            if ($this->isInlineBookingRequest($request)) {
+                return response()->json(['ok' => false, 'message' => 'Please select at least one seat.'], 422);
+            }
+            return redirect()->to(booking_route('seats'))->with('error', 'Please select at least one seat.');
+        }
+
+        $booked = Booking::where('bus_id', $bus_info['bus_id'])
+            ->where('travel_date', $bus_info['travel_date'])
+            ->whereIn('payment_status', ['Paid', 'Reserved', 'resaved'])
+            ->pluck('seat')
+            ->flatMap(fn ($s) => explode(',', $s))
+            ->map(fn ($s) => trim($s))
+            ->unique()
+            ->values()
+            ->toArray();
+
+        $alreadyBooked = array_intersect($selected, $booked);
+        if (!empty($alreadyBooked)) {
+            $msg = 'One or more selected seats are no longer available. Please choose different seats.';
+            if ($this->isInlineBookingRequest($request)) {
+                return response()->json(['ok' => false, 'message' => $msg], 422);
+            }
+            return redirect()->to(booking_route('seats'))->with('error', $msg);
         }
 
         $bus_info['total_amount'] = $price;
@@ -360,14 +609,22 @@ class BookingController extends Controller
 
         session()->put('booking_form', $bus_info);
 
-        return redirect()->route('pay');
+        if ($this->isInlineBookingRequest($request)) {
+            return response()->json([
+                'ok' => true,
+                'step' => 3,
+                'redirect' => booking_route('pay'),
+            ]);
+        }
+
+        return redirect()->to(booking_route('pay'));
     }
 
     public function payment()
     {
         $setting = Setting::first();
         if (is_null(session()->get('booking_form')) || !isset(session()->get('booking_form')['total_amount'])) {
-            return redirect()->route('home')->with('error', 'Session expired. Please try again.');
+            return redirect()->to(booking_route('home'))->with('error', 'Session expired. Please try again.');
         }
         $price = session()->get('booking_form')['total_amount'];
         $seats = session()->get('booking_form')['seats'];
@@ -394,7 +651,10 @@ class BookingController extends Controller
     public function payment_info(Request $request)
     {
         if (is_null(session()->get('booking_form')) || !isset(session()->get('booking_form')['total_amount'])) {
-            return redirect()->route('home')->with('error', 'Session expired. Please try again.');
+            if ($this->isInlineBookingRequest($request)) {
+                return response()->json(['ok' => false, 'message' => 'Session expired. Please try again.'], 422);
+            }
+            return redirect()->to(booking_route('home'))->with('error', 'Session expired. Please try again.');
         }
 
         $bus_info = session()->get('booking_form', []);
@@ -412,16 +672,23 @@ class BookingController extends Controller
         $bus_info['cancel_amount'] = $request->amount_cancel ?? 0;
         $bus_info['cancel_key'] = $request->key ?? '';
         $bus_info['excess_luggage'] = $request->excess_luggage ?? 0; // Add excess luggage checkbox value
+        $bus_info['has_excess_luggage'] = $request->excess_luggage ?? 0; // Canonical DB flag
         $bus_info['excess_luggage_description'] = $request->excess_luggage_description ?? null; // Add excess luggage description
         session()->put('booking_form', $bus_info);
 
         if (!empty($bus_info['discount'])) {
             $couponCheck = Discount::where('code', $bus_info['discount'])->first();
             if (!$couponCheck) {
-                return redirect()->route('pay')->with('error', 'Invalid coupon code. Please check and try again.');
+                if ($this->isInlineBookingRequest($request)) {
+                    return response()->json(['ok' => false, 'message' => 'Invalid coupon code. Please check and try again.'], 422);
+                }
+                return redirect()->to(booking_route('pay'))->with('error', 'Invalid coupon code. Please check and try again.');
             }
             if (!$couponCheck->isValid()) {
-                return redirect()->route('pay')->with('error', 'This coupon has expired or has reached its usage limit.');
+                if ($this->isInlineBookingRequest($request)) {
+                    return response()->json(['ok' => false, 'message' => 'This coupon has expired or has reached its usage limit.'], 422);
+                }
+                return redirect()->to(booking_route('pay'))->with('error', 'This coupon has expired or has reached its usage limit.');
             }
         }
 
@@ -477,6 +744,7 @@ class BookingController extends Controller
         if ((session()->get('booking_form')['excess_luggage'] ?? 0) == 1) {
             $excessLuggageFee = 2500; // TSh. 2,500
             $bus_info = session()->get('booking_form', []);
+            $bus_info['has_excess_luggage'] = 1;
             $bus_info['excess_luggage_fee'] = $excessLuggageFee;
             session()->put('booking_form', $bus_info);
         }
@@ -514,17 +782,56 @@ class BookingController extends Controller
 
         $test_mode = (bool) ($setting->test_mode ?? false);
 
-        return view('payment_details', compact('price', 'ins', 'fees', 'dis', 'excess_luggage_fee', 'test_mode'));
+        $viewData = compact('price', 'ins', 'fees', 'dis', 'excess_luggage_fee', 'test_mode');
+
+        if ($this->isInlineBookingRequest($request)) {
+            $bus_info = session()->get('booking_form', []);
+            $car = Bus::with(['busname', 'route.via'])->find($bus_info['bus_id'] ?? null);
+            $time = session()->get('time');
+            $seatList = array_values(array_filter(array_map('trim', explode(',', (string) ($bus_info['seats'] ?? '')))));
+            $departTime = null;
+            if (!empty($time['start'])) {
+                try {
+                    $departTime = \Carbon\Carbon::parse($time['start'])->subMinutes(30)->format('h:i A');
+                } catch (\Throwable $e) {
+                    $departTime = null;
+                }
+            }
+            $summary = [
+                'bus_name' => $car->busname->name ?? null,
+                'bus_number' => $car->bus_number ?? null,
+                'via' => $car->route->via->name ?? null,
+                'pickup' => $bus_info['pickup_point'] ?? ($bus_info['from'] ?? null),
+                'dropping' => $bus_info['dropping_point'] ?? ($bus_info['to'] ?? null),
+                'travel_date' => $bus_info['travel_date'] ?? null,
+                'depart_time' => $departTime,
+                'seats' => $seatList,
+                'passengers' => $bus_info['passenger_details'] ?? [],
+            ];
+
+            return response()->json([
+                'ok' => true,
+                'step' => 4,
+                'html' => view('test.partials.payment_details_inline', array_merge($viewData, ['summary' => $summary]))->render(),
+            ]);
+        }
+
+        return view('payment_details', $viewData);
     }
 
     public function get_payment(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'contactNumber' => ['required', 'string'],
             'contactEmail' => ['nullable', 'email'],
         ]);
+        if ($validator->fails()) {
+            return redirect()->to(booking_route('pay'))
+                ->withErrors($validator)
+                ->withInput();
+        }
         if (is_null(session()->get('booking_form')) || !isset(session()->get('booking_form')['total_amount'])) {
-            return redirect()->route('home')->with('error', 'Session expired. Please try again.');
+            return redirect()->to(booking_route('home'))->with('error', 'Session expired. Please try again.');
         }
         $bus_info = session()->get('booking_form', []);
 
@@ -571,7 +878,7 @@ class BookingController extends Controller
 
         $tigo = new TigosecureController();
         if (is_null(session()->get('booking_form')) || !isset(session()->get('booking_form')['total_amount'])) {
-            return redirect()->route('home')->with('error', 'Session expired. Please try again.');
+            return redirect()->to(booking_route('home'))->with('error', 'Session expired. Please try again.');
         }
         $bookingForm = session()->get('booking_form');
         $bima = $bookingForm['bima'] ?? 0;
@@ -627,7 +934,8 @@ class BookingController extends Controller
             'busFee' => $bookingForm['dispo'] ?? $bookingForm['total_amount'],
             'schedule_id' => $bookingForm['schedule_id'],
             'cancel_key' => $bookingForm['cancel_key'] ?? null,
-            'excess_luggage' => $bookingForm['excess_luggage'] ?? 0,
+            'has_excess_luggage' => $bookingForm['has_excess_luggage'] ?? ($bookingForm['excess_luggage'] ?? 0),
+            'excess_luggage_fee' => $bookingForm['excess_luggage_fee'] ?? 0,
             'excess_luggage_description' => session()->get('booking_form')['excess_luggage_description'], // Add excess luggage description
         ];
 
@@ -693,7 +1001,7 @@ class BookingController extends Controller
                     ?? session()->get('booking_form')['customer_number'];
                 $normalized = ClickPesaController::normalizeTanzaniaMsisdnForClickPesa((string) $clickpesaPhone);
                 if (!$normalized['ok']) {
-                    return redirect()->back()
+                    return redirect()->to(booking_route('pay'))
                         ->with('error', 'ClickPesa Payment Failed: ' . ($normalized['error'] ?? 'Invalid mobile money number.'))
                         ->withErrors(['payment_error' => $normalized['error'] ?? 'Invalid mobile money number.']);
                 }
@@ -769,7 +1077,8 @@ class BookingController extends Controller
             'busFee' => $bookingForm['dispo'] ?? $bookingForm['total_amount'],
             'schedule_id' => $bookingForm['schedule_id'],
             'cancel_key' => $bookingForm['cancel_key'],
-            'excess_luggage' => $bookingForm['excess_luggage'],
+            'has_excess_luggage' => $bookingForm['has_excess_luggage'] ?? ($bookingForm['excess_luggage'] ?? 0),
+            'excess_luggage_fee' => $bookingForm['excess_luggage_fee'] ?? 0,
             'excess_luggage_description' => $bookingForm['excess_luggage_description'],
             'transaction_ref_id' => $xcode,
             'payment_method' => 'test_mode',
@@ -1133,12 +1442,14 @@ class BookingController extends Controller
                     // Ensure remain_seats is not negative
                     $bus->remain_seats = max(0, $bus->remain_seats);
                 });
-            });
+            })
+            ->sortBy(fn ($bus) => $bus->schedule->start ?? '99:99')
+            ->values();
 
         // Debugging: Uncomment to inspect the data
         //return $busList;
 
-        return view('by_route_search', compact('busList', 'departureCityName', 'arrivalCityName', 'departure_date'));
+        return view($request->attributes->get('_booking_view', 'by_route_search'), compact('busList', 'departureCityName', 'arrivalCityName', 'departure_date'));
     }
 
     public function history(Request $request)

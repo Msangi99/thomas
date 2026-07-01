@@ -1,8 +1,20 @@
 @extends('vender.app')
 
+@section('title', __('customer/busroot.select_your_seats'))
+
+@section('page_hero')
+    @include('test.partials.page_hero', [
+        'eyebrow' => __('all.round_trip'),
+        'title' => __('customer/busroot.select_your_seats'),
+        'subtitle' => __('all.round_trip'),
+    ])
+@endsection
+
 @section('content')
-<section class="bg-gradient-to-b from-gray-200 to-gray-600 py-8 px-4 sm:px-6 lg:px-8 rounded-3xl">
-    <div class="max-w-6xl mx-auto">
+<section class="page-section page-section--alt">
+    <div class="container mx-auto px-4 max-w-6xl">
+        <div class="vendor-panel fade-in">
+            <div class="vendor-panel__body">
         <div class="text-center mb-8">
             <h2 class="text-3xl font-bold text-gray-900">
                 <i class="fas fa-chair text-blue-600 mr-2"></i> {{ __('customer/busroot.select_your_seats') }}

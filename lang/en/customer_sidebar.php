@@ -5,6 +5,8 @@ return [
     'Dashboard' => 'Dashboard',
     'My Tickets' => 'My Tickets',
     'Bus Route' => 'Bus Route',
+    'Round Trip' => 'Round Trip',
     'Profile' => 'Profile',
     'Logout' => 'Logout',
+    'Wallet' => 'Wallet',
 ];

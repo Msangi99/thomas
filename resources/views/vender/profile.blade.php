@@ -1,17 +1,25 @@
 @extends('vender.app')
 
-@section('content')
-    <!-- Heroicons CDN for icons -->
-    <link href="https://unpkg.com/heroicons@2.1.1/dist/heroicons.min.css" rel="stylesheet">
+@section('title', __('assistance/sidebar.profile'))
 
-    <div class="container mx-auto px-4 py-8 max-w-3xl">
-        <div class="bg-white rounded-xl shadow-lg p-6">
-            <h4 class="text-2xl font-semibold text-gray-800 mb-6 flex items-center">
-                <svg class="w-6 h-6 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                </svg>
-                Update Profile
-            </h4>
+@section('page_hero')
+    @include('test.partials.page_hero', [
+        'eyebrow' => __('all.highlink_isgc'),
+        'title' => __('assistance/sidebar.profile'),
+        'subtitle' => __('all.profile_information'),
+    ])
+@endsection
+
+@section('content')
+<section class="page-section page-section--alt">
+    <div class="container mx-auto px-4 max-w-3xl">
+        <div class="vendor-panel fade-in">
+            <div class="vendor-panel__header">
+                <h3 class="vendor-panel__title flex items-center gap-2">
+                    <i class="fas fa-user"></i> Update Profile
+                </h3>
+            </div>
+            <div class="vendor-panel__body">
 
             @if (session('success'))
                 <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-r-lg">
@@ -40,7 +48,7 @@
                         </svg>
                         Name
                     </label>
-                    <input type="text" class="mt-1 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="name" name="name"
+                    <input type="text" class="page-input" id="name" name="name"
                            value="{{ old('name', auth()->user()->name) }}" required>
                     @error('name')
                         <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
@@ -54,7 +62,7 @@
                         </svg>
                         Email
                     </label>
-                    <input type="email" class="mt-1 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="email" name="email"
+                    <input type="email" class="page-input" id="email" name="email"
                            value="{{ old('email', auth()->user()->email) }}" required>
                     @error('email')
                         <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
@@ -68,7 +76,7 @@
                         </svg>
                         Contact
                     </label>
-                    <input type="text" class="mt-1 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="contact" name="contact"
+                    <input type="text" class="page-input" id="contact" name="contact"
                            value="{{ old('contact', auth()->user()->contact ?? '') }}">
                     @error('contact')
                         <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
@@ -85,7 +93,7 @@
                     </h5>
                     <div class="mb-4">
                         <label for="tin" class="block text-sm font-medium text-gray-700">TIN</label>
-                        <input type="text" class="mt-1 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="tin" name="tin"
+                        <input type="text" class="page-input" id="tin" name="tin"
                                value="{{ old('tin', auth()->user()->VenderAccount->tin ?? '') }}">
                         @error('tin')
                             <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
@@ -104,7 +112,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="mb-4">
                         <label for="house_number" class="block text-sm font-medium text-gray-700">House Number</label>
-                        <input type="text" class="mt-1 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="house_number" name="house_number"
+                        <input type="text" class="page-input" id="house_number" name="house_number"
                                value="{{ old('house_number', auth()->user()->VenderAccount->house_number ?? '') }}">
                         @error('house_number')
                             <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
@@ -112,7 +120,7 @@
                     </div>
                     <div class="mb-4">
                         <label for="street" class="block text-sm font-medium text-gray-700">Street</label>
-                        <input type="text" class="mt-1 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="street" name="street"
+                        <input type="text" class="page-input" id="street" name="street"
                                value="{{ old('street', auth()->user()->VenderAccount->street ?? '') }}">
                         @error('street')
                             <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
@@ -122,7 +130,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="mb-4">
                         <label for="town" class="block text-sm font-medium text-gray-700">Town</label>
-                        <input type="text" class="mt-1 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="town" name="town"
+                        <input type="text" class="page-input" id="town" name="town"
                                value="{{ old('town', auth()->user()->VenderAccount->town ?? '') }}">
                         @error('town')
                             <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
@@ -130,7 +138,7 @@
                     </div>
                     <div class="mb-4">
                         <label for="city" class="block text-sm font-medium text-gray-700">District/City</label>
-                        <input type="text" class="mt-1 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="city" name="city"
+                        <input type="text" class="page-input" id="city" name="city"
                                value="{{ old('city', auth()->user()->VenderAccount->city ?? '') }}">
                         @error('city')
                             <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
@@ -138,7 +146,7 @@
                     </div>
                     <div class="mb-4">
                         <label for="province" class="block text-sm font-medium text-gray-700">Region/Province</label>
-                        <input type="text" class="mt-1 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="province" name="province"
+                        <input type="text" class="page-input" id="province" name="province"
                                value="{{ old('province', auth()->user()->VenderAccount->province ?? '') }}">
                         @error('province')
                             <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
@@ -147,7 +155,7 @@
                 </div>
                 <div class="mb-4">
                     <label for="country" class="block text-sm font-medium text-gray-700">Country</label>
-                    <input type="text" class="mt-1 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="country" name="country"
+                    <input type="text" class="page-input" id="country" name="country"
                            value="{{ old('country', auth()->user()->VenderAccount->country ?? '') }}">
                     @error('country')
                         <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
@@ -155,7 +163,7 @@
                 </div>
                 <div class="mb-4">
                     <label for="work" class="block text-sm font-medium text-gray-700">Working Center</label>
-                    <input type="text" class="mt-1 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="work" name="work"
+                    <input type="text" class="page-input" id="work" name="work"
                            value="{{ old('work', auth()->user()->VenderAccount->work ?? '') }}">
                     @error('work')
                         <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
@@ -171,7 +179,7 @@
                 </h5>
                 <div class="mb-4">
                     <label for="altenative_number" class="block text-sm font-medium text-gray-700">Alternative Number</label>
-                    <input type="text" class="mt-1 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="altenative_number" name="altenative_number"
+                    <input type="text" class="page-input" id="altenative_number" name="altenative_number"
                            value="{{ old('altenative_number', auth()->user()->VenderAccount->altenative_number ?? '') }}">
                     @error('altenative_number')
                         <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
@@ -191,7 +199,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="mb-4">
                             <label for="bank_name" class="block text-sm font-medium text-gray-700">Bank Name</label>
-                            <input type="text" class="mt-1 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="bank_name" name="bank_name"
+                            <input type="text" class="page-input" id="bank_name" name="bank_name"
                                    value="{{ old('bank_name', auth()->user()->VenderAccount->bank_name ?? '') }}">
                             @error('bank_name')
                                 <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
@@ -199,7 +207,7 @@
                         </div>
                         <div class="mb-4">
                             <label for="bank_number" class="block text-sm font-medium text-gray-700">Account Number</label>
-                            <input type="text" class="mt-1 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="bank_number" name="bank_number"
+                            <input type="text" class="page-input" id="bank_number" name="bank_number"
                                    value="{{ old('bank_number', auth()->user()->VenderAccount->bank_number ?? '') }}">
                             @error('bank_number')
                                 <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
@@ -217,7 +225,7 @@
                 </h5>
                 <div class="mb-4">
                     <label for="payment_number" class="block text-sm font-medium text-gray-700">Payment Number</label>
-                    <input type="text" class="mt-1 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="payment_number" name="payment_number"
+                    <input type="text" class="page-input" id="payment_number" name="payment_number"
                            value="{{ old('payment_number', auth()->user()->VenderBalances->payment_number ?? '') }}">
                     @error('payment_number')
                         <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
@@ -233,7 +241,7 @@
                 </h5>
                 <div class="mb-4">
                     <label for="password" class="block text-sm font-medium text-gray-700">Password (leave blank to keep unchanged)</label>
-                    <input type="password" class="mt-1 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Leave blank to keep unchanged"
+                    <input type="password" class="page-input" placeholder="Leave blank to keep unchanged"
                            id="password" name="password">
                     @error('password')
                         <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
@@ -241,7 +249,7 @@
                 </div>
                 <div class="mb-4">
                     <label for="password_confirmation" class="block text-sm font-medium text-gray-700">Confirm Password</label>
-                    <input type="password" class="mt-1 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="password_confirmation" name="password_confirmation">
+                    <input type="password" class="page-input" id="password_confirmation" name="password_confirmation">
                     @error('password_confirmation')
                         <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
                     @enderror
@@ -249,14 +257,13 @@
 
                 <!-- Submit Button -->
                 <div class="mt-6">
-                    <button type="submit" class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
-                        </svg>
-                        Update Profile
+                    <button type="submit" class="page-btn w-full justify-center">
+                        <i class="fas fa-save"></i> Update Profile
                     </button>
                 </div>
             </form>
+            </div>
         </div>
     </div>
+</section>
 @endsection

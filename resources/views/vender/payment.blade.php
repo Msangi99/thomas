@@ -1,15 +1,21 @@
 @extends('vender.app')
 
+@section('title', __('customer/busroot.complete_your_booking'))
+
+@section('page_hero')
+    @include('test.partials.page_hero', [
+        'eyebrow' => __('all.highlink_isgc'),
+        'title' => __('customer/busroot.complete_your_booking'),
+        'subtitle' => ($info['from'] ?? '') . ' → ' . ($info['to'] ?? ''),
+    ])
+@endsection
+
 @section('content')
-    <section class="bg-gradient-to-b from-gray-200 to-gray-600 py-8 px-4 sm:px-6 lg:px-8 rounded-3xl">
-        <div class="max-w-9/12 mx-auto">
-            <div class="grid grid-cols-1 lg:grid-cols-1 gap-8">
-                <!-- Passenger Details Column -->
-                <div class="lg:col-span-3">
-                    <div class="bg-white rounded-xl shadow-lg p-6">
+    <section class="page-section page-section--alt">
+        <div class="container mx-auto px-4 max-w-5xl">
+            <div class="vendor-panel fade-in">
+                <div class="vendor-panel__body">
                         <div class="flex justify-between items-center mb-4">
-                            <h5 class="text-xl font-bold text-gray-900">{{ __('customer/busroot.complete_your_booking') }}
-                            </h5>
                             <span class="text-sm text-gray-600">
                                 {{ $info['from'] ?? __('customer/busroot.na') }} {{ __('customer/busroot.to') }}
                                 {{ $info['to'] ?? __('customer/busroot.na') }} |

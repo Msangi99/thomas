@@ -1,29 +1,29 @@
-@extends('layouts.app')
+@php
+    $paymentLayout = auth()->check() && auth()->user()->isCustomer() && request()->routeIs('customer.*')
+        ? 'customer.app'
+        : 'test.layouts.marketing';
+@endphp
+@extends($paymentLayout)
+
+@section('title', (__('all.payment_failed') ?? 'Payment Failed') . ' — ' . __('all.highlink_isgc'))
+
+@section('page_hero')
+    @include('test.partials.page_hero', [
+        'eyebrow' => __('customer_sidebar.Round Trip') ?? 'Round Trip',
+        'title' => __('vender/busroot.round_payment_failed_title') ?? 'Round Trip Payment Failed',
+        'subtitle' => __('all.payment_failed_message') ?? 'Your round trip payment could not be completed.',
+        'image' => 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1200&q=80',
+    ])
+@endsection
 
 @section('content')
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header bg-danger text-white">Payment Failed</div>
-
-                <div class="card-body">
-                    <h3 class="text-center text-danger">Your round trip payment could not be processed.</h3>
-                    <p class="text-center">There was an issue with your payment. Please try again or contact support.</p>
-
-                    @if(session('error'))
-                        <div class="alert alert-danger mt-3">
-                            <strong>Error:</strong> {{ session('error') }}
-                        </div>
-                    @endif
-
-                    <p class="text-center mt-4">
-                        <a href="{{ route('round.trip.checkout') }}" class="btn btn-primary">Try Payment Again</a>
-                        <a href="{{ route('home') }}" class="btn btn-secondary">Go to Home</a>
-                    </p>
-                </div>
-            </div>
-        </div>
+<section class="page-section page-section--alt">
+    <div class="container mx-auto px-4 max-w-3xl">
+        @include('test.partials.payment_failed_body', [
+            'retryUrl' => round_trip_route('checkout'),
+            'homeUrl' => route('home'),
+            'error' => $error ?? session('error'),
+        ])
     </div>
-</div>
+</section>
 @endsection

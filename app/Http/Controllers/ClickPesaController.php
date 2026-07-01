@@ -41,6 +41,23 @@ class ClickPesaController extends Controller
     }
 
     /**
+     * Route user back to the correct payment screen for their portal.
+     */
+    private function paymentRouteForContext(): string
+    {
+        if (auth()->check()) {
+            if (auth()->user()->role === 'customer') {
+                return 'customer.pay';
+            }
+            if (auth()->user()->role === 'vender') {
+                return 'vender.pay';
+            }
+        }
+
+        return 'pay';
+    }
+
+    /**
      * Normalize a MSISDN for ClickPesa (Tanzania mobile money: 255 + 9 digits, typically 06/07 national).
      *
      * @return array{ok: bool, phone: string, error: string|null}
@@ -123,7 +140,8 @@ class ClickPesaController extends Controller
                 'error' => $checkoutResponse,
             ]);
 
-            return back()->with('error', 'ClickPesa Payment Failed: ' . $errorMsg);
+            return redirect()->route($this->paymentRouteForContext())
+                ->with('error', 'ClickPesa Payment Failed: ' . $errorMsg);
         }
 
         // Check if we have a valid response with checkout URL
@@ -149,7 +167,8 @@ class ClickPesaController extends Controller
                     'error_message' => $errorMessage,
                     'response' => $checkoutResponse
                 ]);
-                return back()->with('error', 'ClickPesa Payment Failed: ' . $errorMessage);
+                return redirect()->route($this->paymentRouteForContext())
+                    ->with('error', 'ClickPesa Payment Failed: ' . $errorMessage);
             }
             
             // Use same alphanumeric format we send to ClickPesa so polling and callback work
@@ -204,7 +223,8 @@ class ClickPesaController extends Controller
                     'error' => $e->getMessage(),
                     'trace' => $e->getTraceAsString(),
                 ]);
-                return back()->with('error', 'Could not load payment page: ' . $e->getMessage());
+                return redirect()->route($this->paymentRouteForContext())
+                    ->with('error', 'Could not load payment page: ' . $e->getMessage());
             }
         } else {
             // Response doesn't have expected success structure
@@ -247,7 +267,8 @@ class ClickPesaController extends Controller
                 'has_checkout_url' => isset($checkoutResponse->checkout_url)
             ]);
 
-            return back()->with('error', 'ClickPesa Payment Failed: ' . $errorMessage);
+            return redirect()->route($this->paymentRouteForContext())
+                ->with('error', 'ClickPesa Payment Failed: ' . $errorMessage);
         }
     }
 

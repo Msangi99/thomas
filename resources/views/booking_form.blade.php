@@ -1,240 +1,211 @@
-@extends('test.ap')
+@extends('test.layouts.marketing')
 
-@section('content')
+@section('title', __('all.select_your_journey_points') . ' — ' . __('all.higlink_premium_travel'))
 
+@push('styles')
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <!-- Add Select2 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+@endpush
 
-    <section class="py-8 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-4xl mx-auto">
-            <div class="bg-gray-100 rounded-xl shadow-lg overflow-hidden">
-                <div class="p-6 sm:p-8">
-                    <div class="text-center mb-6">
-                        <h2 class="text-2xl font-bold text-gray-800">{{ __('all.select_your_journey_points') }}</h2>
-                        <p class="text-gray-600 mt-2">{{ __('all.choose_pickup_dropping_locations') }}</p>
+@section('page_hero')
+    @include('test.partials.page_hero', [
+        'eyebrow' => 'Book Your Trip',
+        'title' => ($car->schedule->from ?? 'Route') . ' ➔ ' . ($car->schedule->to ?? ''),
+        'subtitle' => __('all.choose_pickup_dropping_locations'),
+        'image' => 'https://images.unsplash.com/photo-1570125909232-e097323dccff?w=1200&q=80',
+    ])
+@endsection
+
+@section('content')
+<section class="page-section page-section--alt">
+    <div class="container mx-auto px-4 max-w-5xl">
+        @include('test.partials.booking_steps', ['currentStep' => 1])
+
+        @if (session('error'))
+            <div class="booking-alert booking-alert--error fade-in" role="alert">
+                <i class="fas fa-exclamation-circle mr-2"></i>{{ session('error') }}
+            </div>
+        @endif
+
+        <div class="booking-card fade-in">
+            <div class="booking-card__header">
+                <h2 class="booking-card__title">{{ __('all.select_your_journey_points') }}</h2>
+                <p class="booking-card__subtitle">{{ __('all.choose_pickup_dropping_locations') }}</p>
+            </div>
+
+            <div class="booking-card__body">
+                <form id="busSearchForm" method="POST" action="{{ route('store') }}" class="booking-form">
+                    @csrf
+
+                    <div class="booking-summary">
+                        <div class="booking-summary__item">
+                            <span class="booking-summary__icon" aria-hidden="true"><i class="fas fa-bus"></i></span>
+                            <div>
+                                <p class="booking-summary__label">{{ __('all.bus_operator_label') }}</p>
+                                <p class="booking-summary__value">{{ $car->busname->name ?? 'N/A' }}</p>
+                            </div>
+                        </div>
+                        <div class="booking-summary__item">
+                            <span class="booking-summary__icon" aria-hidden="true"><i class="fas fa-route"></i></span>
+                            <div>
+                                <p class="booking-summary__label">{{ __('all.route') }}</p>
+                                <p class="booking-summary__value">{{ $car->schedule->from }} ➔ {{ $car->schedule->to }}</p>
+                            </div>
+                        </div>
                     </div>
 
-                    <form id="busSearchForm" method="POST" action="{{ route('store') }}" class="space-y-6">
-                        @csrf
+                    <input type="hidden" name="bus_id" value="{{ $car->id }}">
+                    <input type="hidden" name="route_id" value="{{ $car->route->id }}">
+                    <input type="hidden" name="bus_name" value="{{ $car->busname->name }}">
+                    <input type="hidden" name="schedule_id" value="{{ $car->schedule->id }}">
 
-                        <!-- Bus Information -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Bus Operator -->
-                            <div class="glass-card p-4 rounded-lg">
-                                <label for="busOperator" class="block text-sm font-medium text-gray-700 mb-1">
-                                    <i class="fas fa-bus text-blue-500 mr-2"></i> {{ __('all.bus_operator_label') }}
-                                </label>
-                                <input type="text" name="bus_name" value="{{ $car->busname->name }}" readonly
-                                    class="text-gray-900 w-full glass-card border border-gray-700 rounded-md px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            </div>
-
-                            <!-- Route Information -->
-                            <div class="glass-card p-4 rounded-lg">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">
-                                    <i class="fas fa-route text-blue-500 mr-2"></i> {{ __('all.route') }}
-                                </label>
-                                <div class="flex items-center space-x-2">
-                                    <span class="font-medium text-gray-900">{{ $car->schedule->from }}</span>
-                                    <i class="fas fa-arrow-right text-gray-400 mx-1"></i>
-                                    <span class="font-medium text-gray-900">{{ $car->schedule->to }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <input type="hidden" name="bus_id" value="{{ $car->id }}">
-                        <input type="hidden" name="route_id" value="{{ $car->route->id }}">
-
-                        <!-- Points Selection -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Pickup Point -->
-                            <div class="glass-card p-4 rounded-lg">
-                                <label for="pickupPoint" class="block text-sm font-medium text-gray-700 mb-1">
-                                    <i class="fas fa-map-marker-alt text-green-500 mr-2"></i> {{ __('all.pickup_point_label') }}
-                                </label>
-                                <select
-                                    class="p-3 w-full border bg-gray-400 text-black border-gray-200 rounded-md px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 select2"
-                                    id="pickupPoint" name="pickup_point">
-                                    <option value="">{{ __('all.select_pickup_point_placeholder') }}</option>
-                                    @if (isset($car->filtered_points))
-                                        @foreach ($car->filtered_points as $value)
-                                            @if ($value->point_mode == 1)
-                                                <option value="{{ $value->point }}"
-                                                    {{ request('pickup_point_id') == $value->point ? 'selected' : '' }}>
-                                                    {{ $value->point }}
-                                                </option>
-                                            @endif
-                                        @endforeach
-                                    @endif
-                                </select>
-                            </div>
-
-                            <!-- Dropoff Point -->
-                            <div class="glass-card p-4 rounded-lg">
-                                <label for="dropoffPoint" class="block text-sm font-medium text-gray-700 mb-1">
-                                    <i class="fas fa-flag-checkered text-red-500 mr-2"></i> {{ __('all.dropoff_point_label') }}
-                                </label>
-                                <select
-                                    class="p-3 w-full border bg-gray-400 text-black border-gray-200 rounded-md px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 select2"
-                                    id="dropoffPoint" name="dropping_point">
-                                    <option value="">{{ __('all.select_dropping_point_placeholder') }}</option>
-                                    @if (isset($car->filtered_points))
-                                        @foreach ($car->filtered_points as $value)
-                                            @if ($value->point_mode == 2)
-                                                <option value="{{ $value->point }}" data-amount="{{ $value->amount }}"
-                                                    {{ request('dropping_point_id') == $value->point ? 'selected' : '' }}>
-                                                    {{ $value->point }}
-                                                </option>
-                                            @endif
-                                        @endforeach
-                                    @endif
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Distance Display -->
-                        <div class="glass-card p-4 rounded-lg">
-                            <label for="routeDistanceDisplay" class="block text-sm font-medium text-gray-700 mb-1">
-                                <i class="fas fa-arrows-alt-h text-blue-500 mr-2"></i> {{ __('all.route_distance_label') }}
+                    <div class="booking-grid booking-grid--2">
+                        <div class="booking-field">
+                            <label for="pickupPoint" class="booking-field__label">
+                                <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+                                {{ __('all.pickup_point_label') }}
                             </label>
-                            <div class="flex items-center">
-                                <input type="text" id="routeDistanceDisplay" readonly
-                                    class="w-full border border-gray-200 rounded-l-md px-4 py-2 text-sm text-gray-900"
-                                    name="route_distance" placeholder="{{ __('all.distance_will_be_calculated_placeholder') }}">
-                                <span class="bg-blue-500 text-black px-4 py-2 rounded-r-md text-sm">{{ __('all.km') }}</span>
-                            </div>
+                            <select class="page-input select2" id="pickupPoint" name="pickup_point">
+                                <option value="">{{ __('all.select_pickup_point_placeholder') }}</option>
+                                @if (isset($car->filtered_points))
+                                    @foreach ($car->filtered_points as $value)
+                                        @if ($value->point_mode == 1)
+                                            <option value="{{ $value->point }}" {{ request('pickup_point_id') == $value->point ? 'selected' : '' }}>
+                                                {{ $value->point }}
+                                            </option>
+                                        @endif
+                                    @endforeach
+                                @endif
+                            </select>
                         </div>
 
-                        <!-- Interactive Map Section -->
-                        <div class="glass-card border border-gray-200 rounded-xl overflow-hidden">
-                            <div class="p-4 border-b border-gray-200 glass-card">
-                                <h3 class="font-medium text-gray-800">
-                                    <i class="fas fa-map-marked-alt text-blue-500 mr-2"></i> {{ __('all.interactive_map_title') }}
-                                </h3>
-                                <p class="text-sm text-gray-600 mt-1">{{ __('all.select_points_map_search_below_description') }}</p>
-                            </div>
+                        <div class="booking-field">
+                            <label for="dropoffPoint" class="booking-field__label">
+                                <i class="fas fa-flag-checkered" aria-hidden="true"></i>
+                                {{ __('all.dropoff_point_label') }}
+                            </label>
+                            <select class="page-input select2" id="dropoffPoint" name="dropping_point">
+                                <option value="">{{ __('all.select_dropping_point_placeholder') }}</option>
+                                @if (isset($car->filtered_points))
+                                    @foreach ($car->filtered_points as $value)
+                                        @if ($value->point_mode == 2)
+                                            <option value="{{ $value->point }}" data-amount="{{ $value->amount }}"
+                                                {{ request('dropping_point_id') == $value->point ? 'selected' : '' }}>
+                                                {{ $value->point }}
+                                            </option>
+                                        @endif
+                                    @endforeach
+                                @endif
+                            </select>
+                        </div>
+                    </div>
 
-                            <div class="p-4 space-y-4">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label for="start" class="block text-sm font-medium text-gray-700 mb-1">
-                                            <i class="fas fa-circle text-green-500 mr-2"></i> {{ __('all.pickup_location_label') }}
-                                        </label>
-                                        <input type="text"
-                                            class="text-gray-900 w-full border border-gray-200 rounded-md px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                            id="start" placeholder="{{ __('all.search_pickup_location_placeholder') }}"
-                                            value="{{ $car->schedule->from }}">
-                                    </div>
-                                    <div>
-                                        <label for="end" class="block text-sm font-medium text-gray-700 mb-1">
-                                            <i class="fas fa-circle text-red-500 mr-2"></i> {{ __('all.dropping_location_label') }}
-                                        </label>
-                                        <input type="text"
-                                            class="text-gray-900 w-full border border-gray-200 rounded-md px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                            id="end" placeholder="{{ __('all.search_dropping_location_placeholder') }}"
-                                            value="{{ $car->schedule->to }}">
-                                    </div>
-                                </div>
+                    <div class="booking-field">
+                        <label for="routeDistanceDisplay" class="booking-field__label">
+                            <i class="fas fa-arrows-alt-h" aria-hidden="true"></i>
+                            {{ __('all.route_distance_label') }}
+                        </label>
+                        <div class="flex">
+                            <input type="text" id="routeDistanceDisplay" readonly
+                                class="page-input rounded-r-none flex-1"
+                                placeholder="{{ __('all.distance_will_be_calculated_placeholder') }}">
+                            <span class="inline-flex items-center px-4 bg-gray-100 border border-l-0 border-gray-200 rounded-r-lg text-sm font-semibold text-gray-600">{{ __('all.km') }}</span>
+                        </div>
+                    </div>
 
-                                <div class="flex flex-wrap gap-2">
-                                    <span class="text-sm font-medium text-gray-700">{{ __('all.quick_locations_label') }}</span>
-                                    <button type="button"
-                                        class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs hover:bg-blue-200 transition"
-                                        data-point="Nairobi, Kenya">{{ __('all.nairobi') }}</button>
-                                    <button type="button"
-                                        class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs hover:bg-blue-200 transition"
-                                        data-point="Mombasa, Kenya">{{ __('all.mombasa') }}</button>
-                                    <button type="button"
-                                        class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs hover:bg-blue-200 transition"
-                                        data-point="Kisumu, Kenya">{{ __('all.kisumu') }}</button>
-                                    <button type="button"
-                                        class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs hover:bg-blue-200 transition"
-                                        data-point="Nakuru, Kenya">{{ __('all.nakuru') }}</button>
-                                    <button type="button"
-                                        class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs hover:bg-blue-200 transition"
-                                        data-point="Eldoret, Kenya">{{ __('all.eldoret') }}</button>
-                                </div>
-
-                                <div class="flex gap-3 pt-2">
-                                    <button type="button" id="calculate"
-                                        class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition flex items-center justify-center">
-                                        <i class="fas fa-calculator mr-2"></i> {{ __('all.calculate_distance_button') }}
-                                    </button>
-                                    <button type="button" id="clear"
-                                        class="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition flex items-center justify-center">
-                                        <i class="fas fa-eraser mr-2"></i> {{ __('all.clear_points_button') }}
-                                    </button>
-                                </div>
-
-                                <div id="result" class="mt-3 p-3 glass-card rounded-md border border-green-100 hidden">
-                                    <div class="flex items-start">
-                                        <i class="fas fa-info-circle text-black mt-1 mr-2"></i>
-                                        <div id="result-content"></div>
-                                    </div>
-                                </div>
-
-                                <div id="map" class="h-80 w-full rounded-lg mt-4 border border-gray-200 shadow-sm">
-                                </div>
-                            </div>
+                    <div class="booking-map-card">
+                        <div class="booking-map-card__head">
+                            <h3 class="booking-map-card__title">
+                                <i class="fas fa-map-marked-alt text-[var(--home-primary)] mr-2"></i>
+                                {{ __('all.interactive_map_title') }}
+                            </h3>
+                            <p class="text-sm text-gray-500 mt-1">{{ __('all.select_points_map_search_below_description') }}</p>
                         </div>
 
-                        <input type="hidden" name="dropping_point_amount" id="droppingPointAmount">
-                        <input type="hidden" name="route_distance" id="routeDistance">
+                        <div class="booking-map-card__body space-y-4">
+                            <div class="booking-grid booking-grid--2">
+                                <div class="booking-field mb-0">
+                                    <label for="start" class="booking-field__label">
+                                        <i class="fas fa-circle text-green-500" aria-hidden="true"></i>
+                                        {{ __('all.pickup_location_label') }}
+                                    </label>
+                                    <input type="text" class="page-input" id="start"
+                                        placeholder="{{ __('all.search_pickup_location_placeholder') }}"
+                                        value="{{ $car->schedule->from }}">
+                                </div>
+                                <div class="booking-field mb-0">
+                                    <label for="end" class="booking-field__label">
+                                        <i class="fas fa-circle text-red-500" aria-hidden="true"></i>
+                                        {{ __('all.dropping_location_label') }}
+                                    </label>
+                                    <input type="text" class="page-input" id="end"
+                                        placeholder="{{ __('all.search_dropping_location_placeholder') }}"
+                                        value="{{ $car->schedule->to }}">
+                                </div>
+                            </div>
 
-                        <button type="submit"
-                            class="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg hover:from-blue-700 hover:to-blue-900 transition shadow-md flex items-center justify-center">
-                            <i class="fas fa-search mr-3"></i> {{ __('all.search_available_buses') }}
-                        </button>
-                        <input type="hidden" name="schedule_id" value="{{ $car->schedule->id }}">
-                    </form>
-                </div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="text-sm font-medium text-gray-600">{{ __('all.quick_locations_label') }}</span>
+                                <button type="button" class="booking-chip" data-point="Dar es Salaam, Tanzania">Dar es Salaam</button>
+                                <button type="button" class="booking-chip" data-point="Dodoma, Tanzania">Dodoma</button>
+                                <button type="button" class="booking-chip" data-point="Arusha, Tanzania">Arusha</button>
+                                <button type="button" class="booking-chip" data-point="Mwanza, Tanzania">Mwanza</button>
+                                <button type="button" class="booking-chip" data-point="Mbeya, Tanzania">Mbeya</button>
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                <button type="button" id="calculate" class="page-btn flex-1">
+                                    <i class="fas fa-calculator"></i> {{ __('all.calculate_distance_button') }}
+                                </button>
+                                <button type="button" id="clear" class="page-btn page-btn--outline flex-1">
+                                    <i class="fas fa-eraser"></i> {{ __('all.clear_points_button') }}
+                                </button>
+                            </div>
+
+                            <div id="result" class="hidden p-3 bg-green-50 border border-green-100 rounded-lg">
+                                <div class="flex items-start gap-2 text-sm text-gray-800">
+                                    <i class="fas fa-info-circle text-[var(--home-primary)] mt-0.5"></i>
+                                    <div id="result-content"></div>
+                                </div>
+                            </div>
+
+                            <div id="map"></div>
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="dropping_point_amount" id="droppingPointAmount">
+                    <input type="hidden" name="route_distance" id="routeDistance">
+
+                    <button type="submit" class="page-btn w-full mt-6">
+                        <i class="fas fa-arrow-right"></i> {{ __('all.search_available_buses') }}
+                    </button>
+                </form>
             </div>
         </div>
-    </section>
- 
-    
+    </div>
+</section>
+@endsection
 
-    <script src="{{ asset('js/jquery.min.js') }}"></script>
-    <script src="{{ asset('js/jquery-migrate-3.0.1.min.js') }}"></script>
-    <script src="{{ asset('js/popper.min.js') }}"></script>
-    <script src="{{ asset('js/bootstrap.min.js') }}"></script>
-    <script defer src="{{ asset('js/bootstrap-datepicker.min.js@key=1') }}"></script>
-    <script defer src="{{ asset('js/jquery-ui.min.js') }}"></script>
-    <script src="{{ asset('js/jquery.easing.1.3.js') }}"></script>
-    <script src="{{ asset('js/jquery.waypoints.min.js') }}"></script>
-    <script src="{{ asset('js/jquery.stellar.min.js') }}"></script>
-    <script src="{{ asset('js/owl.carousel.min.js') }}"></script>
-    <script src="{{ asset('js/aos.js') }}"></script>
-    <script src="{{ asset('js/jquery.animateNumber.min.js') }}"></script>
-    <script src="{{ asset('js/scrollax.min.js') }}"></script>
-    <script src="{{ asset('js/main.js@key=1') }}"></script>
-    <script src="{{ asset('js/hashes.min.js') }}" type="text/javascript"></script>
-    <script defer src="{{ asset('js/common.js@3') }}" type="text/javascript"></script>
+@push('scripts')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
-        $(document).ready(function() {
-            // Initialize Select2 on the select elements
+        $(function () {
             $('.select2').select2({
-                placeholder: "{{ __('all.select_a_point_placeholder') }}",
+                placeholder: @json(__('all.select_a_point_placeholder')),
                 allowClear: true,
                 width: '100%'
             });
         });
-    </script>
 
-    <script>
-        // Existing JavaScript for dropoff point
-        document.getElementById('dropoffPoint').addEventListener('change', function() {
+        document.getElementById('dropoffPoint').addEventListener('change', function () {
             var selectedOption = this.options[this.selectedIndex];
             var amount = selectedOption.getAttribute('data-amount');
-            document.getElementById('droppingPointAmount').value = amount;
-        });
+            document.getElementById('droppingPointAmount').value = amount || '';
 
-        document.getElementById('dropoffPoint').addEventListener('change', function() {
             const selectedValue = this.value;
             let hiddenInput = document.getElementById('hiddenDropoffPoint');
             if (!hiddenInput) {
@@ -247,14 +218,11 @@
             hiddenInput.value = selectedValue;
         });
 
-        // Map JavaScript
         let map, startMarker, endMarker, routingControl, activeInput;
-        let calculatedDistance = null;
 
-        // Initialize map on page load
-        map = L.map('map').setView([-1.286389, 36.817223], 6); // Centered on Nairobi
+        map = L.map('map').setView([-6.7924, 39.2083], 6);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
         function createMarkerIcon(color) {
@@ -273,10 +241,9 @@
                 marker = L.marker(latlng, {
                     icon: createMarkerIcon(color),
                     draggable: true
-                }).addTo(map).on('dragend', function(e) {
+                }).addTo(map).on('dragend', function () {
                     const position = marker.getLatLng();
-                    document.getElementById(inputId).value =
-                        `${position.lat.toFixed(6)}, ${position.lng.toFixed(6)}`;
+                    document.getElementById(inputId).value = `${position.lat.toFixed(6)}, ${position.lng.toFixed(6)}`;
                     if ((inputId === 'start' && endMarker) || (inputId === 'end' && startMarker)) {
                         calculateDistance();
                     }
@@ -294,13 +261,13 @@
         }
 
         function setDistanceResult(calculatedDistanceKm, durationSec, startLatLng, endLatLng, isFallback) {
-            calculatedDistance = calculatedDistanceKm;
             const resultDiv = document.getElementById('result');
             const resultContent = document.getElementById('result-content');
-            if (resultDiv) resultDiv.style.display = 'block';
+            if (resultDiv) resultDiv.classList.remove('hidden');
             if (resultContent) {
                 var durationStr = durationSec != null ? Math.floor(durationSec/60) + ' min ' + (durationSec%60) + ' sec' : '–';
-                resultContent.innerHTML = (isFallback ? '<p class="text-amber-700 text-sm mb-2">{{ __("customer/busroot.routing_fallback") ?? "Route service unavailable; showing straight-line distance." }}</p>' : '') + '<div class="grid grid-cols-2 gap-2 text-sm text-black"><div><span class="font-medium">{{ __('all.distance_label') }}</span> ' + calculatedDistanceKm + ' km</div><div><span class="font-medium">{{ __('all.duration_label') }}</span> ' + durationStr + '</div><div><span class="font-medium">{{ __('all.start_label') }}</span> ' + startLatLng.lat.toFixed(6) + ', ' + startLatLng.lng.toFixed(6) + '</div><div><span class="font-medium">{{ __('all.end_label') }}</span> ' + endLatLng.lat.toFixed(6) + ', ' + endLatLng.lng.toFixed(6) + '</div></div>';
+                resultContent.innerHTML = (isFallback ? '<p class="text-amber-700 text-sm mb-2">Route service unavailable; showing straight-line distance.</p>' : '') +
+                    '<div class="grid grid-cols-2 gap-2"><div><span class="font-medium">{{ __('all.distance_label') }}</span> ' + calculatedDistanceKm + ' km</div><div><span class="font-medium">{{ __('all.duration_label') }}</span> ' + durationStr + '</div></div>';
             }
             var rd = document.getElementById('routeDistance'), rdd = document.getElementById('routeDistanceDisplay');
             if (rd) rd.value = calculatedDistanceKm;
@@ -315,27 +282,24 @@
             if (routingControl) { map.removeControl(routingControl); routingControl = null; }
 
             routingControl = L.Routing.control({
-                waypoints: [
-                    L.latLng(startLatLng.lat, startLatLng.lng),
-                    L.latLng(endLatLng.lat, endLatLng.lng)
-                ],
+                waypoints: [L.latLng(startLatLng.lat, startLatLng.lng), L.latLng(endLatLng.lat, endLatLng.lng)],
                 routeWhileDragging: true,
                 showAlternatives: false,
                 addWaypoints: false,
                 draggableWaypoints: false,
                 fitSelectedRoutes: true,
-                lineOptions: { styles: [{ color: '#3B82F6', opacity: 0.8, weight: 6 }] },
-                createMarker: function() { return null; }
+                lineOptions: { styles: [{ color: '#2E3093', opacity: 0.8, weight: 6 }] },
+                createMarker: function () { return null; }
             }).addTo(map);
 
-            routingControl.on('routesfound', function(e) {
+            routingControl.on('routesfound', function (e) {
                 const routes = e.routes;
                 const distance = routes[0].summary.totalDistance;
                 const duration = routes[0].summary.totalTime;
                 setDistanceResult((distance/1000).toFixed(2), duration, startLatLng, endLatLng, false);
             });
 
-            routingControl.on('routingerror', function() {
+            routingControl.on('routingerror', function () {
                 map.removeControl(routingControl);
                 routingControl = null;
                 var fallbackKm = haversineKm(startLatLng.lat, startLatLng.lng, endLatLng.lat, endLatLng.lng).toFixed(2);
@@ -350,13 +314,8 @@
             if (!place) return Promise.resolve();
             const input = document.getElementById(inputId);
             input.classList.add('bg-blue-50');
-            input.readOnly = true;
-            function done() {
-                input.classList.remove('bg-blue-50');
-                input.readOnly = false;
-            }
             return fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(place) + '&limit=1', {
-                headers: { 'Accept': 'application/json', 'User-Agent': 'HighlinkRoundTrip/1.0' }
+                headers: { 'Accept': 'application/json', 'User-Agent': 'HighlinkBooking/1.0' }
             })
                 .then(response => response.json())
                 .then(data => {
@@ -365,96 +324,66 @@
                         const lon = parseFloat(data[0].lon);
                         const latlng = L.latLng(lat, lon);
                         document.getElementById(inputId).value = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
-                        if (inputId === 'start') {
-                            startMarker = updateMarker(startMarker, latlng, 'start');
-                        } else {
-                            endMarker = updateMarker(endMarker, latlng, 'end');
-                        }
+                        if (inputId === 'start') startMarker = updateMarker(startMarker, latlng, 'start');
+                        else endMarker = updateMarker(endMarker, latlng, 'end');
                         if (startMarker && endMarker) calculateDistance();
                         else map.setView(latlng, 12);
                     } else {
-                        showAlert('{{ __('all.error_no_results_found') }} "' + place + '"', 'error');
+                        showAlert(@json(__('all.error_no_results_found')) + ' "' + place + '"', 'error');
                         document.getElementById(inputId).value = '';
                     }
                 })
-                .catch(error => {
+                .catch(function () {
                     if (retryCount < 1) {
                         return new Promise(r => setTimeout(r, 1100)).then(() => geocodePlace(place, inputId, 1));
                     }
-                    console.error('Geocoding error:', error);
-                    showAlert('{{ __('all.error_geocoding_place_name_try_again') }}', 'error');
+                    showAlert(@json(__('all.error_geocoding_place_name_try_again')), 'error');
                     document.getElementById(inputId).value = '';
                 })
-                .finally(done);
+                .finally(function () { input.classList.remove('bg-blue-50'); });
         }
 
-        function showAlert(message, type = 'info') {
+        function showAlert(message, type) {
             const alertDiv = document.createElement('div');
-            alertDiv.className = `fixed top-4 right-4 p-4 rounded-md shadow-lg text-white ${
-        type === 'error' ? 'bg-red-500' : 'bg-blue-500'
-    }`;
-            alertDiv.innerHTML = `
-        <div class="flex items-center">
-            <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'} mr-2"></i>
-            <span>${message}</span>
-        </div>
-    `;
+            alertDiv.className = 'fixed top-20 right-4 p-4 rounded-lg shadow-lg text-white z-50 ' + (type === 'error' ? 'bg-red-500' : 'bg-[var(--home-primary)]');
+            alertDiv.innerHTML = '<div class="flex items-center gap-2"><i class="fas ' + (type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle') + '"></i><span>' + message + '</span></div>';
             document.body.appendChild(alertDiv);
-            setTimeout(() => {
-                alertDiv.classList.add('opacity-0', 'transition-opacity', 'duration-300');
-                setTimeout(() => alertDiv.remove(), 300);
+            setTimeout(function () {
+                alertDiv.remove();
             }, 3000);
         }
 
         function handleInputChange(inputId) {
             const input = document.getElementById(inputId);
-            input.addEventListener('change', function() {
+            input.addEventListener('change', function () {
                 const value = this.value.trim();
-                if (!value.match(/^-?\d+\.\d+,\s*-?\d+\.\d+$/)) {
-                    geocodePlace(value, inputId);
-                }
+                if (!value.match(/^-?\d+\.\d+,\s*-?\d+\.\d+$/)) geocodePlace(value, inputId);
             });
-            input.addEventListener('keypress', function(e) {
+            input.addEventListener('keypress', function (e) {
                 if (e.key === 'Enter') {
                     const value = this.value.trim();
-                    if (!value.match(/^-?\d+\.\d+,\s*-?\d+\.\d+$/)) {
-                        geocodePlace(value, inputId);
-                    }
+                    if (!value.match(/^-?\d+\.\d+,\s*-?\d+\.\d+$/)) geocodePlace(value, inputId);
                 }
             });
         }
 
-        // Handle input focus
-        document.getElementById('start').addEventListener('focus', function() {
+        document.getElementById('start').addEventListener('focus', function () {
             activeInput = 'start';
-            this.classList.add('ring-2', 'ring-blue-400');
-            document.getElementById('end').classList.remove('ring-2', 'ring-blue-400');
         });
-
-        document.getElementById('end').addEventListener('focus', function() {
+        document.getElementById('end').addEventListener('focus', function () {
             activeInput = 'end';
-            this.classList.add('ring-2', 'ring-blue-400');
-            document.getElementById('start').classList.remove('ring-2', 'ring-blue-400');
         });
 
-        // Handle map clicks
-        map.on('click', function(e) {
-            if (activeInput) {
-                const latlng = e.latlng;
-                document.getElementById(activeInput).value = `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
-                if (activeInput === 'start') {
-                    startMarker = updateMarker(startMarker, latlng, 'start');
-                } else {
-                    endMarker = updateMarker(endMarker, latlng, 'end');
-                }
-                if (startMarker && endMarker) {
-                    calculateDistance();
-                }
-            }
+        map.on('click', function (e) {
+            if (!activeInput) return;
+            const latlng = e.latlng;
+            document.getElementById(activeInput).value = `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
+            if (activeInput === 'start') startMarker = updateMarker(startMarker, latlng, 'start');
+            else endMarker = updateMarker(endMarker, latlng, 'end');
+            if (startMarker && endMarker) calculateDistance();
         });
 
-        // Handle calculate button (delay between geocodes for Nominatim 1 req/sec)
-        document.getElementById('calculate').addEventListener('click', function() {
+        document.getElementById('calculate').addEventListener('click', function () {
             const startValue = document.getElementById('start').value.trim();
             const endValue = document.getElementById('end').value.trim();
             const coordRegex = /^-?\d+\.\d+,\s*-?\d+\.\d+$/;
@@ -462,10 +391,8 @@
             function setStart() {
                 if (!startValue) return Promise.resolve();
                 if (startValue.match(coordRegex)) {
-                    try {
-                        const parts = startValue.split(',').map(c => parseFloat(c.trim()));
-                        startMarker = updateMarker(startMarker, L.latLng(parts[0], parts[1]), 'start');
-                    } catch (e) { showAlert('{{ __('all.error_invalid_start_coordinates') }}', 'error'); }
+                    const parts = startValue.split(',').map(c => parseFloat(c.trim()));
+                    startMarker = updateMarker(startMarker, L.latLng(parts[0], parts[1]), 'start');
                     return Promise.resolve();
                 }
                 return geocodePlace(startValue, 'start');
@@ -473,16 +400,14 @@
             function setEnd() {
                 if (!endValue) return Promise.resolve();
                 if (endValue.match(coordRegex)) {
-                    try {
-                        const parts = endValue.split(',').map(c => parseFloat(c.trim()));
-                        endMarker = updateMarker(endMarker, L.latLng(parts[0], parts[1]), 'end');
-                    } catch (e) { showAlert('{{ __('all.error_invalid_end_coordinates') }}', 'error'); }
+                    const parts = endValue.split(',').map(c => parseFloat(c.trim()));
+                    endMarker = updateMarker(endMarker, L.latLng(parts[0], parts[1]), 'end');
                     return Promise.resolve();
                 }
                 return geocodePlace(endValue, 'end');
             }
 
-            setStart().then(function() { return new Promise(r => setTimeout(r, 1100)); }).then(setEnd).then(function() {
+            setStart().then(function () { return new Promise(r => setTimeout(r, 1100)); }).then(setEnd).then(function () {
                 if (startMarker && endMarker) {
                     map.invalidateSize();
                     setTimeout(calculateDistance, 200);
@@ -490,156 +415,59 @@
             });
         });
 
-        // Handle clear button
-        document.getElementById('clear').addEventListener('click', function() {
-            if (startMarker) {
-                map.removeLayer(startMarker);
-                startMarker = null;
-            }
-            if (endMarker) {
-                map.removeLayer(endMarker);
-                endMarker = null;
-            }
-            if (routingControl) {
-                map.removeControl(routingControl);
-                routingControl = null;
-            }
+        document.getElementById('clear').addEventListener('click', function () {
+            if (startMarker) { map.removeLayer(startMarker); startMarker = null; }
+            if (endMarker) { map.removeLayer(endMarker); endMarker = null; }
+            if (routingControl) { map.removeControl(routingControl); routingControl = null; }
             document.getElementById('start').value = '';
             document.getElementById('end').value = '';
-            document.getElementById('result').style.display = 'none';
-            document.getElementById('start').classList.remove('ring-2', 'ring-blue-400');
-            document.getElementById('end').classList.remove('ring-2', 'ring-blue-400');
+            document.getElementById('result').classList.add('hidden');
             activeInput = null;
             document.getElementById('routeDistance').value = '';
             document.getElementById('routeDistanceDisplay').value = '';
         });
 
-        // Handle quick location buttons
-        document.querySelectorAll('[data-point]').forEach(btn => {
-            btn.addEventListener('click', function() {
+        document.querySelectorAll('[data-point]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
                 if (!activeInput) {
                     showAlert('Please click on either Pickup or Dropping input field first', 'error');
                     return;
                 }
-                const pointName = this.getAttribute('data-point');
-                geocodePlace(pointName, activeInput);
+                geocodePlace(this.getAttribute('data-point'), activeInput);
             });
         });
 
-        // Sync pickup and dropoff points with map inputs
-        document.getElementById('pickupPoint').addEventListener('change', function() {
-            const startInput = document.getElementById('start');
+        document.getElementById('pickupPoint').addEventListener('change', function () {
             if (this.value) {
-                startInput.value = this.value;
+                document.getElementById('start').value = this.value;
                 geocodePlace(this.value, 'start');
             }
         });
 
-        document.getElementById('dropoffPoint').addEventListener('change', function() {
-            const endInput = document.getElementById('end');
+        document.getElementById('dropoffPoint').addEventListener('change', function () {
             if (this.value) {
-                endInput.value = this.value;
+                document.getElementById('end').value = this.value;
                 geocodePlace(this.value, 'end');
             }
         });
 
-        // Initialize input handlers
         handleInputChange('start');
         handleInputChange('end');
 
-        // Auto-geocode default points on load
-        window.addEventListener('load', function() {
-            const fromValue = document.getElementById('routeFrom').value;
-            const toValue = document.getElementById('routeTo').value;
+        window.addEventListener('load', function () {
+            setTimeout(function () { map.invalidateSize(); }, 300);
+            const fromValue = @json($car->schedule->from);
+            const toValue = @json($car->schedule->to);
             if (fromValue) {
                 document.getElementById('start').value = fromValue;
                 geocodePlace(fromValue, 'start');
             }
             if (toValue) {
-                document.getElementById('end').value = toValue;
-                geocodePlace(toValue, 'end');
+                setTimeout(function () {
+                    document.getElementById('end').value = toValue;
+                    geocodePlace(toValue, 'end');
+                }, 1200);
             }
         });
     </script>
-
-    <style>
-        .custom-icon {
-            background: transparent !important;
-            border: none !important;
-        }
-
-        #map {
-            z-index: 0;
-        }
-
-        .toggle-password {
-            float: right;
-            cursor: pointer;
-            margin-right: 10px;
-            margin-top: -25px;
-        }
-
-        .resend-color {
-            color: #183C64 !important;
-            cursor: pointer;
-        }
-
-        /* Make Leaflet routing (route info) panel readable on white background */
-        .leaflet-routing-container {
-            background-color: rgba(255, 255, 255, 0.96) !important;
-            color: #111827 !important;
-            border-radius: 0.5rem;
-            padding: 0.75rem;
-            font-size: 0.85rem;
-        }
-        .leaflet-routing-container,
-        .leaflet-routing-container * ,
-        .leaflet-routing-alt,
-        .leaflet-routing-alt * {
-            color: #111827 !important;
-            background-color: transparent !important;
-        }
-        .leaflet-routing-alt {
-            background-color: rgba(255, 255, 255, 0.96) !important;
-            padding: 0.5rem 0.25rem;
-            border-radius: 0.5rem;
-        }
-
-        /* Animation for route display */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        #result {
-            animation: fadeIn 0.3s ease-out;
-        }
-
-        /* Custom scrollbar for selects */
-        select::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        select::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-
-        select::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 4px;
-        }
-
-        select::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8;
-        }
-    </style>
-
-@endsection
+@endpush

@@ -1,16 +1,28 @@
 @extends('vender.app')
 
-@section('content')
+@section('title', __('vender/busroot.select_your_journey_points'))
+
+@section('page_hero')
+    @include('test.partials.page_hero', [
+        'eyebrow' => __('all.highlink_isgc'),
+        'title' => __('vender/busroot.select_your_journey_points'),
+        'subtitle' => __('assistance/sidebar.book_ticket'),
+    ])
+@endsection
+
+@push('styles')
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+@endpush
 
-<section class="bg-gray-100 py-8">
+@section('content')
+<section class="page-section page-section--alt">
     <div class="container mx-auto px-4">
-        <div class="max-w-2xl mx-auto">
-            <div class="bg-white rounded-2xl shadow-md p-6">
+        <div class="max-w-2xl mx-auto vendor-panel fade-in">
+            <div class="vendor-panel__body">
                 <h5 class="text-xl font-bold text-gray-800 text-center mb-6">{{ __('vender/busroot.select_your_journey_points') }}</h5>
 
-                <form id="busSearchForm" method="POST" action="{{ route('vender.store') }}">
+                <form id="busSearchForm" method="POST" action="{{ route('vender.get_form') }}">
                     @csrf
 
                     <!-- Bus Operator -->
@@ -141,8 +153,7 @@
                     <input type="hidden" name="dropping_point_amount" id="droppingPointAmount">
                     <input type="hidden" name="route_distance" id="routeDistance">
 
-                    <button type="submit"
-                            class="w-full py-2 mt-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-md font-medium hover:opacity-90 transition">
+                    <button type="submit" class="w-full mt-4 page-btn">
                         <i class="fas fa-search mr-2"></i> {{ __('vender/busroot.search_available_buses') }}
                     </button>
                     <input type="hidden" value="{{ $car->schedule->id }}" name="schedule_id">
@@ -152,6 +163,7 @@
     </div>
 </section>
 
+@push('scripts')
 <script src="{{ asset('js/jquery.min.js') }}"></script>
 <script src="{{ asset('js/jquery-migrate-3.0.1.min.js') }}"></script>
 <script src="{{ asset('js/popper.min.js') }}"></script>
@@ -479,24 +491,15 @@
         }
     });
 </script>
+@endpush
 
+@push('styles')
 <style>
     #map {
-        height: 18rem; /* h-72 = 288px */
+        height: 18rem;
         width: 100%;
-        border-radius: 0.375rem; /* rounded-md */
+        border-radius: 0.375rem;
     }
-    .toggle-password {
-        float: right;
-        cursor: pointer;
-        margin-right: 0.625rem; /* 10px */
-        margin-top: -1.5625rem; /* -25px */
-    }
-    .resend-color {
-        color: #183C64 !important;
-        cursor: pointer;
-    }
-    /* Make Leaflet routing (route info) panel readable on white background */
     .leaflet-routing-container {
         background-color: rgba(255, 255, 255, 0.96) !important;
         color: #111827 !important;
@@ -505,7 +508,7 @@
         font-size: 0.85rem;
     }
     .leaflet-routing-container,
-    .leaflet-routing-container * ,
+    .leaflet-routing-container *,
     .leaflet-routing-alt,
     .leaflet-routing-alt * {
         color: #111827 !important;
@@ -517,4 +520,5 @@
         border-radius: 0.5rem;
     }
 </style>
+@endpush
 @endsection

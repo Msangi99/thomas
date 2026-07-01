@@ -1,85 +1,81 @@
-@extends('test.ap')
+@extends('test.layouts.marketing')
+
+@section('title', __('all.booking_verification_title') . ' — ' . __('all.highlink_isgc'))
+
+@section('page_hero')
+    @include('test.partials.page_hero', [
+        'eyebrow' => __('all.booking_information'),
+        'title' => __('all.booking_verification_title'),
+        'subtitle' => __('all.booking_verification_subtitle'),
+        'image' => 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1200&q=80',
+    ])
+@endsection
 
 @section('content')
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
-        <div class="text-center mb-6">
-            <h2 class="text-2xl font-bold text-gray-800 mb-2">Email Verification Required</h2>
-            <p class="text-gray-600">Please verify your email address to view your bookings</p>
-        </div>
+<section class="page-section page-section--alt">
+    <div class="container mx-auto px-4 max-w-md">
+        <div class="customer-panel fade-in">
+            <div class="customer-panel__body">
+                @if (session('status'))
+                    <div class="customer-alert customer-alert--success mb-4" role="status">{{ session('status') }}</div>
+                @endif
 
-        @if (session('status'))
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4" role="alert">
-                {{ session('status') }}
-            </div>
-        @endif
+                @if (session('email'))
+                    <p class="text-sm text-gray-600 mb-4">
+                        {{ __('all.email_or_phone_number') }}: <strong>{{ session('email') }}</strong>
+                    </p>
+                @endif
 
-        <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-6">
-            <strong>Booking Access Verification</strong><br>
-            Please check your email and enter the 6-digit verification code that was sent to your email address to access your booking details.
-        </div>
-
-        <form method="POST" action="{{ route('booking.verification.verify') }}" class="space-y-4">
-            @csrf
-
-            <div>
-                <label for="verification_code" class="block text-sm font-medium text-gray-700 mb-1">Verification Code</label>
-                <input id="verification_code" type="text" class="text-gray-800 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('verification_code') border-red-500 @enderror" 
-                       name="verification_code" value="{{ old('verification_code') }}" required 
-                       maxlength="6" pattern="[0-9]{6}" placeholder="123456">
-                @error('verification_code')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out">
-                Verify Email & View Bookings
-            </button>
-        </form>
-
-        <div class="mt-6 pt-4 border-t border-gray-200">
-            <div class="text-center">
-                <p class="text-sm text-gray-600 mb-3">Didn't receive the code?</p>
-                <form method="POST" action="{{ route('booking.verification.resend') }}" class="inline">
+                <form method="POST" action="{{ route('booking.verification.verify') }}" class="space-y-4">
                     @csrf
-                    <button type="submit" class="text-blue-600 hover:text-blue-800 text-sm font-medium underline">
-                        Resend Verification Code
+
+                    <div>
+                        <label for="verification_code" class="block text-sm font-semibold text-gray-700 mb-1.5">
+                            {{ __('all.verification_code') }}
+                        </label>
+                        <input id="verification_code" type="text"
+                            class="page-input text-center tracking-widest text-lg @error('verification_code') border-red-400 @enderror"
+                            name="verification_code" value="{{ old('verification_code') }}" required
+                            maxlength="6" pattern="[0-9]{6}" placeholder="123456" inputmode="numeric">
+                        @error('verification_code')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <button type="submit" class="page-btn w-full">
+                        <i class="fas fa-check" aria-hidden="true"></i> {{ __('all.verify_and_view_bookings') }}
                     </button>
                 </form>
-            </div>
 
-            <div class="text-center mt-4">
-                <a href="{{ route('info') }}" class="text-gray-600 hover:text-gray-800 text-sm">
-                    Back to Booking Search
-                </a>
+                <div class="mt-6 pt-4 border-t border-gray-200 text-center space-y-3">
+                    <form method="POST" action="{{ route('booking.verification.resend') }}">
+                        @csrf
+                        <button type="submit" class="text-sm font-semibold" style="color:var(--home-primary)">
+                            {{ __('all.resend_verification_code') }}
+                        </button>
+                    </form>
+                    <a href="{{ route('info') }}" class="page-btn page-btn--outline w-full">
+                        {{ __('all.back_to_booking_search') }}
+                    </a>
+                </div>
             </div>
         </div>
     </div>
-</div>
-
-<script>
-// Auto-focus on verification code input
-document.addEventListener('DOMContentLoaded', function() {
-    const codeInput = document.getElementById('verification_code');
-    
-    if (codeInput) {
-        codeInput.focus();
-    }
-    
-    // Auto-submit when 6 digits are entered
-    codeInput.addEventListener('input', function() {
-        if (this.value.length === 6) {
-            this.form.submit();
-        }
-    });
-});
-</script>
+</section>
 @endsection
 
-
-
-
-
-
-
-
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const codeInput = document.getElementById('verification_code');
+    if (codeInput) {
+        codeInput.focus();
+        codeInput.addEventListener('input', function () {
+            if (this.value.length === 6) {
+                this.form.requestSubmit();
+            }
+        });
+    }
+});
+</script>
+@endpush

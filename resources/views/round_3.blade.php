@@ -1,16 +1,40 @@
-@extends('test.ap')
+@extends('test.layouts.marketing')
 
-@section('content')
+@section('title', __('all.select_your_journey_points') . ' — ' . __('all.higlink_premium_travel'))
+
+@push('styles')
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+@endpush
 
-<section class="bg-gray-100 py-8">
-    <div class="container mx-auto px-4">
-        <div class="max-w-2xl mx-auto">
-            <div class="bg-white rounded-2xl shadow-md p-6">
-                <h5 class="text-xl font-bold text-gray-800 text-center mb-6">{{ __('customer/busroot.select_your_journey_points') }}</h5>
+@section('page_hero')
+    @include('test.partials.page_hero', [
+        'eyebrow' => 'Round Trip · Step 1',
+        'title' => ($car->schedule->from ?? 'Route') . ' ➔ ' . ($car->schedule->to ?? ''),
+        'subtitle' => __('all.choose_pickup_dropping_locations'),
+        'image' => 'https://images.unsplash.com/photo-1570125909232-e097323dccff?w=1200&q=80',
+    ])
+@endsection
 
-                <form id="busSearchForm" method="POST" action="{{ route('round.trip.booking_form.store') }}">
+@section('content')
+<section class="page-section page-section--alt">
+    <div class="container mx-auto px-4 max-w-5xl">
+        @include('test.partials.booking_steps', ['currentStep' => 1])
+
+        @if (session('error'))
+            <div class="booking-alert booking-alert--error fade-in mb-6" role="alert">
+                <i class="fas fa-exclamation-circle mr-2"></i>{{ session('error') }}
+            </div>
+        @endif
+
+        <div class="booking-card fade-in">
+            <div class="booking-card__header">
+                <h2 class="booking-card__title">{{ __('customer/busroot.select_your_journey_points') }}</h2>
+                <p class="booking-card__subtitle">{{ __('all.choose_pickup_dropping_locations') }}</p>
+            </div>
+            <div class="booking-card__body">
+                <form id="busSearchForm" method="POST" action="{{ route('round.trip.booking_form.store') }}" class="booking-form">
                     @csrf
 
                     <!-- Bus Operator -->
@@ -141,33 +165,26 @@
                     <input type="hidden" name="dropping_point_amount" id="droppingPointAmount">
                     <input type="hidden" name="route_distance" id="routeDistance">
 
-                    <button type="submit"
-                            class="w-full py-2 mt-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-md font-medium hover:opacity-90 transition">
+                    <button type="submit" class="page-btn w-full mt-4">
                         <i class="fas fa-search mr-2"></i> {{ __('customer/busroot.search_available_buses') }}
                     </button>
                     <input type="hidden" value="{{ $car->schedule->id }}" name="schedule_id">
                 </form>
             </div>
         </div>
+
+        <div class="mt-6">
+            <a href="{{ route('round.trip') }}" class="page-btn page-btn--outline">
+                <i class="fas fa-arrow-left mr-2"></i> {{ __('all.back_button') }}
+            </a>
+        </div>
     </div>
 </section>
+@endsection
 
-<script src="{{ asset('js/jquery.min.js') }}"></script>
-<script src="{{ asset('js/jquery-migrate-3.0.1.min.js') }}"></script>
-<script src="{{ asset('js/popper.min.js') }}"></script>
-<script src="{{ asset('js/bootstrap.min.js') }}"></script>
-<script defer src="{{ asset('js/bootstrap-datepicker.min.js@key=1') }}"></script>
-<script defer src="{{ asset('js/jquery-ui.min.js') }}"></script>
-<script src="{{ asset('js/jquery.easing.1.3.js') }}"></script>
-<script src="{{ asset('js/jquery.waypoints.min.js') }}"></script>
-<script src="{{ asset('js/jquery.stellar.min.js') }}"></script>
-<script src="{{ asset('js/owl.carousel.min.js') }}"></script>
-<script src="{{ asset('js/aos.js') }}"></script>
-<script src="{{ asset('js/jquery.animateNumber.min.js') }}"></script>
-<script src="{{ asset('js/scrollax.min.js') }}"></script>
-<script src="{{ asset('js/main.js@key=1') }}"></script>
-<script src="{{ asset('js/hashes.min.js') }}"></script>
-<script defer src="{{ asset('js/common.js@3') }}"></script>
+@push('scripts')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
@@ -479,7 +496,9 @@
         }
     });
 </script>
+@endpush
 
+@push('styles')
 <style>
     #map {
         height: 18rem; /* h-72 = 288px */
@@ -497,4 +516,4 @@
         cursor: pointer;
     }
 </style>
-@endsection
+@endpush

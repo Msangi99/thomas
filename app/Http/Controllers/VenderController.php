@@ -228,115 +228,22 @@ class VenderController extends Controller
 
     public function mybooking_search(Request $request)
     {
-        //return $request->all();
-        $busList = collect([]);
-        $currentTime = Carbon::now()->format('H:i:s');
-        $currentDate = Carbon::now()->format('Y-m-d');
-
-        // Check if bus_id is provided (from bus-name tab)
-        if ($request->has('bus_id') && $request->bus_id) {
-            $busList = Bus::with(['schedules' => function ($query) use ($currentDate) {
-                $query->where('schedule_date', '>', $currentDate)
-                    ->orWhere('schedule_date', '=', $currentDate);
-                //->where('start', '>=', Carbon::now()->format('H:i:s')); // Optional: future schedules
-            }])
-                ->where('campany_id', $request->bus_id)
-                ->whereHas('schedules', function ($query) use ($currentDate) {
-                    $query->where('schedule_date', '>=', $currentDate);
-                    //->where('start', '>=', Carbon::now()->format('H:i:s')); // Optional
-                })
-                ->get();
+        if ($request->filled('departure_city') && $request->filled('arrival_city')) {
+            return $this->by_route_search($request);
         }
-        
-        // Get cities for the form
-        $cities = City::all();
-        
-        return view('vender.route', compact('busList', 'cities'));
+
+        if ($request->filled('bus_id')) {
+            return app(RouteController::class)->bus_name($request);
+        }
+
+        return view('vender.route');
     }
 
     public function by_route_search(Request $request)
     {
-        // Validate the request
-        $validated = $request->validate([
-            'departure_city' => 'required|exists:cities,id',
-            'arrival_city' => 'required|exists:cities,id|different:departure_city',
-            'departure_date' => 'required|date|after_or_equal:today',
-            'bus_type' => 'sometimes|in:any,10,20,30,40',
-            'passengers' => 'sometimes|integer|min:1',
-        ]);
+        $request->attributes->set('_booking_view', 'vender.by_route_search');
 
-        // Retrieve city names and normalize departure date
-        $departureCityName = City::findOrFail($validated['departure_city'])->name;
-        $arrivalCityName = City::findOrFail($validated['arrival_city'])->name;
-        $departure_date = Carbon::parse($validated['departure_date'])->toDateString();
-
-        session()->put('departure_date', $departure_date);
-
-        // Query buses with relationships and filter by route - only today to future
-        // Load schedule.route so from/to use real schedule data with route fallback when null
-        $busQuery = Bus::with([
-            'busname' => function ($query) {
-                $query->where('status', 1);
-            },
-            'route.via',
-            'schedules' => function ($query) use ($departureCityName, $arrivalCityName, $departure_date) {
-                $query->with('route')
-                    ->where('from', $departureCityName)
-                    ->where('to', $arrivalCityName)
-                    ->whereDate('schedule_date', $departure_date);
-            },
-            'booking' => function ($query) use ($departure_date) {
-                $query->where('travel_date', $departure_date)
-                    ->where('payment_status', 'Paid');
-            }
-        ])
-            ->whereHas('busname', function ($query) {
-                $query->where('status', 1);
-            })
-            ->whereHas('schedules', function ($query) use ($departureCityName, $arrivalCityName, $departure_date) {
-                $query->where('from', $departureCityName)
-                    ->where('to', $arrivalCityName)
-                    ->whereDate('schedule_date', $departure_date);
-                    // ->where(function ($timeQuery) use ($departure_date) {
-                    //     // If it's today, only show schedules that haven't started yet
-                    //     if ($departure_date === Carbon::now()->toDateString()) {
-                    //         $timeQuery->where('start', '>', Carbon::now()->toTimeString());
-                    //     }
-                    // });
-            });
-
-        // Add bus class filter if specified and not "any"
-        if (!empty($validated['bus_type']) && $validated['bus_type'] !== 'any') {
-            $busQuery->where('bus_type', $validated['bus_type']);
-        }
-
-        $busList = $busQuery->get()
-            ->map(function ($bus) {
-                return tap($bus, function ($bus) {
-                    // Ensure total_seats is available
-                    $total_seats = $bus->total_seats ?? $bus->busname->total_seats ?? 0;
-
-                    // Calculate booked seats from pre-loaded bookings
-                    $booked_seats = $bus->booking
-                        ->flatMap(function ($booking) {
-                            // Handle comma-separated seats, trim whitespace, and filter valid seats
-                            return array_filter(array_map('trim', explode(',', $booking->seat)));
-                        })
-                        ->unique()
-                        ->count();
-
-                    $bus->booked_seats = $booked_seats;
-                    $bus->remain_seats = $total_seats - $booked_seats;
-
-                    // Ensure remain_seats is not negative
-                    $bus->remain_seats = max(0, $bus->remain_seats);
-                });
-            });
-
-        // Get cities for the form
-        $cities = City::all();
-
-        return view('vender.route', compact('busList', 'departureCityName', 'arrivalCityName', 'departure_date', 'cities'));
+        return app(BookingController::class)->by_route_search($request);
     }
 
     public function booking_form($id, $from, $to)
@@ -657,10 +564,12 @@ class VenderController extends Controller
         $user = $request->user_id ?? "";
 
         session()->put('booking_form', $bus_info);
-        $payment_method =  $request->payment_method;
+        $payment_method = $request->payment_method;
+
+        $isResave = $request->has('resave_ticket') && $request->input('resave_ticket') == '1';
 
         $canonicalAmount = session()->get('booking_form')['payable_amount'] ?? $request->amount;
-        return $this->pay($canonicalAmount, $user, $payment_method);
+        return $this->pay($canonicalAmount, $user, $payment_method, $isResave);
     }
 
     private function generateRandomId()
@@ -676,13 +585,13 @@ class VenderController extends Controller
         return $randomString . "-" . $randomNumber;
     }
 
-    public function pay($amount, $user, $method)
+    public function pay($amount, $user, $method, $isResave = false)
     {
         // Check if test mode is enabled
         $settings = \App\Models\Setting::first();
         if ($settings && ($settings->test_mode ?? false)) {
             // Test mode is enabled - use test payment processing
-            return $this->processTestPayment($amount, $user, $method);
+            return $this->processTestPayment($amount, $user, $method, $isResave);
         }
 
         $tigo = new TigosecureController();
@@ -690,7 +599,7 @@ class VenderController extends Controller
             return redirect()->route('home')->with('error', 'Session expired. Please try again.');
         }
         $bookingForm = session()->get('booking_form');
-        $bima = session()->get('booking_form')['bima'];
+        $bima = $bookingForm['bima'] ?? 0;
         $xcode = $this->generateRandomId();
         $data = [
             'account' => session()->get('booking_form')['customer_payment_number'],
@@ -720,32 +629,32 @@ class VenderController extends Controller
         $bookingData = [
             'booking_code' => $bookingCode,
             'campany_id' => $bus->campany->id,
-            'bus_id' => session()->get('booking_form')['bus_id'],
-            'route_id' => session()->get('booking_form')['route_id'],
-            'pickup_point' => session()->get('booking_form')['pickup_point'],
-            'dropping_point' => session()->get('booking_form')['dropping_point'],
-            'travel_date' => session()->get('booking_form')['travel_date'],
-            'seat' => session()->get('booking_form')['seats'],
+            'bus_id' => $bookingForm['bus_id'],
+            'route_id' => $bookingForm['route_id'],
+            'pickup_point' => $bookingForm['pickup_point'],
+            'dropping_point' => $bookingForm['dropping_point'],
+            'travel_date' => $bookingForm['travel_date'],
+            'seat' => $bookingForm['seats'],
             'amount' => round($amount),
-            'gender' => session()->get('booking_form')['gender'],
-            'age' => session()->get('booking_form')['age'],
-            'infant_child' => session()->get('booking_form')['infant_child'],
-            'age_group' => session()->get('booking_form')['age_group'],
-            'payment_status' => 'Unpaid', // Set initial status to Unpaid
-            'customer_phone' => session()->get('booking_form')['customer_number'],
-            'customer_name' => session()->get('booking_form')['customer_name'],
-            'customer_email' => session()->get('booking_form')['customer_email'],
-            'bima' => session()->get('booking_form')['bima'],
-            'insuranceDate' => session()->get('booking_form')['insuranceDate'],
+            'gender' => $bookingForm['gender'] ?? null,
+            'age' => $bookingForm['age'] ?? null,
+            'infant_child' => $bookingForm['infant_child'] ?? 0,
+            'age_group' => $bookingForm['age_group'] ?? null,
+            'payment_status' => $isResave ? 'resaved' : 'Unpaid',
+            'resaved_until' => $isResave ? Carbon::now()->addDay() : null,
+            'customer_phone' => $bookingForm['customer_number'],
+            'customer_name' => $bookingForm['customer_name'],
+            'customer_email' => $bookingForm['customer_email'],
+            'bima' => $bookingForm['bima'] ?? 0,
+            'insuranceDate' => $bookingForm['insuranceDate'] ?? null,
             'vender_id' => $pop,
-            'discount' => session()->get('booking_form')['discount'],
-            'discount_amount' => session()->get('booking_form')['discount_amount'],
-            'busFee' => session()->get('booking_form')['dispo'] ?? session()->get('booking_form')['total_amount'],
-            'schedule_id' => session()->get('booking_form')['schedule_id'],
-            'cancel_key' => session()->get('booking_form')['cancel_key'],
-            'excess_luggage' => session()->get('booking_form')['excess_luggage'], // Add excess luggage
-            'excess_luggage_description' => session()->get('booking_form')['excess_luggage_description'], // Add excess luggage description
-            'excess_luggage_fee' => session()->get('booking_form')['excess_luggage_fee'] ?? '',
+            'discount' => $bookingForm['discount'] ?? '',
+            'discount_amount' => $bookingForm['discount_amount'] ?? 0,
+            'distance' => $bookingForm['route_distance'] ?? 0,
+            'busFee' => $bookingForm['dispo'] ?? $bookingForm['total_amount'],
+            'schedule_id' => $bookingForm['schedule_id'] ?? null,
+            'has_excess_luggage' => $bookingForm['has_excess_luggage'] ?? ($bookingForm['excess_luggage'] ?? 0),
+            'excess_luggage_fee' => (int) ($bookingForm['excess_luggage_fee'] ?? 0),
         ];
 
         if ($bima == 1) {
@@ -763,6 +672,15 @@ class VenderController extends Controller
                 'data' => $bookingData,
             ]);
             return response()->json(['status' => 'error', 'message' => 'Failed to create booking'], 500);
+        }
+
+        if ($isResave) {
+            session()->forget('booking_form');
+
+            return redirect()->route('vender.resaved.tickets')->with(
+                'success',
+                'Ticket reserved successfully! Please pay within 24 hours. After that, the booking will be cancelled.'
+            );
         }
 
         // Initiate payment and get transactionRefId
@@ -859,7 +777,7 @@ class VenderController extends Controller
      * @param string $method
      * @return \Illuminate\Http\RedirectResponse
      */
-    private function processTestPayment($amount, $user, $method)
+    private function processTestPayment($amount, $user, $method, $isResave = false)
     {
         $bookingForm = session()->get('booking_form');
         $bima = $bookingForm['bima'] ?? 0;
@@ -886,25 +804,25 @@ class VenderController extends Controller
             'travel_date' => $bookingForm['travel_date'],
             'seat' => $bookingForm['seats'],
             'amount' => round($amount),
-            'gender' => $bookingForm['gender'],
-            'age' => $bookingForm['age'],
-            'infant_child' => $bookingForm['infant_child'],
-            'age_group' => $bookingForm['age_group'],
-            'payment_status' => 'Unpaid',
+            'gender' => $bookingForm['gender'] ?? null,
+            'age' => $bookingForm['age'] ?? null,
+            'infant_child' => $bookingForm['infant_child'] ?? 0,
+            'age_group' => $bookingForm['age_group'] ?? null,
+            'payment_status' => $isResave ? 'resaved' : 'Unpaid',
+            'resaved_until' => $isResave ? Carbon::now()->addDay() : null,
             'customer_phone' => $bookingForm['customer_number'],
             'customer_name' => $bookingForm['customer_name'],
             'customer_email' => $bookingForm['customer_email'],
-            'bima' => $bookingForm['bima'],
-            'insuranceDate' => $bookingForm['insuranceDate'],
+            'bima' => $bookingForm['bima'] ?? 0,
+            'insuranceDate' => $bookingForm['insuranceDate'] ?? null,
             'vender_id' => $pop,
-            'discount' => $bookingForm['discount'],
-            'discount_amount' => $bookingForm['discount_amount'],
-            'distance' => $bookingForm['route_distance'],
+            'discount' => $bookingForm['discount'] ?? '',
+            'discount_amount' => $bookingForm['discount_amount'] ?? 0,
+            'distance' => $bookingForm['route_distance'] ?? 0,
             'busFee' => $bookingForm['dispo'] ?? $bookingForm['total_amount'],
-            'schedule_id' => $bookingForm['schedule_id'],
-            'cancel_key' => $bookingForm['cancel_key'],
-            'excess_luggage' => $bookingForm['excess_luggage'],
-            'excess_luggage_description' => $bookingForm['excess_luggage_description'],
+            'schedule_id' => $bookingForm['schedule_id'] ?? null,
+            'has_excess_luggage' => $bookingForm['has_excess_luggage'] ?? ($bookingForm['excess_luggage'] ?? 0),
+            'excess_luggage_fee' => (int) ($bookingForm['excess_luggage_fee'] ?? 0),
             'transaction_ref_id' => $xcode,
             'payment_method' => 'test_mode',
         ];
@@ -924,6 +842,15 @@ class VenderController extends Controller
                 'data' => $bookingData,
             ]);
             return redirect()->route('home')->with('error', 'Failed to create booking in test mode');
+        }
+
+        if ($isResave) {
+            session()->forget('booking_form');
+
+            return redirect()->route('vender.resaved.tickets')->with(
+                'success',
+                'Ticket reserved successfully! Please pay within 24 hours. After that, the booking will be cancelled.'
+            );
         }
 
         // Store booking in session for test payment controller
@@ -1075,8 +1002,117 @@ class VenderController extends Controller
             }
         }
 
-        $bookings = $query->where('payment_status', 'Paid')->latest()->paginate(20);
-        return view('vender.history', compact('bookings'));
+        $bookings = $query->where('payment_status', 'Paid')->latest()->paginate(20)->withQueryString();
+        $period = $request->get('period', 'today');
+
+        return view('vender.history', compact('bookings', 'period'));
+    }
+
+    public function resavedTickets()
+    {
+        $bookings = Booking::with(['campany', 'schedule', 'bus.busname', 'bus.route'])
+            ->where('vender_id', auth()->id())
+            ->where('payment_status', 'resaved')
+            ->latest()
+            ->get();
+
+        $ticketRows = collect(group_ticket_list_rows($bookings));
+        $page = max(1, (int) request()->get('page', 1));
+        $perPage = 20;
+
+        $bookings = new \Illuminate\Pagination\LengthAwarePaginator(
+            $ticketRows->forPage($page, $perPage)->values(),
+            $ticketRows->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
+        return view('vender.resaved_tickets', compact('bookings'));
+    }
+
+    public function cancelResavedTicket($id)
+    {
+        $booking = Booking::where('id', $id)
+            ->where('vender_id', auth()->id())
+            ->where('payment_status', 'resaved')
+            ->firstOrFail();
+
+        $booking->update(['payment_status' => 'Cancel']);
+
+        $partner = round_trip_resaved_partner($booking);
+        if ($partner !== null && ($partner->payment_status ?? '') === 'resaved') {
+            $partner->update(['payment_status' => 'Cancel']);
+        }
+
+        return redirect()->route('vender.resaved.tickets')
+            ->with('success', __('vender/resaved_tickets.cancelled_success'));
+    }
+
+    public function payResavedTicket($id)
+    {
+        $booking = Booking::with(['route_name', 'bus.busname', 'schedule', 'campany'])
+            ->where('id', $id)
+            ->where('vender_id', auth()->id())
+            ->where('payment_status', 'resaved')
+            ->firstOrFail();
+
+        $partner = round_trip_resaved_partner($booking);
+        if ($partner !== null && ($partner->payment_status ?? '') === 'resaved') {
+            $legs = sort_round_trip_resaved_legs([$booking, $partner]);
+            app(RoundTripController::class)->loadResavedRoundTripCheckout($legs[0], $legs[1]);
+
+            return redirect()->round_trip_route('checkout');
+        }
+
+        $setting = Setting::first();
+        $formulaService = app(FareFormulaService::class);
+        $seatCount = max(1, count(array_filter(array_map('trim', explode(',', (string) $booking->seat)))));
+        $price = (float) $booking->amount;
+        $fees = $formulaService->calculateTravellerServiceFee(
+            (float) ($booking->busFee ?: $booking->amount),
+            $setting,
+            $seatCount
+        );
+        $dis = $booking->discount_amount ?? 0;
+        $ins = $booking->bima_amount ?? 0;
+        $test_mode = (bool) ($setting->test_mode ?? false);
+
+        return view('vender.pay_resaved', compact('booking', 'price', 'fees', 'dis', 'ins', 'test_mode'));
+    }
+
+    public function editResavedTicket($id)
+    {
+        $booking = Booking::where('id', $id)
+            ->where('vender_id', auth()->id())
+            ->where('payment_status', 'resaved')
+            ->firstOrFail();
+
+        return view('vender.edit_resaved', compact('booking'));
+    }
+
+    public function updateResavedTicket(Request $request)
+    {
+        $request->validate([
+            'booking_id' => 'required|integer',
+            'name' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'required|string|max:20',
+        ]);
+
+        $booking = Booking::where('id', $request->booking_id)
+            ->where('vender_id', auth()->id())
+            ->where('payment_status', 'resaved')
+            ->firstOrFail();
+
+        $booking->update([
+            'customer_name' => $request->name,
+            'customer_email' => $request->email,
+            'customer_phone' => normalize_tanzania_phone_for_booking((string) $request->phone),
+        ]);
+
+        return redirect()->route('vender.resaved.tickets')
+            ->with('success', __('vender/resaved_tickets.updated_success'));
     }
 
 

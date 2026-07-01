@@ -8,6 +8,7 @@ return [
     'book_ticket' => 'Hifadhi Tiketi',
     'booking_history' => 'Historia ya Uhifadhi',
     'booking_history_menu' => 'Menyu ya Historia ya Uhifadhi',
+    'reserved_tickets' => 'Tiketi Zilizohifadhiwa',
     'today' => 'Leo',
     'week' => 'Wiki',
     'month' => 'Mwezi',

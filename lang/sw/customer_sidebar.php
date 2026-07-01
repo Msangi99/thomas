@@ -5,6 +5,8 @@ return [
     'Dashboard' => 'Dashibodi',
     'My Tickets' => 'Tiketi Zangu',
     'Bus Route' => 'Njia ya Basi',
+    'Round Trip' => 'Safari ya Kwenda na Kurudi',
     'Profile' => 'Wasifu',
     'Logout' => 'Ondoka',
+    'Wallet' => 'Mkoba',
 ];

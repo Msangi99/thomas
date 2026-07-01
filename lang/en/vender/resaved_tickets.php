@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'title' => 'Reserved Tickets',
     'subtitle' => 'Your company\'s reserved tickets (not yet paid).',
     'no_tickets' => 'No reserved tickets for your company.',
     'booking_code' => 'Booking Code',
@@ -15,4 +16,7 @@ return [
     'actions' => 'Actions',
     'view' => 'View',
     'resaved' => 'Reserved',
+    'cancelled_success' => 'Reserved ticket cancelled successfully.',
+    'updated_success' => 'Reserved ticket updated successfully.',
+    'cancel_confirm' => 'Are you sure you want to cancel this reserved ticket?',
 ];

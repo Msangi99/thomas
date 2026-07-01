@@ -11,12 +11,14 @@ use App\Models\Roundtrip;
 use App\Models\route;
 use App\Models\Schedule;
 use App\Models\Setting;
+use App\Models\TempWallet;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use App\Services\FareFormulaService;
+use App\Services\RouteDistanceService;
 use Illuminate\Support\Str;
 
 class RoundTripController extends Controller
@@ -25,12 +27,38 @@ class RoundTripController extends Controller
 
     public function direction($view, $data = [])
     {
-        $user = auth()->user(); // Get the authenticated user object
+        $user = auth()->user();
 
         if ($user) {
             if ($user->isCustomer()) {
+                if (request()->routeIs('customer.round.trip*')) {
+                    if ($view === 'round_6') {
+                        return view('customer.round_trip_checkout', $data);
+                    }
+                    if ($view === 'round_payment_success') {
+                        return view('round_payment_success', $data);
+                    }
+                    if ($view === 'round_payment_failed') {
+                        return view('round_payment_failed', $data);
+                    }
+
+                    return view($view, $data);
+                }
+
                 return view("customer.{$view}", $data);
             } elseif ($user->isVender()) {
+                if (request()->routeIs('vender.round.trip*')) {
+                    if ($view === 'round_6') {
+                        return view('vender.round_trip_checkout', $data);
+                    }
+                    if ($view === 'round_payment_success') {
+                        return view('vender.round_payment_success', $data);
+                    }
+                    if ($view === 'round_payment_failed') {
+                        return view('vender.round_payment_failed', $data);
+                    }
+                }
+
                 return view("vender.{$view}", $data);
             }
         }
@@ -55,6 +83,116 @@ class RoundTripController extends Controller
         ];
     }
 
+    private function buildRoundTripLegSummary(array $legData, string $legLabel): array
+    {
+        $car = bus::with(['busname', 'route.via'])->find($legData['bus_id'] ?? null);
+        $seatList = array_values(array_filter(array_map('trim', explode(',', (string) ($legData['seats'] ?? '')))));
+
+        return [
+            'leg_label' => $legLabel,
+            'bus_name' => $car->busname->name ?? null,
+            'bus_number' => $car->bus_number ?? null,
+            'via' => $car->route->via->name ?? null,
+            'pickup' => $legData['pickup_point'] ?? ($legData['from'] ?? null),
+            'dropping' => $legData['dropping_point'] ?? ($legData['to'] ?? null),
+            'travel_date' => $legData['travel_date'] ?? null,
+            'seats' => $seatList,
+            'passengers' => $legData['passenger_details'] ?? [],
+        ];
+    }
+
+    private function buildRoundTripLegSummaryFromBooking(Booking $booking, string $legLabel): array
+    {
+        $car = bus::with(['busname', 'route.via'])->find($booking->bus_id);
+        $seatList = array_values(array_filter(array_map('trim', explode(',', (string) ($booking->seat ?? '')))));
+
+        return [
+            'leg_label' => $legLabel,
+            'bus_name' => $car->busname->name ?? null,
+            'bus_number' => $car->bus_number ?? null,
+            'via' => $car->route->via->name ?? null,
+            'pickup' => $booking->pickup_point,
+            'dropping' => $booking->dropping_point,
+            'travel_date' => $booking->travel_date,
+            'seats' => $seatList,
+            'passengers' => [],
+        ];
+    }
+
+    /**
+     * Resume payment for a reserved round-trip pair using the round-trip checkout flow.
+     */
+    public function loadResavedRoundTripCheckout(Booking $outbound, Booking $return): void
+    {
+        $totalAmount = (float) $outbound->amount + (float) $return->amount;
+
+        session()->put('booking1', $outbound);
+        session()->put('booking2', $return);
+        session()->put('is_round', true);
+        session()->put('booking_form', [
+            'customer_number' => $outbound->customer_phone,
+            'customer_email' => $outbound->customer_email,
+            'customer_name' => $outbound->customer_name,
+            'payable_amount' => $totalAmount,
+            'total_amount' => $totalAmount,
+        ]);
+    }
+
+    private function buildRoundTripCheckoutFromBookings(Booking $b1, Booking $b2, Setting $setting): array
+    {
+        $legs = sort_round_trip_resaved_legs([$b1, $b2]);
+        $outbound = $legs[0];
+        $return = $legs[1];
+
+        $ins = (float) ($outbound->bima_amount ?? 0) + (float) ($return->bima_amount ?? 0);
+        $dis = (float) ($outbound->discount_amount ?? 0) + (float) ($return->discount_amount ?? 0);
+        $excess = (float) ($outbound->excess_luggage_fee ?? 0) + (float) ($return->excess_luggage_fee ?? 0);
+        $totalAmount = (float) ($outbound->amount ?? 0) + (float) ($return->amount ?? 0);
+        $legFees = max(0, (float) ($outbound->amount ?? 0) - (float) ($outbound->busFee ?? 0) - (float) ($outbound->bima_amount ?? 0) - (float) ($outbound->excess_luggage_fee ?? 0))
+            + max(0, (float) ($return->amount ?? 0) - (float) ($return->busFee ?? 0) - (float) ($return->bima_amount ?? 0) - (float) ($return->excess_luggage_fee ?? 0));
+        $price = max(0, $totalAmount - $legFees);
+
+        return [
+            'price' => $price,
+            'ins' => $ins,
+            'fees' => $legFees,
+            'dis' => $dis,
+            'excess_luggage_fee' => $excess,
+            'test_mode' => (bool) ($setting->test_mode ?? false),
+            'legSummaries' => [
+                $this->buildRoundTripLegSummaryFromBooking($outbound, 'Outbound'),
+                $this->buildRoundTripLegSummaryFromBooking($return, 'Return'),
+            ],
+            'contactPhone' => $outbound->customer_phone ?? '',
+            'paymentAction' => round_trip_route('get_payment'),
+            'standalone' => true,
+        ];
+    }
+
+    private function buildRoundTripInlinePaymentViewData(Roundtrip $firstbooking, Roundtrip $secondbooking): array
+    {
+        $data1 = json_decode($firstbooking->data, true) ?: [];
+        $data2 = json_decode($secondbooking->data, true) ?: [];
+        $checkout = $this->buildRoundTripCheckoutData($data1, $data2);
+
+        return array_merge($checkout, [
+            'legSummaries' => [
+                $this->buildRoundTripLegSummary($data1, 'Outbound'),
+                $this->buildRoundTripLegSummary($data2, 'Return'),
+            ],
+            'contactPhone' => $data2['customer_number'] ?? ($data1['customer_number'] ?? ''),
+            'paymentAction' => round_trip_route('get_payment'),
+        ]);
+    }
+
+    private function renderRoundTripInlinePaymentHtml(Roundtrip $firstbooking, Roundtrip $secondbooking, bool $standalone = false): string
+    {
+        return view('test.partials.round_trip_payment_details_inline', array_merge(
+            $this->buildRoundTripInlinePaymentViewData($firstbooking, $secondbooking),
+            ['standalone' => $standalone]
+        ))->render();
+    }
+
     /**
      * Show final round-trip checkout (round_6) when leg data or pending bookings remain in session.
      */
@@ -63,10 +201,14 @@ class RoundTripController extends Controller
         $setting = Setting::first();
 
         if (session()->has('firstbooking') && session()->has('secondbooking')) {
-            $data1 = json_decode(session()->get('firstbooking')->data, true);
-            $data2 = json_decode(session()->get('secondbooking')->data, true);
+            $firstbooking = session()->get('firstbooking');
+            $secondbooking = session()->get('secondbooking');
+            $data = array_merge(
+                $this->buildRoundTripInlinePaymentViewData($firstbooking, $secondbooking),
+                ['standalone' => true]
+            );
 
-            return $this->direction('round_6', $this->buildRoundTripCheckoutData($data1, $data2, $setting));
+            return $this->direction('round_6', $data);
         }
 
         if (session()->get('is_round') && session()->has('booking1') && session()->has('booking2')) {
@@ -79,22 +221,7 @@ class RoundTripController extends Controller
                 $b2 = Booking::find($b2->id) ?? $b2;
             }
 
-            $ins = (float) ($b1->bima_amount ?? 0) + (float) ($b2->bima_amount ?? 0);
-            $dis = (float) ($b1->discount_amount ?? 0) + (float) ($b2->discount_amount ?? 0);
-            $excess = (float) ($b1->excess_luggage_fee ?? 0) + (float) ($b2->excess_luggage_fee ?? 0);
-            $totalAmount = (float) ($b1->amount ?? 0) + (float) ($b2->amount ?? 0);
-            $legFees = max(0, (float) ($b1->amount ?? 0) - (float) ($b1->busFee ?? 0) - (float) ($b1->bima_amount ?? 0) - (float) ($b1->excess_luggage_fee ?? 0))
-                + max(0, (float) ($b2->amount ?? 0) - (float) ($b2->busFee ?? 0) - (float) ($b2->bima_amount ?? 0) - (float) ($b2->excess_luggage_fee ?? 0));
-            $price = max(0, $totalAmount - $legFees);
-
-            return $this->direction('round_6', [
-                'price' => $price,
-                'ins' => $ins,
-                'fees' => $legFees,
-                'dis' => $dis,
-                'excess_luggage_fee' => $excess,
-                'test_mode' => (bool) ($setting->test_mode ?? false),
-            ]);
+            return $this->direction('round_6', $this->buildRoundTripCheckoutFromBookings($b1, $b2, $setting));
         }
 
         return null;
@@ -103,20 +230,20 @@ class RoundTripController extends Controller
     public function checkout()
     {
         if ($this->roundTripPassengerStepPending()) {
-            return redirect()->route('round.trip.payment');
+            return redirect()->round_trip_route('payment');
         }
 
         if ($response = $this->roundTripCheckoutResponse()) {
             return $response;
         }
 
-        return redirect()->route('round.trip')
+        return redirect()->round_trip_route('index')
             ->with('error', 'Your booking session was lost. Please search and select your seats again.');
     }
 
     private function redirectRoundTripCheckout(array $errors = [])
     {
-        $redirect = redirect()->route('round.trip.checkout');
+        $redirect = redirect()->round_trip_route('checkout');
 
         return empty($errors) ? $redirect : $redirect->withErrors($errors);
     }
@@ -156,9 +283,336 @@ class RoundTripController extends Controller
         session()->forget(['key', 'round_trip_pending_key']);
     }
 
+    private function isInlineBookingRequest(Request $request): bool
+    {
+        return $request->ajax()
+            || $request->boolean('inline')
+            || $request->header('X-Inline-Booking') === '1';
+    }
+
+    private function loadBookingFormBus(Request $request, $id, $from, $to)
+    {
+        if ($request->filled('departure_date')) {
+            session()->put('departure_date', Carbon::parse($request->departure_date)->toDateString());
+        }
+
+        $car = bus::with([
+            'busname',
+            'route',
+            'schedule' => function ($query) use ($from, $to) {
+                $query->where('from', $from)->where('to', $to);
+                if ($date = session('departure_date')) {
+                    $query->where('schedule_date', $date);
+                }
+            },
+            'route.points',
+        ])->find($id);
+
+        if ($car === null || $car->route === null || $car->schedule === null) {
+            return null;
+        }
+
+        session()->put('time', [
+            'start' => $car->schedule->start ?? $car->route->route_start,
+            'end' => $car->schedule->end ?? $car->route->route_end,
+        ]);
+
+        if ($car->route->from == $car->schedule->from) {
+            $car->filtered_points = $car->route->points->filter(fn ($point) => $point->state === 'no');
+        } else {
+            $car->filtered_points = $car->route->points->filter(fn ($point) => $point->state === 'yes');
+        }
+
+        return $car;
+    }
+
+    private function getSeatsContext(): ?array
+    {
+        $booking_form = session()->get('booking_form');
+        if (empty($booking_form['bus_id']) || empty($booking_form['travel_date'])) {
+            return null;
+        }
+
+        $bus_id = $booking_form['bus_id'];
+        $travel_date = $booking_form['travel_date'];
+        $price = $booking_form['dropping_point_amount'];
+        $info = $booking_form;
+
+        $car = bus::with([
+            'busname',
+            'route',
+            'schedule' => function ($query) use ($travel_date, $booking_form) {
+                $query->where('schedule_date', $travel_date);
+                if (! empty($booking_form['from']) && ! empty($booking_form['to'])) {
+                    $query->where('from', $booking_form['from'])->where('to', $booking_form['to']);
+                }
+            },
+        ])->find($bus_id);
+
+        if (! $car) {
+            return null;
+        }
+
+        $booked_seats = Booking::where('bus_id', $bus_id)
+            ->where('travel_date', $travel_date)
+            ->whereIn('payment_status', ['Paid', 'Reserved', 'resaved'])
+            ->pluck('seat')
+            ->flatMap(fn ($seats) => explode(',', $seats))
+            ->unique()
+            ->values()
+            ->toArray();
+
+        $distance = $info['route_distance'] ?? 0;
+        $setting = Setting::first();
+        $formulaService = app(FareFormulaService::class);
+        $provisionalForm = array_merge($info, ['seats' => 'A1', 'total_amount' => $price]);
+        $fees = $formulaService->calculateTravellerServiceFee(
+            $formulaService->busFareForServiceFeeFromBookingForm($provisionalForm),
+            $setting,
+            1
+        );
+
+        return compact('price', 'booked_seats', 'car', 'info', 'distance', 'fees');
+    }
+
+    private function buildReturnLegSearchUrl(array $legData): string
+    {
+        $fromName = $legData['to'] ?? '';
+        $toName = $legData['from'] ?? '';
+        $date = $legData['travel_date'] ?? Carbon::today()->toDateString();
+
+        $fromCity = City::where('name', $fromName)->first();
+        $toCity = City::where('name', $toName)->first();
+
+        if (! $fromCity || ! $toCity) {
+            return round_trip_route('index');
+        }
+
+        return round_trip_route('by_routesearch', [
+            'departure_city' => $fromCity->id,
+            'arrival_city' => $toCity->id,
+            'departure_date' => $date,
+        ]);
+    }
+
+    public function inlineBookingForm(Request $request, $id, $from, $to)
+    {
+        $car = $this->loadBookingFormBus($request, $id, $from, $to);
+
+        if ($car === null) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'This trip is not available. Please try another bus.',
+            ], 404);
+        }
+
+        $inlineUid = 'rt_' . $car->id . '_' . substr(md5($from . $to . session('departure_date')), 0, 8);
+
+        return view('test.partials.round_trip_booking_form_inline', compact('car', 'inlineUid'));
+    }
+
+    public function inlineWalletLookup(Request $request)
+    {
+        $key = trim((string) $request->query('key', ''));
+        if ($key === '') {
+            return response()->json(['amount' => 0]);
+        }
+
+        $amount = TempWallet::where('user_key', $key)->value('amount') ?? 0;
+
+        return response()->json(['amount' => (float) $amount]);
+    }
+
+    public function inlinePreparePayment(Request $request)
+    {
+        if (! $this->isInlineBookingRequest($request)) {
+            return response()->json(['ok' => false, 'message' => 'Invalid request.'], 400);
+        }
+
+        $bus_info = session()->get('booking_form', []);
+        if (empty($bus_info['bus_id']) || empty($bus_info['travel_date'])) {
+            return response()->json(['ok' => false, 'message' => 'Session expired. Please try again.'], 422);
+        }
+
+        $seats = $request->input('selected_seats');
+        $price = $request->input('total_amount');
+        $selected = is_array($seats) ? $seats : (is_string($seats) ? array_map('trim', explode(',', $seats)) : []);
+        $selected = array_values(array_filter($selected));
+
+        if (empty($selected) && ! empty($bus_info['seats'])) {
+            $selected = array_values(array_filter(array_map('trim', explode(',', (string) $bus_info['seats']))));
+            if ($price === null || $price === '') {
+                $price = $bus_info['total_amount'] ?? null;
+            }
+        }
+
+        if (empty($selected)) {
+            return response()->json(['ok' => false, 'message' => 'Please select at least one seat.'], 422);
+        }
+
+        $booked = Booking::where('bus_id', $bus_info['bus_id'])
+            ->where('travel_date', $bus_info['travel_date'])
+            ->whereIn('payment_status', ['Paid', 'Reserved', 'resaved'])
+            ->pluck('seat')
+            ->flatMap(fn ($s) => explode(',', $s))
+            ->map(fn ($s) => trim($s))
+            ->unique()
+            ->values()
+            ->toArray();
+
+        $alreadyBooked = array_intersect($selected, $booked);
+        if (! empty($alreadyBooked)) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'One or more selected seats are no longer available. Please choose different seats.',
+            ], 422);
+        }
+
+        $passengers = $request->input('passengers');
+        if (is_string($passengers)) {
+            $passengers = json_decode($passengers, true) ?: [];
+        }
+        if (! is_array($passengers) || count($passengers) !== count($selected)) {
+            return response()->json(['ok' => false, 'message' => 'Please complete details for each selected seat.'], 422);
+        }
+
+        foreach ($passengers as $passenger) {
+            if (empty(trim($passenger['name'] ?? '')) || empty(trim($passenger['phone'] ?? ''))) {
+                return response()->json(['ok' => false, 'message' => 'Please enter name and phone for each selected seat.'], 422);
+            }
+            if (empty(trim($passenger['age_group'] ?? ''))) {
+                return response()->json(['ok' => false, 'message' => 'Please select age group for each passenger.'], 422);
+            }
+        }
+
+        $bus_info['total_amount'] = $price;
+        $bus_info['total_amount_before_coupon'] = $price;
+        $bus_info['seats'] = implode(',', $selected);
+        $bus_info['passenger_details'] = $passengers;
+        $bus_info['customer_name'] = $passengers[0]['name'];
+        $bus_info['customer_number'] = $passengers[0]['phone'];
+        $bus_info['age_group'] = $passengers[0]['age_group'];
+        session()->put('booking_form', $bus_info);
+
+        $merged = array_merge($request->all(), [
+            'customer' => $passengers[0]['name'],
+            'gender' => 'Male',
+            'age' => 25,
+            'age_group' => $passengers[0]['age_group'],
+            'category' => '',
+            'inline' => '1',
+        ]);
+        $paymentRequest = Request::create(round_trip_route('payment_pay'), 'POST', $merged);
+        $paymentRequest->headers->set('X-Requested-With', 'XMLHttpRequest');
+        $paymentRequest->headers->set('X-Inline-Booking', '1');
+
+        return $this->payment_info($paymentRequest);
+    }
+
+    /**
+     * Guest/customer round-trip search uses the marketing inline checkout UI.
+     */
+    private function usesMarketingRoundTrip(): bool
+    {
+        if (! auth()->check()) {
+            return true;
+        }
+
+        return request()->routeIs('customer.round.trip*', 'vender.round.trip*');
+    }
+
+    private function roundTripSearchView(): string
+    {
+        return match (booking_channel()) {
+            'customer' => 'customer.round_trip_search',
+            'vender' => 'vender.round_trip_search',
+            default => 'round_trip_search',
+        };
+    }
+
+    private function guestRoundTripSearchData(
+        string $departureCityName = '',
+        string $arrivalCityName = '',
+        ?string $departure_date = null
+    ): array {
+        return [
+            'busList' => collect(),
+            'departureCityName' => $departureCityName,
+            'arrivalCityName' => $arrivalCityName,
+            'departure_date' => $departure_date ?? Carbon::today()->toDateString(),
+        ];
+    }
+
+    /**
+     * Query outbound buses for guest round-trip search (one schedule row per bus, like one-way).
+     */
+    private function queryGuestRoundTripBuses(
+        string $departureCityName,
+        string $arrivalCityName,
+        string $departure_date,
+        ?string $busType = null
+    ) {
+        $busQuery = Bus::with([
+            'busname' => function ($query) {
+                $query->where('status', 1);
+            },
+            'route.via',
+            'schedule' => function ($query) use ($departureCityName, $arrivalCityName, $departure_date) {
+                $query->where('from', $departureCityName)
+                    ->where('to', $arrivalCityName)
+                    ->where('schedule_date', $departure_date);
+            },
+            'booking' => function ($query) use ($departure_date) {
+                $query->where('travel_date', $departure_date)
+                    ->where('payment_status', 'Paid');
+            },
+        ])
+            ->whereHas('busname', function ($query) {
+                $query->where('status', 1);
+            })
+            ->whereHas('schedule', function ($query) use ($departureCityName, $arrivalCityName, $departure_date) {
+                $query->where('from', $departureCityName)
+                    ->where('to', $arrivalCityName)
+                    ->where('schedule_date', $departure_date);
+            });
+
+        if (! empty($busType) && $busType !== 'any') {
+            $busQuery->where('bus_type', $busType);
+        }
+
+        return $busQuery->get()
+            ->map(function ($bus) {
+                return tap($bus, function ($bus) {
+                    $total_seats = $bus->total_seats ?? $bus->busname->total_seats ?? 0;
+                    $booked_seats = $bus->booking
+                        ->flatMap(function ($booking) {
+                            return array_filter(array_map('trim', explode(',', $booking->seat)));
+                        })
+                        ->unique()
+                        ->count();
+
+                    $bus->booked_seats = $booked_seats;
+                    $bus->remain_seats = max(0, $total_seats - $booked_seats);
+                });
+            })
+            ->sortBy(fn ($bus) => $bus->schedule->start ?? '99:99')
+            ->values();
+    }
+
     public function index()
     {
-        //$campanies = Campany::with('bus')->all();
+        if (auth()->user()?->isCustomer() && request()->routeIs('round.trip*') && ! request()->routeIs('customer.round.trip*')) {
+            return redirect()->route('customer.round.trip');
+        }
+
+        if (auth()->user()?->isVender() && request()->routeIs('round.trip*') && ! request()->routeIs('vender.round.trip*')) {
+            return redirect()->route('vender.round.trip');
+        }
+
+        if ($this->usesMarketingRoundTrip()) {
+            return view($this->roundTripSearchView(), $this->guestRoundTripSearchData());
+        }
+
         return $this->direction('round_1');
     }
 
@@ -251,23 +705,47 @@ class RoundTripController extends Controller
 
     public function by_routesearch(Request $request)
     {
-        // Validate the request
         $validated = $request->validate([
             'departure_city' => 'required|exists:cities,id',
             'arrival_city' => 'required|exists:cities,id|different:departure_city',
             'departure_date' => 'required|date|after_or_equal:today',
             'bus_type' => 'sometimes|in:any,10,20,30,40',
+            'bus_class' => 'sometimes|in:any,10,20,30,40',
             'passengers' => 'sometimes|integer|min:1',
         ]);
 
-        // Retrieve city names and normalize departure date
         $departureCityName = City::findOrFail($validated['departure_city'])->name;
         $arrivalCityName = City::findOrFail($validated['arrival_city'])->name;
         $departure_date = Carbon::parse($validated['departure_date'])->toDateString();
+        $busType = $validated['bus_type'] ?? $validated['bus_class'] ?? 'any';
 
         session()->put('departure_date', $departure_date);
 
-        // Query buses with relationships and filter by route - only today to future
+        if ($this->usesMarketingRoundTrip()) {
+            if (auth()->user()?->isCustomer() && ! request()->routeIs('customer.round.trip*')) {
+                return redirect()->route('customer.round.trip.by.routesearch', $request->query());
+            }
+
+            if (auth()->user()?->isVender() && ! request()->routeIs('vender.round.trip*')) {
+                return redirect()->route('vender.round.trip.by.routesearch', $request->query());
+            }
+
+            $busList = $this->queryGuestRoundTripBuses(
+                $departureCityName,
+                $arrivalCityName,
+                $departure_date,
+                $busType
+            );
+
+            return view($this->roundTripSearchView(), compact(
+                'busList',
+                'departureCityName',
+                'arrivalCityName',
+                'departure_date'
+            ));
+        }
+
+        // Authenticated customer/vendor round-trip portal
         $busQuery = Bus::with([
             'busname' => function ($query) {
                 $query->where('status', 1);
@@ -305,8 +783,8 @@ class RoundTripController extends Controller
             });
 
         // Add bus class filter if specified and not "any"
-        if (!empty($validated['bus_type']) && $validated['bus_type'] !== 'any') {
-            $busQuery->where('bus_type', $validated['bus_type']);
+        if (! empty($busType) && $busType !== 'any') {
+            $busQuery->where('bus_type', $busType);
         }
 
         $busList = $busQuery->get()
@@ -463,7 +941,7 @@ class RoundTripController extends Controller
         ])->find($id);
 
         if ($car === null || $car->route === null || $car->schedule === null) {
-            return redirect()->route('round.trip')->with(
+            return redirect()->round_trip_route('index')->with(
                 'error',
                 'This trip is not available. Please run a new search and try again.'
             );
@@ -506,20 +984,25 @@ class RoundTripController extends Controller
 
     public function get_form(Request $request)
     {
-        // Customer round trip: distance calculation/geocoding is disabled; allow proceed without it
-        $routeDistance = $request->route_distance;
-        if ($routeDistance === null || $routeDistance === '' || (is_numeric($routeDistance) && (float) $routeDistance < 1)) {
-            $routeDistance = 0;
-        }
-        $route = Route::find($request->route_id);
+        $route = route::find($request->route_id);
         $schedule = Schedule::find($request->schedule_id);
+        $pickupPoint = $request->pickup_point ?? ($schedule->from ?? $route->from);
+        $droppingPoint = $request->dropping_point ?? ($schedule->to ?? $route->to);
+
+        $routeDistance = RouteDistanceService::resolveForBooking(
+            $request->route_distance,
+            $pickupPoint,
+            $droppingPoint,
+            $route ? (float) ($route->distance ?? 0) : null
+        );
+
         $bus_info = [
             'bus_id' => $request->bus_id,
             'from' => $schedule->from ?? $route->from,
             'to' => $schedule->to ?? $route->to,
             'route_id' => $request->route_id,
-            'pickup_point' => $request->pickup_point ?? ($schedule->from ?? $route->from),
-            'dropping_point' => $request->dropping_point ?? ($schedule->to ?? $route->to),
+            'pickup_point' => $pickupPoint,
+            'dropping_point' => $droppingPoint,
             'travel_date' => session()->get('departure_date') ?? now()->format('Y-m-d'),
             'dropping_point_amount' => $request->dropping_point_amount ?? ($route ? $route->price : 0),
             'route_distance' => $routeDistance,
@@ -528,10 +1011,27 @@ class RoundTripController extends Controller
 
         // Store in session
         session()->put('booking_form', $bus_info);
-        //return session()->get('booking_form');
-        // Redirect to seats route
 
-        return redirect()->route('round.trip.seats');
+        if ($this->isInlineBookingRequest($request)) {
+            $context = $this->getSeatsContext();
+            if (! $context) {
+                return response()->json(['ok' => false, 'message' => 'Session expired. Please try again.'], 422);
+            }
+
+            $inlineUid = $request->input('inline_uid', 'rt_seats');
+
+            return response()->json([
+                'ok' => true,
+                'step' => 2,
+                'html' => view('test.partials.inline_checkout_wizard', array_merge($context, [
+                    'inlineUid' => $inlineUid,
+                    'inlinePrepareUrl' => round_trip_route('inline_prepare'),
+                    'inlineWalletUrl' => round_trip_route('inline_wallet'),
+                ]))->render(),
+            ]);
+        }
+
+        return redirect()->round_trip_route('seats');
         //return session()->get('booking_form');
     }
 
@@ -539,7 +1039,7 @@ class RoundTripController extends Controller
     {
         $booking_form = session()->get('booking_form');
         if (is_null($booking_form) || empty($booking_form['bus_id'])) {
-            return redirect()->route('round.trip')
+            return redirect()->round_trip_route('index')
                 ->with('error', 'Your booking session was lost. Please search and select a bus again.');
         }
         $bus_id = $booking_form['bus_id'];
@@ -604,14 +1104,14 @@ class RoundTripController extends Controller
 
         $bus_info = session()->get('booking_form', []);
         if (empty($bus_info['bus_id']) || empty($bus_info['travel_date'])) {
-            return redirect()->route('round.trip')->with('error', 'Session expired. Please try again.');
+            return redirect()->round_trip_route('index')->with('error', 'Session expired. Please try again.');
         }
 
         $selected = is_array($seats) ? $seats : (is_string($seats) ? array_map('trim', explode(',', $seats)) : []);
         $selected = array_filter($selected);
 
         if (empty($selected)) {
-            return redirect()->route('round.trip.seats')->with('error', 'Please select at least one seat.');
+            return redirect()->round_trip_route('seats')->with('error', 'Please select at least one seat.');
         }
 
         // Always store a valid numeric total. If the posted amount is missing/zero
@@ -635,7 +1135,7 @@ class RoundTripController extends Controller
 
         $alreadyBooked = array_intersect($selected, $booked);
         if (!empty($alreadyBooked)) {
-            return redirect()->route('round.trip.seats')->with('error', 'One or more selected seats (e.g. ' . implode(', ', array_slice($alreadyBooked, 0, 3)) . ') are no longer available. Please choose different seats.');
+            return redirect()->round_trip_route('seats')->with('error', 'One or more selected seats (e.g. ' . implode(', ', array_slice($alreadyBooked, 0, 3)) . ') are no longer available. Please choose different seats.');
         }
 
         $bus_info['total_amount'] = $price;
@@ -644,7 +1144,7 @@ class RoundTripController extends Controller
 
         session()->put('booking_form', $bus_info);
 
-        return redirect()->route('round.trip.payment');
+        return redirect()->round_trip_route('payment');
     }
 
     public function payment()
@@ -667,7 +1167,7 @@ class RoundTripController extends Controller
                 'has_booking_form' => !is_null($bookingForm),
                 'session_keys' => array_keys(session()->all()),
             ]);
-            return redirect()->route('round.trip')
+            return redirect()->round_trip_route('index')
                 ->with('error', 'Your booking session was lost. Please search and select your seats again.');
         }
 
@@ -721,7 +1221,11 @@ class RoundTripController extends Controller
             Log::warning('Round trip payment_info(): booking_form missing seat data', [
                 'session_keys' => array_keys(session()->all()),
             ]);
-            return redirect()->route('round.trip')
+            if ($this->isInlineBookingRequest($request)) {
+                return response()->json(['ok' => false, 'message' => 'Your booking session was lost. Please search and select your seats again.'], 422);
+            }
+
+            return redirect()->round_trip_route('index')
                 ->with('error', 'Your booking session was lost. Please search and select your seats again.');
         }
 
@@ -750,10 +1254,18 @@ class RoundTripController extends Controller
         if (!empty($bus_info['discount'])) {
             $couponCheck = Discount::where('code', $bus_info['discount'])->first();
             if (!$couponCheck) {
-                return redirect()->route('round.trip.payment')->with('error', 'Invalid coupon code. Please check and try again.');
+                if ($this->isInlineBookingRequest($request)) {
+                    return response()->json(['ok' => false, 'message' => 'Invalid coupon code. Please check and try again.'], 422);
+                }
+
+                return redirect()->round_trip_route('payment')->with('error', 'Invalid coupon code. Please check and try again.');
             }
             if (!$couponCheck->isValid()) {
-                return redirect()->route('round.trip.payment')->with('error', 'This coupon has expired or has reached its usage limit.');
+                if ($this->isInlineBookingRequest($request)) {
+                    return response()->json(['ok' => false, 'message' => 'This coupon has expired or has reached its usage limit.'], 422);
+                }
+
+                return redirect()->round_trip_route('payment')->with('error', 'This coupon has expired or has reached its usage limit.');
             }
         }
 
@@ -819,10 +1331,11 @@ class RoundTripController extends Controller
 
 
         $key = $this->resolveRoundTripKey();
+        $legPayload = session()->get('booking_form');
 
         Roundtrip::create([
             'key' => $key,
-            'data' => json_encode(session()->get('booking_form')),
+            'data' => json_encode($legPayload),
         ]);
 
         session()->forget('booking_form');
@@ -833,7 +1346,17 @@ class RoundTripController extends Controller
             session()->put('round_trip_pending_key', $key);
             session()->put('key', $key);
 
-            return redirect()->route('round.trip')->with('info', 'proceed with returning booking');
+            if ($this->isInlineBookingRequest($request)) {
+                session()->flash('info', 'proceed with returning booking');
+
+                return response()->json([
+                    'ok' => true,
+                    'redirect' => $this->buildReturnLegSearchUrl(is_array($legPayload) ? $legPayload : []),
+                    'message' => 'Outbound leg saved. Select your return bus.',
+                ]);
+            }
+
+            return redirect()->round_trip_route('index')->with('info', 'proceed with returning booking');
         }
 
         $firstbooking = Roundtrip::where('key', $key)
@@ -848,7 +1371,15 @@ class RoundTripController extends Controller
         session()->put('firstbooking', $firstbooking);
         session()->put('secondbooking', $secondbooking);
 
-        return redirect()->route('round.trip.checkout');
+        if ($this->isInlineBookingRequest($request)) {
+            return response()->json([
+                'ok' => true,
+                'step' => 4,
+                'html' => $this->renderRoundTripInlinePaymentHtml($firstbooking, $secondbooking),
+            ]);
+        }
+
+        return redirect()->round_trip_route('checkout');
 
         // return $this->direction('round_6', $data);
 
@@ -890,7 +1421,25 @@ class RoundTripController extends Controller
         ]);
 
         $canonicalAmount = session()->get('booking_form')['payable_amount'] ?? $request->amount;
-        return $this->pay($canonicalAmount, $user, $payment_method);
+        $isResave = $request->has('resave_ticket') && $request->input('resave_ticket') == '1';
+
+        return $this->pay($canonicalAmount, $user, $payment_method, $isResave);
+    }
+
+    private function resaveSuccessRedirect()
+    {
+        $message = 'Tickets reserved successfully! Please pay within 24 hours. After that, the bookings will be cancelled.';
+        $channel = round_trip_routes()['channel'] ?? 'guest';
+
+        if ($channel === 'vender') {
+            return redirect()->route('vender.resaved.tickets')->with('success', $message);
+        }
+
+        if ($channel === 'customer') {
+            return redirect()->route('customer.mybooking')->with('success', $message);
+        }
+
+        return redirect()->to(booking_route('home'))->with('success', $message);
     }
 
     private function generateRandomId()
@@ -928,12 +1477,13 @@ class RoundTripController extends Controller
         return $code;
     }
 
-    public function pay($amount, $user, $method)
+    public function pay($amount, $user, $method, $isResave = false)
     {
         Log::info('Starting Round Trip Payment Processing', [
             'amount' => $amount,
             'user' => $user,
             'method' => $method,
+            'is_resave' => $isResave,
             'firstbooking_session' => session()->get('firstbooking') ? 'exists' : 'missing',
             'secondbooking_session' => session()->get('secondbooking') ? 'exists' : 'missing',
             'booking_form_session' => session()->get('booking_form') ? 'exists' : 'missing'
@@ -943,7 +1493,7 @@ class RoundTripController extends Controller
         $settings = \App\Models\Setting::first();
         if ($settings && ($settings->test_mode ?? false)) {
             // Test mode is enabled - use test payment processing
-            return $this->processTestPayment($amount, $user, $method);
+            return $this->processTestPayment($amount, $user, $method, $isResave);
         }
 
         // Common payment details from the request (e.g., contact number, email)
@@ -980,6 +1530,10 @@ class RoundTripController extends Controller
                 'commonPaymentInfo' => $commonPaymentInfo
             ]);
 
+            $roundResaveRef = $isResave
+                ? (round_trip_resaved_group_prefix() . strtoupper((string) Str::uuid()))
+                : null;
+
             // Prepare booking data for the first leg
             $bookingCode1 = $this->generateRandomCode();
             $bus1 = Bus::with(['busname', 'campany.balance'])->find($firstBookingData['bus_id']);
@@ -1007,7 +1561,9 @@ class RoundTripController extends Controller
                 'age' => $firstBookingData['age'],
                 'infant_child' => $firstBookingData['infant_child'],
                 'age_group' => $firstBookingData['age_group'],
-                'payment_status' => 'Unpaid',
+                'payment_status' => $isResave ? 'resaved' : 'Unpaid',
+                'resaved_until' => $isResave ? Carbon::now()->addDay() : null,
+                'transaction_ref_id' => $roundResaveRef,
                 'customer_phone' => $commonPaymentInfo['customer_number'] ?? '',
                 'customer_name' => $firstBookingData['customer_name'],
                 'customer_email' => $commonPaymentInfo['customer_email'] ?? '',
@@ -1056,7 +1612,9 @@ class RoundTripController extends Controller
                 'age' => $secondBookingData['age'],
                 'infant_child' => $secondBookingData['infant_child'],
                 'age_group' => $secondBookingData['age_group'],
-                'payment_status' => 'Unpaid',
+                'payment_status' => $isResave ? 'resaved' : 'Unpaid',
+                'resaved_until' => $isResave ? Carbon::now()->addDay() : null,
+                'transaction_ref_id' => $roundResaveRef,
                 'customer_phone' => $commonPaymentInfo['customer_number'] ?? '',
                 'customer_name' => $secondBookingData['customer_name'],
                 'customer_email' => $commonPaymentInfo['customer_email'] ?? '',
@@ -1086,7 +1644,7 @@ class RoundTripController extends Controller
             } catch (\Exception $e) {
                 DB::rollBack();
                 Log::error('Round trip booking failed: ' . $e->getMessage());
-                return redirect()->route('round.trip.payment.failed')->with('error', 'Failed to create round trip bookings: ' . $e->getMessage());
+                return redirect()->round_trip_route('payment_failed')->with('error', 'Failed to create round trip bookings: ' . $e->getMessage());
             }
 
             session()->put('booking1', $booking1);
@@ -1102,6 +1660,23 @@ class RoundTripController extends Controller
                 $booking1->update($contactUpdate);
                 $booking2->update($contactUpdate);
             }
+        }
+
+        if ($isResave) {
+            if ($reuseBookings) {
+                $roundResaveRef = round_trip_resaved_group_prefix() . strtoupper((string) Str::uuid());
+                $resaveUpdate = [
+                    'payment_status' => 'resaved',
+                    'resaved_until' => Carbon::now()->addDay(),
+                    'transaction_ref_id' => $roundResaveRef,
+                ];
+                $booking1->update($resaveUpdate);
+                $booking2->update($resaveUpdate);
+            }
+
+            session()->forget(['booking_form', 'firstbooking', 'secondbooking', 'booking1', 'booking2', 'is_round']);
+
+            return $this->resaveSuccessRedirect();
         }
 
         $data = [
@@ -1202,7 +1777,7 @@ class RoundTripController extends Controller
                 // Clear only booking_form; keep booking1/booking2/is_round for success page (paymentSuccess() will clear them)
                 session()->forget(['booking_form']);
 
-                return redirect()->route('round.trip.payment.success')->with('success', 'Round trip bookings created successfully via cash!');
+                return redirect()->round_trip_route('payment_success')->with('success', 'Round trip bookings created successfully via cash!');
             } catch (\Exception $e) {
                 Log::error('Cash Payment processing failed', [
                     'error' => $e->getMessage(),
@@ -1262,7 +1837,7 @@ class RoundTripController extends Controller
      * @param string $method
      * @return \Illuminate\Http\RedirectResponse
      */
-    private function processTestPayment($amount, $user, $method)
+    private function processTestPayment($amount, $user, $method, $isResave = false)
     {
         $firstBookingData = json_decode(session()->get('firstbooking')->data, true);
         $secondBookingData = json_decode(session()->get('secondbooking')->data, true);
@@ -1294,6 +1869,9 @@ class RoundTripController extends Controller
         // Generate test transaction references
         $xcode1 = 'TEST-RT1-' . strtoupper(uniqid() . rand(1000, 9999));
         $xcode2 = 'TEST-RT2-' . strtoupper(uniqid() . rand(1000, 9999));
+        $roundResaveRef = $isResave
+            ? (round_trip_resaved_group_prefix() . strtoupper((string) Str::uuid()))
+            : null;
 
         // Create first booking (mirror live pay() field sources)
         $bookingData1 = [
@@ -1310,7 +1888,8 @@ class RoundTripController extends Controller
             'age' => $firstBookingData['age'],
             'infant_child' => $firstBookingData['infant_child'],
             'age_group' => $firstBookingData['age_group'],
-            'payment_status' => 'Unpaid',
+            'payment_status' => $isResave ? 'resaved' : 'Unpaid',
+            'resaved_until' => $isResave ? Carbon::now()->addDay() : null,
             'customer_phone' => $commonPaymentInfo['customer_number'],
             'customer_name' => $firstBookingData['customer_name'],
             'customer_email' => $commonPaymentInfo['customer_email'],
@@ -1325,7 +1904,7 @@ class RoundTripController extends Controller
             'schedule_id' => $firstBookingData['schedule_id'],
             'has_excess_luggage' => $firstBookingData['has_excess_luggage'],
             'excess_luggage_fee' => $firstBookingData['excess_luggage_fee'],
-            'transaction_ref_id' => $xcode1,
+            'transaction_ref_id' => $isResave ? $roundResaveRef : $xcode1,
             'payment_method' => 'test_mode',
         ];
 
@@ -1350,7 +1929,8 @@ class RoundTripController extends Controller
             'age' => $secondBookingData['age'],
             'infant_child' => $secondBookingData['infant_child'],
             'age_group' => $secondBookingData['age_group'],
-            'payment_status' => 'Unpaid',
+            'payment_status' => $isResave ? 'resaved' : 'Unpaid',
+            'resaved_until' => $isResave ? Carbon::now()->addDay() : null,
             'customer_phone' => $commonPaymentInfo['customer_number'],
             'customer_name' => $secondBookingData['customer_name'],
             'customer_email' => $commonPaymentInfo['customer_email'],
@@ -1365,7 +1945,7 @@ class RoundTripController extends Controller
             'schedule_id' => $secondBookingData['schedule_id'],
             'has_excess_luggage' => $secondBookingData['has_excess_luggage'],
             'excess_luggage_fee' => $secondBookingData['excess_luggage_fee'],
-            'transaction_ref_id' => $xcode2,
+            'transaction_ref_id' => $isResave ? $roundResaveRef : $xcode2,
             'payment_method' => 'test_mode',
         ];
 
@@ -1389,6 +1969,12 @@ class RoundTripController extends Controller
         Session::put('booking1', $booking1);
         Session::put('booking2', $booking2);
         Session::put('is_round', true);
+
+        if ($isResave) {
+            session()->forget(['firstbooking', 'secondbooking', 'booking_form', 'booking1', 'booking2', 'is_round']);
+
+            return $this->resaveSuccessRedirect();
+        }
 
         // Clear roundtrip session data
         session()->forget(['firstbooking', 'secondbooking', 'booking_form']);

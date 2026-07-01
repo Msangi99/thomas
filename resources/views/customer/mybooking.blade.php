@@ -1,347 +1,88 @@
 @extends('customer.app')
 
+@section('title', __('customer_sidebar.My Tickets'))
+
+@section('page_hero')
+    @include('test.partials.page_hero', [
+        'eyebrow' => __('all.highlink_isgc'),
+        'title' => __('customer/myticket.my_ticket'),
+        'subtitle' => __('customer_sidebar.My Tickets'),
+    ])
+@endsection
+
 @section('content')
-    <link href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" rel="stylesheet">
-    <div class="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
-        <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-            <div class="p-4 sm:p-6 border-b border-gray-200">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <h1 class="text-xl font-bold text-gray-800">{{ __('customer/myticket.my_ticket') }}</h1>
-                </div>
+<section class="page-section page-section--alt">
+    <div class="container mx-auto px-4">
+        <div class="customer-panel fade-in">
+            <div class="customer-panel__header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <h3 class="text-base sm:text-lg">{{ __('customer/myticket.my_ticket') }}</h3>
+                <span class="text-sm opacity-90">{{ count($ticketRows ?? []) }} {{ __('customer/myticket.my_ticket') }}</span>
             </div>
-            <div class="p-4 sm:p-6">
+
+            <div class="customer-panel__body">
                 @if (session('success'))
-                    <div class="mb-4 p-3 bg-green-100 text-green-700 text-sm rounded-md" role="alert">
+                    <div class="customer-alert customer-alert--success" role="alert">
                         {{ session('success') }}
                     </div>
                 @endif
                 @if (session('error'))
-                    <div class="mb-4 p-3 bg-red-100 text-red-700 text-sm rounded-md" role="alert">
+                    <div class="customer-alert customer-alert--error" role="alert">
                         {{ session('error') }}
                     </div>
                 @endif
-                <div class="overflow-x-auto">
-                    <table id="busTable" class="w-full table-auto text-sm text-gray-700">
-                        <thead class="bg-gray-100 text-xs uppercase text-gray-500 font-semibold">
-                            <tr>
-                                <th>{{ __('customer/myticket.no') }}</th>
-                                <th class="px-4 py-3 text-left">{{ __('customer/myticket.booking_id') }}</th>
-                                <th class="px-4 py-3 text-left">{{ __('customer/busroot.price') }}</th>
-                                <th class="px-4 py-3 text-left">{{ __('customer/myticket.bus_name') }}</th>
-                                <th class="px-4 py-3 text-left">{{ __('customer/myticket.departure_date') }}</th>
-                                <th class="px-4 py-3 text-left">{{ __('customer/busroot.created_at') }}</th>
-                                <th class="px-4 py-3 text-left">{{ __('customer/myticket.status') }}</th>
-                                <th class="px-4 py-3 text-left">{{ __('customer/myticket.action') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($booking as $book)
+
+                @if (empty($ticketRows))
+                    <div class="tickets-empty">
+                        <div class="tickets-empty__icon"><i class="fas fa-ticket"></i></div>
+                        <h4 class="tickets-empty__title">{{ __('customer/myticket.no_booking_found') }}</h4>
+                        <p class="tickets-empty__text">{{ __('all.here_are_some_things_you_can_do') }}</p>
+                        <a href="{{ route('customer.mybooking.search') }}" class="page-btn">
+                            <i class="fas fa-bus"></i> {{ __('all.search_buses') }}
+                        </a>
+                    </div>
+                @else
+                    <div class="tickets-table-wrap page-table-wrap">
+                        <table id="ticketsTable" class="page-table tickets-table">
+                            <thead>
                                 <tr>
-                                    <td>{{ $loop->iteration }}</td>
-                                    <td class="px-4 py-3">{{ $book->booking_code }}</td>
-                                    <td class="px-4 py-3">{{ number_format((float) ($book->busFee ?: $book->amount), 0) }}</td>
-                                    <td class="px-4 py-3">{{ $book->campany->name ?? '' }}</td>
-                                    <td class="px-4 py-3">{{ $book->travel_date ?? '' }}</td>
-                                    <td class="px-4 py-3">{{ $book->created_at }}</td>
-                                    <td class="px-4 py-3">
-                                        @if ($book->payment_status == 'Paid')
-                                            <span
-                                                class="bg-green-200 text-green-800 py-1 px-3 rounded-full text-xs">{{ __('customer/myticket.Paid') }}</span>
-                                        @elseif($book->payment_status == 'Unpaid')
-                                            <span
-                                                class="bg-yellow-200 text-yellow-800 py-1 px-3 rounded-full text-xs">{{ __('customer/myticket.Unpaid') }}</span>
-                                        @elseif ($book->payment_status == 'resaved')
-                                            <span
-                                                class="bg-blue-200 text-blue-800 py-1 px-3 rounded-full text-xs">{{ __('customer/busroot.resaved_ticket') }}</span>
-                                        @elseif ($book->payment_status == 'Cancel')
-                                            <span
-                                                class="bg-red-200 text-red-800 py-1 px-3 rounded-full text-xs">Cancel</span>
-                                        @elseif ($book->payment_status == 'Refund')
-                                            <span
-                                                class="bg-purple-200 text-purple-800 py-1 px-3 rounded-full text-xs">{{ __('customer/myticket.Refund') }}</span>
-                                        @elseif (in_array($book->payment_status, ['Refund Pending', 'refunded']))
-                                            <span
-                                                class="bg-yellow-200 text-yellow-800 py-1 px-3 rounded-full text-xs">{{ __('customer/myticket.Refund_pending') }}</span>
-                                        @elseif ($book->payment_status == 'Refund Rejected')
-                                            <span
-                                                class="bg-red-200 text-red-800 py-1 px-3 rounded-full text-xs">{{ __('customer/myticket.Refund_rejected') }}</span>
-                                        @else
-                                            <span
-                                                class="bg-red-200 text-red-800 py-1 px-3 rounded-full text-xs">{{ __('customer/myticket.Failed') }}</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-4 py-3">
-                                        @if (in_array($book->payment_status, ['Paid', 'Refund Rejected']))
-                                            <div class="relative inline-block group">
-                                                <form action="{{ route('customer.cancel') }}" method="get">
-                                                    @csrf
-                                                    <input type="hidden" name="booking_id" value="{{ $book->id }}">
-                                                    <button
-                                                        class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-2 rounded"
-                                                        title="cancel">
-                                                        <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg"
-                                                            viewBox="0 0 20 20">
-                                                            <path
-                                                                d="M6.293 6.293a1 1 0 011.414 0L10 8.586l2.293-2.293a1 1 0 111.414 1.414L11.414 10l2.293 2.293a1 1 0 01-1.414 1.414L10 11.414l-2.293 2.293a1 1 0 01-1.414-1.414L8.586 10 6.293 7.707a1 1 0 010-1.414zM10 0a10 10 0 100 20 10 10 0 000-20z" />
-                                                        </svg>
-                                                    </button>
-                                                </form>
-                                                <div
-                                                    class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1.5 rounded bg-gray-800 px-2 py-1.5 text-xs font-medium text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                                    {{ __('all.cancel_title') }}
-                                                </div>
-                                            </div>
-
-                                            <div class="relative inline-block group">
-                                                <form action="{{ route('customer.rebook') }}" method="get"
-                                                    onsubmit="return confirm('This action will delete existing one. Are you sure you want to rebook this ticket?')">
-                                                    @csrf
-                                                    <input type="hidden" name="order_id" value="{{ $book->id }}">
-                                                    <button type="submit"
-                                                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-2 rounded"
-                                                        title="rebook">
-                                                        <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg"
-                                                            viewBox="0 0 20 20">
-                                                            <path
-                                                                d="M9 5a2 2 0 00-2 2v5a2 2 0 002 2h5a2 2 0 002-2V7a2 2 0 00-2-2H9zM7.646 6.646a.5.5 0 01.708 0l3 3a.5.5 0 010 .708l-3 3a.5.5 0 01-.708-.708L10.293 10 7.646 7.354a.5.5 0 010-.708zM10 2a8 8 0 110 16 8 8 0 010-16z" />
-                                                        </svg>
-                                                    </button>
-                                                </form>
-                                                <div
-                                                    class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1.5 rounded bg-gray-800 px-2 py-1.5 text-xs font-medium text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                                    {{ __('all.rebook_title') }}
-                                                </div>
-                                            </div>
-
-                                            <div class="relative inline-block group">
-                                                <form action="{{ route('customer.edit', ['id' => $book->id]) }}"
-                                                    method="get">
-                                                    @csrf
-                                                    <input type="hidden" name="booking_id" value="{{ $book->id }}">
-                                                    <button
-                                                        class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-2 rounded"
-                                                        title="edit">
-                                                        <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg"
-                                                            viewBox="0 0 20 20">
-                                                            <path
-                                                                d="M17.414 2.586a2 2 0 00-2.828 0L3 12.5862 2 0 000-2.828zM4 14.414L9.586 9 11 10.414 5.414 16H4v-1.586z" />
-                                                        </svg>
-                                                    </button>
-                                                </form>
-                                                <div
-                                                    class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1.5 rounded bg-gray-800 px-2 py-1.5 text-xs font-medium text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                                    {{ __('all.edit_title') }}
-                                                </div>
-                                            </div>
-
-                                            <div class="relative inline-block group">
-                                                <form action="{{ route('ticket.print') }}" method="post">
-                                                    @csrf
-                                                    <input type="hidden" name="data" value="{{ $book }}">
-                                                    <button
-                                                        class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-2 rounded"
-                                                        title="print">
-                                                        <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg"
-                                                            viewBox="0 0 20 20">
-                                                            <path
-                                                                d="M5 1a2 2 0 00-2 2v3h14V3a2 2 0 00-2-2H5zM4 8v10h12V8H4zm4 4h4v2H8v-2z" />
-                                                        </svg>
-                                                    </button>
-                                                </form>
-                                                <div
-                                                    class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1.5 rounded bg-gray-800 px-2 py-1.5 text-xs font-medium text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                                    {{ __('all.print_title') }}
-                                                </div>
-                                            </div>
-
-                                            <!-- Refund Button -->
-                                            <div class="relative inline-block group">
-                                                <button type="button"
-                                                    class="refund-trigger bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-2 rounded"
-                                                    data-refund-modal="refundModal{{ $book->id }}"
-                                                    aria-label="Request refund for booking {{ $book->id }}"
-                                                    title="Refund">
-                                                    <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg"
-                                                        viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd"
-                                                            d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10l-2.3 2.3a1 1 0 11-1.4 1.4L15 14l-5.7-5.7a1 1 0 01-1.4-1.4L4 6v4H2a2 2 0 002 2v4a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a1 1 0 110-2 1 1 0 010 2z"
-                                                            clip-rule="evenodd" />
-                                                    </svg>
-                                                </button>
-                                                <div
-                                                    class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1.5 rounded bg-gray-800 px-2 py-1.5 text-xs font-medium text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                                    Refund
-                                                </div>
-                                            </div>
-
-                                            <!-- Refund Modal (Tailwind only) -->
-                                            <div class="refund-modal fixed inset-0 z-50 hidden" id="refundModal{{ $book->id }}"
-                                                aria-labelledby="refundModalLabel{{ $book->id }}" aria-modal="true" role="dialog">
-                                                <div class="fixed inset-0 bg-black/50" data-close-refund-modal="refundModal{{ $book->id }}"></div>
-                                                <div class="fixed inset-0 flex items-center justify-center p-4">
-                                                    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md relative">
-                                                        <div class="flex justify-between items-center mb-4">
-                                                            <h5 class="text-lg font-bold text-gray-800"
-                                                                id="refundModalLabel{{ $book->id }}">{{ __('all.refund_title') }} Request
-                                                            </h5>
-                                                            <button type="button" class="text-gray-400 hover:text-gray-600 p-1 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                                data-close-refund-modal="refundModal{{ $book->id }}" aria-label="Close">
-                                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-                                                            </button>
-                                                        </div>
-                                                        <form action="{{ route('customer.refund') }}" method="POST"
-                                                            id="refundForm{{ $book->id }}" class="needs-validation refund-form"
-                                                            novalidate data-book-id="{{ $book->id }}">
-                                                            @csrf
-                                                            <input type="hidden" name="booking_id"
-                                                                value="{{ $book->id }}">
-                                                            <p class="text-xs text-gray-500 mb-3">{{ __('all.refund_mobile_or_bank_hint') ?? 'Enter at least one: mobile number (must match booking phone) or bank account number.' }}</p>
-                                                            <div class="mb-4">
-                                                                <label for="fullname{{ $book->id }}"
-                                                                    class="block text-sm font-medium text-gray-700 mb-1">{{ __('all.full_name') }}</label>
-                                                                <input type="text"
-                                                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                                    id="fullname{{ $book->id }}" name="fullname"
-                                                                    value="{{ old('fullname') }}" required placeholder="{{ __('all.enter_full_name') }}">
-                                                                @error('fullname')
-                                                                    <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                                                                @enderror
-                                                            </div>
-                                                            <div class="mb-4">
-                                                                <label for="mobile_number{{ $book->id }}"
-                                                                    class="block text-sm font-medium text-gray-700 mb-1">{{ __('all.mobile_number') }}</label>
-                                                                <input type="tel"
-                                                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                                    id="mobile_number{{ $book->id }}"
-                                                                    name="mobile_number" pattern="[0-9]{9,15}" placeholder="{{ $book->customer_phone ?? __('all.enter_mobile_number') }}"
-                                                                    value="{{ old('mobile_number') }}">
-                                                                <div class="text-gray-500 text-xs mt-1">{{ __('all.mobile_must_match_booking') ?? 'Must match the phone number used for this booking.' }}</div>
-                                                                @error('mobile_number')
-                                                                    <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                                                                @enderror
-                                                            </div>
-                                                            <div class="mb-4">
-                                                                <label for="bank_number{{ $book->id }}"
-                                                                    class="block text-sm font-medium text-gray-700 mb-1">{{ __('all.bank_account_number') }}</label>
-                                                                <input type="text"
-                                                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                                    id="bank_number{{ $book->id }}"
-                                                                    name="bank_number" placeholder="{{ __('all.enter_bank_account_number') }}"
-                                                                    value="{{ old('bank_number') }}">
-                                                                @error('bank_number')
-                                                                    <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                                                                @enderror
-                                                            </div>
-                                                            <div id="refundFormError{{ $book->id }}" class="text-red-600 text-sm mb-3 hidden" role="alert"></div>
-                                                            <div class="flex justify-end gap-2">
-                                                                <button type="button"
-                                                                    class="refund-modal-close bg-gray-500 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-md"
-                                                                    data-close-refund-modal="refundModal{{ $book->id }}">{{ __('all.close_button') }}</button>
-                                                                <button type="submit"
-                                                                    class="bg-blue-500 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md">{{ __('all.submit_refund_request') }}</button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @elseif(in_array($book->payment_status, ['Refund Pending', 'refunded', 'Refund']))
-                                            <span class="text-gray-400 text-xs">—</span>
-                                        @elseif($book->payment_status == 'Unpaid')
-                                            <div class="relative inline-block group">
-                                                <button
-                                                    class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-2 rounded"
-                                                    title="fail">
-                                                    <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg"
-                                                        viewBox="0 0 20 20">
-                                                        <path
-                                                            d="M10 0a10 10 0 100 20 10 10 0 000-20zm0 11a1 1 0 110 2 1 1 0 010-2zm0-7a1 1 0 011 1v4a1 1 0 11-2 0V5a1 1 0 011-1z" />
-                                                    </svg>
-                                                </button>
-                                                <div
-                                                    class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1.5 rounded bg-gray-800 px-2 py-1.5 text-xs font-medium text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                                    {{ __('all.fail_title') }}
-                                                </div>
-                                            </div>
-                                        @elseif($book->payment_status == 'resaved')
-                                            <div class="flex space-x-2">
-                                                <div class="relative inline-block group">
-                                                    <form action="{{ route('customer.edit', ['id' => $book->id]) }}" method="get">
-                                                        @csrf
-                                                        <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-2 rounded" title="edit">
-                                                            <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                                                <path d="M17.414 2.586a2 2 0 00-2.828 0L3 12.5862 2 0 000-2.828zM4 14.414L9.586 9 11 10.414 5.414 16H4v-1.586z" />
-                                                            </svg>
-                                                        </button>
-                                                    </form>
-                                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1.5 rounded bg-gray-800 px-2 py-1.5 text-xs font-medium text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                                        {{ __('all.edit_title') }}
-                                                    </div>
-                                                </div>
-
-                                                <div class="relative inline-block group">
-                                                    <form action="{{ route('customer.cancel.resaved', ['id' => $book->id]) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this resaved ticket?')">
-                                                        @csrf
-                                                        <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-2 rounded" title="cancel">
-                                                            <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                                                <path d="M6.293 6.293a1 1 0 011.414 0L10 8.586l2.293-2.293a1 1 0 111.414 1.414L11.414 10l2.293 2.293a1 1 0 01-1.414 1.414L10 11.414l-2.293 2.293a1 1 0 01-1.414-1.414L8.586 10 6.293 7.707a1 1 0 010-1.414zM10 0a10 10 0 100 20 10 10 0 000-20z" />
-                                                            </svg>
-                                                        </button>
-                                                    </form>
-                                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1.5 rounded bg-gray-800 px-2 py-1.5 text-xs font-medium text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                                        {{ __('all.cancel_title') }}
-                                                    </div>
-                                                </div>
-
-                                                <div class="relative inline-block group">
-                                                    <form action="{{ route('customer.pay.resaved', ['id' => $book->id]) }}" method="get">
-                                                        @csrf
-                                                        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-2 rounded" title="pay">
-                                                            <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                                                <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm-1 11h2v2h-2v-2zm0-8h2v6h-2V5z" />
-                                                            </svg>
-                                                        </button>
-                                                    </form>
-                                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1.5 rounded bg-gray-800 px-2 py-1.5 text-xs font-medium text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                                        {{ __('all.pay_button') }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @else
-                                            <div class="relative inline-block group">
-                                                <button
-                                                    class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-2 rounded"
-                                                    title="fail">
-                                                    <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg"
-                                                        viewBox="0 0 20 20">
-                                                        <path
-                                                            d="M10 0a10 10 0 100 20 10 10 0 000-20zm0 11a1 1 0 110 2 1 1 0 010-2zm0-7a1 1 0 011 1v4a1 1 0 11-2 0V5a1 1 0 011-1z" />
-                                                    </svg>
-                                                </button>
-                                                <div
-                                                    class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1.5 rounded bg-gray-800 px-2 py-1.5 text-xs font-medium text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                                    {{ __('all.cancelled') }}
-                                                </div>
-                                            </div>
-                                        @endif
-                                    </td>
+                                    <th class="tickets-table__col-no">#</th>
+                                    <th>{{ __('customer/myticket.booking_id') }}</th>
+                                    <th>{{ __('customer/busroot.price') }}</th>
+                                    <th>{{ __('customer/myticket.bus_name') }}</th>
+                                    <th>{{ __('customer/myticket.departure_date') }}</th>
+                                    <th class="tickets-table__col-date">{{ __('customer/busroot.created_at') }}</th>
+                                    <th>{{ __('customer/myticket.status') }}</th>
+                                    <th class="tickets-table__col-actions">{{ __('customer/myticket.action') }}</th>
                                 </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="8" class="px-4 py-3 text-center">
-                                        {{ __('customer/myticket.no_booking_found') }}</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody>
+                                @foreach ($ticketRows as $row)
+                                    @include('customer.partials.mybooking_table_row', [
+                                        'row' => $row,
+                                        'rowNumber' => $loop->iteration,
+                                    ])
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
+</section>
+
+@foreach ($booking as $book)
+    @if (in_array($book->payment_status, ['Paid', 'Refund Rejected']))
+        @include('customer.partials.refund_modal', ['book' => $book])
+    @endif
+@endforeach
+@endsection
+
+@push('scripts')
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Refund modal: open
             document.querySelectorAll('.refund-trigger').forEach(function(btn) {
                 btn.addEventListener('click', function() {
                     var id = this.getAttribute('data-refund-modal');
@@ -350,29 +91,26 @@
                 });
             });
 
-            // Refund modal: close (backdrop, close button)
             function closeRefundModal(id) {
                 var modal = id ? document.getElementById(id) : null;
                 if (modal) modal.classList.add('hidden');
             }
+
             document.querySelectorAll('[data-close-refund-modal]').forEach(function(el) {
                 el.addEventListener('click', function() {
                     closeRefundModal(this.getAttribute('data-close-refund-modal'));
                 });
             });
 
-            // Refund form: require at least one of mobile or bank
             document.querySelectorAll('.refund-form').forEach(function(form) {
                 form.addEventListener('submit', function(event) {
                     var mobile = (form.querySelector('input[name="mobile_number"]') || {}).value || '';
                     var bank = (form.querySelector('input[name="bank_number"]') || {}).value || '';
-                    var mobileTrim = mobile.trim();
-                    var bankTrim = bank.trim();
                     var errEl = form.querySelector('[id^="refundFormError"]');
-                    if (!mobileTrim && !bankTrim) {
+                    if (!mobile.trim() && !bank.trim()) {
                         event.preventDefault();
                         if (errEl) {
-                            errEl.textContent = '{{ __("all.please_enter_mobile_or_bank") ?? "Please enter a mobile number or bank account number." }}';
+                            errEl.textContent = @json(__('all.please_enter_mobile_or_bank') ?? 'Please enter a mobile number or bank account number.');
                             errEl.classList.remove('hidden');
                         }
                         return false;
@@ -389,41 +127,40 @@
                 }, false);
             });
 
-            // Standard needs-validation (non-refund forms)
-            var otherForms = document.querySelectorAll('.needs-validation:not(.refund-form)');
-            Array.prototype.slice.call(otherForms).forEach(function(form) {
-                form.addEventListener('submit', function(event) {
-                    if (!form.checkValidity()) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    }
-                    form.classList.add('was-validated');
-                }, false);
-            });
-
-            // Re-open refund modal when returning with validation errors for this booking
-            var refundBookingId = {{ json_encode(old('booking_id')) }};
+            var refundBookingId = @json(old('booking_id'));
             if (refundBookingId) {
                 var modalEl = document.getElementById('refundModal' + refundBookingId);
                 if (modalEl) modalEl.classList.remove('hidden');
             }
         });
-    </script>
-    <script>
+
         $(document).ready(function() {
-            // Only init DataTables when table has data rows (8 columns). Empty state has 1 cell with colspan=8.
-            var $firstRow = $('#busTable tbody tr:first');
-            if ($firstRow.length && $firstRow.find('td').length === 8) {
-                $('#busTable').DataTable({
-                    responsive: true,
-                    paging: true,
-                    searching: true,
-                    ordering: true,
-                    language: {
-                        emptyTable: "{{ __('customer/myticket.no_booking_found') }}"
+            if (!$('#ticketsTable').length) return;
+
+            $('#ticketsTable').DataTable({
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, @json(__('all.all') ?? 'All')]],
+                order: [[5, 'desc']],
+                autoWidth: false,
+                dom: '<"tickets-dt-top"lf>rt<"tickets-dt-bottom"ip>',
+                language: {
+                    search: '',
+                    searchPlaceholder: @json(__('all.search') ?? 'Search tickets...'),
+                    lengthMenu: @json('_MENU_ per page'),
+                    info: @json(__('all.showing') ?? 'Showing') + ' _START_ ' + @json(__('all.to') ?? 'to') + ' _END_ ' + @json(__('all.of') ?? 'of') + ' _TOTAL_',
+                    infoEmpty: @json(__('customer/myticket.no_booking_found')),
+                    paginate: {
+                        first: @json(__('all.first') ?? 'First'),
+                        last: @json(__('all.last') ?? 'Last'),
+                        next: @json(__('all.next') ?? 'Next'),
+                        previous: @json(__('all.previous') ?? 'Previous')
                     }
-                });
-            }
+                },
+                columnDefs: [
+                    { orderable: false, targets: [7] },
+                    { searchable: false, targets: [0, 7] }
+                ]
+            });
         });
     </script>
-@endsection
+@endpush

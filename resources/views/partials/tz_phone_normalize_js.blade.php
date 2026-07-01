@@ -1,3 +1,9 @@
+function isValidTzMobile255(digits) {
+    return digits.length === 12
+        && digits.substring(0, 3) === '255'
+        && (digits.charAt(3) === '6' || digits.charAt(3) === '7');
+}
+
 function normalizePhoneTo255(str) {
     if (!str) return '';
     var trimmed = String(str).trim();
@@ -12,20 +18,24 @@ function normalizePhoneTo255(str) {
             digits = '255' + r;
         }
     }
-    if (digits.length === 12 && digits.substring(0, 3) === '255') {
+    if (isValidTzMobile255(digits)) {
         return digits;
     }
     if (digits.length === 10 && digits.charAt(0) === '0') {
-        return '255' + digits.substring(1);
+        digits = '255' + digits.substring(1);
+        if (isValidTzMobile255(digits)) return digits;
     }
     if (digits.length === 9 && (digits.charAt(0) === '6' || digits.charAt(0) === '7')) {
-        return '255' + digits;
+        digits = '255' + digits;
+        if (isValidTzMobile255(digits)) return digits;
     }
     if (digits.charAt(0) === '0') {
-        return '255' + digits.substring(1);
+        digits = '255' + digits.substring(1);
+        if (isValidTzMobile255(digits)) return digits;
     }
     if (digits.substring(0, 3) !== '255') {
-        return '255' + digits;
+        digits = '255' + digits;
+        if (isValidTzMobile255(digits)) return digits;
     }
-    return digits;
+    return '';
 }

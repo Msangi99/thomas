@@ -1,8 +1,18 @@
 @extends('vender.app')
 
+@section('title', __('customer/busroot.complete_your_payment'))
+
+@section('page_hero')
+    @include('test.partials.page_hero', [
+        'eyebrow' => __('all.round_trip'),
+        'title' => __('customer/busroot.complete_your_payment'),
+        'subtitle' => __('all.round_trip'),
+    ])
+@endsection
+
 @section('content')
-    <section class="bg-gradient-to-b from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-6xl mx-auto">
+<section class="page-section page-section--alt">
+    <div class="container mx-auto px-4 max-w-6xl">
             <!-- Header Section -->
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div>

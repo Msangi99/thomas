@@ -1,7 +1,17 @@
 @extends('vender.app')
 
+@section('title', __('assistance/booking.select_bus'))
+
+@section('page_hero')
+    @include('test.partials.page_hero', [
+        'eyebrow' => __('all.highlink_isgc'),
+        'title' => __('assistance/booking.select_bus'),
+        'subtitle' => __('assistance/booking.choose_bus_continue'),
+    ])
+@endsection
+
 @section('content')
-<section class="bg-gray-100 py-8">
+<section class="page-section page-section--alt">
     <div class="container mx-auto px-4">
         @if ($busList->isEmpty())
             <div class="bg-white rounded-2xl shadow-md p-6 text-center">
@@ -9,7 +19,7 @@
                 <h4 class="text-2xl font-bold text-gray-800">{{ __('assistance/booking.no_buses_available') }}</h4>
                 <p class="text-gray-500 mt-2">{{ __('assistance/booking.try_different_criteria') }}</p>
                 <a href="{{ route('vender.route') }}"
-                   class="mt-4 inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">
+                   class="mt-4 inline-flex items-center page-btn">
                     <i class="fas fa-arrow-left mr-2"></i> {{ __('assistance/booking.back_to_search') }}
                 </a>
             </div>
@@ -88,7 +98,7 @@
                                     <i class="fas fa-chair text-yellow-500 mr-1"></i>{{ $bus->remain_seats ?? __('assistance/booking.na') }}
                                 </span>
                                 <a href="{{ route('vender.booking_form', ['id' => $bus->id, 'from' => $bus->schedule->from ?? __('assistance/booking.na'), 'to' => $bus->schedule->to ?? __('assistance/booking.na')]) }}"
-                                   class="px-3 py-1 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded text-xs font-medium hover:opacity-90 transition"
+                                   class="page-btn text-xs py-1 px-3"
                                    onclick="checkCurrency(0, 0, 0)">
                                     {{ __('assistance/booking.book') }}
                                 </a>

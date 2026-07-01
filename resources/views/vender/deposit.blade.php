@@ -1,8 +1,20 @@
 @extends('vender.app')
 
+@section('title', __('vender/busroot.deposit_to_vendor_wallet'))
+
+@section('page_hero')
+    @include('test.partials.page_hero', [
+        'eyebrow' => __('all.highlink_isgc'),
+        'title' => __('vender/busroot.deposit_to_vendor_wallet'),
+        'subtitle' => __('assistance/sidebar.transactions'),
+    ])
+@endsection
+
 @section('content')
-<div class="container mx-auto py-12">
-    <div class="max-w-lg mx-auto bg-white rounded-2xl shadow-xl p-8">
+<section class="page-section page-section--alt">
+    <div class="container mx-auto px-4 max-w-lg">
+        <div class="vendor-panel fade-in">
+            <div class="vendor-panel__body">
         <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">
             {{ __('vender/busroot.deposit_to_vendor_wallet') }}
         </h2>
@@ -131,15 +143,17 @@
 
             {{-- Submit Button --}}
             <div class="text-center">
-                <button type="submit"
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow focus:outline-none focus:ring-blue-300 transition">
+                <button type="submit" class="w-full page-btn">
                     {{ __('vender/busroot.deposit_button') }}
                 </button>
             </div>
         </form>
+            </div>
+        </div>
     </div>
-</div>
+</section>
 
+@push('scripts')
 <script>
     function toggleDepositMethodFields() {
         const paymentMethod = document.getElementById('payment_method').value;
@@ -150,4 +164,5 @@
     }
     document.addEventListener('DOMContentLoaded', toggleDepositMethodFields);
 </script>
+@endpush
 @endsection

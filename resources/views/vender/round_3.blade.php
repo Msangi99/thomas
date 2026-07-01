@@ -1,13 +1,25 @@
 @extends('vender.app')
 
-@section('content')
+@section('title', __('all.round_trip'))
+
+@section('page_hero')
+    @include('test.partials.page_hero', [
+        'eyebrow' => __('all.highlink_isgc'),
+        'title' => __('vender/busroot.select_your_journey_points'),
+        'subtitle' => __('all.round_trip'),
+    ])
+@endsection
+
+@push('styles')
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+@endpush
 
-<section class="bg-gray-100 py-8">
-    <div class="container mx-auto px-4">
-        <div class="max-w-2xl mx-auto">
-            <div class="bg-white rounded-2xl shadow-md p-6">
+@section('content')
+<section class="page-section page-section--alt">
+    <div class="container mx-auto px-4 max-w-2xl">
+        <div class="vendor-panel fade-in">
+            <div class="vendor-panel__body">
                 <h5 class="text-xl font-bold text-gray-800 text-center mb-6">{{ __('customer/busroot.select_your_journey_points') }}</h5>
 
                 <form id="busSearchForm" method="POST" action="{{ route('round.trip.booking_form.store') }}">

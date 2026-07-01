@@ -33,6 +33,8 @@ class Booking extends Model
         'age',
         'infant_child',
         'age_group',
+        'has_excess_luggage',
+        'excess_luggage_fee',
         'mfs_id',
         'verification_code',
         ////////

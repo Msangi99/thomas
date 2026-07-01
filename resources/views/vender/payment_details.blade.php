@@ -1,14 +1,21 @@
 @extends('vender.app')
 
+@section('title', __('customer/busroot.complete_your_payment'))
+
+@section('page_hero')
+    @include('test.partials.page_hero', [
+        'eyebrow' => __('all.highlink_isgc'),
+        'title' => __('customer/busroot.complete_your_payment'),
+        'subtitle' => __('assistance/sidebar.book_ticket'),
+    ])
+@endsection
+
 @section('content')
-<section class="bg-gradient-to-b from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-6xl mx-auto">
-        <!-- Header Section -->
+<section class="page-section page-section--alt">
+    <div class="container mx-auto px-4 max-w-6xl">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-            <div>
-                <h2 class="text-2xl font-bold text-gray-900">{{ __('customer/busroot.complete_your_payment') }}</h2>
-            </div>
-            <div class="text-sm text-white bg-red-600 px-4 py-2 rounded-lg shadow-sm flex items-center">
+            <h2 class="section-title mb-0">{{ __('customer/busroot.complete_your_payment') }}</h2>
+            <div class="text-sm text-white px-4 py-2 rounded-lg shadow-sm flex items-center" style="background:var(--home-primary)">
                 <i class="fas fa-clock mr-2"></i>
                 <span>{{ __('customer/busroot.your_session_expires_in') }} <span id="minutes">06</span> {{ __('customer/busroot.mins') }} <span id="seconds">40</span> {{ __('customer/busroot.secs') }}</span>
             </div>

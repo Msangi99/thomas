@@ -117,3 +117,333 @@ if (!function_exists('normalize_tanzania_phone_for_booking')) {
         return $digits;
     }
 }
+
+if (!function_exists('booking_channel')) {
+    function booking_channel(): string
+    {
+        if (request()->routeIs('customer.*')) {
+            return 'customer';
+        }
+
+        if (request()->routeIs('vender.*')) {
+            return 'vender';
+        }
+
+        return 'guest';
+    }
+}
+
+if (!function_exists('booking_routes')) {
+    /**
+     * Named routes and URLs for one-way booking (guest vs customer portal).
+     *
+     * @return array<string, string>
+     */
+    function booking_routes(?string $channel = null): array
+    {
+        $channel ??= booking_channel();
+
+        if ($channel === 'customer') {
+            return [
+                'channel' => 'customer',
+                'search_form' => route('customer.mybooking.search.form'),
+                'search_method' => 'POST',
+                'inline_form' => 'customer.booking.inline.form',
+                'store' => 'customer.get_form',
+                'get_seats' => 'customer.get_seats',
+                'inline_prepare' => 'customer.booking.inline.prepare',
+                'inline_wallet' => 'customer.booking.inline.wallet',
+                'verify' => 'customer.verify',
+                'pay' => 'customer.pay',
+                'seats' => 'customer.seats',
+                'booking_form' => 'customer.booking_form',
+                'back_search' => route('customer.mybooking.search'),
+                'home' => 'customer.index',
+                'busname' => 'customer.busname',
+            ];
+        }
+
+        if ($channel === 'vender') {
+            return [
+                'channel' => 'vender',
+                'search_form' => route('vender.route.by_route_search'),
+                'search_method' => 'GET',
+                'inline_form' => 'vender.booking.inline.form',
+                'store' => 'vender.get_form',
+                'get_seats' => 'vender.get_seats',
+                'inline_prepare' => 'vender.booking.inline.prepare',
+                'inline_wallet' => 'vender.booking.inline.wallet',
+                'verify' => 'vender.verify',
+                'pay' => 'vender.pay',
+                'seats' => 'seates.vender',
+                'booking_form' => 'vender.booking_form',
+                'back_search' => route('vender.route'),
+                'home' => 'vender.index',
+                'busname' => 'vender.busname',
+            ];
+        }
+
+        return [
+            'channel' => 'guest',
+            'search_form' => route('by_route_search'),
+            'search_method' => 'POST',
+            'inline_form' => 'booking.inline.form',
+            'store' => 'store',
+            'get_seats' => 'get_seats',
+            'inline_prepare' => 'booking.inline.prepare',
+            'inline_wallet' => 'booking.inline.wallet',
+            'verify' => 'verify',
+            'pay' => 'pay',
+            'seats' => 'seates',
+            'booking_form' => 'booking_form',
+            'back_search' => route('routes'),
+            'home' => 'home',
+            'busname' => 'busname',
+        ];
+    }
+}
+
+if (!function_exists('booking_route')) {
+    function booking_route(string $key, array $params = []): string
+    {
+        $routes = booking_routes();
+        $value = $routes[$key] ?? $routes['home'];
+
+        if (str_contains($value, '://') || str_starts_with($value, '/')) {
+            return $value;
+        }
+
+        return route($value, $params);
+    }
+}
+
+if (!function_exists('round_trip_routes')) {
+    /**
+     * Named routes and URLs for round-trip booking (guest vs customer portal).
+     *
+     * @return array<string, string>
+     */
+    function round_trip_routes(?string $channel = null): array
+    {
+        $channel ??= booking_channel();
+
+        if ($channel === 'vender') {
+            return [
+                'channel' => 'vender',
+                'index' => 'vender.round.trip',
+                'by_routesearch' => 'vender.round.trip.by.routesearch',
+                'inline_form' => 'vender.round.trip.inline.form',
+                'store' => 'vender.round.trip.booking_form.store',
+                'inline_prepare' => 'vender.round.trip.inline.prepare',
+                'inline_wallet' => 'vender.round.trip.inline.wallet',
+                'seats' => 'vender.round.trip.seats',
+                'seats_post' => 'vender.round.trip.seats.post',
+                'payment' => 'vender.round.trip.payment',
+                'payment_pay' => 'vender.round.trip.payment.pay',
+                'checkout' => 'vender.round.trip.checkout',
+                'get_payment' => 'vender.round.trip.get_payment',
+                'payment_success' => 'vender.round.trip.payment.success',
+                'payment_failed' => 'vender.round.trip.payment.failed',
+                'busname' => 'vender.busname',
+            ];
+        }
+
+        if ($channel === 'customer') {
+            return [
+                'channel' => 'customer',
+                'index' => 'customer.round.trip',
+                'by_routesearch' => 'customer.round.trip.by.routesearch',
+                'inline_form' => 'customer.round.trip.inline.form',
+                'store' => 'customer.round.trip.booking_form.store',
+                'inline_prepare' => 'customer.round.trip.inline.prepare',
+                'inline_wallet' => 'customer.round.trip.inline.wallet',
+                'seats' => 'customer.round.trip.seats',
+                'seats_post' => 'customer.round.trip.seats.post',
+                'payment' => 'customer.round.trip.payment',
+                'payment_pay' => 'customer.round.trip.payment.pay',
+                'checkout' => 'customer.round.trip.checkout',
+                'get_payment' => 'customer.round.trip.get_payment',
+                'payment_success' => 'customer.round.trip.payment.success',
+                'payment_failed' => 'customer.round.trip.payment.failed',
+                'busname' => 'customer.busname',
+            ];
+        }
+
+        return [
+            'channel' => 'guest',
+            'index' => 'round.trip',
+            'by_routesearch' => 'round.trip.by.routesearch',
+            'inline_form' => 'round.trip.inline.form',
+            'store' => 'round.trip.booking_form.store',
+            'inline_prepare' => 'round.trip.inline.prepare',
+            'inline_wallet' => 'round.trip.inline.wallet',
+            'seats' => 'round.trip.seats',
+            'seats_post' => 'round.trip.seats.post',
+            'payment' => 'round.trip.payment',
+            'payment_pay' => 'round.trip.payment.pay',
+            'checkout' => 'round.trip.checkout',
+            'get_payment' => 'round.trip.get_payment',
+            'payment_success' => 'round.trip.payment.success',
+            'payment_failed' => 'round.trip.payment.failed',
+            'busname' => 'busname',
+        ];
+    }
+}
+
+if (!function_exists('round_trip_route')) {
+    function round_trip_route(string $key, array $params = []): string
+    {
+        $routes = round_trip_routes();
+        $value = $routes[$key] ?? $routes['index'];
+
+        if (str_contains($value, '://') || str_starts_with($value, '/')) {
+            return $value;
+        }
+
+        return route($value, $params);
+    }
+}
+
+if (!function_exists('round_trip_resaved_group_prefix')) {
+    function round_trip_resaved_group_prefix(): string
+    {
+        return 'RoundResave_';
+    }
+}
+
+if (!function_exists('is_round_trip_resaved_group')) {
+    function is_round_trip_resaved_group(?string $transactionRefId): bool
+    {
+        return $transactionRefId !== null
+            && str_starts_with($transactionRefId, round_trip_resaved_group_prefix());
+    }
+}
+
+if (!function_exists('round_trip_resaved_pair_matches')) {
+    function round_trip_resaved_pair_matches(\App\Models\Booking $a, \App\Models\Booking $b): bool
+    {
+        if (($a->payment_status ?? '') !== 'resaved' || ($b->payment_status ?? '') !== 'resaved') {
+            return false;
+        }
+
+        if (($a->resaved_until ?? null) !== ($b->resaved_until ?? null)) {
+            return false;
+        }
+
+        if (($a->customer_phone ?? '') !== ($b->customer_phone ?? '')) {
+            return false;
+        }
+
+        if ((string) ($a->vender_id ?? '') !== (string) ($b->vender_id ?? '')) {
+            return false;
+        }
+
+        if ((string) ($a->user_id ?? '') !== (string) ($b->user_id ?? '')) {
+            return false;
+        }
+
+        $createdDiff = abs(strtotime((string) $a->created_at) - strtotime((string) $b->created_at));
+        if ($createdDiff > 120) {
+            return false;
+        }
+
+        $aFrom = trim((string) ($a->pickup_point ?? ''));
+        $aTo = trim((string) ($a->dropping_point ?? ''));
+        $bFrom = trim((string) ($b->pickup_point ?? ''));
+        $bTo = trim((string) ($b->dropping_point ?? ''));
+
+        return $aFrom !== '' && $aTo !== '' && $aFrom === $bTo && $aTo === $bFrom;
+    }
+}
+
+if (!function_exists('round_trip_resaved_partner')) {
+    function round_trip_resaved_partner(\App\Models\Booking $booking, ?iterable $pool = null): ?\App\Models\Booking
+    {
+        if (($booking->payment_status ?? '') !== 'resaved') {
+            return null;
+        }
+
+        $ref = $booking->transaction_ref_id ?? '';
+        if (is_round_trip_resaved_group($ref)) {
+            return \App\Models\Booking::query()
+                ->where('transaction_ref_id', $ref)
+                ->where('payment_status', 'resaved')
+                ->where('id', '!=', $booking->id)
+                ->first();
+        }
+
+        if ($pool !== null) {
+            foreach ($pool as $candidate) {
+                if ((int) $candidate->id === (int) $booking->id) {
+                    continue;
+                }
+
+                if (round_trip_resaved_pair_matches($booking, $candidate)) {
+                    return $candidate;
+                }
+            }
+        }
+
+        return null;
+    }
+}
+
+if (!function_exists('sort_round_trip_resaved_legs')) {
+    /**
+     * @param array<int, \App\Models\Booking> $bookings
+     * @return array<int, \App\Models\Booking>
+     */
+    function sort_round_trip_resaved_legs(array $bookings): array
+    {
+        usort($bookings, function ($a, $b) {
+            return strcmp((string) ($a->travel_date ?? ''), (string) ($b->travel_date ?? ''));
+        });
+
+        return $bookings;
+    }
+}
+
+if (!function_exists('group_ticket_list_rows')) {
+    /**
+     * @param iterable<\App\Models\Booking> $bookings
+     * @return array<int, array{type: string, booking?: \App\Models\Booking, bookings?: array, primary: \App\Models\Booking}>
+     */
+    function group_ticket_list_rows(iterable $bookings): array
+    {
+        $list = $bookings instanceof \Illuminate\Support\Collection
+            ? $bookings->values()->all()
+            : array_values(is_array($bookings) ? $bookings : iterator_to_array($bookings));
+
+        $consumed = [];
+        $rows = [];
+
+        foreach ($list as $booking) {
+            if (in_array($booking->id, $consumed, true)) {
+                continue;
+            }
+
+            if (($booking->payment_status ?? '') === 'resaved') {
+                $partner = round_trip_resaved_partner($booking, $list);
+                if ($partner !== null) {
+                    $legs = sort_round_trip_resaved_legs([$booking, $partner]);
+                    $rows[] = [
+                        'type' => 'round_trip_resaved',
+                        'bookings' => $legs,
+                        'primary' => $legs[0],
+                    ];
+                    $consumed[] = $booking->id;
+                    $consumed[] = $partner->id;
+                    continue;
+                }
+            }
+
+            $rows[] = [
+                'type' => 'single',
+                'booking' => $booking,
+                'primary' => $booking,
+            ];
+        }
+
+        return $rows;
+    }
+}

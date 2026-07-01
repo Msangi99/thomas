@@ -1,234 +1,190 @@
-<!-- Include jQuery and Select2 CSS/JS -->
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+@php
+    $activeSearchTab = $activeSearchTab ?? 'one-way';
+    $selectedCompanyId = request('bus_id');
+    $selectedDepartureDate = request('departure_date', now()->toDateString());
+    $br = booking_routes();
+    $rtr = round_trip_routes();
+@endphp
 
-<div class="glass-card p-6 md:p-8 max-w-5xl mx-auto fade-in delay-200">
-    <div class="flex space-x-2 mb-6 bg-white/10 rounded-xl p-1">
-        <button class="search-tab active flex-1 px-4 py-3 rounded-lg font-medium text-white text-sm uppercase tracking-wide" data-tab="one-way">One Way</button>
-        <button class="search-tab flex-1 px-4 py-3 rounded-lg font-medium text-white/80 text-sm uppercase tracking-wide" data-tab="round-trip">Round Trip</button>
-        <!--<button class="search-tab flex-1 px-4 py-3 rounded-lg font-medium text-white/80 text-sm uppercase tracking-wide" data-tab="multi-city">Multi-City</button>-->
-        <button class="search-tab flex-1 px-4 py-3 rounded-lg font-medium text-white/80 text-sm uppercase tracking-wide" data-tab="bus-name">Bus Name</button>
+<div id="search" class="home-search fade-in">
+    <div class="home-search__tabs">
+        <button type="button" class="home-search__tab search-tab {{ $activeSearchTab === 'one-way' ? 'home-search__tab--active' : '' }}" data-tab="one-way">{{ __('all.one_way') }}</button>
+        <button type="button" class="home-search__tab search-tab {{ $activeSearchTab === 'round-trip' ? 'home-search__tab--active' : '' }}" data-tab="round-trip">{{ __('all.round_trip') }}</button>
+        <button type="button" class="home-search__tab search-tab {{ $activeSearchTab === 'bus-name' ? 'home-search__tab--active' : '' }}" data-tab="bus-name">{{ __('all.bus_name') }}</button>
     </div>
 
-    <!-- One Way Form -->
-    <form action="{{ route('by_route_search') }}" method="POST" class="search-form" id="one-way-form">
+    <!-- One Way -->
+    <form action="{{ $br['search_form'] }}" method="{{ $br['search_method'] }}" class="search-form home-search__form {{ $activeSearchTab === 'one-way' ? '' : 'hidden' }}" id="one-way-form">
         @csrf
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div class="relative">
-                <label class="block text-white/80 text-sm font-medium mb-1">From</label>
-                <div class="relative">
-                    <select name="departure_city" id="departure_city"
-                        class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white [color-scheme:dark]">
-                        <option value="">Select Departure City</option>
+        <div class="home-search__fields">
+            <div class="home-search__field home-search__field--from">
+                <label class="home-search__label" for="departure_city">
+                    <span class="home-search__label-icon" aria-hidden="true"><i class="fas fa-map-marker-alt"></i></span>
+                    <span class="home-search__label-text">{{ __('all.from') }}</span>
+                </label>
+                <div class="home-search__control">
+                    <select name="departure_city" id="departure_city" class="home-search__input">
+                        <option value=""></option>
                         @foreach ($cities as $city)
-                            <option value="{{ $city->id }}" {{ old('departure_city') == $city->id ? 'selected' : '' }}>{{ $city->name }}</option>
+                            <option value="{{ $city->id }}" {{ (string) old('departure_city', request('departure_city')) === (string) $city->id ? 'selected' : '' }}>{{ $city->name }}</option>
                         @endforeach
                     </select>
                 </div>
             </div>
 
-            <div class="relative">
-                <label class="block text-white/80 text-sm font-medium mb-1">To</label>
-                <div class="relative">
-                    <select name="arrival_city" id="arrival_city"
-                        class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white [color-scheme:dark]">
-                        <option value="">Select Arrival City</option>
+            <div class="home-search__field home-search__field--to">
+                <label class="home-search__label" for="arrival_city">
+                    <span class="home-search__label-icon" aria-hidden="true"><i class="fas fa-map-marker-alt"></i></span>
+                    <span class="home-search__label-text">{{ __('all.to') }}</span>
+                </label>
+                <div class="home-search__control">
+                    <select name="arrival_city" id="arrival_city" class="home-search__input">
+                        <option value=""></option>
                         @foreach ($cities as $city)
-                            <option value="{{ $city->id }}" {{ old('arrival_city') == $city->id ? 'selected' : '' }}>{{ $city->name }}</option>
+                            <option value="{{ $city->id }}" {{ (string) old('arrival_city', request('arrival_city')) === (string) $city->id ? 'selected' : '' }}>{{ $city->name }}</option>
                         @endforeach
                     </select>
                 </div>
             </div>
 
-            <div class="relative">
-                <label class="block text-white/80 text-sm font-medium mb-1">Date</label>
-                <div class="relative">
-                    <input type="date" name="departure_date" id="departure_date"
-                        value="{{ old('departure_date') }}"
-                        class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white [color-scheme:dark]">
+            <div class="home-search__field home-search__field--date">
+                <label class="home-search__label" for="departure_date">
+                    <span class="home-search__label-icon" aria-hidden="true"><i class="fas fa-calendar"></i></span>
+                    <span class="home-search__label-text">{{ __('all.date') }}</span>
+                </label>
+                <div class="home-search__control">
+                    <input type="date" name="departure_date" id="departure_date" value="{{ old('departure_date', request('departure_date')) }}" class="home-search__input">
                 </div>
             </div>
 
-            <div class="relative">
-                <label class="block text-white/80 text-sm font-medium mb-1">Bus Class</label>
-                <div class="relative">
-                    <select name="bus_class" id="bus_class"
-                        class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white [color-scheme:dark]">
-                        <option value="any">Any</option>
-                        <option value="10" {{ old('bus_class') == '10' ? 'selected' : '' }}>Luxury</option>
-                        <option value="20" {{ old('bus_class') == '20' ? 'selected' : '' }}>Upper Semi-Luxury</option>
-                        <option value="30" {{ old('bus_class') == '30' ? 'selected' : '' }}>Lower Semi-Luxury</option>
-                        <option value="40" {{ old('bus_class') == '40' ? 'selected' : '' }}>Ordinary</option>
+            <div class="home-search__field home-search__field--class">
+                <label class="home-search__label" for="bus_class">
+                    <span class="home-search__label-icon" aria-hidden="true"><i class="fas fa-bus"></i></span>
+                    <span class="home-search__label-text">{{ __('customer/busroot.bus_class') }}</span>
+                </label>
+                <div class="home-search__control">
+                    <select name="bus_class" id="bus_class" class="home-search__input">
+                        <option value="any">{{ __('customer/busroot.any') }}</option>
+                        <option value="10" {{ old('bus_class', request('bus_class')) == '10' ? 'selected' : '' }}>{{ __('all.luxury') }}</option>
+                        <option value="20" {{ old('bus_class', request('bus_class')) == '20' ? 'selected' : '' }}>{{ __('all.upper_semiluxury') }}</option>
+                        <option value="30" {{ old('bus_class', request('bus_class')) == '30' ? 'selected' : '' }}>{{ __('all.lower_semiluxury') }}</option>
+                        <option value="40" {{ old('bus_class', request('bus_class')) == '40' ? 'selected' : '' }}>{{ __('all.ordinary') }}</option>
                     </select>
                 </div>
             </div>
 
-            <div class="relative flex items-end">
-                <button
-                    class="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white py-3 rounded-lg font-medium text-base transition-all btn-glow">
-                    Find Buses
-                </button>
+            <div class="home-search__field home-search__field--submit">
+                <button type="submit" class="home-search__cta">{{ __('all.find_buses') }}</button>
             </div>
         </div>
     </form>
 
-    <!-- Round Trip Form -->
-    <div class="search-form hidden text-center py-12" id="round-trip-form">
-        <div class="flex flex-col items-center justify-center">
-            <h2 class="text-2xl font-bold text-white mb-2">Round Trip Booking</h2>
-            <p class="text-white/80 text-sm max-w-md mb-6">Book your round trip journey with ease and convenience!</p>
-            <a href="{{ route('round.trip') }}" 
-               class="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg font-medium text-base transition-all btn-glow inline-flex items-center">
-                Book Round Trip
-            </a>
-        </div>
-    </div>
-
-    <!-- Multi-City Coming Soon -->
-    <div class="search-form hidden text-center py-12" id="multi-city-form">
-        <div class="flex flex-col items-center justify-center">
-            <h2 class="text-2xl font-bold text-white mb-2">Multi-City Coming Soon!</h2>
-            <p class="text-white/80 text-sm max-w-md">Explore multiple destinations with ease. Multi-city booking is on its way!</p>
-        </div>
-    </div>
-
-    <!-- Bus Name Search Form -->
-    <form action="{{ route('busname') }}" method="get" class="search-form hidden" id="bus-name-form">
-        @csrf
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div class="relative">
-                <label class="block text-white/80 text-sm font-medium mb-1">Bus Name</label>
-                <div class="relative">
-                    <select name="bus_id" id="bus_departure_date"
-                        class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white [color-scheme:dark]">
-                        <option value="">Select Bus Name</option>
-                        @forelse (App\Models\Campany::all() as $bus)
-                        <option value="{{ $bus->id }}" {{ request('bus_name') == $bus->id ? 'selected' : '' }}>{{ $bus->name ?? 'N/A' }}</option>
-                        @empty
-                            <option value="">No Bus Companies Available</option>
-                        @endforelse
+    <!-- Round Trip -->
+    <form action="{{ route($rtr['by_routesearch']) }}" method="GET" class="search-form home-search__form {{ $activeSearchTab === 'round-trip' ? '' : 'hidden' }}" id="round-trip-form">
+        <div class="home-search__fields">
+            <div class="home-search__field home-search__field--from">
+                <label class="home-search__label" for="rt_departure_city">
+                    <span class="home-search__label-icon" aria-hidden="true"><i class="fas fa-map-marker-alt"></i></span>
+                    <span class="home-search__label-text">{{ __('all.from') }}</span>
+                </label>
+                <div class="home-search__control">
+                    <select name="departure_city" id="rt_departure_city" class="home-search__input">
+                        <option value=""></option>
+                        @foreach ($cities as $city)
+                            <option value="{{ $city->id }}" {{ (string) (request('departure_city') ?? old('departure_city')) === (string) $city->id ? 'selected' : '' }}>{{ $city->name }}</option>
+                        @endforeach
                     </select>
                 </div>
             </div>
 
-            <div class="relative flex items-end">
-                <button
-                    class="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white py-3 rounded-lg font-medium text-base transition-all btn-glow">
-                    Find Buses
-                </button>
+            <div class="home-search__field home-search__field--to">
+                <label class="home-search__label" for="rt_arrival_city">
+                    <span class="home-search__label-icon" aria-hidden="true"><i class="fas fa-map-marker-alt"></i></span>
+                    <span class="home-search__label-text">{{ __('all.to') }}</span>
+                </label>
+                <div class="home-search__control">
+                    <select name="arrival_city" id="rt_arrival_city" class="home-search__input">
+                        <option value=""></option>
+                        @foreach ($cities as $city)
+                            <option value="{{ $city->id }}" {{ (string) (request('arrival_city') ?? old('arrival_city')) === (string) $city->id ? 'selected' : '' }}>{{ $city->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <div class="home-search__field home-search__field--date">
+                <label class="home-search__label" for="rt_departure_date">
+                    <span class="home-search__label-icon" aria-hidden="true"><i class="fas fa-calendar"></i></span>
+                    <span class="home-search__label-text">{{ __('all.date') }}</span>
+                </label>
+                <div class="home-search__control">
+                    <input type="date" name="departure_date" id="rt_departure_date" value="{{ request('departure_date', old('departure_date')) }}" class="home-search__input">
+                </div>
+            </div>
+
+            <div class="home-search__field home-search__field--class">
+                <label class="home-search__label" for="rt_bus_class">
+                    <span class="home-search__label-icon" aria-hidden="true"><i class="fas fa-bus"></i></span>
+                    <span class="home-search__label-text">{{ __('customer/busroot.bus_class') }}</span>
+                </label>
+                <div class="home-search__control">
+                    <select name="bus_class" id="rt_bus_class" class="home-search__input">
+                        <option value="any">{{ __('customer/busroot.any') }}</option>
+                        <option value="10" {{ (request('bus_class') ?? request('bus_type')) == '10' ? 'selected' : '' }}>{{ __('all.luxury') }}</option>
+                        <option value="20" {{ (request('bus_class') ?? request('bus_type')) == '20' ? 'selected' : '' }}>{{ __('all.upper_semiluxury') }}</option>
+                        <option value="30" {{ (request('bus_class') ?? request('bus_type')) == '30' ? 'selected' : '' }}>{{ __('all.lower_semiluxury') }}</option>
+                        <option value="40" {{ (request('bus_class') ?? request('bus_type')) == '40' ? 'selected' : '' }}>{{ __('all.ordinary') }}</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="home-search__field home-search__field--submit">
+                <button type="submit" class="home-search__cta">{{ __('all.find_buses') }}</button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Bus Name -->
+    <form action="{{ route($br['busname']) }}" method="get" class="search-form home-search__form {{ $activeSearchTab === 'bus-name' ? '' : 'hidden' }}" id="bus-name-form">
+        <div class="home-search__fields home-search__fields--bus-name">
+            <div class="home-search__field home-search__field--bus">
+                <label class="home-search__label" for="bus_departure_date">
+                    <span class="home-search__label-icon" aria-hidden="true"><i class="fas fa-bus"></i></span>
+                    <span class="home-search__label-text">{{ __('all.bus_name') }}</span>
+                </label>
+                <div class="home-search__control">
+                    <select name="bus_id" id="bus_departure_date" class="home-search__input">
+                        <option value=""></option>
+                        @forelse (App\Models\Campany::all() as $bus)
+                            <option value="{{ $bus->id }}" {{ (string) $selectedCompanyId === (string) $bus->id ? 'selected' : '' }}>{{ $bus->name ?? 'N/A' }}</option>
+                        @empty
+                            <option value="">{{ __('all.no_companies_found') }}</option>
+                        @endforelse
+                    </select>
+                </div>
+            </div>
+            <div class="home-search__field home-search__field--bus-date">
+                <label class="home-search__label" for="bus_company_departure_date">
+                    <span class="home-search__label-icon" aria-hidden="true"><i class="fas fa-calendar"></i></span>
+                    <span class="home-search__label-text">{{ __('all.date') }}</span>
+                </label>
+                <div class="home-search__control">
+                    <input type="date" name="departure_date" id="bus_company_departure_date" value="{{ $selectedDepartureDate }}" class="home-search__input">
+                </div>
+            </div>
+            <div class="home-search__field home-search__field--bus-submit">
+                <button type="submit" class="home-search__cta">{{ __('all.find_buses') }}</button>
             </div>
         </div>
     </form>
 </div>
 
-<style>
-/* Date input to match select height and look */
-input[type="date"] {
-    height: 44px;
-    min-height: 44px;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-}
-input[type="date"]::-webkit-calendar-picker-indicator {
-    opacity: 0.6;
-    cursor: pointer;
-    filter: invert(1);
-}
-
-/* Custom Select2 styles to match dark theme without blur */
-.select2-container--default .select2-selection--single {
-    background-color: #1f2937; /* Solid dark background (Tailwind: gray-800) */
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 0.5rem;
-    height: 44px;
-    color: white;
-}
-
-.select2-container--default .select2-selection--single .select2-selection__rendered {
-    color: white;
-    line-height: 44px;
-    padding-left: 1rem;
-    padding-right: 2rem;
-}
-
-.select2-container--default .select2-selection--single .select2-selection__arrow {
-    height: 44px;
-    right: 10px;
-}
-
-.select2-container--default .select2-selection--single .select2-selection__arrow b {
-    border-color: rgba(255, 255, 255, 0.6);
-}
-
-.select2-dropdown {
-    background-color: #1f2937; /* Solid dark background (no transparency or blur) */
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 0.5rem;
-    color: white;
-}
-
-.select2-container--default .select2-results__option {
-    color: white;
-    background-color: #1f2937; /* Solid background for options */
-}
-
-.select2-container--default .select2-results__option--highlighted[aria-selected] {
-    background-color: #4f46e5; /* Indigo-600 for highlight */
-    color: white;
-}
-
-.select2-container--default .select2-results__option[aria-selected=true] {
-    background-color: #312e81; /* Indigo-900 for selected option */
-}
-
-.select2-container--default .select2-selection--single .select2-selection__arrow {
-    z-index: 1;
-}
-</style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Select2 for all selects
-    $('#departure_city, #arrival_city, #bus_class, #bus_departure_date').select2({
-        placeholder: "Select an option",
-        allowClear: true,
-        theme: "default",
-        dropdownCssClass: "select2-dropdown--dark",
-        width: '100%'
-    });
-
-    // Set today's date as the minimum for departure date inputs
-    const today = new Date().toISOString().split('T')[0];
-    const departureDateInput = document.getElementById('departure_date');
-    const busDepartureDateInput = document.getElementById('bus_departure_date');
-    departureDateInput.setAttribute('min', today);
-    busDepartureDateInput.setAttribute('min', today);
-
-    // Tab switching logic
-    const tabs = document.querySelectorAll('.search-tab');
-    const forms = document.querySelectorAll('.search-form');
-
-    tabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            // Remove active class from all tabs
-            tabs.forEach(t => t.classList.remove('active', 'text-white'));
-            tabs.forEach(t => t.classList.add('text-white/80'));
-
-            // Add active class to clicked tab
-            this.classList.add('active', 'text-white');
-            this.classList.remove('text-white/80');
-
-            // Hide all forms
-            forms.forEach(form => form.classList.add('hidden'));
-
-            // Show the corresponding form
-            const targetForm = document.getElementById(`${this.dataset.tab}-form`);
-            if (targetForm) {
-                targetForm.classList.remove('hidden');
-            }
-        });
-    });
-});
-</script>
+@once
+    @push('styles')
+        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    @endpush
+    @push('scripts')
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+        <script src="{{ asset('js/home-search.js') }}"></script>
+    @endpush
+@endonce

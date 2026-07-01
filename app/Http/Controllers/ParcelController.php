@@ -12,12 +12,19 @@ class ParcelController extends Controller
     public function index(Request $request)
     {
         $venderId = auth()->id();
-        $parcels = Parcel::with('bus.campany')
+        $parcels = Parcel::with('bus.campany', 'bus.schedule')
             ->where('vender_id', $venderId)
             ->latest()
             ->paginate(10);
 
-        return view('vender.parcels.index', compact('parcels'));
+        $parcelStats = [
+            'total' => Parcel::where('vender_id', $venderId)->count(),
+            'amount' => (float) Parcel::where('vender_id', $venderId)->sum('amount_paid'),
+            'today' => Parcel::where('vender_id', $venderId)->whereDate('created_at', today())->count(),
+            'assigned' => Parcel::where('vender_id', $venderId)->where('status', 'pending')->count(),
+        ];
+
+        return view('vender.parcels.index', compact('parcels', 'parcelStats'));
     }
 
     public function searchBus(Request $request)
