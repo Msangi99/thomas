@@ -10,8 +10,8 @@
             <div class="payment-result-status__icon" aria-hidden="true">
                 <i class="fas fa-times"></i>
             </div>
-            <h2 class="payment-result-status__title">{{ __('all.payment_failed') ?? 'Payment Failed' }}</h2>
-            <p class="payment-result-status__subtitle">{{ __('all.payment_failed_message') ?? 'We could not process your payment. No money has been deducted.' }}</p>
+            <h2 class="payment-result-status__title">{{ __('all.payment_failed') }}</h2>
+            <p class="payment-result-status__subtitle">{{ __('all.payment_failed_message') }}</p>
         </div>
 
         @if ($errorMessage)
@@ -23,7 +23,7 @@
         <div class="payment-result-card mb-6">
             <h3 class="payment-result-card__title">
                 <i class="fas fa-circle-info" aria-hidden="true"></i>
-                {{ __('all.what_went_wrong') ?? 'What might have gone wrong?' }}
+                {{ __('all.what_went_wrong') }}
             </h3>
             <ul class="payment-result-error-list">
                 <li><i class="fas fa-times-circle"></i><span>{{ __('all.payment_fail_reason_funds') }}</span></li>

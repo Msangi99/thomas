@@ -162,7 +162,7 @@
                     <div class="inline-payment__pane inline-payment__pane--active" data-inline-pay-pane="mixx" role="tabpanel">
                         <div class="inline-payment__amount-row">
                             <span>{{ __('all.amount') }}</span>
-                            <strong>{{ __('all.currency_prefix_tzs') }} {{ convert_money($totalPayable) }}</strong>
+                            <strong>{{ $currency }} {{ convert_money($totalPayable) }}</strong>
                         </div>
                         <form id="inlineMixxForm" action="{{ $paymentAction }}" method="POST">
                             @csrf
@@ -174,7 +174,7 @@
                     <div class="inline-payment__pane" data-inline-pay-pane="dpo" role="tabpanel" hidden>
                         <div class="inline-payment__amount-row">
                             <span>{{ __('all.amount') }}</span>
-                            <strong>{{ __('all.currency_prefix_tzs') }} {{ convert_money($totalPayable) }}</strong>
+                            <strong>{{ $currency }} {{ convert_money($totalPayable) }}</strong>
                         </div>
                         <form id="inlineDpoForm" action="{{ $paymentAction }}" method="POST">
                             @csrf
@@ -186,7 +186,7 @@
                     <div class="inline-payment__pane" data-inline-pay-pane="clickpesa" role="tabpanel" hidden>
                         <div class="inline-payment__amount-row">
                             <span>{{ __('all.amount') }}</span>
-                            <strong>{{ __('all.currency_prefix_tzs') }} {{ convert_money($totalPayable) }}</strong>
+                            <strong>{{ $currency }} {{ convert_money($totalPayable) }}</strong>
                         </div>
                         <form id="inlineClickpesaForm" action="{{ $paymentAction }}" method="POST">
                             @csrf
@@ -199,11 +199,11 @@
                         <div class="inline-payment__pane" data-inline-pay-pane="wallet" role="tabpanel" hidden>
                             <div class="inline-payment__amount-row">
                                 <span>{{ __('all.amount') }}</span>
-                                <strong>{{ __('all.currency_prefix_tzs') }} {{ convert_money($totalPayable) }}</strong>
+                                <strong>{{ $currency }} {{ convert_money($totalPayable) }}</strong>
                             </div>
                             <div class="inline-payment__amount-row">
                                 <span>Wallet balance</span>
-                                <strong>{{ __('all.currency_prefix_tzs') }} {{ convert_money(auth()->user()->temp_wallets->amount ?? 0) }}</strong>
+                                <strong>{{ $currency }} {{ convert_money(auth()->user()->temp_wallets->amount ?? 0) }}</strong>
                             </div>
                             <form id="inlineWalletForm" action="{{ $paymentAction }}" method="POST">
                                 @csrf
@@ -216,7 +216,7 @@
                     <div class="inline-payment__pane" data-inline-pay-pane="airtel" role="tabpanel" hidden>
                         <div class="inline-payment__amount-row">
                             <span>{{ __('all.amount') }}</span>
-                            <strong>{{ __('all.currency_prefix_tzs') }} {{ convert_money($totalPayable) }}</strong>
+                            <strong>{{ $currency }} {{ convert_money($totalPayable) }}</strong>
                         </div>
                         <p class="inline-payment__airtel-status hidden" data-inline-airtel-status role="status"></p>
                     </div>
@@ -225,7 +225,7 @@
                         <div class="inline-payment__pane" data-inline-pay-pane="cash" role="tabpanel" hidden>
                             <div class="inline-payment__amount-row">
                                 <span>{{ __('all.amount') }}</span>
-                                <strong>{{ __('all.currency_prefix_tzs') }} {{ convert_money($totalPayable) }}</strong>
+                                <strong>{{ $currency }} {{ convert_money($totalPayable) }}</strong>
                             </div>
                             <p class="text-sm text-gray-600 mb-3">{{ __('customer/busroot.session_expiry_warning') }}</p>
                             <form id="inlineCashForm" action="{{ $paymentAction }}" method="POST">
@@ -242,7 +242,7 @@
                                 <p class="mb-2">{{ __('customer/busroot.resave_warning') }}</p>
                                 <p class="font-semibold m-0">
                                     {{ __('customer/busroot.total_to_resave') }}
-                                    {{ __('all.currency_prefix_tzs') }} {{ convert_money($totalPayable) }}
+                                    {{ $currency }} {{ convert_money($totalPayable) }}
                                 </p>
                             </div>
                             <p class="text-sm text-gray-600 mb-4">{{ __('customer/busroot.resave_description') }}</p>
@@ -278,32 +278,32 @@
             @if (($dis ?? 0) > 0)
                 <div class="inline-payment__line">
                     <dt>{{ __('all.discount') }}</dt>
-                    <dd>{{ __('all.currency_prefix_tzs') }} {{ number_format($dis, 2) }}</dd>
+                    <dd>{{ $currency }} {{ convert_money($dis) }}</dd>
                 </div>
             @endif
             @if (($ins ?? 0) > 0)
                 <div class="inline-payment__line">
                     <dt>{{ __('all.insurance') }}</dt>
-                    <dd>{{ __('all.currency_prefix_tzs') }} {{ number_format($ins) }}</dd>
+                    <dd>{{ $currency }} {{ convert_money($ins) }}</dd>
                 </div>
             @endif
             <div class="inline-payment__line">
                 <dt>{{ __('all.system_charge') }}</dt>
-                <dd>{{ __('all.currency_prefix_tzs') }} {{ convert_money($fees) }}</dd>
+                <dd>{{ $currency }} {{ convert_money($fees) }}</dd>
             </div>
             @if (($excess_luggage_fee ?? 0) > 0)
                 <div class="inline-payment__line">
                     <dt>{{ __('all.excess_luggage') }}</dt>
-                    <dd>{{ __('all.currency_prefix_tzs') }} {{ convert_money($excess_luggage_fee) }}</dd>
+                    <dd>{{ $currency }} {{ convert_money($excess_luggage_fee) }}</dd>
                 </div>
             @endif
             <div class="inline-payment__line">
                 <dt>{{ __('all.bus_fare') }}</dt>
-                <dd>{{ __('all.currency_prefix_tzs') }} {{ convert_money($price - ($ins ?? 0)) }}</dd>
+                <dd>{{ $currency }} {{ convert_money($price - ($ins ?? 0)) }}</dd>
             </div>
             <div class="inline-payment__line inline-payment__line--total">
                 <dt>{{ __('all.total_payable') }}</dt>
-                <dd>{{ __('all.currency_prefix_tzs') }} {{ convert_money($totalPayable) }}</dd>
+                <dd>{{ $currency }} {{ convert_money($totalPayable) }}</dd>
             </div>
         </dl>
 

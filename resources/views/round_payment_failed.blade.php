@@ -9,9 +9,9 @@
 
 @section('page_hero')
     @include('test.partials.page_hero', [
-        'eyebrow' => __('customer_sidebar.Round Trip') ?? 'Round Trip',
-        'title' => __('vender/busroot.round_payment_failed_title') ?? 'Round Trip Payment Failed',
-        'subtitle' => __('all.payment_failed_message') ?? 'Your round trip payment could not be completed.',
+        'eyebrow' => __('customer_sidebar.Round Trip'),
+        'title' => __('all.round_trip_payment_failed_title'),
+        'subtitle' => __('all.payment_failed_message'),
         'image' => 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1200&q=80',
     ])
 @endsection

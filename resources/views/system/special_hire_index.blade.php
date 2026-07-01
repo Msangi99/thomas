@@ -144,7 +144,7 @@
                                             —
                                         @endif
                                     </td>
-                                    <td class="px-4 py-3 text-right font-semibold text-gray-900">Tsh {{ number_format($wr->amount, 0) }}</td>
+                                    <td class="px-4 py-3 text-right font-semibold text-gray-900">{{ $currency }} {{ convert_money($wr->amount) }}</td>
                                     <td class="px-4 py-3 text-gray-600">
                                         <span class="font-medium text-gray-800">{{ $wr->payment_method }}</span>
                                         <div class="text-xs font-mono mt-1">{{ $wr->payment_number }}</div>
@@ -217,7 +217,7 @@
                                             —
                                         @endif
                                     </td>
-                                    <td class="px-4 py-3 text-right font-semibold text-gray-900">Tsh {{ number_format($wr->amount, 0) }}</td>
+                                    <td class="px-4 py-3 text-right font-semibold text-gray-900">{{ $currency }} {{ convert_money($wr->amount) }}</td>
                                     <td class="px-4 py-3 text-gray-600">
                                         <span class="font-medium text-gray-800">{{ $wr->payment_method }}</span>
                                         <div class="text-xs font-mono mt-1">{{ $wr->payment_number }}</div>

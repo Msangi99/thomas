@@ -151,6 +151,7 @@ class CustomerController extends Controller
 
         // Add filtered points as a new attribute to the car object
         $car->filtered_points = $filteredPoints;
+        apply_booking_filtered_points($car);
 
         return view('customer.bookingform', compact('car'));
         //return $car;

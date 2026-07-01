@@ -336,7 +336,7 @@ class BookingController extends Controller
             $car->filtered_points = $car->route->points->filter(fn ($point) => $point->state === 'yes');
         }
 
-        return $car;
+        return apply_booking_filtered_points($car);
     }
 
     private function isInlineBookingRequest(Request $request): bool

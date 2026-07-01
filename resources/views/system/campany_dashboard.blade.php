@@ -31,19 +31,19 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <div class="kpi-card bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5">
                 <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">{{ __('system.pages.wallet_balance') }}</p>
-                <p class="mt-1 text-2xl font-bold text-slate-800">{{ $currency }} {{ number_format($campany->balance->amount ?? 0, 0) }}</p>
+                <p class="mt-1 text-2xl font-bold text-slate-800">{{ $currency }} {{ convert_money($campany->balance->amount ?? 0) }}</p>
             </div>
             <div class="kpi-card bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5">
                 <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">{{ __('system.pages.booking_revenue') }}</p>
-                <p class="mt-1 text-2xl font-bold text-emerald-600">{{ $currency }} {{ number_format($totalBookingsRevenue ?? 0, 0) }}</p>
+                <p class="mt-1 text-2xl font-bold text-emerald-600">{{ $currency }} {{ convert_money($totalBookingsRevenue ?? 0) }}</p>
             </div>
             <div class="kpi-card bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5">
                 <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">{{ __('system.pages.commission_system') }}</p>
-                <p class="mt-1 text-2xl font-bold text-indigo-600">{{ $currency }} {{ number_format($totalCommission ?? 0, 0) }}</p>
+                <p class="mt-1 text-2xl font-bold text-indigo-600">{{ $currency }} {{ convert_money($totalCommission ?? 0) }}</p>
             </div>
             <div class="kpi-card bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5">
                 <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">{{ __('system.pages.service_fees_system') }}</p>
-                <p class="mt-1 text-2xl font-bold text-amber-600">{{ $currency }} {{ number_format($totalServiceFees ?? 0, 0) }}</p>
+                <p class="mt-1 text-2xl font-bold text-amber-600">{{ $currency }} {{ convert_money($totalServiceFees ?? 0) }}</p>
             </div>
         </div>
 
@@ -78,7 +78,7 @@
                                     <td class="px-4 py-2.5 text-sm font-medium text-slate-800">{{ $b->booking_code }}</td>
                                     <td class="px-4 py-2.5 text-sm text-slate-600">{{ optional($b->schedule)->from ?? '—' }} → {{ optional($b->schedule)->to ?? '—' }}</td>
                                     <td class="px-4 py-2.5 text-sm text-slate-600">{{ $b->travel_date }}</td>
-                                    <td class="px-4 py-2.5 text-sm text-right font-medium text-slate-800">{{ $currency }} {{ number_format($b->amount ?? 0, 0) }}</td>
+                                    <td class="px-4 py-2.5 text-sm text-right font-medium text-slate-800">{{ $currency }} {{ convert_money($b->amount ?? 0) }}</td>
                                 </tr>
                             @empty
                                 <tr><td colspan="4" class="px-4 py-8 text-center text-slate-400 text-sm">{{ __('system.pages.no_bookings_short') }}</td></tr>
@@ -172,7 +172,7 @@
                             @forelse($transactions->take(10) as $t)
                                 <tr class="hover:bg-slate-50/50">
                                     <td class="px-4 py-2.5 text-sm text-slate-800">{{ $t->user->name ?? '—' }}</td>
-                                    <td class="px-4 py-2.5 text-sm font-medium text-slate-800">{{ $currency }} {{ number_format($t->amount ?? 0, 0) }}</td>
+                                    <td class="px-4 py-2.5 text-sm font-medium text-slate-800">{{ $currency }} {{ convert_money($t->amount ?? 0) }}</td>
                                     <td class="px-4 py-2.5">
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
                                             {{ $t->status === 'Completed' ? 'bg-emerald-100 text-emerald-800' : ($t->status === 'Pending' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800') }}">

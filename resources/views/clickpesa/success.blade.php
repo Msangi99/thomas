@@ -20,7 +20,7 @@
                     </div>
                 </div>
                 <h1 class="result-title">{{ __('all.payment_successful') ?? 'Payment Successful' }}</h1>
-                <p class="result-subtitle">{{ $message ?? 'Your payment was completed successfully.' }}</p>
+                <p class="result-subtitle">{{ $message ?? __('all.payment_completed_successfully') }}</p>
             </div>
 
             @if(isset($booking) && $booking)

@@ -100,7 +100,7 @@
     <div class="home-bus-row__commerce">
         <div class="home-bus-row__price">
             <small>{{ __('all.from_price') }}</small>
-            <strong>TZS {{ number_format($price) }}</strong>
+            <strong>{{ $currency }} {{ convert_money($price) }}</strong>
         </div>
 
         @if ($isSoldOut)

@@ -55,7 +55,7 @@
                             <td>{{ $loop->iteration }}</td>
                             <td class="font-semibold font-mono">{{ $book->booking_code }}</td>
                             <td>{{ $routeLabel }}</td>
-                            <td>TZS {{ number_format($book->amount) }}</td>
+                            <td>{{ $currency }} {{ convert_money($book->amount) }}</td>
                             <td>{{ $book->campany->name ?? '—' }}</td>
                             <td>
                                 {{ $book->travel_date ? \Carbon\Carbon::parse($book->travel_date)->format('D, M d, Y') : __('all.not_available_short') }}

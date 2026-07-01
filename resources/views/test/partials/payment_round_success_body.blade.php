@@ -4,8 +4,8 @@
             <div class="payment-result-status__icon" aria-hidden="true">
                 <i class="fas fa-check"></i>
             </div>
-            <h2 class="payment-result-status__title">{{ __('all.payment_successful') ?? 'Payment Successful' }}</h2>
-            <p class="payment-result-status__subtitle">{{ __('vender/busroot.round_trip_booking_confirmed') ?? 'Your round trip booking has been confirmed.' }}</p>
+            <h2 class="payment-result-status__title">{{ __('all.payment_successful') }}</h2>
+            <p class="payment-result-status__subtitle">{{ __('all.round_trip_booking_confirmed') }}</p>
         </div>
 
         <div class="payment-result-grid">
@@ -21,19 +21,19 @@
                             <dd>{{ $booking1->booking_code }}</dd>
                         </div>
                         <div class="payment-result-row">
-                            <dt>{{ __('all.route') ?? 'Route' }}</dt>
+                            <dt>{{ __('all.route') }}</dt>
                             <dd>{{ $booking1->pickup_point }} → {{ $booking1->dropping_point }}</dd>
                         </div>
                         <div class="payment-result-row">
-                            <dt>{{ __('all.travel_date') ?? 'Travel Date' }}</dt>
+                            <dt>{{ __('all.travel_date') }}</dt>
                             <dd>{{ $booking1->travel_date }}</dd>
                         </div>
                         <div class="payment-result-row">
-                            <dt>{{ __('all.seats') ?? 'Seats' }}</dt>
+                            <dt>{{ __('all.seats') }}</dt>
                             <dd>{{ $booking1->seat }}</dd>
                         </div>
                         <div class="payment-result-row payment-result-row--total">
-                            <dt>{{ __('all.amount') ?? 'Amount' }}</dt>
+                            <dt>{{ __('all.amount') }}</dt>
                             <dd>{{ $currency }} {{ convert_money($booking1->amount) }}</dd>
                         </div>
                     </dl>
@@ -62,19 +62,19 @@
                             <dd>{{ $booking2->booking_code }}</dd>
                         </div>
                         <div class="payment-result-row">
-                            <dt>{{ __('all.route') ?? 'Route' }}</dt>
+                            <dt>{{ __('all.route') }}</dt>
                             <dd>{{ $secondFrom }} → {{ $secondTo }}</dd>
                         </div>
                         <div class="payment-result-row">
-                            <dt>{{ __('all.travel_date') ?? 'Travel Date' }}</dt>
+                            <dt>{{ __('all.travel_date') }}</dt>
                             <dd>{{ $booking2->travel_date }}</dd>
                         </div>
                         <div class="payment-result-row">
-                            <dt>{{ __('all.seats') ?? 'Seats' }}</dt>
+                            <dt>{{ __('all.seats') }}</dt>
                             <dd>{{ $booking2->seat }}</dd>
                         </div>
                         <div class="payment-result-row payment-result-row--total">
-                            <dt>{{ __('all.amount') ?? 'Amount' }}</dt>
+                            <dt>{{ __('all.amount') }}</dt>
                             <dd>{{ $currency }} {{ convert_money($booking2->amount) }}</dd>
                         </div>
                     </dl>
@@ -82,10 +82,24 @@
             @endif
         </div>
 
+        @if (isset($booking1) && $booking1)
+            <div class="payment-result-code">
+                <p class="payment-result-code__label">{{ __('all.verification_code') }} — {{ __('all.outbound') }}</p>
+                <p class="payment-result-code__value">{{ $booking1->booking_code }}</p>
+            </div>
+        @endif
+        @if (isset($booking2) && $booking2)
+            <div class="payment-result-code">
+                <p class="payment-result-code__label">{{ __('all.verification_code') }} — {{ __('all.return_leg') }}</p>
+                <p class="payment-result-code__value">{{ $booking2->booking_code }}</p>
+            </div>
+        @endif
+        <p class="payment-result-code__hint text-center mt-2">{{ __('all.present_code_boarding') }}</p>
+
         <div class="payment-result-actions">
             <a href="{{ route('home') }}" class="page-btn">
                 <i class="fas fa-home" aria-hidden="true"></i>
-                {{ __('all.return_home') ?? 'Return Home' }}
+                {{ __('all.return_home') }}
             </a>
             @auth
                 @if (auth()->user()->isCustomer())
@@ -106,7 +120,7 @@
                     <input type="hidden" name="data" value='{{ json_encode(["id" => $booking1->id]) }}'>
                     <button type="submit" class="page-btn page-btn--outline w-full sm:w-auto">
                         <i class="fas fa-print" aria-hidden="true"></i>
-                        {{ __('all.print_ticket') ?? 'Print' }} ({{ __('all.outbound') ?? 'Outbound' }})
+                        {{ __('all.print_ticket_outbound') }}
                     </button>
                 </form>
             @endif
@@ -116,11 +130,20 @@
                     <input type="hidden" name="data" value='{{ json_encode(["id" => $booking2->id]) }}'>
                     <button type="submit" class="page-btn page-btn--outline w-full sm:w-auto">
                         <i class="fas fa-print" aria-hidden="true"></i>
-                        {{ __('all.print_ticket') ?? 'Print' }} ({{ __('all.return') ?? 'Return' }})
+                        {{ __('all.print_ticket_return') }}
                     </button>
                 </form>
             @endif
         </div>
+
+        @php
+            $customerEmail = $booking1->customer_email ?? ($booking2->customer_email ?? null);
+        @endphp
+        @if (!empty($customerEmail))
+            <div class="payment-result-footer">
+                <p>{{ __('all.confirmation_email_sent') }} {{ $customerEmail }}</p>
+            </div>
+        @endif
     </div>
 </div>
 

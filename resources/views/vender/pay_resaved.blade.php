@@ -108,12 +108,12 @@
                 <dl class="inline-payment__lines">
                     <div class="inline-payment__line">
                         <dt>{{ __('customer/busroot.discount') }}</dt>
-                        <dd>{{ $currency }} {{ number_format($dis, 2) }}</dd>
+                        <dd>{{ $currency }} {{ convert_money($dis) }}</dd>
                     </div>
                     @if (($ins ?? 0) > 0)
                         <div class="inline-payment__line">
                             <dt>{{ __('customer/busroot.insurance') }}</dt>
-                            <dd>{{ $currency }} {{ number_format($ins) }}</dd>
+                            <dd>{{ $currency }} {{ convert_money($ins) }}</dd>
                         </div>
                     @endif
                     <div class="inline-payment__line">

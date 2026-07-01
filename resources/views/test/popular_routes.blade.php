@@ -51,7 +51,7 @@
                         <span class="home-routes__overlay" aria-hidden="true"></span>
                         <span class="home-routes__content">
                             <span class="home-routes__name">{{ $route['from'] }} ➔ {{ $route['to'] }}</span>
-                            <span class="home-routes__price">{{ __('all.from_price') }} TZS {{ number_format($price ?: 1000) }}</span>
+                            <span class="home-routes__price">{{ __('all.from_price') }} {{ $currency }} {{ convert_money($price ?: 1000) }}</span>
                         </span>
                     </button>
                 </form>

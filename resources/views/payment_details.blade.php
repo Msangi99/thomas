@@ -319,42 +319,42 @@
                                 <div class="space-y-3 mb-6">
                                     <div class="flex justify-between">
                                         <span class="text-sm text-gray-600">{{ __('all.discount') }}</span>
-                                        <span class="text-sm font-medium text-gray-500">{{ __('all.currency_prefix_tzs') }}
-                                            {{ number_format($dis, 2) }}</span>
+                                        <span class="text-sm font-medium text-gray-500">{{ $currency }}
+                                            {{ convert_money($dis) }}</span>
                                     </div>
 
                                     @if(isset($ins) && $ins > 0)
                                         <div class="flex justify-between">
                                             <span class="text-sm text-gray-600">{{ __('all.insurance') }}</span>
-                                            <span class="text-sm font-medium text-gray-500">{{ __('all.currency_prefix_tzs') }}
-                                                {{ number_format($ins) }}</span>
+                                            <span class="text-sm font-medium text-gray-500">{{ $currency }}
+                                                {{ convert_money($ins) }}</span>
                                         </div>
                                     @endif
 
                                     <div class="flex justify-between">
                                         <span class="text-sm text-gray-600">{{ __('all.system_charge') }}</span>
-                                        <span class="text-sm font-medium text-gray-500">{{ __('all.currency_prefix_tzs') }}
+                                        <span class="text-sm font-medium text-gray-500">{{ $currency }}
                                             {{ convert_money($fees) }}</span>
                                     </div>
                                     @if(($excess_luggage_fee ?? 0) > 0)
                                         <div class="flex justify-between">
                                             <span class="text-sm text-gray-600">{{ __('all.excess_luggage') }}</span>
                                             <span class="text-sm font-medium text-gray-500">
-                                                {{ __('all.currency_prefix_tzs') }} {{ convert_money($excess_luggage_fee) }}
+                                                {{ $currency }} {{ convert_money($excess_luggage_fee) }}
                                             </span>
                                         </div>
                                     @endif
 
                                     <div class="flex justify-between">
                                         <span class="text-sm text-gray-600">{{ __('all.bus_fare') }}</span>
-                                        <span class="text-sm font-medium text-gray-500">{{ __('all.currency_prefix_tzs') }}
+                                        <span class="text-sm font-medium text-gray-500">{{ $currency }}
                                             {{ convert_money($price - $ins) }}</span>
                                     </div>
 
                                     <div class="border-t border-gray-200 pt-2 mt-2 flex justify-between">
                                         <span class="text-base font-semibold">{{ __('all.total_payable') }}</span>
                                         <span class="text-base font-bold text-blue-600" id="total-payable-display">
-                                            {{ __('all.currency_prefix_tzs') }} {{ convert_money($price + $fees) }}
+                                            {{ $currency }} {{ convert_money($price + $fees) }}
                                         </span>
                                     </div>
                                 </div>

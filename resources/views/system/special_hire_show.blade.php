@@ -79,8 +79,8 @@
         </div>
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
             <p class="text-xs font-semibold text-teal-600 uppercase tracking-wide">Paid revenue</p>
-            <p class="text-2xl font-bold text-gray-900 mt-1">Tsh {{ number_format($stats['revenue_paid'], 0) }}</p>
-            <p class="text-xs text-gray-500 mt-1">Pending: Tsh {{ number_format($stats['revenue_pending'], 0) }}</p>
+            <p class="text-2xl font-bold text-gray-900 mt-1">{{ $currency }} {{ convert_money($stats['revenue_paid']) }}</p>
+            <p class="text-xs text-gray-500 mt-1">Pending: {{ $currency }} {{ convert_money($stats['revenue_pending']) }}</p>
         </div>
     </div>
 
@@ -231,7 +231,7 @@
                             <td class="px-4 py-3 text-gray-600">{{ $o->coaster->name ?? '—' }}<br><span class="text-xs font-mono text-gray-400">{{ $o->coaster->plate_number ?? '' }}</span></td>
                             <td class="px-4 py-3 text-gray-600">{{ $o->customer_name }}<br><span class="text-xs text-gray-400">{{ $o->customer_phone }}</span></td>
                             <td class="px-4 py-3 text-gray-600 whitespace-nowrap">{{ $o->hire_date?->format('Y-m-d') }}</td>
-                            <td class="px-4 py-3 text-right font-medium text-gray-900">Tsh {{ number_format($o->total_amount, 0) }}</td>
+                            <td class="px-4 py-3 text-right font-medium text-gray-900">{{ $currency }} {{ convert_money($o->total_amount) }}</td>
                             <td class="px-4 py-3">
                                 <span class="capitalize text-xs font-semibold
                                     {{ $o->payment_status === 'paid' ? 'text-green-700' : '' }}
@@ -274,7 +274,7 @@
                         @forelse($withdrawalRequestsOpen as $wr)
                             <tr class="hover:bg-gray-50 align-top">
                                 <td class="px-4 py-3 text-gray-600 whitespace-nowrap">{{ $wr->created_at->format('Y-m-d H:i') }}</td>
-                                <td class="px-4 py-3 text-right font-semibold text-gray-900">Tsh {{ number_format($wr->amount, 0) }}</td>
+                                <td class="px-4 py-3 text-right font-semibold text-gray-900">{{ $currency }} {{ convert_money($wr->amount) }}</td>
                                 <td class="px-4 py-3 text-gray-600">
                                     <span class="font-medium text-gray-800">{{ $wr->payment_method }}</span>
                                     <div class="text-xs font-mono mt-1">{{ $wr->payment_number }}</div>
@@ -338,7 +338,7 @@
                         @forelse($withdrawalRequestsExecuted as $wr)
                             <tr class="hover:bg-gray-50 align-top">
                                 <td class="px-4 py-3 text-gray-600 whitespace-nowrap">{{ $wr->created_at->format('Y-m-d H:i') }}</td>
-                                <td class="px-4 py-3 text-right font-semibold text-gray-900">Tsh {{ number_format($wr->amount, 0) }}</td>
+                                <td class="px-4 py-3 text-right font-semibold text-gray-900">{{ $currency }} {{ convert_money($wr->amount) }}</td>
                                 <td class="px-4 py-3 text-gray-600">
                                     <span class="font-medium text-gray-800">{{ $wr->payment_method }}</span>
                                     <div class="text-xs font-mono mt-1">{{ $wr->payment_number }}</div>

@@ -254,7 +254,7 @@
                     <label for="amount">{{ __('assistance/transaction.amount_tsh') }}</label>
                     <input type="number" class="page-input w-full" id="amount" name="amount" step="0.01" min="1"
                            max="{{ $commissionBalance }}"
-                           placeholder="{{ __('assistance/transaction.max_amount', ['amount' => number_format($commissionBalance, 2, '.', ',')]) }}"
+                           placeholder="{{ __('assistance/transaction.max_amount', ['amount' => convert_money($commissionBalance)]) }}"
                            required>
                     @error('amount')
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>

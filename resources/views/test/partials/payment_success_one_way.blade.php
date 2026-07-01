@@ -31,15 +31,15 @@
             <div class="payment-result-status__icon" aria-hidden="true">
                 <i class="fas fa-check"></i>
             </div>
-            <h2 class="payment-result-status__title">{{ __('all.payment_successful') ?? 'Payment Successful' }}</h2>
-            <p class="payment-result-status__subtitle">{{ __('all.thank_you_booking') ?? 'Thank you for your booking! Your payment was processed successfully.' }}</p>
+            <h2 class="payment-result-status__title">{{ __('all.payment_successful') }}</h2>
+            <p class="payment-result-status__subtitle">{{ __('all.thank_you_booking') }}</p>
         </div>
 
         <div class="payment-result-grid">
             <div class="payment-result-card">
                 <h3 class="payment-result-card__title">
                     <i class="fas fa-ticket" aria-hidden="true"></i>
-                    {{ __('all.booking_summary') ?? 'Booking Summary' }}
+                    {{ __('all.booking_summary') }}
                 </h3>
                 <dl class="payment-result-rows">
                     <div class="payment-result-row">
@@ -72,21 +72,21 @@
             <div class="payment-result-card">
                 <h3 class="payment-result-card__title">
                     <i class="fas fa-credit-card" aria-hidden="true"></i>
-                    {{ __('all.payment_details') ?? 'Payment Details' }}
+                    {{ __('all.payment_details') }}
                 </h3>
                 <dl class="payment-result-rows">
                     <div class="payment-result-row">
                         <dt>{{ __('all.bus_fare') ?? 'Ticket Fee' }}</dt>
-                        <dd>{{ $currency }} {{ number_format($ticketFee, 2) }}</dd>
+                        <dd>{{ $currency }} {{ convert_money($ticketFee) }}</dd>
                     </div>
                     <div class="payment-result-row">
-                        <dt>{{ ($useStoredCustomerTotal ?? false) ? 'Service & charges' : (__('all.system_charge') ?? 'Service Fee') }}</dt>
-                        <dd>{{ $currency }} {{ number_format($displayServiceFee, 2) }}</dd>
+                        <dt>{{ ($useStoredCustomerTotal ?? false) ? __('all.service_and_charges') : __('all.system_charge') }}</dt>
+                        <dd>{{ $currency }} {{ convert_money($displayServiceFee) }}</dd>
                     </div>
                     @if ($data->bima == 1)
                         <div class="payment-result-row">
                             <dt>{{ __('all.insurance') ?? 'Insurance' }}</dt>
-                            <dd>{{ $currency }} {{ number_format($data->bima_amount, 2) }}</dd>
+                            <dd>{{ $currency }} {{ convert_money($data->bima_amount) }}</dd>
                         </div>
                     @endif
                     @if (!empty($data->discount))
@@ -97,7 +97,7 @@
                     @endif
                     <div class="payment-result-row payment-result-row--total">
                         <dt>{{ __('all.total_payable') ?? 'Amount Paid' }}</dt>
-                        <dd>{{ $currency }} {{ number_format($amountPaid, 2) }}</dd>
+                        <dd>{{ $currency }} {{ convert_money($amountPaid) }}</dd>
                     </div>
                     <div class="payment-result-row">
                         <dt>{{ __('all.transaction_id') ?? 'Transaction ID' }}</dt>
@@ -105,7 +105,7 @@
                     </div>
                     <div class="payment-result-row">
                         <dt>{{ __('all.status') ?? 'Status' }}</dt>
-                        <dd><span class="payment-result-badge">{{ __('all.confirmed') ?? 'Confirmed' }}</span></dd>
+                        <dd><span class="payment-result-badge">{{ __('all.confirmed') }}</span></dd>
                     </div>
                 </dl>
             </div>
@@ -114,7 +114,7 @@
         <div class="payment-result-code">
             <p class="payment-result-code__label">{{ __('all.verification_code') ?? 'Your Verification Code' }}</p>
             <p class="payment-result-code__value">{{ $data->booking_code }}</p>
-            <p class="payment-result-code__hint">{{ __('all.present_code_boarding') ?? 'Present this code when boarding the bus' }}</p>
+            <p class="payment-result-code__hint">{{ __('all.present_code_boarding') }}</p>
         </div>
 
         @if ($data->tra_vnum ?? false)
@@ -139,7 +139,7 @@
                 <input type="hidden" name="data" value="{{ $data }}">
                 <button type="submit" class="page-btn page-btn--outline w-full sm:w-auto">
                     <i class="fas fa-print" aria-hidden="true"></i>
-                    {{ __('all.print_ticket') ?? 'Print Ticket' }}
+                    {{ __('all.print_ticket') }}
                 </button>
             </form>
             @auth
@@ -153,7 +153,7 @@
         </div>
 
         <div class="payment-result-footer">
-            <p>{{ __('all.confirmation_email_sent') ?? 'A confirmation email has been sent to' }} {{ $data->customer_email }}</p>
+            <p>{{ __('all.confirmation_email_sent') }} {{ $data->customer_email }}</p>
         </div>
     </div>
 </div>

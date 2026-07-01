@@ -312,6 +312,112 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    function readPickupFormState(inner) {
+        const form = inner.querySelector('[data-inline-form="pickup"]');
+        if (!form) return null;
+
+        const uid = form.dataset.inlineUid;
+        if (!uid) return null;
+
+        return {
+            uid: uid,
+            pickup: form.querySelector('#pickupPoint_' + uid)?.value || '',
+            dropoff: form.querySelector('#dropoffPoint_' + uid)?.value || '',
+            routeDistance: form.querySelector('#routeDistance_' + uid)?.value || '',
+            droppingPointAmount: form.querySelector('#droppingPointAmount_' + uid)?.value || '',
+        };
+    }
+
+    function applyPickupFormState(inner, state) {
+        if (!state?.uid) return;
+
+        const form = inner.querySelector('[data-inline-form="pickup"]');
+        if (!form) return;
+
+        const uid = state.uid;
+        const pickup = form.querySelector('#pickupPoint_' + uid);
+        const drop = form.querySelector('#dropoffPoint_' + uid);
+        const distanceField = form.querySelector('#routeDistance_' + uid);
+        const amountField = form.querySelector('#droppingPointAmount_' + uid);
+        const hint = inner.querySelector('#routeDistanceHint_' + uid);
+
+        if (pickup && state.pickup) {
+            pickup.value = state.pickup;
+            Array.from(pickup.options).forEach(function (option) {
+                option.selected = option.value === state.pickup;
+            });
+        }
+
+        if (drop && state.dropoff) {
+            drop.value = state.dropoff;
+            Array.from(drop.options).forEach(function (option) {
+                option.selected = option.value === state.dropoff;
+            });
+        }
+
+        if (distanceField && state.routeDistance) {
+            distanceField.value = state.routeDistance;
+        }
+
+        if (amountField && state.droppingPointAmount) {
+            amountField.value = state.droppingPointAmount;
+        }
+
+        if (hint && state.routeDistance && parseFloat(state.routeDistance) >= 1) {
+            hint.hidden = false;
+            hint.innerHTML = '<i class="fas fa-road" aria-hidden="true"></i> '
+                + parseFloat(state.routeDistance).toFixed(1) + ' km total distance';
+        }
+    }
+
+    function syncPickupSelectValuesToDom(inner) {
+        inner.querySelectorAll('[data-inline-form="pickup"]').forEach(function (form) {
+            const uid = form.dataset.inlineUid;
+            if (!uid) return;
+
+            ['pickupPoint_', 'dropoffPoint_'].forEach(function (prefix) {
+                const select = form.querySelector('#' + prefix + uid);
+                if (!select) return;
+                const current = select.value;
+                Array.from(select.options).forEach(function (option) {
+                    option.selected = option.value === current;
+                });
+            });
+        });
+    }
+
+    function refreshInlineSelect2Values(panel, state) {
+        if (!state?.uid || typeof window.jQuery === 'undefined') return;
+
+        const $pickup = window.jQuery(panel).find('#pickupPoint_' + state.uid);
+        const $drop = window.jQuery(panel).find('#dropoffPoint_' + state.uid);
+
+        if (state.pickup && $pickup.length) {
+            $pickup.val(state.pickup).trigger('change');
+        }
+        if (state.dropoff && $drop.length) {
+            $drop.val(state.dropoff).trigger('change');
+        }
+    }
+
+    function restoreInlinePickupPanel(inner) {
+        if (!inner._pickupHtml) return;
+
+        inner.innerHTML = inner._pickupHtml;
+        resetInlinePickupPanelState(inner);
+        applyPickupFormState(inner, inner._pickupState);
+        bindInlineForms(inner);
+
+        inner.querySelectorAll('.inline-booking-panel').forEach(function (panel) {
+            if (panel.querySelector('[data-inline-form="pickup"]')) {
+                refreshInlineSelect2Values(panel, inner._pickupState);
+            }
+        });
+
+        clearPanelError(inner);
+        inner.closest('.home-bus-row-wrap')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
     function cleanupInlineSelect2(container) {
         if (typeof window.jQuery === 'undefined') return;
         window.jQuery(container).find('.inline-select2').each(function () {
@@ -342,6 +448,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function capturePickupHtml(inner) {
+        inner._pickupState = readPickupFormState(inner);
+        syncPickupSelectValuesToDom(inner);
         resetInlinePickupPanelState(inner);
         return inner.innerHTML;
     }
@@ -553,11 +661,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (stepKey === 'pickup') {
             if (inner._pickupHtml) {
-                inner.innerHTML = inner._pickupHtml;
-                resetInlinePickupPanelState(inner);
-                bindInlineForms(inner);
-                clearPanelError(inner);
-                inner.closest('.home-bus-row-wrap')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                restoreInlinePickupPanel(inner);
                 return;
             }
 
@@ -1039,6 +1143,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (distancePanel?._inlineDistancePromise) {
                         await distancePanel._inlineDistancePromise;
                     }
+                    inner._pickupState = readPickupFormState(inner);
                 }
 
                 const fd = new FormData(form);

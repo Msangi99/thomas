@@ -140,12 +140,12 @@
                                                         <div class="space-y-2">
                                                             <div class="flex justify-between">
                                                                 <span class="text-sm text-gray-600">{{ __('customer/busroot.discount') }}</span>
-                                                                <span class="text-sm font-medium text-gray-500">{{ $currency }} {{ number_format($dis, 2) }}</span>
+                                                                <span class="text-sm font-medium text-gray-500">{{ $currency }} {{ convert_money($dis) }}</span>
                                                             </div>
                                                             @if(isset($ins) && $ins > 0)
                                                             <div class="flex justify-between">
                                                                 <span class="text-sm text-gray-600">{{ __('customer/busroot.insurance') }}</span>
-                                                                <span class="text-sm font-medium text-gray-500">{{ $currency }} {{ number_format($ins) }}</span>
+                                                                <span class="text-sm font-medium text-gray-500">{{ $currency }} {{ convert_money($ins) }}</span>
                                                             </div>
                                                             @endif
                                                             <div class="flex justify-between">
@@ -242,12 +242,12 @@
                                                         <div class="space-y-2">
                                                             <div class="flex justify-between">
                                                                 <span class="text-sm text-gray-600">{{ __('customer/busroot.discount') }}</span>
-                                                                <span class="text-sm font-medium text-gray-500">{{ $currency }} {{ number_format($dis, 2) }}</span>
+                                                                <span class="text-sm font-medium text-gray-500">{{ $currency }} {{ convert_money($dis) }}</span>
                                                             </div>
                                                             @if(isset($ins) && $ins > 0)
                                                             <div class="flex justify-between">
                                                                 <span class="text-sm text-gray-600">{{ __('customer/busroot.insurance') }}</span>
-                                                                <span class="text-sm font-medium text-gray-500">{{ $currency }} {{ number_format($ins) }}</span>
+                                                                <span class="text-sm font-medium text-gray-500">{{ $currency }} {{ convert_money($ins) }}</span>
                                                             </div>
                                                             @endif
                                                             <div class="flex justify-between">
@@ -294,12 +294,12 @@
                                                         <div class="space-y-2">
                                                             <div class="flex justify-between">
                                                                 <span class="text-sm text-gray-600">{{ __('customer/busroot.discount') }}</span>
-                                                                <span class="text-sm font-medium text-gray-500">{{ $currency }} {{ number_format($dis, 2) }}</span>
+                                                                <span class="text-sm font-medium text-gray-500">{{ $currency }} {{ convert_money($dis) }}</span>
                                                             </div>
                                                             @if(isset($ins) && $ins > 0)
                                                             <div class="flex justify-between">
                                                                 <span class="text-sm text-gray-600">{{ __('customer/busroot.insurance') }}</span>
-                                                                <span class="text-sm font-medium text-gray-500">{{ $currency }} {{ number_format($ins) }}</span>
+                                                                <span class="text-sm font-medium text-gray-500">{{ $currency }} {{ convert_money($ins) }}</span>
                                                             </div>
                                                             @endif
                                                             <div class="flex justify-between">
@@ -362,12 +362,12 @@
                                                         <div class="space-y-2">
                                                             <div class="flex justify-between">
                                                                 <span class="text-sm text-gray-600">{{ __('customer/busroot.discount') }}</span>
-                                                                <span class="text-sm font-medium text-gray-500">{{ $currency }} {{ number_format($dis, 2) }}</span>
+                                                                <span class="text-sm font-medium text-gray-500">{{ $currency }} {{ convert_money($dis) }}</span>
                                                             </div>
                                                             @if(isset($ins) && $ins > 0)
                                                             <div class="flex justify-between">
                                                                 <span class="text-sm text-gray-600">{{ __('customer/busroot.insurance') }}</span>
-                                                                <span class="text-sm font-medium text-gray-500">{{ $currency }} {{ number_format($ins) }}</span>
+                                                                <span class="text-sm font-medium text-gray-500">{{ $currency }} {{ convert_money($ins) }}</span>
                                                             </div>
                                                             @endif
                                                             <div class="flex justify-between">
@@ -440,13 +440,13 @@
                     <div class="space-y-3 mb-6">
                         <div class="flex justify-between">
                             <span class="text-sm text-gray-600">{{ __('customer/busroot.discount') }}</span>
-                            <span class="text-sm font-medium text-gray-500">{{ $currency }} {{ number_format($dis, 2) }}</span>
+                            <span class="text-sm font-medium text-gray-500">{{ $currency }} {{ convert_money($dis) }}</span>
                         </div>
                         
                         @if(isset($ins) && $ins > 0)
                         <div class="flex justify-between">
                             <span class="text-sm text-gray-600">{{ __('customer/busroot.insurance') }}</span>
-                            <span class="text-sm font-medium text-gray-500">{{ $currency }} {{ number_format($ins) }}</span>
+                            <span class="text-sm font-medium text-gray-500">{{ $currency }} {{ convert_money($ins) }}</span>
                         </div>
                         @endif
                         

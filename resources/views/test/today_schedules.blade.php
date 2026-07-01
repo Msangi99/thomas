@@ -90,7 +90,7 @@
                         <div class="home-schedule-card__price">
                             @if ($price)
                                 <small>{{ __('all.from_price') }}</small>
-                                <strong>TZS {{ number_format($price) }}</strong>
+                                <strong>{{ $currency }} {{ convert_money($price) }}</strong>
                             @else
                                 <small>{{ __('all.available_today') }}</small>
                                 <strong>{{ __('all.book_your_seat') }}</strong>

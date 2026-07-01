@@ -269,6 +269,8 @@
     <!-- Hero Section -->
     @include('test.hero')
 
+    @yield('content')
+
     @unless (request()->routeIs('schedules.today', 'about', 'contact', 'info', 'booking_info'))
         <!-- Popular Routes -->
         @include('test.popular')

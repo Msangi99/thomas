@@ -5,8 +5,8 @@
 @section('page_hero')
     @include('test.partials.page_hero', [
         'eyebrow' => __('all.round_trip'),
-        'title' => __('vender/busroot.round_payment_success_title'),
-        'subtitle' => __('vender/busroot.round_trip_booking_confirmed'),
+        'title' => __('all.round_trip_payment_success_title'),
+        'subtitle' => __('all.round_trip_booking_confirmed'),
     ])
 @endsection
 

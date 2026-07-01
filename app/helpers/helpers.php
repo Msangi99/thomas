@@ -21,6 +21,79 @@ if (!function_exists('convert_to_usd')) {
     }
 }
 
+if (!function_exists('normalize_booking_point_name')) {
+    function normalize_booking_point_name(?string $name): string
+    {
+        return strtoupper(trim((string) $name));
+    }
+}
+
+if (!function_exists('with_route_endpoint_points')) {
+    /**
+     * Add schedule/route from & to cities as pickup/dropoff options when missing.
+     */
+    function with_route_endpoint_points($points, ?string $from, ?string $to, float $basePrice = 0)
+    {
+        $points = collect($points ?? []);
+        $from = trim((string) $from);
+        $to = trim((string) $to);
+
+        $hasPoint = function (int $mode, string $name) use ($points) {
+            $needle = normalize_booking_point_name($name);
+            if ($needle === '') {
+                return true;
+            }
+
+            return $points->contains(function ($point) use ($mode, $needle) {
+                return (int) ($point->point_mode ?? 0) === $mode
+                    && normalize_booking_point_name($point->point ?? '') === $needle;
+            });
+        };
+
+        if ($from !== '' && ! $hasPoint(1, $from)) {
+            $points->prepend((object) [
+                'point' => $from,
+                'point_mode' => 1,
+                'amount' => $basePrice,
+                'state' => 'yes',
+            ]);
+        }
+
+        if ($to !== '' && ! $hasPoint(2, $to)) {
+            $points->prepend((object) [
+                'point' => $to,
+                'point_mode' => 2,
+                'amount' => $basePrice,
+                'state' => 'yes',
+            ]);
+        }
+
+        return $points->values();
+    }
+}
+
+if (!function_exists('apply_booking_filtered_points')) {
+    function apply_booking_filtered_points($car)
+    {
+        if ($car === null) {
+            return null;
+        }
+
+        $from = $car->schedule->from ?? $car->route->from ?? null;
+        $to = $car->schedule->to ?? $car->route->to ?? null;
+        $basePrice = (float) ($car->route->price ?? 0);
+
+        $car->filtered_points = with_route_endpoint_points(
+            $car->filtered_points ?? collect(),
+            $from,
+            $to,
+            $basePrice
+        );
+
+        return $car;
+    }
+}
+
 if (!function_exists('normalize_tanzania_phone_to_canonical')) {
     /**
      * Strip formatting and return Tanzania mobile as 255 + 9 digits, or null if not a recognizable TZ mobile.

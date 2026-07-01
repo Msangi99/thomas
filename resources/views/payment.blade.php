@@ -252,20 +252,20 @@
                         <div class="space-y-3 mb-6">
                             <div class="flex justify-between">
                                 <span class="text-sm text-gray-600">Discount</span>
-                                <span class="text-sm font-medium text-black">TZS 0.00</span>
+                                <span class="text-sm font-medium text-black">{{ $currency }} 0.00</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-sm text-gray-600">System Charge</span>
-                                <span class="text-sm font-medium text-black">TZS {{ number_format($fees ?? 0) }}</span>
+                                <span class="text-sm font-medium text-black">{{ $currency }} {{ convert_money($fees ?? 0) }}</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-sm text-gray-600">Bus Fare</span>
-                                <span class="text-sm font-medium text-black">TZS {{ number_format($price ?? 0) }}</span>
+                                <span class="text-sm font-medium text-black">{{ $currency }} {{ convert_money($price ?? 0) }}</span>
                             </div>
                             <div class="border-t border-gray-200 pt-2 mt-2 flex justify-between">
                                 <span class="text-base font-semibold">Total Payable</span>
                                 <span class="text-base font-bold text-blue-600" id="total_payable_amount_root_payment">
-                                    TZS {{ number_format(($price ?? 0) + ($fees ?? 0)) }}
+                                    {{ $currency }} {{ convert_money(($price ?? 0) + ($fees ?? 0)) }}
                                 </span>
                             </div>
                         </div>

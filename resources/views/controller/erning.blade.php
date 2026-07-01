@@ -41,7 +41,7 @@
                     </div>
                     <div>
                         <p class="text-sm text-gray-500">{{ __('vender/earning.balance') }}</p>
-                        <h3 class="text-lg font-semibold">Tsh {{ number_format(auth()->user()->campany->balance->amount ?? 0, 2, '.', ',') }}</h3>
+                        <h3 class="text-lg font-semibold">{{ $currency }} {{ convert_money(auth()->user()->campany->balance->amount ?? 0) }}</h3>
                     </div>
                 </div>
             </div>
@@ -54,7 +54,7 @@
                     </div>
                     <div>
                         <p class="text-sm text-gray-500">{{ __('vender/earning.withdrawals_requested') }}</p>
-                        <h3 class="text-lg font-semibold">Tsh {{ number_format($data['request'] ?? 0, 2, '.', ',') }}</h3>
+                        <h3 class="text-lg font-semibold">{{ $currency }} {{ convert_money($data['request'] ?? 0) }}</h3>
                     </div>
                 </div>
             </div>
@@ -67,7 +67,7 @@
                     </div>
                     <div>
                         <p class="text-sm text-gray-500">{{ __('vender/earning.withdrawals') }}</p>
-                        <h3 class="text-lg font-semibold">Tsh {{ number_format($data['success'] ?? 0, 2, '.', ',') }}</h3>
+                        <h3 class="text-lg font-semibold">{{ $currency }} {{ convert_money($data['success'] ?? 0) }}</h3>
                     </div>
                 </div>
             </div>
@@ -130,7 +130,7 @@
                                     {{ $transaction->user ? $transaction->user->name : __('vender/earning.unknown') }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 amount" data-amount="{{ $transaction->amount }}">
-                                    Tsh {{ number_format($transaction->amount, 2, '.', ',') }}
+                                    {{ $currency }} {{ convert_money($transaction->amount) }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-date="{{ $transaction->created_at->format('Y-m-d') }}">
                                     {{ $transaction->created_at->format('Y-m-d H:i:s') }}
@@ -184,7 +184,7 @@
                                     <div class="mb-4">
                                         <label for="amount" class="block text-sm font-medium text-gray-700 mb-1">{{ __('vender/earning.amount_tsh') }}</label>
                                         <input type="number" class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500" 
-                                            placeholder="{{ __('vender/earning.max') }} {{ number_format(auth()->user()->campany->balance->amount ?? 0, 2, '.', ',') }}"
+                                            placeholder="{{ __('vender/earning.max') }} {{ convert_money(auth()->user()->campany->balance->amount ?? 0) }}"
                                             id="amount" name="amount" step="0.01" min="1" required>
                                         @error('amount')
                                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
