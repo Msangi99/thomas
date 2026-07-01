@@ -61,7 +61,7 @@
         @endif
     </td>
     <td data-label="{{ __('vender/resaved_tickets.amount') }}">
-        <span class="tickets-table__price">{{ number_format($totalAmount, 0) }} {{ $currency }}</span>
+        <span class="tickets-table__price">{{ $currency }} {{ convert_money($totalAmount) }}</span>
     </td>
     <td data-label="{{ __('vender/resaved_tickets.resaved_until') }}">
         {{ $book->resaved_until ? \Carbon\Carbon::parse($book->resaved_until)->format('M j, Y g:i A') : '—' }}

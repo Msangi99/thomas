@@ -21,7 +21,7 @@
         @endif
     </td>
     <td data-label="{{ __('customer/busroot.price') }}">
-        <span class="tickets-table__price">{{ number_format($totalAmount, 0) }} {{ $currency }}</span>
+        <span class="tickets-table__price">{{ $currency }} {{ convert_money($totalAmount) }}</span>
     </td>
     <td data-label="{{ __('customer/myticket.bus_name') }}">
         @if ($isRoundTrip)
