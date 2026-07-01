@@ -1,4 +1,24 @@
 (function () {
+    function showSearchForm(form) {
+        if (!form) {
+            return;
+        }
+        form.classList.remove('hidden');
+        form.removeAttribute('hidden');
+        form.style.display = '';
+        form.setAttribute('aria-hidden', 'false');
+    }
+
+    function hideSearchForm(form) {
+        if (!form) {
+            return;
+        }
+        form.classList.add('hidden');
+        form.setAttribute('hidden', 'hidden');
+        form.style.display = 'none';
+        form.setAttribute('aria-hidden', 'true');
+    }
+
     function initHomeSearchTabs(root) {
         const tabs = root.querySelectorAll('.search-tab');
         const forms = root.querySelectorAll('.search-form');
@@ -9,22 +29,31 @@
             }
             tab.dataset.homeSearchTabBound = '1';
 
-            tab.addEventListener('click', function () {
+            tab.addEventListener('click', function (event) {
+                event.preventDefault();
+
                 tabs.forEach(function (t) {
                     t.classList.remove('home-search__tab--active');
+                    t.setAttribute('aria-selected', 'false');
                 });
                 tab.classList.add('home-search__tab--active');
+                tab.setAttribute('aria-selected', 'true');
 
-                forms.forEach(function (form) {
-                    form.classList.add('hidden');
-                });
+                forms.forEach(hideSearchForm);
 
-                const target = document.getElementById(tab.dataset.tab + '-form');
-                if (target) {
-                    target.classList.remove('hidden');
-                }
+                const formId = tab.dataset.tab + '-form';
+                const target = root.querySelector('#' + formId);
+                showSearchForm(target);
             });
         });
+
+        // Ensure only the active tab's form is visible on load.
+        const activeTab = root.querySelector('.home-search__tab--active') || tabs[0];
+        if (activeTab) {
+            forms.forEach(hideSearchForm);
+            const activeForm = root.querySelector('#' + activeTab.dataset.tab + '-form');
+            showSearchForm(activeForm);
+        }
     }
 
     function initHomeSearchSelect2(root) {

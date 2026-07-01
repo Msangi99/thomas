@@ -8,6 +8,7 @@
     @livewireStyles()
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/home.css') }}">
+    @stack('styles')
 </head>
 <body class="font-sans bg-gray-50">
 
@@ -122,7 +123,9 @@
         <i class="fas fa-arrow-up"></i>
     </button>
 
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="{{ asset('js/home.js') }}"></script>
+    @stack('scripts')
     @livewireScripts()
 </body>
 </html>

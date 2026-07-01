@@ -8,9 +8,9 @@
 
 <div id="search" class="home-search fade-in">
     <div class="home-search__tabs">
-        <button type="button" class="home-search__tab search-tab {{ $activeSearchTab === 'one-way' ? 'home-search__tab--active' : '' }}" data-tab="one-way">{{ __('all.one_way') }}</button>
-        <button type="button" class="home-search__tab search-tab {{ $activeSearchTab === 'round-trip' ? 'home-search__tab--active' : '' }}" data-tab="round-trip">{{ __('all.round_trip') }}</button>
-        <button type="button" class="home-search__tab search-tab {{ $activeSearchTab === 'bus-name' ? 'home-search__tab--active' : '' }}" data-tab="bus-name">{{ __('all.bus_name') }}</button>
+        <button type="button" class="home-search__tab search-tab {{ $activeSearchTab === 'one-way' ? 'home-search__tab--active' : '' }}" data-tab="one-way" aria-selected="{{ $activeSearchTab === 'one-way' ? 'true' : 'false' }}">{{ __('all.one_way') }}</button>
+        <button type="button" class="home-search__tab search-tab {{ $activeSearchTab === 'round-trip' ? 'home-search__tab--active' : '' }}" data-tab="round-trip" aria-selected="{{ $activeSearchTab === 'round-trip' ? 'true' : 'false' }}">{{ __('all.round_trip') }}</button>
+        <button type="button" class="home-search__tab search-tab {{ $activeSearchTab === 'bus-name' ? 'home-search__tab--active' : '' }}" data-tab="bus-name" aria-selected="{{ $activeSearchTab === 'bus-name' ? 'true' : 'false' }}">{{ __('all.bus_name') }}</button>
     </div>
 
     <!-- One Way -->
@@ -185,6 +185,6 @@
     @endpush
     @push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-        <script src="{{ asset('js/home-search.js') }}"></script>
+        <script src="{{ asset('js/home-search.js') }}?v=2"></script>
     @endpush
 @endonce

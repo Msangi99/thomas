@@ -30,6 +30,7 @@
         <i class="fas fa-arrow-up"></i>
     </button>
 
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="{{ asset('js/home.js') }}"></script>
     @stack('scripts')
     @livewireScripts()

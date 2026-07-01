@@ -178,6 +178,11 @@ body {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+.home-search .search-form.hidden,
+.home-search .search-form[hidden] {
+    display: none !important;
+}
+
 .home-search__fields {
     display: flex;
     flex-wrap: wrap;
